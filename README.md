@@ -113,7 +113,7 @@ The database needs to be populated with some information if you want to use the 
 
 ```SQL
 INSERT INTO organizations (name) VALUES ('DootaAI'');
-INSERT INTO users (auth0_id, email, email_verified, organization_id, role, state) VALUES ('', 'julien@streamingfast.io', true, 'fe7cce88-fbe4-4e47-8f9a-a7dd40c10f8d', 'PLATFORM_ADMIN', 'ACTIVE');
+INSERT INTO users (auth0_id, email, email_verified, organization_id, role, state) VALUES ('', 'shank@dootaai.com', true, 'fe7cce88-fbe4-4e47-8f9a-a7dd40c10f8d', 'PLATFORM_ADMIN', 'ACTIVE');
 ```
 
 ### Tracing
@@ -191,3 +191,8 @@ UPDATE organizations SET feature_flags = jsonb_set(feature_flags, '{enable_load_
 ## Seed DB
 
 You can find a sample seed file here [`./devel/seed.sql`](`./devel/seed.sql`)
+
+## Create a new migration
+```bash
+./backend/script/migrate.sh new customer
+```

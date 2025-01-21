@@ -6,7 +6,8 @@ CREATE TABLE integrations
     organization_id uuid  NOT NULL,
     type character varying(255) NOT NULL,
     state character varying(255) NOT NULL,
-    config jsonb DEFAULT '{}'::jsonb  NOT NULL,
+    plain_text_config jsonb DEFAULT '{}'::jsonb  NOT NULL,
+    encrypted_config VARCHAR NOT NULL DEFAULT ''
     created_at             timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at             timestamp
 );

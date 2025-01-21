@@ -1,0 +1,7 @@
+BEGIN;
+DROP TABLE IF EXISTS customers;
+DROP INDEX IF EXISTS idx1_customers;
+DROP INDEX IF EXISTS idx2_customers;
+COMMIT;
+
+
