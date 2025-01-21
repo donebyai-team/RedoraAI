@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package doota.portal.v1;
+
+option go_package = "github.com/shank318/doota/pb/doota/portal/v1;pbportal";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+service PortalService {
+  rpc Self(.google.protobuf.Empty) returns (User);
+  rpc GetIntegration(GetIntegrationRequest) returns (Integration);
+}
+
+message User {
+  string id = 1;
+  string email = 2;
+  bool email_verified = 3;
+  UserRole role = 4;
+  repeated Organization organizations = 7;
+  .google.protobuf.Timestamp created_at = 10;
+}
+
+enum UserRole {
+  USER_ROLE_UNSPECIFIED = 0;
+  USER_ROLE_USER = 1;
+  USER_ROLE_ADMIN = 2;
+  USER_ROLE_PLATFORM_ADMIN = 3;
+}
+
+message JWT {
+  string token = 1;
+  int64 expires_at = 2;
+}
+
+message Organization {
+  string id = 1;
+  string name = 2;
+  OrganizationFeatureFlags feature_flags = 3;
+  .google.protobuf.Timestamp created_at = 4;
+}
+
+message OrganizationFeatureFlags {}
+
+message Integration {
+  string id = 1;
+  string organization_id = 2;
+  IntegrationType type = 3;
+  IntegrationState status = 4;
+}
+
+message GetIntegrationRequest { IntegrationType type = 1; }
+
+enum IntegrationType {
+  INTEGRATION_TYPE_UNSPECIFIED = 0;
+  INTEGRATION_TYPE_MICROSOFT = 1;
+  INTEGRATION_TYPE_GOOGLE = 2;
+}
+
+enum IntegrationState {
+  INTEGRATION_STATE_UNSPECIFIED = 0;
+  INTEGRATION_STATE_ACTIVE = 1;
+
+  // This is a transient state not stored in the actual integration model. This will
+  // be that case when for multiple reasons, the token we had for this integration is
+  // revoked.
+  INTEGRATION_STATE_AUTH_REVOKED = 2;
+}

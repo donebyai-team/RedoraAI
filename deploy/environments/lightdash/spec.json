@@ -1,0 +1,14 @@
+{
+  "apiVersion": "tanka.dev/v1alpha1",
+  "kind": "Environment",
+  "metadata": {
+    "name": "environments/prod"
+  },
+  "spec": {
+    "apiServer": "https://34.139.254.0",
+    "namespace": "lightdash",
+    "resourceDefaults": {},
+    "expectVersions": {},
+    "injectLabels": true
+  }
+}

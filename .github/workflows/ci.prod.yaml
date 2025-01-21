@@ -1,0 +1,233 @@
+name: ci frontend prod
+
+on:
+  workflow_dispatch:
+
+env:
+  NEXT_PUBLIC_APP_URL: https://app.dootaai.com
+  NEXT_PUBLIC_API_URL: https://api.dootaai.com
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+
+    env:
+      SLACK_IDS: ${{ secrets.GH_USERNAME_TO_SLACK_IDS }}
+
+    outputs:
+      slack_id: ${{ steps.get-slack-id.outputs.SLACK_ID }}
+
+    steps:
+      - name: Check SLACK_IDS env variable
+        run: |
+          if [ -z "${SLACK_IDS}" ]; then
+            echo "The secret 'secrets.GH_USERNAME_TO_SLACK_IDS' is empty"
+            exit 1
+          fi
+
+      - name: Get Slack ID
+        id: get-slack-id
+        run: |
+          SLACK_IDS=$(echo "$SLACK_IDS" | sed 's/\\//g')
+          SLACK_ID=$(echo "$SLACK_IDS" | jq -r ".${{ github.actor }}")
+          echo "SLACK_ID=$SLACK_ID" >> $GITHUB_OUTPUT
+
+  package-extensions:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    outputs:
+      chrome-extension-archive-url: ${{ steps.artifact-upload-step-chrome.outputs.artifact-url }}
+      outlook-extension-archive-url: ${{ steps.artifact-upload-step-outlook.outputs.artifact-url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: frontend
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          version: 9
+          run_install: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Get pnpm store directory
+        id: get-pnpm-store-path
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v4
+        name: Setup pnpm cache
+        with:
+          path: ${{ steps.get-pnpm-store-path.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: |
+          pnpm install
+
+      - name: Package extension(s)
+        run: |
+          pnpm build:extensions
+
+      - uses: mad9000/actions-find-and-replace-string@5
+        id: archive-ref-name
+        with:
+          source: ${{ github.ref_name }}
+          find: '/'
+          replace: '_'
+
+      - name: Upload Chrome extension
+        id: artifact-upload-step-chrome
+        uses: actions/upload-artifact@v4
+        with:
+          name: loadlogic-chrome-extension-prod-${{ steps.archive-ref-name.outputs.value }}
+          path: ./frontend/extension/chrome/dist
+
+      - name: Upload Outlook extension
+        id: artifact-upload-step-outlook
+        uses: actions/upload-artifact@v4
+        with:
+          name: loadlogic-outlook-extension-prod-${{ steps.archive-ref-name.outputs.value }}
+          path: ./frontend/extension/outlook/dist
+
+  docker-build-frontend:
+    runs-on: ubuntu-latest
+
+    # Add "id-token" with the intended permissions.
+    permissions:
+      contents: "read"
+      id-token: "write"
+
+    outputs:
+      tags-portal: ${{ steps.meta-portal.outputs.tags }}
+      tags-outlook: ${{ steps.meta-outlook.outputs.tags }}
+
+    steps:
+      - name: Docker meta (Portal)
+        id: meta-portal
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            us-east1-docker.pkg.dev/doota/docker/frontend
+          tags: |
+            type=schedule
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern=v{{version}}
+            type=sha,prefix=,format=short
+
+      - name: Docker meta (Outlook Add-In Server)
+        id: meta-outlook
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            us-east1-docker.pkg.dev/doota/docker/outlook-addin-server
+          tags: |
+            type=schedule
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern=v{{version}}
+            type=sha,prefix=,format=short
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v1
+        with:
+          token_format: access_token
+          service_account: ${{ secrets.GAR_SERVICE_ACCOUNT_EMAIL }}
+          workload_identity_provider: ${{ secrets.GAR_WORKLOAD_IDENTITY_PROVIDER }}
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          registry: us-east1-docker.pkg.dev
+          username: oauth2accesstoken
+          password: ${{ steps.auth.outputs.access_token }}
+
+      - name: Install Cache for Docker
+        uses: actions/cache@v4
+        with:
+          path: nodejs-install-cache
+          key: ${{ runner.os }}-nodejs-install-cache
+
+      - name: Inject Install Cache into Docker (layers caching)
+        uses: reproducible-containers/buildkit-cache-dance@v2.1.2
+        with:
+          cache-source: nodejs-install-cache
+          cache-target: /root/.cache
+
+      - name: Build Cache for Docker
+        uses: actions/cache@v4
+        with:
+          path: nodejs-build-cache
+          key: ${{ runner.os }}-nodejs-build-cache
+
+      - name: Inject Build Cache into Docker (layers caching)
+        uses: reproducible-containers/buildkit-cache-dance@v2.1.2
+        with:
+          cache-source: nodejs-build-cache
+          cache-target: /app/.next/cache
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          file: "Dockerfile.portal"
+          context: "{{defaultContext}}:frontend"
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta-portal.outputs.tags }}
+          labels: ${{ steps.meta-portal.outputs.labels }}
+          build-args: |
+            NEXT_PUBLIC_APP_URL=${{ env.NEXT_PUBLIC_APP_URL }}
+            NEXT_PUBLIC_API_URL=${{ env.NEXT_PUBLIC_API_URL }}
+
+      - name: Build and push (Outlook Add-In Server)
+        uses: docker/build-push-action@v5
+        with:
+          file: "Dockerfile.outlook"
+          context: "{{defaultContext}}:frontend"
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta-outlook.outputs.tags }}
+          labels: ${{ steps.meta-outlook.outputs.labels }}
+          build-args: |
+            NEXT_PUBLIC_APP_URL=${{ env.NEXT_PUBLIC_APP_URL }}
+            NEXT_PUBLIC_API_URL=${{ env.NEXT_PUBLIC_API_URL }}
+
+  slack-notifications:
+    needs: [setup, package-extensions, docker-build-frontend]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Slack notification
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        uses: Ilshidur/action-slack@2.1.0
+        with:
+          args: |
+            :done: <@${{ needs.setup.outputs.slack_id }}> *${{ github.repository }}* Success building docker image from ${{ github.ref_type }} _${{ github.ref_name }}_ (${{ github.actor }}) :sparkling_heart:
+            *LoadLogic Prod Portal* ```${{ join(needs.docker-build-frontend.outputs.tags-portal, ' ') }}```
+            *LoadLogic Prod Outlook Add-In Server* ```${{ join(needs.docker-build-frontend.outputs.tags-outlook, ' ') }}```
+            *LoadLogic Prod Chrome Extension*
+            ${{ needs.package-extensions.outputs.chrome-extension-archive-url }}
+            *LoadLogic Prod Outlook Extension*
+            ${{ needs.package-extensions.outputs.outlook-extension-archive-url }}

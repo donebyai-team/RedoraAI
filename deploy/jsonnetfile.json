@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "dependencies": [
+    {
+      "_comment": "This is transitive dependency of sf-tanka above, but I'm quite unsure why 'jb install' does not pull it automatically",
+      "source": {
+        "git": {
+          "remote": "https://github.com/grafana/jsonnet-libs.git",
+          "subdir": "ksonnet-util"
+        }
+      },
+      "version": "master"
+    },
+    {
+      "source": {
+        "git": {
+          "remote": "https://github.com/jsonnet-libs/k8s-libsonnet.git",
+          "subdir": "1.29"
+        }
+      },
+      "version": "main"
+    },
+    {
+      "source": {
+        "git": {
+          "remote": "https://github.com/streamingfast/sf-tanka.git",
+          "subdir": ""
+        }
+      },
+      "version": "master"
+    }
+  ],
+  "legacyImports": true
+}

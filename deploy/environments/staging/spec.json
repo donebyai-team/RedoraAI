@@ -1,0 +1,14 @@
+{
+  "apiVersion": "tanka.dev/v1alpha1",
+  "kind": "Environment",
+  "metadata": {
+    "name": "environments/prod"
+  },
+  "spec": {
+    "apiServer": "https://35.237.5.82",
+    "namespace": "staging",
+    "resourceDefaults": {},
+    "expectVersions": {},
+    "injectLabels": true
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "apiVersion": "v1",
+  "kind": "ServiceAccount",
+  "metadata": {
+    "name": "lightdash",
+    "namespace": "lightdash",
+    "labels": {
+      "helm.sh/chart": "lightdash-0.8.9",
+      "app.kubernetes.io/name": "lightdash",
+      "app.kubernetes.io/instance": "lightdash",
+      "app.kubernetes.io/version": "0.778.1",
+      "app.kubernetes.io/managed-by": "Helm"
+    }
+  }
+}
