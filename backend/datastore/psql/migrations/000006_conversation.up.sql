@@ -7,9 +7,10 @@ CREATE TABLE conversations
     from_phone varchar(255) NOT NULL,
     status character varying(255) NOT NULL DEFAULT 'QUEUED',
     summary TEXT DEFAULT '',
-    voice_provider character varying(255) NOT NULL,
+    provider character varying(255) NOT NULL,
     call_duration integer DEFAULT 0,
     recording_url TEXT,
+    external_id varchar(255),
     created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at  timestamp
 );

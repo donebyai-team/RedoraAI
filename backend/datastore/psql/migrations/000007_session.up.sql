@@ -3,8 +3,6 @@ BEGIN;
 CREATE TABLE customer_sessions
 (
     id uuid DEFAULT public.uuid_generate_v4() NOT NULL PRIMARY KEY,
-    name varchar(255) NOT NULL,
-    phone varchar(255) NOT NULL,
     customer_id uuid NOT NULL,
     organization_id uuid NOT NULL,
     external_id varchar(255),
