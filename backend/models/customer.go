@@ -31,15 +31,15 @@ type CustomerSession struct {
 type Provider string
 
 type Conversation struct {
-	ID           string             `db:"id"`
-	SessionID    string             `db:"session_id"`
-	FromPhone    string             `db:"from_phone"`
-	Status       ConversationStatus `db:"status"`
-	Summary      string             `db:"summary"`
-	Provider     Provider           `db:"provider"`
-	ExternalID   string             `db:"external_id"`
-	CallDuration uint32             `db:"call_duration"` // in milliseconds
-	RecordingURL string             `db:"recording_url"`
-	CreatedAt    time.Time          `db:"created_at"`
-	UpdatedAt    *time.Time         `db:"updated_at"`
+	ID                string             `db:"id"`
+	CustomerSessionID string             `db:"customer_session_id"`
+	FromPhone         string             `db:"from_phone"`
+	Status            ConversationStatus `db:"status"`
+	Summary           string             `db:"summary"`
+	Provider          Provider           `db:"provider"`
+	ExternalID        string             `db:"external_id"`
+	CallDuration      uint32             `db:"call_duration"` // in milliseconds
+	RecordingURL      string             `db:"recording_url"`
+	CreatedAt         time.Time          `db:"created_at"`
+	UpdatedAt         *time.Time         `db:"updated_at"`
 }

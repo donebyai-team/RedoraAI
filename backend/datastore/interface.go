@@ -39,3 +39,18 @@ type UserRepository interface {
 	GetUserByAuth0Id(ctx context.Context, auth0ID string) (*models.User, error)
 	GetUserByEmail(ctx context.Context, email string) (*models.User, error)
 }
+
+type CustomerRepository interface {
+	CreateCustomer(ctx context.Context, customer *models.Customer) (*models.Customer, error)
+	GetCustomerByPhone(ctx context.Context, phone, organizationID string) (*models.Customer, error)
+}
+
+type CustomerSessionRepository interface {
+	CreateCustomerSession(ctx context.Context, customer *models.CustomerSession) (*models.CustomerSession, error)
+	UpdateCustomerSession(ctx context.Context, customer *models.CustomerSession) error
+}
+
+type ConversationRepository interface {
+	CreateConversation(ctx context.Context, obj *models.Conversation) (*models.Conversation, error)
+	UpdateConversation(ctx context.Context, externalSessionID string, obj *models.Conversation) error
+}

@@ -3,7 +3,7 @@ BEGIN;
 CREATE TABLE conversations
 (
     id uuid DEFAULT public.uuid_generate_v4() NOT NULL PRIMARY KEY,
-    session_id uuid NOT NULL,
+    customer_session_id uuid NOT NULL,
     from_phone varchar(255) NOT NULL,
     status character varying(255) NOT NULL DEFAULT 'QUEUED',
     summary TEXT DEFAULT '',
