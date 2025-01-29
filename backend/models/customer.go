@@ -18,6 +18,7 @@ type ConversationStatus string
 
 type CustomerSession struct {
 	ID         string             `db:"id"`
+	PromptType string             `db:"prompt_type"`
 	OrgID      string             `db:"organization_id"`
 	CustomerID string             `db:"customer_id"`
 	ExternalID string             `db:"external_id"`

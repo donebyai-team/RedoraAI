@@ -23,6 +23,7 @@ func main() {
 	Run("doota", "Doota Management & Backend CLI",
 
 		StartCmd,
+		ToolsGroup,
 		ConfigureViper("DOOTA"),
 		ConfigureVersion(version),
 

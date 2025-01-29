@@ -22,6 +22,7 @@ func (r *Database) CreateCustomerSession(ctx context.Context, customer *models.C
 		"customer_id": customer.CustomerID,
 		"due_date":    customer.DueDate,
 		"status":      customer.Status,
+		"prompt_type": customer.PromptType,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create customer session: %w", err)

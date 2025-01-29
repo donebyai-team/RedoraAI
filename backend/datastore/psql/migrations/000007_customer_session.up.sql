@@ -7,6 +7,7 @@ CREATE TABLE customer_sessions
     organization_id uuid NOT NULL,
     external_id varchar(255),
     due_date  timestamp NOT NULL,
+    prompt_type character varying(255) NOT NULL,
     status character varying(255) NOT NULL DEFAULT 'QUEUED',
     created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at  timestamp

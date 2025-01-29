@@ -9,11 +9,10 @@ import (
 )
 
 type Prompt struct {
-	Model       GPTModel `json:"model"`
-	PromptTmpl  string   `json:"prompt_tmpl"`
-	SchemaTmpl  string   `json:"schema_tmpl"`
-	HumanTmpl   string   `json:"human_tmpl"`
-	ChildPrompt *Prompt  `json:"child_prompt,omitempty"`
+	Model      GPTModel `json:"model"`
+	PromptTmpl string   `json:"prompt_tmpl"`
+	SchemaTmpl string   `json:"schema_tmpl"`
+	HumanTmpl  string   `json:"human_tmpl"`
 }
 
 func (p *Prompt) getPromptTemplate(templatePrefix string, addImageSupport bool) (prompts.ChatPromptTemplate, *template.Template, []*template.Template) {

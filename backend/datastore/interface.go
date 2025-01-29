@@ -15,6 +15,10 @@ type Repository interface {
 	OrganizationRepository
 	IntegrationRepository
 	UserRepository
+	PromptTypeRepository
+	ConversationRepository
+	CustomerRepository
+	CustomerSessionRepository
 }
 
 type OrganizationRepository interface {
@@ -53,4 +57,10 @@ type CustomerSessionRepository interface {
 type ConversationRepository interface {
 	CreateConversation(ctx context.Context, obj *models.Conversation) (*models.Conversation, error)
 	UpdateConversation(ctx context.Context, externalSessionID string, obj *models.Conversation) error
+}
+
+type PromptTypeRepository interface {
+	CreatePromptType(ctx context.Context, PromptType *models.PromptType) (*models.PromptType, error)
+	UpdatePromptType(ctx context.Context, PromptType *models.PromptType) error
+	GetPromptTypeByName(ctx context.Context, name string) (*models.PromptType, error)
 }
