@@ -3,7 +3,8 @@ BEGIN;
 CREATE TABLE customers
 (
     id uuid DEFAULT public.uuid_generate_v4() NOT NULL PRIMARY KEY,
-    name varchar(255) NOT NULL,
+    first_name varchar(255) NOT NULL,
+    last_name varchar(255) NOT NULL,
     phone varchar(255) NOT NULL,
     organization_id uuid NOT NULL,
     created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,

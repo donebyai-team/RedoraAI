@@ -50,37 +50,3 @@ func ParseConversationStatus(name string) (ConversationStatus, error) {
 	}
 	return ConversationStatus(""), fmt.Errorf("%s is %w", name, ErrInvalidConversationStatus)
 }
-
-const (
-	// ProviderVOICEMILLIS is a Provider of type VOICE_MILLIS.
-	ProviderVOICEMILLIS Provider = "VOICE_MILLIS"
-	// ProviderVOICEVAPI is a Provider of type VOICE_VAPI.
-	ProviderVOICEVAPI Provider = "VOICE_VAPI"
-)
-
-var ErrInvalidProvider = errors.New("not a valid Provider")
-
-// String implements the Stringer interface.
-func (x Provider) String() string {
-	return string(x)
-}
-
-// IsValid provides a quick way to determine if the typed value is
-// part of the allowed enumerated values
-func (x Provider) IsValid() bool {
-	_, err := ParseProvider(string(x))
-	return err == nil
-}
-
-var _ProviderValue = map[string]Provider{
-	"VOICE_MILLIS": ProviderVOICEMILLIS,
-	"VOICE_VAPI":   ProviderVOICEVAPI,
-}
-
-// ParseProvider attempts to convert a string to a Provider.
-func ParseProvider(name string) (Provider, error) {
-	if x, ok := _ProviderValue[name]; ok {
-		return x, nil
-	}
-	return Provider(""), fmt.Errorf("%s is %w", name, ErrInvalidProvider)
-}

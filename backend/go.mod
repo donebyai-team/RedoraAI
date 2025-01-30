@@ -7,11 +7,13 @@ toolchain go1.22.6
 require (
 	connectrpc.com/connect v1.14.0
 	github.com/KimMachineGun/automemlimit v0.6.0
+	github.com/VapiAI/server-sdk-go v0.4.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/drone/envsubst v1.0.3
 	github.com/golang-migrate/migrate v3.5.4+incompatible
 	github.com/golang-migrate/migrate/v4 v4.17.0
 	github.com/google/uuid v1.6.0
+	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/iancoleman/strcase v0.3.0
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/k3a/html2text v1.2.1
@@ -81,6 +83,7 @@ require (
 	github.com/godbus/dbus/v5 v5.0.4 // indirect
 	github.com/goph/emperror v0.17.2 // indirect
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0 // indirect
+	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/huandu/xstrings v1.3.3 // indirect
 	github.com/imdario/mergo v0.3.13 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
@@ -169,7 +172,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.30.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	golang.org/x/crypto v0.26.0 // indirect
-	golang.org/x/net v0.28.0 // indirect
+	golang.org/x/net v0.28.0
 	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/sys v0.24.0 // indirect
 	golang.org/x/term v0.23.0 // indirect

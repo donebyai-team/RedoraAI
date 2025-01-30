@@ -4,7 +4,8 @@ import "time"
 
 type Customer struct {
 	ID        string     `db:"id"`
-	Name      string     `db:"name"`
+	FirstName string     `db:"first_name"`
+	LastName  string     `db:"last_name"`
 	Phone     string     `db:"phone"`
 	OrgID     string     `db:"organization_id"`
 	CreatedAt time.Time  `db:"created_at"`
@@ -28,16 +29,13 @@ type CustomerSession struct {
 	UpdatedAt  *time.Time         `db:"updated_at"`
 }
 
-// ENUM(VOICE_MILLIS, VOICE_VAPI)
-type Provider string
-
 type Conversation struct {
 	ID                string             `db:"id"`
 	CustomerSessionID string             `db:"customer_session_id"`
 	FromPhone         string             `db:"from_phone"`
 	Status            ConversationStatus `db:"status"`
 	Summary           string             `db:"summary"`
-	Provider          Provider           `db:"provider"`
+	Provider          IntegrationType    `db:"provider"`
 	ExternalID        string             `db:"external_id"`
 	CallDuration      uint32             `db:"call_duration"` // in milliseconds
 	RecordingURL      string             `db:"recording_url"`

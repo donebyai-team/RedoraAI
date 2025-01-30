@@ -8,7 +8,7 @@ import (
 
 //go:generate go-enum -f=$GOFILE
 
-// ENUM(MICROSOFT, GOOGLE, DAT, REVENOVA)
+// ENUM(VOICE_MILLIS, VOICE_VAPI)
 type IntegrationType string
 
 // ENUM(ACTIVE)
@@ -37,90 +37,24 @@ func SetIntegrationType[T Serializable](integration *Integration, integrationTyp
 	return integration
 }
 
-var _ Serializable = (*MicrosoftConfig)(nil)
+var _ Serializable = (*VAPIConfig)(nil)
 
-type MicrosoftConfig struct {
-	TenantId string `json:"tenant_id"`
+type VAPIConfig struct {
+	APIKey   string `json:"-"`
+	HostName string `json:"hostname"`
 }
 
-func NewMicrosoftConfig(tenantId string) *MicrosoftConfig {
-	return &MicrosoftConfig{
-		TenantId: tenantId,
+func NewVAPIConfig(apiKey string) *VAPIConfig {
+	return &VAPIConfig{
+		APIKey: apiKey,
 	}
 }
 
-func (i *MicrosoftConfig) EncryptedData() []byte {
-	return []byte("{}")
-}
-
-func (i *MicrosoftConfig) PlainTextData() []byte {
-	data, err := json.Marshal(i)
-	if err != nil {
-		panic(err)
-	}
-	return data
-}
-
-func (i *Integration) GetMicrosoftConfig() *MicrosoftConfig {
-	if i.Type != IntegrationTypeMICROSOFT {
-		panic(fmt.Errorf("integration is not a microsoft integration"))
-	}
-	out := MicrosoftConfig{}
-	// we know that msoft the whole object is store in plaintext nothing to encrypt?
-	if err := json.Unmarshal([]byte(i.PlainTextConfig), &out); err != nil {
-		panic(fmt.Errorf("unable to unmarshal microsoft config: %w", err))
-	}
-	return &out
-}
-
-var _ Serializable = (*GoogleConfig)(nil)
-
-type GoogleConfig struct {
-	RefreshToken string `json:"refresh_token"`
-}
-
-func NewGoogleConfig(refreshToken string) *GoogleConfig {
-	return &GoogleConfig{
-		RefreshToken: refreshToken,
-	}
-}
-
-func (i *GoogleConfig) EncryptedData() []byte {
-	data, err := json.Marshal(i)
-	if err != nil {
-		panic(err)
-	}
-	return data
-
-}
-
-func (i *GoogleConfig) PlainTextData() []byte {
-	return []byte("{}")
-}
-
-func (i *Integration) GetGoogleConfig() *GoogleConfig {
-	if i.Type != IntegrationTypeGOOGLE {
-		panic(fmt.Errorf("integration is not a google integration"))
-	}
-	out := GoogleConfig{}
-	if err := json.Unmarshal([]byte(i.EncryptedConfig), &out); err != nil {
-		panic(fmt.Errorf("unable to unmarshal google config: %w", err))
-	}
-	return &out
-}
-
-type RevenovaConfig struct {
-	OrgID    string `json:"org_id"`
-	LoginURL string `json:"login_url"`
-	Username string `json:"username"`
-	Password string `json:"-"`
-}
-
-func (i *RevenovaConfig) EncryptedData() []byte {
+func (i *VAPIConfig) EncryptedData() []byte {
 	toEncrypt := struct {
-		Password string `json:"password"` // CHANGE_PASSWORD [ENCRYPTED]
+		APIKey string `json:"api_key"`
 	}{
-		Password: i.Password,
+		APIKey: i.APIKey,
 	}
 	data, err := json.Marshal(toEncrypt)
 	if err != nil {
@@ -130,7 +64,7 @@ func (i *RevenovaConfig) EncryptedData() []byte {
 
 }
 
-func (i *RevenovaConfig) PlainTextData() []byte {
+func (i *VAPIConfig) PlainTextData() []byte {
 	data, err := json.Marshal(i)
 	if err != nil {
 		panic(err)
@@ -138,74 +72,23 @@ func (i *RevenovaConfig) PlainTextData() []byte {
 	return data
 }
 
-func (i *Integration) GetRevenovaConfig() *RevenovaConfig {
-	if i.Type != IntegrationTypeREVENOVA {
-		panic(fmt.Errorf("integration is not a revenova integration"))
+func (i *Integration) GetVAPIConfig() *VAPIConfig {
+	if i.Type != IntegrationTypeVOICEVAPI {
+		panic(fmt.Errorf("integration is not a vapi integration"))
 	}
 
-	out := RevenovaConfig{}
+	out := VAPIConfig{}
 	if err := json.Unmarshal([]byte(i.PlainTextConfig), &out); err != nil {
-		panic(fmt.Errorf("unable to unmarshal revenova config: %w", err))
+		panic(fmt.Errorf("unable to unmarshal vapi config: %w", err))
 	}
 
 	encryptedData := struct {
-		Password string `json:"password"` // CHANGE_PASSWORD [ENCRYPTED]
+		APIKey string `json:"api_key"`
 	}{}
 
 	if err := json.Unmarshal([]byte(i.EncryptedConfig), &encryptedData); err != nil {
-		panic(fmt.Errorf("unable to unmarshal google config: %w", err))
+		panic(fmt.Errorf("unable to unmarshal vapi config: %w", err))
 	}
-	out.Password = encryptedData.Password
-	return &out
-}
-
-type DATConfig struct {
-	AuthHost    string `json:"auth_host"` // identity.api.staging.dat.com
-	APIHost     string `json:"api_host"`  // api.staging.dat.com
-	OrgUser     string `json:"org_user"`  //dat@loadlogic.ai
-	OrgPassword string `json:"-"`
-	UserAccount string `json:"user_account"` // mdm@streamingfast.io
-}
-
-func (i *DATConfig) EncryptedData() []byte {
-	toEncrypt := struct {
-		OrgPassword string `json:"org_password"` // CHANGE_PASSWORD [ENCRYPTED]
-	}{
-		OrgPassword: i.OrgPassword,
-	}
-	data, err := json.Marshal(toEncrypt)
-	if err != nil {
-		panic(err)
-	}
-	return data
-
-}
-
-func (i *DATConfig) PlainTextData() []byte {
-	data, err := json.Marshal(i)
-	if err != nil {
-		panic(err)
-	}
-	return data
-}
-
-func (i *Integration) GetDATConfig() *DATConfig {
-	if i.Type != IntegrationTypeDAT {
-		panic(fmt.Errorf("integration is not a dat integration"))
-	}
-
-	out := DATConfig{}
-	if err := json.Unmarshal([]byte(i.PlainTextConfig), &out); err != nil {
-		panic(fmt.Errorf("unable to unmarshal dat config: %w", err))
-	}
-
-	encryptedData := struct {
-		OrgPassword string `json:"org_password"` // CHANGE_PASSWORD [ENCRYPTED]
-	}{}
-
-	if err := json.Unmarshal([]byte(i.EncryptedConfig), &encryptedData); err != nil {
-		panic(fmt.Errorf("unable to unmarshal google config: %w", err))
-	}
-	out.OrgPassword = encryptedData.OrgPassword
+	out.APIKey = encryptedData.APIKey
 	return &out
 }

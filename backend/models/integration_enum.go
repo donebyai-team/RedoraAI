@@ -43,14 +43,10 @@ func ParseIntegrationState(name string) (IntegrationState, error) {
 }
 
 const (
-	// IntegrationTypeMICROSOFT is a IntegrationType of type MICROSOFT.
-	IntegrationTypeMICROSOFT IntegrationType = "MICROSOFT"
-	// IntegrationTypeGOOGLE is a IntegrationType of type GOOGLE.
-	IntegrationTypeGOOGLE IntegrationType = "GOOGLE"
-	// IntegrationTypeDAT is a IntegrationType of type DAT.
-	IntegrationTypeDAT IntegrationType = "DAT"
-	// IntegrationTypeREVENOVA is a IntegrationType of type REVENOVA.
-	IntegrationTypeREVENOVA IntegrationType = "REVENOVA"
+	// IntegrationTypeVOICEMILLIS is a IntegrationType of type VOICE_MILLIS.
+	IntegrationTypeVOICEMILLIS IntegrationType = "VOICE_MILLIS"
+	// IntegrationTypeVOICEVAPI is a IntegrationType of type VOICE_VAPI.
+	IntegrationTypeVOICEVAPI IntegrationType = "VOICE_VAPI"
 )
 
 var ErrInvalidIntegrationType = errors.New("not a valid IntegrationType")
@@ -68,10 +64,8 @@ func (x IntegrationType) IsValid() bool {
 }
 
 var _IntegrationTypeValue = map[string]IntegrationType{
-	"MICROSOFT": IntegrationTypeMICROSOFT,
-	"GOOGLE":    IntegrationTypeGOOGLE,
-	"DAT":       IntegrationTypeDAT,
-	"REVENOVA":  IntegrationTypeREVENOVA,
+	"VOICE_MILLIS": IntegrationTypeVOICEMILLIS,
+	"VOICE_VAPI":   IntegrationTypeVOICEVAPI,
 }
 
 // ParseIntegrationType attempts to convert a string to a IntegrationType.

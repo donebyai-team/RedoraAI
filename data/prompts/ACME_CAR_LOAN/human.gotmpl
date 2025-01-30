@@ -1,11 +1,4 @@
-email from: {{ .EmailFrom }}
-email to: {{ .EmailTo }} 
-email received at: {{ .EmailReceivedAt}}
-email subject: {{ .EmailSubject }}
-email body: {{ .EmailBody }}
-
-{{ range $index, $element := .Attachments }}
-Attachment {{ $index }} Type: {{ $element.MimeType }}
-Attachment {{ $index }} Name: {{ $element.Name }}
-Attachment {{ $index }} Content: {{ $element.Content }}
-{{ end }}
+Here is the client's first and last names:
+- First name: {{.firstName}}
+- Last name: {{.lastName}}
+- Phone number: {{.phoneNumber}}
