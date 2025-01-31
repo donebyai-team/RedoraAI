@@ -1,5 +1,7 @@
 package utils
 
+import "strings"
+
 // SlicesAny returns true if any element in the slice satisfies the predicate function.
 func SlicesAll[T any](s []T, f func(T) bool) bool {
 	for _, v := range s {
@@ -17,4 +19,13 @@ func SlicesAllEquals[T comparable](s []T) bool {
 	}
 
 	return SlicesAll(s, func(v T) bool { return v == s[0] })
+}
+
+func Contains(haystack []string, needle string) bool {
+	for _, a := range haystack {
+		if strings.EqualFold(a, needle) {
+			return true
+		}
+	}
+	return false
 }

@@ -62,5 +62,5 @@ type ConversationRepository interface {
 type PromptTypeRepository interface {
 	CreatePromptType(ctx context.Context, PromptType *models.PromptType) (*models.PromptType, error)
 	UpdatePromptType(ctx context.Context, PromptType *models.PromptType) error
-	GetPromptTypeByName(ctx context.Context, name string) (*models.PromptType, error)
+	GetPromptTypeByName(ctx context.Context, name, orgID string) (*models.PromptType, error)
 }

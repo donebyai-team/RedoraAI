@@ -44,8 +44,9 @@ func (r *Database) UpdatePromptType(ctx context.Context, PromptType *models.Prom
 	return nil
 }
 
-func (r *Database) GetPromptTypeByName(ctx context.Context, name string) (*models.PromptType, error) {
+func (r *Database) GetPromptTypeByName(ctx context.Context, name, orgID string) (*models.PromptType, error) {
 	return getOne[models.PromptType](ctx, r, "prompt_type/query_by_name.sql", map[string]any{
-		"name": name,
+		"name":            name,
+		"organization_id": orgID,
 	})
 }

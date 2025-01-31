@@ -5,6 +5,7 @@ import (
 	"github.com/shank318/doota/auth"
 	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/portal/server"
+	"github.com/shank318/doota/services"
 	"github.com/streamingfast/logging"
 	"github.com/streamingfast/shutter"
 	"go.uber.org/zap"
@@ -13,14 +14,15 @@ import (
 
 type Portal struct {
 	*shutter.Shutter
-	isAppReady        func() bool
-	httpListenAddr    string
-	corsURLRegexAllow *regexp.Regexp
-	domainWhitelist   []*regexp.Regexp
-	db                datastore.Repository
-	logger            *zap.Logger
-	tracer            logging.Tracer
-	authenticator     *auth.Authenticator
+	isAppReady             func() bool
+	httpListenAddr         string
+	corsURLRegexAllow      *regexp.Regexp
+	domainWhitelist        []*regexp.Regexp
+	db                     datastore.Repository
+	logger                 *zap.Logger
+	tracer                 logging.Tracer
+	authenticator          *auth.Authenticator
+	customerSessionService services.CustomerSessionService
 }
 
 func New(

@@ -22,6 +22,7 @@ const _ = grpc.SupportPackageIsVersion7
 const (
 	PortalService_Self_FullMethodName           = "/doota.portal.v1.PortalService/Self"
 	PortalService_GetIntegration_FullMethodName = "/doota.portal.v1.PortalService/GetIntegration"
+	PortalService_Batch_FullMethodName          = "/doota.portal.v1.PortalService/Batch"
 )
 
 // PortalServiceClient is the client API for PortalService service.
@@ -30,6 +31,7 @@ const (
 type PortalServiceClient interface {
 	Self(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*User, error)
 	GetIntegration(ctx context.Context, in *GetIntegrationRequest, opts ...grpc.CallOption) (*Integration, error)
+	Batch(ctx context.Context, in *BatchReq, opts ...grpc.CallOption) (*BatchResp, error)
 }
 
 type portalServiceClient struct {
@@ -58,12 +60,22 @@ func (c *portalServiceClient) GetIntegration(ctx context.Context, in *GetIntegra
 	return out, nil
 }
 
+func (c *portalServiceClient) Batch(ctx context.Context, in *BatchReq, opts ...grpc.CallOption) (*BatchResp, error) {
+	out := new(BatchResp)
+	err := c.cc.Invoke(ctx, PortalService_Batch_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PortalServiceServer is the server API for PortalService service.
 // All implementations must embed UnimplementedPortalServiceServer
 // for forward compatibility
 type PortalServiceServer interface {
 	Self(context.Context, *emptypb.Empty) (*User, error)
 	GetIntegration(context.Context, *GetIntegrationRequest) (*Integration, error)
+	Batch(context.Context, *BatchReq) (*BatchResp, error)
 	mustEmbedUnimplementedPortalServiceServer()
 }
 
@@ -76,6 +88,9 @@ func (UnimplementedPortalServiceServer) Self(context.Context, *emptypb.Empty) (*
 }
 func (UnimplementedPortalServiceServer) GetIntegration(context.Context, *GetIntegrationRequest) (*Integration, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetIntegration not implemented")
+}
+func (UnimplementedPortalServiceServer) Batch(context.Context, *BatchReq) (*BatchResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Batch not implemented")
 }
 func (UnimplementedPortalServiceServer) mustEmbedUnimplementedPortalServiceServer() {}
 
@@ -126,6 +141,24 @@ func _PortalService_GetIntegration_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PortalService_Batch_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortalServiceServer).Batch(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortalService_Batch_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortalServiceServer).Batch(ctx, req.(*BatchReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // PortalService_ServiceDesc is the grpc.ServiceDesc for PortalService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -140,6 +173,10 @@ var PortalService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetIntegration",
 			Handler:    _PortalService_GetIntegration_Handler,
+		},
+		{
+			MethodName: "Batch",
+			Handler:    _PortalService_Batch_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -10,6 +10,19 @@ import "google/protobuf/empty.proto";
 service PortalService {
   rpc Self(.google.protobuf.Empty) returns (User);
   rpc GetIntegration(GetIntegrationRequest) returns (Integration);
+  rpc Batch(BatchReq) returns (BatchResp);
+}
+
+message BatchReq {
+  string filename = 1;
+  bytes csv_data = 2;
+  string organization_id = 3;
+}
+
+message BatchResp {
+  int32 rows = 1;
+  int32 rows_extracted = 2;
+  repeated string rejected_rows = 3;
 }
 
 message User {
