@@ -196,3 +196,10 @@ You can find a sample seed file here [`./devel/seed.sql`](`./devel/seed.sql`)
 ```bash
 ./backend/script/migrate.sh new customer
 ```
+
+## Spooler 
+1. Call between given hours
+2. Per day max no of calls limits.
+3. Total max no of calls limits
+4. Fanout limits to max no of calls per org at a time
+5. Polling interval

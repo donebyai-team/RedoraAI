@@ -12,8 +12,8 @@ import (
 const SEED = 42
 
 type Client struct {
-	model               llms.Model
-	langsmithConfig     LangsmithConfig
+	model           llms.Model
+	langsmithConfig LangsmithConfig
 	/**/ debugFileStore dstore.Store
 }
 

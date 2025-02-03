@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/shank318/doota/agents"
+	"github.com/shank318/doota/agents/state"
 	"github.com/shank318/doota/ai"
 	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/integrations"
@@ -24,7 +25,9 @@ type Spooler struct {
 	queue              chan *models.AugmentedCustomerCase
 	queued             *agents.QueuedMap[string, bool]
 	integrationFactory integrations.Factory
+	state              state.SpoolerState
 	appIsReady         func() bool
+	maxParallelCalls   uint64
 
 	logger *zap.Logger
 }
@@ -32,8 +35,10 @@ type Spooler struct {
 func New(
 	db datastore.Repository,
 	aiClient ai.Client,
+	state state.SpoolerState,
 	integrationFactory integrations.Factory,
 	bufferSize int,
+	maxParallelCalls uint64,
 	dbPollingInterval time.Duration,
 	isShuttingDown func() bool,
 	logger *zap.Logger,
@@ -41,6 +46,8 @@ func New(
 	return &Spooler{
 		Shutter:            shutter.New(),
 		db:                 db,
+		state:              state,
+		maxParallelCalls:   maxParallelCalls,
 		aiClient:           aiClient,
 		integrationFactory: integrationFactory,
 		dbPollingInterval:  dbPollingInterval,
@@ -96,6 +103,27 @@ func (s *Spooler) processCustomerCase(ctx context.Context, customerCase *models.
 	)
 	logger.Debug("processing customer cases", zap.Int("queue_size", len(s.queue)))
 
+	// Check if a call is already running across organizations
+	isRunning, err := s.state.IsRunning(ctx, customerCase.Customer.Phone)
+	if err != nil {
+		return fmt.Errorf("failed to check if customer is running: %w", err)
+	}
+
+	if isRunning {
+		logger.Debug("customer call is already running", zap.String("phone", customerCase.Customer.Phone))
+		return nil
+	}
+
+	// Check if total active calls across organizations < maxParallelCalls
+	count, err := s.state.ActiveCount(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get active count: %w", err)
+	}
+	if count >= s.maxParallelCalls {
+		s.logger.Info("maxParallelCalls exceeded", zap.Uint64("count", count))
+		return nil
+	}
+
 	// Create Conversation
 	voiceProvider, err := s.integrationFactory.NewVoiceClient(ctx, customerCase.CustomerCase.OrgID)
 	if err != nil {
@@ -142,10 +170,18 @@ func (s *Spooler) processCustomerCase(ctx context.Context, customerCase *models.
 
 	conversation.ExternalID = callResponse.CallID
 	conversation.CallStatus = callResponse.Status
-
 	err = s.db.UpdateConversation(ctx, conversation)
 	if err != nil {
 		return fmt.Errorf("failed to update conversation for %s: %w", customerCase.CustomerCase.ID, err)
+	}
+
+	// Mark a call running
+	// TODO: Put the status check eg. QUEUED, IN_PROGRESS etc
+	if callResponse.CallID != "" {
+		err := s.state.KeepAlive(ctx, customerCase.CustomerCase.OrgID, customerCase.Customer.Phone)
+		if err != nil {
+			return fmt.Errorf("failed to keep alive for %s: %w", customerCase.CustomerCase.ID, err)
+		}
 	}
 
 	return nil
@@ -176,6 +212,16 @@ func (s *Spooler) pollCustomerCases(ctx context.Context) {
 }
 
 func (s *Spooler) loadCustomerSessions(ctx context.Context) error {
+	// Validate if the maxParallelCalls is already running
+	count, err := s.state.ActiveCount(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get active count: %w", err)
+	}
+	if count >= s.maxParallelCalls {
+		s.logger.Info("maxParallelCalls exceeded", zap.Uint64("count", count))
+		return nil
+	}
+
 	t0 := time.Now()
 	// Case IN (CREATED, PENDING)
 	// LastCallStatus = NULL OR IN (ENDED, AI_ENDED)
