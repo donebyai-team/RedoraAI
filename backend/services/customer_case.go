@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-type CreateCustomerSession struct {
+type CreateCustomerCase struct {
 	FirstName  string
 	LastName   string
 	Phone      string
@@ -18,15 +18,15 @@ type CreateCustomerSession struct {
 	DueDate    time.Time
 }
 
-type CustomerSessionService interface {
-	Create(ctx context.Context, session *CreateCustomerSession) error
+type CustomerCaseService interface {
+	Create(ctx context.Context, session *CreateCustomerCase) error
 }
 
-type CustomerSessionServiceImpl struct {
+type CustomerCaseServiceImpl struct {
 	db datastore.Repository
 }
 
-func (c *CustomerSessionServiceImpl) Create(ctx context.Context, session *CreateCustomerSession) error {
+func (c *CustomerCaseServiceImpl) Create(ctx context.Context, session *CreateCustomerCase) error {
 	customer, err := c.db.GetCustomerByPhone(ctx, session.Phone, session.OrgID)
 	if err != nil && !errors.Is(err, datastore.NotFound) {
 		return fmt.Errorf("get customer by phone: %w", err)
@@ -53,12 +53,11 @@ func (c *CustomerSessionServiceImpl) Create(ctx context.Context, session *Create
 		return fmt.Errorf("get prompt type: %w", err)
 	}
 
-	_, err = c.db.CreateCustomerSession(ctx, &models.CustomerSession{
+	_, err = c.db.CreateCustomerCase(ctx, &models.CustomerCase{
 		PromptType: promptType.Name,
 		OrgID:      customer.OrgID,
 		CustomerID: customer.ID,
 		DueDate:    session.DueDate,
-		Status:     models.ConversationStatusQUEUED,
 	})
 	return err
 }

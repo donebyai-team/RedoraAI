@@ -1,4 +1,4 @@
-package milli
+package vapi
 
 import (
 	"context"
@@ -6,7 +6,8 @@ import (
 	vapiclient "github.com/VapiAI/server-sdk-go/client"
 	"github.com/VapiAI/server-sdk-go/option"
 	"github.com/shank318/doota/models"
-	"github.com/shank318/doota/voice_providers"
+	"github.com/shank318/doota/utils"
+	"github.com/tmc/langchaingo/llms"
 	"go.uber.org/zap"
 )
 
@@ -15,7 +16,11 @@ type VAPIVoiceProvider struct {
 	logger *zap.Logger
 }
 
-func NewVAPIVoiceProvider(config *models.VAPIConfig, logger *zap.Logger) integrations.VoiceProvider {
+func (m *VAPIVoiceProvider) Name() models.IntegrationType {
+	return models.IntegrationTypeVOICEVAPI
+}
+
+func NewVAPIVoiceProvider(config *models.VAPIConfig, logger *zap.Logger) *VAPIVoiceProvider {
 	client := vapiclient.NewClient(option.WithToken(config.APIKey))
 	return &VAPIVoiceProvider{
 		client: client,
@@ -23,12 +28,31 @@ func NewVAPIVoiceProvider(config *models.VAPIConfig, logger *zap.Logger) integra
 	}
 }
 
-func (m *VAPIVoiceProvider) CreateCall(ctx context.Context, req integrations.CallRequest) (*integrations.CallResponse, error) {
-	model, err := api.NewOpenAiModelModelFromString(req.Prompt.Model.String())
+func (m *VAPIVoiceProvider) CreateCall(ctx context.Context, req models.CallRequest) (*models.CallResponse, error) {
+	model, err := api.NewOpenAiModelModelFromString(req.GPTModel)
 	if err != nil {
 		return nil, err
 	}
+
+	messages := []*api.OpenAiMessage{}
+	for _, message := range req.ChatMessages {
+		if message.GetType() == llms.ChatMessageTypeSystem {
+			messages = append(messages, &api.OpenAiMessage{
+				Role:    api.OpenAiMessageRoleSystem,
+				Content: utils.Ptr(message.GetContent()),
+			})
+		}
+
+		if message.GetType() == llms.ChatMessageTypeHuman {
+			messages = append(messages, &api.OpenAiMessage{
+				Role:    api.OpenAiMessageRoleUser,
+				Content: utils.Ptr(message.GetContent()),
+			})
+		}
+	}
+
 	registerCall := api.CreateCallDto{
+		Name:          &req.ConversationID,
 		PhoneNumberId: nil,
 		PhoneNumber:   nil,
 		Customer: &api.CreateCustomerDto{
@@ -37,27 +61,19 @@ func (m *VAPIVoiceProvider) CreateCall(ctx context.Context, req integrations.Cal
 		Assistant: &api.CreateAssistantDto{
 			Model: &api.CreateAssistantDtoModel{
 				OpenAiModel: &api.OpenAiModel{
-					Messages: []*api.OpenAiMessage{
-						{
-							Content: &req.Prompt.PromptTmpl,
-							Role:    api.OpenAiMessageRoleSystem,
-						},
-						{
-							Content: &req.Prompt.HumanTmpl,
-							Role:    api.OpenAiMessageRoleUser,
-						},
-					},
-					Model: model,
+					Messages: messages,
+					Model:    model,
 				},
 			},
 		},
 	}
+
 	resp, err := m.client.Calls.Create(ctx, &registerCall)
 	if err != nil {
 		return nil, err
 	}
 
-	return &integrations.CallResponse{
+	return &models.CallResponse{
 		CallID: resp.Id,
 	}, nil
 }

@@ -2,6 +2,7 @@ package ai
 
 import (
 	"fmt"
+	"github.com/shank318/doota/models"
 	"slices"
 	"text/template"
 
@@ -19,6 +20,16 @@ var knownTemplates = []Template{
 
 // ENUM(gpt-4-vision-preview, gpt-4-turbo, gpt-4-turbo-preview, gpt-4-0125-preview, gpt-4-turbo-2024-04-09, gpt-4o-2024-05-13, gpt-4o-2024-08-06)
 type GPTModel string
+
+func (g GPTModel) GetVars(customerCase *models.AugmentedCustomerCase) Variable {
+	out := make(Variable).
+		WithCustomer(customerCase.Customer).
+		WithCustomerCase(customerCase.CustomerCase)
+	if len(customerCase.Conversations) > 0 {
+		out = out.WithPastConversations(customerCase.Conversations)
+	}
+	return out
+}
 
 // TODO: Create list of all gptModels that support images
 var visionGPTModelList = []GPTModel{

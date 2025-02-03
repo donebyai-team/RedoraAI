@@ -1,11 +1,13 @@
 package ai
 
 import (
+	"github.com/shank318/doota/models"
 	"github.com/tmc/langchaingo/prompts"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 	"strings"
 	"text/template"
+	"time"
 )
 
 type Prompt struct {
@@ -31,6 +33,31 @@ func (p *Prompt) getPromptTemplate(templatePrefix string, addImageSupport bool) 
 //}
 
 type Variable map[string]any
+
+func (v Variable) WithCustomer(customer *models.Customer) Variable {
+	v["firstName"] = customer.FirstName
+	v["lastName"] = customer.LastName
+	v["phoneNumber"] = customer.Phone
+	return v
+}
+
+func (v Variable) WithCustomerCase(customer *models.CustomerCase) Variable {
+	v["dueDate"] = customer.DueDate.Format(time.RFC3339)
+	return v
+}
+
+func (v Variable) WithPastConversations(conversations []*models.Conversation) Variable {
+	var atts []map[string]any
+	for _, conversation := range conversations {
+		atts = append(atts, map[string]any{
+			"Date":    conversation.CreatedAt.Format(time.RFC3339),
+			"Summary": conversation.Summary,
+		})
+	}
+	v["Conversations"] = atts
+
+	return v
+}
 
 func (v Variable) WithVariable(key string, value any) Variable {
 	v[key] = value

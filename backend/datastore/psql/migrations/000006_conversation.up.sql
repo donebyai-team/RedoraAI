@@ -3,9 +3,10 @@ BEGIN;
 CREATE TABLE conversations
 (
     id uuid DEFAULT public.uuid_generate_v4() NOT NULL PRIMARY KEY,
-    customer_session_id uuid NOT NULL,
+    customer_case_id uuid NOT NULL,
     from_phone varchar(255) NOT NULL,
-    status character varying(255) NOT NULL DEFAULT 'QUEUED',
+    call_status character varying(255) NOT NULL DEFAULT 'CREATED',
+    next_scheduled_at timestamp,
     summary TEXT DEFAULT '',
     provider character varying(255) NOT NULL,
     call_duration integer DEFAULT 0,

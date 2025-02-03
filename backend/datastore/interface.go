@@ -3,8 +3,8 @@ package datastore
 import (
 	"context"
 	"errors"
-
 	"github.com/shank318/doota/models"
+	"time"
 )
 
 var NotFound = errors.New("not found")
@@ -18,7 +18,7 @@ type Repository interface {
 	PromptTypeRepository
 	ConversationRepository
 	CustomerRepository
-	CustomerSessionRepository
+	CustomerCaseRepository
 }
 
 type OrganizationRepository interface {
@@ -49,18 +49,26 @@ type CustomerRepository interface {
 	GetCustomerByPhone(ctx context.Context, phone, organizationID string) (*models.Customer, error)
 }
 
-type CustomerSessionRepository interface {
-	CreateCustomerSession(ctx context.Context, customer *models.CustomerSession) (*models.CustomerSession, error)
-	UpdateCustomerSession(ctx context.Context, customer *models.CustomerSession) error
+type CustomerCaseRepository interface {
+	CreateCustomerCase(ctx context.Context, customer *models.CustomerCase) (*models.CustomerCase, error)
+	UpdateCustomerCase(ctx context.Context, customer *models.CustomerCase) error
+	GetCustomerCases(ctx context.Context, filter CustomerCaseFilter) ([]*models.AugmentedCustomerCase, error)
 }
 
 type ConversationRepository interface {
 	CreateConversation(ctx context.Context, obj *models.Conversation) (*models.Conversation, error)
-	UpdateConversation(ctx context.Context, externalSessionID string, obj *models.Conversation) error
+	UpdateConversation(ctx context.Context, obj *models.Conversation) error
+	GetConversationsByCaseID(ctx context.Context, customerCaseID string) ([]*models.Conversation, error)
 }
 
 type PromptTypeRepository interface {
 	CreatePromptType(ctx context.Context, PromptType *models.PromptType) (*models.PromptType, error)
 	UpdatePromptType(ctx context.Context, PromptType *models.PromptType) error
 	GetPromptTypeByName(ctx context.Context, name, orgID string) (*models.PromptType, error)
+}
+
+type CustomerCaseFilter struct {
+	LastCallStatus  []models.CallStatus
+	CaseStatus      []models.CustomerCaseStatus
+	NextScheduledAt time.Time
 }

@@ -10,28 +10,53 @@ func init() {
 	registerFiles([]string{
 		"conversation/create.sql",
 		"conversation/update.sql",
-		"customer_sessions/update.sql",
+		"conversation/query_by_caseid.sql",
+
+		"customer_case/update.sql",
 	})
 
 }
 func (r *Database) CreateConversation(ctx context.Context, obj *models.Conversation) (*models.Conversation, error) {
-	stmt := r.mustGetStmt("conversation/create.sql")
+	tx, err := r.BeginTxx(ctx, nil)
+	if err != nil {
+		return nil, fmt.Errorf("begin transaction: %w", err)
+	}
+	defer func() {
+		err = executePotentialRollback(tx, err)
+	}()
+
+	stmt := r.mustGetTxStmt(ctx, "conversation/create.sql", tx)
 	var id string
 
-	err := stmt.GetContext(ctx, &id, map[string]interface{}{
-		"customer_session_id": obj.CustomerSessionID,
-		"from_phone":          obj.FromPhone,
-		"status":              obj.Status,
-		"provider":            obj.Provider,
+	err = stmt.GetContext(ctx, &id, map[string]interface{}{
+		"customer_case_id": obj.CustomerCaseID,
+		"from_phone":       obj.FromPhone,
+		"provider":         obj.Provider,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create customer comversation: %w", err)
 	}
 	obj.ID = id
+
+	//stmt = r.mustGetTxStmt(ctx, "customer_case/update.sql", tx)
+	//_, err = stmt.ExecContext(ctx, map[string]interface{}{
+	//	"id":                obj.CustomerCaseID,
+	//	"last_call_status":  models.ConversationStatusCREATED,
+	//	"status":            models.CustomerCaseStatusCREATED,
+	//	"next_scheduled_at": obj.NextScheduledAt,
+	//})
+	//if err != nil {
+	//	return nil, fmt.Errorf("failed to update customer_case %q: %w", obj.CustomerCaseID, err)
+	//}
+
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("commit transaction, update conversation: %w", err)
+	}
+
 	return obj, nil
 }
 
-func (r *Database) UpdateConversation(ctx context.Context, externalSessionID string, obj *models.Conversation) error {
+func (r *Database) UpdateConversation(ctx context.Context, obj *models.Conversation) error {
 	tx, err := r.BeginTxx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("begin transaction: %w", err)
@@ -42,24 +67,28 @@ func (r *Database) UpdateConversation(ctx context.Context, externalSessionID str
 
 	stmt := r.mustGetTxStmt(ctx, "conversation/update.sql", tx)
 	_, err = stmt.ExecContext(ctx, map[string]interface{}{
-		"summary":       obj.Summary,
-		"recording_url": obj.RecordingURL,
-		"call_duration": obj.CallDuration,
-		"status":        obj.Status,
-		"id":            obj.ID,
-		"external_id":   obj.ExternalID,
+		"summary":           obj.Summary,
+		"recording_url":     obj.RecordingURL,
+		"call_duration":     obj.CallDuration,
+		"call_status":       obj.CallStatus,
+		"next_scheduled_at": obj.NextScheduledAt,
+		"id":                obj.ID,
+		"external_id":       obj.ExternalID,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to update customer conversation %q: %w", obj.ID, err)
 	}
 
+	stmt = r.mustGetTxStmt(ctx, "customer_case/update.sql", tx)
 	_, err = stmt.ExecContext(ctx, map[string]interface{}{
-		"external_id": externalSessionID,
-		"status":      obj.Status,
-		"id":          obj.CustomerSessionID,
+		"id":                obj.CustomerCaseID,
+		"last_call_status":  obj.CallStatus,
+		"summary":           obj.CaseSummary,
+		"status":            obj.CustomerCaseStatus,
+		"next_scheduled_at": obj.NextScheduledAt,
 	})
 	if err != nil {
-		return fmt.Errorf("failed to update customer_session %q: %w", obj.CustomerSessionID, err)
+		return fmt.Errorf("failed to update customer_case %q: %w", obj.CustomerCaseID, err)
 	}
 
 	if err := tx.Commit(); err != nil {
@@ -67,4 +96,10 @@ func (r *Database) UpdateConversation(ctx context.Context, externalSessionID str
 	}
 
 	return nil
+}
+
+func (r *Database) GetConversationsByCaseID(ctx context.Context, customerCaseID string) ([]*models.Conversation, error) {
+	return getMany[models.Conversation](ctx, r, "conversation/query_by_caseid.sql", map[string]any{
+		"customer_case_id": customerCaseID,
+	})
 }

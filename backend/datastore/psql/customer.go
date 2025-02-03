@@ -10,6 +10,7 @@ func init() {
 	registerFiles([]string{
 		"customer/create.sql",
 		"customer/query_by_phone.sql",
+		"customer/query_by_id.sql",
 	})
 
 }
@@ -35,5 +36,11 @@ func (r *Database) GetCustomerByPhone(ctx context.Context, phone, organizationID
 	return getOne[models.Customer](ctx, r, "customer/query_by_phone.sql", map[string]any{
 		"phone":           phone,
 		"organization_id": organizationID,
+	})
+}
+
+func (r *Database) GetCustomerByID(ctx context.Context, id string) (*models.Customer, error) {
+	return getOne[models.Customer](ctx, r, "customer/query_by_id.sql", map[string]any{
+		"id": id,
 	})
 }

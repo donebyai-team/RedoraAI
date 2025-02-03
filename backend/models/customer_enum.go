@@ -12,41 +12,93 @@ import (
 )
 
 const (
-	// ConversationStatusINPROGRESS is a ConversationStatus of type IN_PROGRESS.
-	ConversationStatusINPROGRESS ConversationStatus = "IN_PROGRESS"
-	// ConversationStatusQUEUED is a ConversationStatus of type QUEUED.
-	ConversationStatusQUEUED ConversationStatus = "QUEUED"
-	// ConversationStatusAIENDED is a ConversationStatus of type AI_ENDED.
-	ConversationStatusAIENDED ConversationStatus = "AI_ENDED"
-	// ConversationStatusCUSTOMERENDED is a ConversationStatus of type CUSTOMER_ENDED.
-	ConversationStatusCUSTOMERENDED ConversationStatus = "CUSTOMER_ENDED"
+	// CallStatusCREATED is a CallStatus of type CREATED.
+	CallStatusCREATED CallStatus = "CREATED"
+	// CallStatusQUEUED is a CallStatus of type QUEUED.
+	CallStatusQUEUED CallStatus = "QUEUED"
+	// CallStatusINPROGRESS is a CallStatus of type IN_PROGRESS.
+	CallStatusINPROGRESS CallStatus = "IN_PROGRESS"
+	// CallStatusENDED is a CallStatus of type ENDED.
+	CallStatusENDED CallStatus = "ENDED"
+	// CallStatusAIENDED is a CallStatus of type AI_ENDED.
+	CallStatusAIENDED CallStatus = "AI_ENDED"
+	// CallStatusFORWARDED is a CallStatus of type FORWARDED.
+	CallStatusFORWARDED CallStatus = "FORWARDED"
+	// CallStatusFAILED is a CallStatus of type FAILED.
+	CallStatusFAILED CallStatus = "FAILED"
 )
 
-var ErrInvalidConversationStatus = errors.New("not a valid ConversationStatus")
+var ErrInvalidCallStatus = errors.New("not a valid CallStatus")
 
 // String implements the Stringer interface.
-func (x ConversationStatus) String() string {
+func (x CallStatus) String() string {
 	return string(x)
 }
 
 // IsValid provides a quick way to determine if the typed value is
 // part of the allowed enumerated values
-func (x ConversationStatus) IsValid() bool {
-	_, err := ParseConversationStatus(string(x))
+func (x CallStatus) IsValid() bool {
+	_, err := ParseCallStatus(string(x))
 	return err == nil
 }
 
-var _ConversationStatusValue = map[string]ConversationStatus{
-	"IN_PROGRESS":    ConversationStatusINPROGRESS,
-	"QUEUED":         ConversationStatusQUEUED,
-	"AI_ENDED":       ConversationStatusAIENDED,
-	"CUSTOMER_ENDED": ConversationStatusCUSTOMERENDED,
+var _CallStatusValue = map[string]CallStatus{
+	"CREATED":     CallStatusCREATED,
+	"QUEUED":      CallStatusQUEUED,
+	"IN_PROGRESS": CallStatusINPROGRESS,
+	"ENDED":       CallStatusENDED,
+	"AI_ENDED":    CallStatusAIENDED,
+	"FORWARDED":   CallStatusFORWARDED,
+	"FAILED":      CallStatusFAILED,
 }
 
-// ParseConversationStatus attempts to convert a string to a ConversationStatus.
-func ParseConversationStatus(name string) (ConversationStatus, error) {
-	if x, ok := _ConversationStatusValue[name]; ok {
+// ParseCallStatus attempts to convert a string to a CallStatus.
+func ParseCallStatus(name string) (CallStatus, error) {
+	if x, ok := _CallStatusValue[name]; ok {
 		return x, nil
 	}
-	return ConversationStatus(""), fmt.Errorf("%s is %w", name, ErrInvalidConversationStatus)
+	return CallStatus(""), fmt.Errorf("%s is %w", name, ErrInvalidCallStatus)
+}
+
+const (
+	// CustomerCaseStatusCREATED is a CustomerCaseStatus of type CREATED.
+	CustomerCaseStatusCREATED CustomerCaseStatus = "CREATED"
+	// CustomerCaseStatusPENDING is a CustomerCaseStatus of type PENDING.
+	CustomerCaseStatusPENDING CustomerCaseStatus = "PENDING"
+	// CustomerCaseStatusPARTIALLYPAID is a CustomerCaseStatus of type PARTIALLY_PAID.
+	CustomerCaseStatusPARTIALLYPAID CustomerCaseStatus = "PARTIALLY_PAID"
+	// CustomerCaseStatusPAID is a CustomerCaseStatus of type PAID.
+	CustomerCaseStatusPAID CustomerCaseStatus = "PAID"
+	// CustomerCaseStatusCLOSED is a CustomerCaseStatus of type CLOSED.
+	CustomerCaseStatusCLOSED CustomerCaseStatus = "CLOSED"
+)
+
+var ErrInvalidCustomerCaseStatus = errors.New("not a valid CustomerCaseStatus")
+
+// String implements the Stringer interface.
+func (x CustomerCaseStatus) String() string {
+	return string(x)
+}
+
+// IsValid provides a quick way to determine if the typed value is
+// part of the allowed enumerated values
+func (x CustomerCaseStatus) IsValid() bool {
+	_, err := ParseCustomerCaseStatus(string(x))
+	return err == nil
+}
+
+var _CustomerCaseStatusValue = map[string]CustomerCaseStatus{
+	"CREATED":        CustomerCaseStatusCREATED,
+	"PENDING":        CustomerCaseStatusPENDING,
+	"PARTIALLY_PAID": CustomerCaseStatusPARTIALLYPAID,
+	"PAID":           CustomerCaseStatusPAID,
+	"CLOSED":         CustomerCaseStatusCLOSED,
+}
+
+// ParseCustomerCaseStatus attempts to convert a string to a CustomerCaseStatus.
+func ParseCustomerCaseStatus(name string) (CustomerCaseStatus, error) {
+	if x, ok := _CustomerCaseStatusValue[name]; ok {
+		return x, nil
+	}
+	return CustomerCaseStatus(""), fmt.Errorf("%s is %w", name, ErrInvalidCustomerCaseStatus)
 }
