@@ -28,7 +28,7 @@ func (p *Portal) Batch(ctx context.Context, req *connect.Request[pbportal.BatchR
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to fetcg org details: %w", err))
 	}
 
-	var customerSessions []*services.CreateCustomerSession
+	var customerCases []*services.CreateCustomerCase
 	csvParseError := false
 	var parseError error
 	for {
@@ -48,7 +48,7 @@ func (p *Portal) Batch(ctx context.Context, req *connect.Request[pbportal.BatchR
 			return nil, fmt.Errorf("product type[%s], not configured for the given org: %w", row.ProductType, err)
 		}
 
-		ppi := &services.CreateCustomerSession{
+		ppi := &services.CreateCustomerCase{
 			FirstName:  row.FirstName,
 			LastName:   row.LastName,
 			Phone:      row.Phone,
@@ -57,7 +57,7 @@ func (p *Portal) Batch(ctx context.Context, req *connect.Request[pbportal.BatchR
 			DueDate:    row.DueDate,
 		}
 
-		customerSessions = append(customerSessions, ppi)
+		customerCases = append(customerCases, ppi)
 	}
 
 	if csvParseError {
@@ -66,8 +66,8 @@ func (p *Portal) Batch(ctx context.Context, req *connect.Request[pbportal.BatchR
 
 	var count = 0
 	rejectedRows := []string{}
-	for _, ppi := range customerSessions {
-		err := p.customerSessionService.Create(ctx, ppi)
+	for _, ppi := range customerCases {
+		err := p.customerCaseService.Create(ctx, ppi)
 		if err != nil {
 			p.logger.Warn("unable to create customerSession", zap.Error(err), zap.String("phone", ppi.Phone))
 			rejectedRows = append(rejectedRows, ppi.Phone)
@@ -77,7 +77,7 @@ func (p *Portal) Batch(ctx context.Context, req *connect.Request[pbportal.BatchR
 	}
 
 	return response(&pbportal.BatchResp{
-		Rows:          int32(len(customerSessions)),
+		Rows:          int32(len(customerCases)),
 		RowsExtracted: int32(count),
 		RejectedRows:  rejectedRows,
 	}), nil

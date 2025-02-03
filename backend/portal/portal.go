@@ -14,19 +14,20 @@ import (
 
 type Portal struct {
 	*shutter.Shutter
-	isAppReady             func() bool
-	httpListenAddr         string
-	corsURLRegexAllow      *regexp.Regexp
-	domainWhitelist        []*regexp.Regexp
-	db                     datastore.Repository
-	logger                 *zap.Logger
-	tracer                 logging.Tracer
-	authenticator          *auth.Authenticator
-	customerSessionService services.CustomerSessionService
+	isAppReady          func() bool
+	httpListenAddr      string
+	corsURLRegexAllow   *regexp.Regexp
+	domainWhitelist     []*regexp.Regexp
+	db                  datastore.Repository
+	logger              *zap.Logger
+	tracer              logging.Tracer
+	authenticator       *auth.Authenticator
+	customerCaseService services.CustomerCaseService
 }
 
 func New(
 	authenticator *auth.Authenticator,
+	customerCaseService services.CustomerCaseService,
 	db datastore.Repository,
 	httpListenAddr string,
 	corsURLRegexAllow *regexp.Regexp,
@@ -36,15 +37,16 @@ func New(
 	tracer logging.Tracer,
 ) *Portal {
 	return &Portal{
-		Shutter:           shutter.New(),
-		authenticator:     authenticator,
-		db:                db,
-		httpListenAddr:    httpListenAddr,
-		corsURLRegexAllow: corsURLRegexAllow,
-		domainWhitelist:   domainWhitelist,
-		isAppReady:        isAppReady,
-		logger:            logger.Named("portal"),
-		tracer:            tracer,
+		Shutter:             shutter.New(),
+		authenticator:       authenticator,
+		customerCaseService: customerCaseService,
+		db:                  db,
+		httpListenAddr:      httpListenAddr,
+		corsURLRegexAllow:   corsURLRegexAllow,
+		domainWhitelist:     domainWhitelist,
+		isAppReady:          isAppReady,
+		logger:              logger.Named("portal"),
+		tracer:              tracer,
 	}
 }
 
