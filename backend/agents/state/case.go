@@ -27,6 +27,14 @@ func NewCustomerCaseState(redisAddr string, customerCaseTTL time.Duration, custo
 	}
 }
 
+func (r *customerCaseState) Release(ctx context.Context, phone string) error {
+	key := callRunningKey(phone)
+	if cmd := r.redisClient.Del(ctx, key); cmd.Err() != nil {
+		return fmt.Errorf("release case state: %w", cmd.Err())
+	}
+	return nil
+}
+
 func (r *customerCaseState) IsRunning(ctx context.Context, phone string) (bool, error) {
 	key := callRunningKey(phone)
 	_, err := r.redisClient.Get(ctx, key).Bytes()

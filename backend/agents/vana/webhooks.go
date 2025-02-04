@@ -2,6 +2,7 @@ package vana
 
 import (
 	"fmt"
+	"github.com/shank318/doota/agents"
 	"golang.org/x/net/context"
 )
 
@@ -25,10 +26,19 @@ func (s *Spooler) UpdateConversation(ctx context.Context, conversationID string,
 	conversation.CallStatus = callResponse.CallStatus
 	conversation.CallEndedReason = callResponse.CallEndedReason
 
-	// MARK a case alive
-	err = s.markCallAlive(ctx, callResponse, augConversation.CustomerCase.OrgID, augConversation.Customer.Phone)
+	// Update conversation
+	err = s.db.UpdateConversation(ctx, conversation)
 	if err != nil {
-		return fmt.Errorf("error while mark call alive: %w", err)
+		return fmt.Errorf("error while updating conversation: %w", err)
+	}
+
+	// MARK a case alive if running
+	if agents.IsCallRunning(callResponse.CallStatus) {
+		err := s.state.KeepAlive(ctx, augConversation.CustomerCase.OrgID, augConversation.Customer.Phone)
+		if err != nil {
+			return fmt.Errorf("failed to keep alive for %s, phone %s: %w", augConversation.CustomerCase.ID, augConversation.Customer.Phone, err)
+		}
+		return nil
 	}
 
 	// Case Decision (using llm)

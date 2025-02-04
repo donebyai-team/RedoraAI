@@ -11,4 +11,6 @@ type SpoolerState interface {
 
 	// KeepAlive signals that the case is still being processed, this should be called periodically
 	KeepAlive(ctx context.Context, organizationID, phone string) error
+
+	Release(ctx context.Context, organizationID, phone string) error
 }

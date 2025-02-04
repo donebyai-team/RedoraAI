@@ -59,15 +59,17 @@ func (m *VAPIVoiceProvider) handleEndOfCallReport(ctx context.Context, report *a
 func transformCallToCallResponse(call *api.Call) *models.CallResponse {
 	callResponse := &models.CallResponse{
 		CallID:          call.Id,
-		CallEndedReason: models.CallEndedReasonASSISTANTERROR, // Default
+		CallEndedReason: models.CallEndedReasonUNKNOWN,
 		CallStatus:      models.CallStatusUNKNOWN,
 		RawResponse:     call.String(),
 	}
 
-	for key, reasons := range endReasonMapping {
-		for _, reason := range reasons {
-			if reason == *call.EndedReason {
-				callResponse.CallEndedReason = key
+	if call.EndedReason != nil {
+		for key, reasons := range endReasonMapping {
+			for _, reason := range reasons {
+				if reason == *call.EndedReason {
+					callResponse.CallEndedReason = key
+				}
 			}
 		}
 	}

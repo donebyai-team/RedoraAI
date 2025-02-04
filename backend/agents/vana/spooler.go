@@ -176,21 +176,13 @@ func (s *Spooler) processCustomerCase(ctx context.Context, customerCase *models.
 	}
 
 	// Mark a call running
-	err = s.markCallAlive(ctx, callResponse, customerCase.CustomerCase.OrgID, customerCase.Customer.Phone)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (s *Spooler) markCallAlive(ctx context.Context, callResponse *models.CallResponse, orgID, phone string) error {
 	if callResponse.CallID != "" && agents.IsCallRunning(callResponse.CallStatus) {
-		err := s.state.KeepAlive(ctx, orgID, phone)
+		err := s.state.KeepAlive(ctx, customerCase.CustomerCase.OrgID, customerCase.Customer.Phone)
 		if err != nil {
-			return fmt.Errorf("failed to keep alive for %s, phone %s: %w", callResponse.CallID, phone, err)
+			return fmt.Errorf("failed to keep alive for %s, phone %s: %w", customerCase.CustomerCase.ID, customerCase.Customer.Phone, err)
 		}
 	}
+
 	return nil
 }
 

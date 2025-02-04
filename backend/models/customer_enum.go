@@ -12,6 +12,8 @@ import (
 )
 
 const (
+	// CallEndedReasonUNKNOWN is a CallEndedReason of type UNKNOWN.
+	CallEndedReasonUNKNOWN CallEndedReason = "UNKNOWN"
 	// CallEndedReasonASSISTANTERROR is a CallEndedReason of type ASSISTANT_ERROR.
 	CallEndedReasonASSISTANTERROR CallEndedReason = "ASSISTANT_ERROR"
 	// CallEndedReasonASSISTANTENDED is a CallEndedReason of type ASSISTANT_ENDED.
@@ -41,6 +43,7 @@ func (x CallEndedReason) IsValid() bool {
 }
 
 var _CallEndedReasonValue = map[string]CallEndedReason{
+	"UNKNOWN":                CallEndedReasonUNKNOWN,
 	"ASSISTANT_ERROR":        CallEndedReasonASSISTANTERROR,
 	"ASSISTANT_ENDED":        CallEndedReasonASSISTANTENDED,
 	"ASSISTANT_FORWARDED":    CallEndedReasonASSISTANTFORWARDED,
