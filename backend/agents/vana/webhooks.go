@@ -3,6 +3,7 @@ package vana
 import (
 	"fmt"
 	"github.com/shank318/doota/agents"
+	"github.com/shank318/doota/models"
 	"golang.org/x/net/context"
 )
 
@@ -41,12 +42,19 @@ func (s *Spooler) UpdateConversation(ctx context.Context, conversationID string,
 		return nil
 	}
 
+	// Release call
+	err = s.state.Release(ctx, augConversation.CustomerCase.OrgID, augConversation.Customer.Phone)
+	if err != nil {
+		return fmt.Errorf("failed to release state for %s, phone %s: %w", augConversation.CustomerCase.ID, augConversation.Customer.Phone, err)
+	}
+
+	// Mark case failed if reached max tries
+
 	// Case Decision (using llm)
 	// Check if I should call again
+	if callResponse.CallEndedReason == models.CallEndedReasonASSISTANTERROR {
+		// Should not happen, log and monitor this error
+	}
 
 	return nil
-}
-
-func shouldRetry(err error) bool {
-
 }
