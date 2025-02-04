@@ -2,6 +2,8 @@ package vapi
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	api "github.com/VapiAI/server-sdk-go"
 	vapiclient "github.com/VapiAI/server-sdk-go/client"
 	"github.com/VapiAI/server-sdk-go/option"
@@ -26,6 +28,59 @@ func NewVAPIVoiceProvider(config *models.VAPIConfig, logger *zap.Logger) *VAPIVo
 		client: client,
 		logger: logger,
 	}
+}
+
+func (m *VAPIVoiceProvider) HandleWebhook(ctx context.Context, req []byte) (*models.CallResponse, error) {
+	serverMessage := api.ServerMessage{}
+	err := json.Unmarshal(req, &serverMessage)
+	if err != nil {
+		return nil, err
+	}
+
+	if serverMessage.Message.ServerMessageEndOfCallReport != nil {
+		return m.handleEndOfCallReport(ctx, serverMessage.Message.ServerMessageEndOfCallReport)
+	}
+	return nil, err
+}
+
+func (m *VAPIVoiceProvider) handleEndOfCallReport(ctx context.Context, report *api.ServerMessageEndOfCallReport) (*models.CallResponse, error) {
+	if report.Call == nil {
+		m.logger.Warn("handleEndOfCallReport, no call found")
+		return nil, nil
+	}
+	call, err := m.client.Calls.Get(ctx, report.Call.Id)
+	if err != nil {
+		return nil, fmt.Errorf("could not get call '%s': %w", report.Call.Id, err)
+	}
+
+	return transformCallToCallResponse(call), nil
+}
+
+func transformCallToCallResponse(call *api.Call) *models.CallResponse {
+	callResponse := &models.CallResponse{
+		CallID:          call.Id,
+		CallEndedReason: models.CallEndedReasonASSISTANTERROR, // Default
+		CallStatus:      models.CallStatusUNKNOWN,
+		RawResponse:     call.String(),
+	}
+
+	for key, reasons := range endReasonMapping {
+		for _, reason := range reasons {
+			if reason == *call.EndedReason {
+				callResponse.CallEndedReason = key
+			}
+		}
+	}
+
+	for key, statuses := range callStatusMapping {
+		for _, status := range statuses {
+			if status == *call.Status {
+				callResponse.CallStatus = key
+			}
+		}
+	}
+
+	return callResponse
 }
 
 func (m *VAPIVoiceProvider) CreateCall(ctx context.Context, req models.CallRequest) (*models.CallResponse, error) {
@@ -65,6 +120,17 @@ func (m *VAPIVoiceProvider) CreateCall(ctx context.Context, req models.CallReque
 					Model:    model,
 				},
 			},
+			ServerMessages: []api.CreateAssistantDtoServerMessagesItem{
+				api.CreateAssistantDtoServerMessagesItemEndOfCallReport,
+				api.CreateAssistantDtoServerMessagesItemTranscript,
+			},
+			Server: &api.Server{
+				Url: "",
+				Headers: map[string]interface{}{
+					"Content-Type":    "application/json",
+					"conversation_id": req.ConversationID,
+				},
+			},
 		},
 	}
 
@@ -73,7 +139,5 @@ func (m *VAPIVoiceProvider) CreateCall(ctx context.Context, req models.CallReque
 		return nil, err
 	}
 
-	return &models.CallResponse{
-		CallID: resp.Id,
-	}, nil
+	return transformCallToCallResponse(resp), nil
 }

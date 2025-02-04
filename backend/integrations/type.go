@@ -14,6 +14,7 @@ import (
 type VoiceProvider interface {
 	Name() models.IntegrationType
 	CreateCall(ctx context.Context, req models.CallRequest) (*models.CallResponse, error)
+	HandleWebhook(ctx context.Context, req []byte) (*models.CallResponse, error)
 }
 
 type Factory struct {

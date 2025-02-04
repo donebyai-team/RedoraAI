@@ -53,12 +53,14 @@ type CustomerCaseRepository interface {
 	CreateCustomerCase(ctx context.Context, customer *models.CustomerCase) (*models.CustomerCase, error)
 	UpdateCustomerCase(ctx context.Context, customer *models.CustomerCase) error
 	GetCustomerCases(ctx context.Context, filter CustomerCaseFilter) ([]*models.AugmentedCustomerCase, error)
+	GetCustomerCaseByID(ctx context.Context, id string) (*models.CustomerCase, error)
 }
 
 type ConversationRepository interface {
 	CreateConversation(ctx context.Context, obj *models.Conversation) (*models.Conversation, error)
 	UpdateConversation(ctx context.Context, obj *models.Conversation) error
 	GetConversationsByCaseID(ctx context.Context, customerCaseID string) ([]*models.Conversation, error)
+	GetConversationByID(ctx context.Context, id string) (*models.AugmentedConversation, error)
 }
 
 type PromptTypeRepository interface {

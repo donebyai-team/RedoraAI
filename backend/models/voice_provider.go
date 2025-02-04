@@ -13,7 +13,9 @@ type CallRequest struct {
 }
 
 type CallResponse struct {
-	CallID    string
-	SessionID string
-	Status    CallStatus
+	CallID          string
+	SessionID       string
+	CallStatus      CallStatus
+	CallEndedReason CallEndedReason
+	RawResponse     string
 }

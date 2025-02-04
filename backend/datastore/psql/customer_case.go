@@ -12,8 +12,15 @@ func init() {
 		"customer_case/create.sql",
 		"customer_case/update.sql",
 		"customer_case/query_by_filter.sql",
+		"customer_case/query_by_id.sql",
 	})
 
+}
+
+func (r *Database) GetCustomerCaseByID(ctx context.Context, id string) (*models.CustomerCase, error) {
+	return getOne[models.CustomerCase](ctx, r, "customer_case/query_by_id.sql", map[string]any{
+		"id": id,
+	})
 }
 
 func (r *Database) CreateCustomerCase(ctx context.Context, customer *models.CustomerCase) (*models.CustomerCase, error) {

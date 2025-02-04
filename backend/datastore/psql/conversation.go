@@ -10,12 +10,38 @@ func init() {
 	registerFiles([]string{
 		"conversation/create.sql",
 		"conversation/update.sql",
+		"conversation/query_by_id.sql",
 		"conversation/query_by_caseid.sql",
 
 		"customer_case/update.sql",
 	})
-
 }
+func (r *Database) GetConversationByID(ctx context.Context, id string) (*models.AugmentedConversation, error) {
+	conversation, err := getOne[models.Conversation](ctx, r, "conversation/query_by_id.sql", map[string]any{
+		"id": id,
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("get conversation by id: %w", err)
+	}
+
+	customerCase, err := r.GetCustomerCaseByID(ctx, conversation.CustomerCaseID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get conversations for customer case %q: %w", customerCase.ID, err)
+	}
+
+	customer, err := r.GetCustomerByID(ctx, customerCase.CustomerID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get customer by id %q: %w", customerCase.CustomerID, err)
+	}
+
+	return &models.AugmentedConversation{
+		CustomerCase: customerCase,
+		Customer:     customer,
+		Conversation: conversation,
+	}, nil
+}
+
 func (r *Database) CreateConversation(ctx context.Context, obj *models.Conversation) (*models.Conversation, error) {
 	tx, err := r.BeginTxx(ctx, nil)
 	if err != nil {
@@ -67,13 +93,14 @@ func (r *Database) UpdateConversation(ctx context.Context, obj *models.Conversat
 
 	stmt := r.mustGetTxStmt(ctx, "conversation/update.sql", tx)
 	_, err = stmt.ExecContext(ctx, map[string]interface{}{
-		"summary":           obj.Summary,
-		"recording_url":     obj.RecordingURL,
-		"call_duration":     obj.CallDuration,
-		"call_status":       obj.CallStatus,
-		"next_scheduled_at": obj.NextScheduledAt,
-		"id":                obj.ID,
-		"external_id":       obj.ExternalID,
+		"summary":            obj.Summary,
+		"recording_url":      obj.RecordingURL,
+		"call_duration":      obj.CallDuration,
+		"end_of_call_reason": obj.CallEndedReason,
+		"call_status":        obj.CallStatus,
+		"next_scheduled_at":  obj.NextScheduledAt,
+		"id":                 obj.ID,
+		"external_id":        obj.ExternalID,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to update customer conversation %q: %w", obj.ID, err)

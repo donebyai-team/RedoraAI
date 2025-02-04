@@ -105,7 +105,7 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 	whitelistDomains := []*regexp.Regexp{
 		regexp.MustCompile(".*localhost"),
 		regexp.MustCompile(".*127.0.0.1"),
-		regexp.MustCompile(`.*\.dootaai.com`),
+		regexp.MustCompile(`.*\.donebyai.team`),
 	}
 
 	authenticator := auth.NewAuthenticator(deps.AuthTokenValidator, deps.DataStore, zlog)

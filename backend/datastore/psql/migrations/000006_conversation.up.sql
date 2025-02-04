@@ -6,6 +6,7 @@ CREATE TABLE conversations
     customer_case_id uuid NOT NULL,
     from_phone varchar(255) NOT NULL,
     call_status character varying(255) NOT NULL DEFAULT 'CREATED',
+    end_of_call_reason character varying(255),
     next_scheduled_at timestamp,
     summary TEXT DEFAULT '',
     provider character varying(255) NOT NULL,

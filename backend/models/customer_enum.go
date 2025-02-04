@@ -12,6 +12,54 @@ import (
 )
 
 const (
+	// CallEndedReasonASSISTANTERROR is a CallEndedReason of type ASSISTANT_ERROR.
+	CallEndedReasonASSISTANTERROR CallEndedReason = "ASSISTANT_ERROR"
+	// CallEndedReasonASSISTANTENDED is a CallEndedReason of type ASSISTANT_ENDED.
+	CallEndedReasonASSISTANTENDED CallEndedReason = "ASSISTANT_ENDED"
+	// CallEndedReasonASSISTANTFORWARDED is a CallEndedReason of type ASSISTANT_FORWARDED.
+	CallEndedReasonASSISTANTFORWARDED CallEndedReason = "ASSISTANT_FORWARDED"
+	// CallEndedReasonCUSTOMERBUSY is a CallEndedReason of type CUSTOMER_BUSY.
+	CallEndedReasonCUSTOMERBUSY CallEndedReason = "CUSTOMER_BUSY"
+	// CallEndedReasonCUSTOMERENDED is a CallEndedReason of type CUSTOMER_ENDED.
+	CallEndedReasonCUSTOMERENDED CallEndedReason = "CUSTOMER_ENDED"
+	// CallEndedReasonMAXCALLLIMITREACHED is a CallEndedReason of type MAX_CALL_LIMIT_REACHED.
+	CallEndedReasonMAXCALLLIMITREACHED CallEndedReason = "MAX_CALL_LIMIT_REACHED"
+)
+
+var ErrInvalidCallEndedReason = errors.New("not a valid CallEndedReason")
+
+// String implements the Stringer interface.
+func (x CallEndedReason) String() string {
+	return string(x)
+}
+
+// IsValid provides a quick way to determine if the typed value is
+// part of the allowed enumerated values
+func (x CallEndedReason) IsValid() bool {
+	_, err := ParseCallEndedReason(string(x))
+	return err == nil
+}
+
+var _CallEndedReasonValue = map[string]CallEndedReason{
+	"ASSISTANT_ERROR":        CallEndedReasonASSISTANTERROR,
+	"ASSISTANT_ENDED":        CallEndedReasonASSISTANTENDED,
+	"ASSISTANT_FORWARDED":    CallEndedReasonASSISTANTFORWARDED,
+	"CUSTOMER_BUSY":          CallEndedReasonCUSTOMERBUSY,
+	"CUSTOMER_ENDED":         CallEndedReasonCUSTOMERENDED,
+	"MAX_CALL_LIMIT_REACHED": CallEndedReasonMAXCALLLIMITREACHED,
+}
+
+// ParseCallEndedReason attempts to convert a string to a CallEndedReason.
+func ParseCallEndedReason(name string) (CallEndedReason, error) {
+	if x, ok := _CallEndedReasonValue[name]; ok {
+		return x, nil
+	}
+	return CallEndedReason(""), fmt.Errorf("%s is %w", name, ErrInvalidCallEndedReason)
+}
+
+const (
+	// CallStatusUNKNOWN is a CallStatus of type UNKNOWN.
+	CallStatusUNKNOWN CallStatus = "UNKNOWN"
 	// CallStatusCREATED is a CallStatus of type CREATED.
 	CallStatusCREATED CallStatus = "CREATED"
 	// CallStatusQUEUED is a CallStatus of type QUEUED.
@@ -20,12 +68,8 @@ const (
 	CallStatusINPROGRESS CallStatus = "IN_PROGRESS"
 	// CallStatusENDED is a CallStatus of type ENDED.
 	CallStatusENDED CallStatus = "ENDED"
-	// CallStatusAIENDED is a CallStatus of type AI_ENDED.
-	CallStatusAIENDED CallStatus = "AI_ENDED"
 	// CallStatusFORWARDED is a CallStatus of type FORWARDED.
 	CallStatusFORWARDED CallStatus = "FORWARDED"
-	// CallStatusFAILED is a CallStatus of type FAILED.
-	CallStatusFAILED CallStatus = "FAILED"
 )
 
 var ErrInvalidCallStatus = errors.New("not a valid CallStatus")
@@ -43,13 +87,12 @@ func (x CallStatus) IsValid() bool {
 }
 
 var _CallStatusValue = map[string]CallStatus{
+	"UNKNOWN":     CallStatusUNKNOWN,
 	"CREATED":     CallStatusCREATED,
 	"QUEUED":      CallStatusQUEUED,
 	"IN_PROGRESS": CallStatusINPROGRESS,
 	"ENDED":       CallStatusENDED,
-	"AI_ENDED":    CallStatusAIENDED,
 	"FORWARDED":   CallStatusFORWARDED,
-	"FAILED":      CallStatusFAILED,
 }
 
 // ParseCallStatus attempts to convert a string to a CallStatus.

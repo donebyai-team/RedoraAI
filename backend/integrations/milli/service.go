@@ -10,6 +10,11 @@ type MilliVoiceProvider struct {
 	client *api.Client
 }
 
+func (m *MilliVoiceProvider) HandleWebhook(ctx context.Context, req []byte) (*models.CallResponse, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func NewMilliVoiceProvider() *MilliVoiceProvider {
 	return &MilliVoiceProvider{}
 }

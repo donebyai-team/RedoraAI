@@ -14,7 +14,10 @@ type Customer struct {
 
 //go:generate go-enum -f=$GOFILE
 
-// ENUM(CREATED, QUEUED, IN_PROGRESS, ENDED, AI_ENDED, FORWARDED, FAILED)
+// ENUM(ASSISTANT_ERROR, ASSISTANT_ENDED, ASSISTANT_FORWARDED, CUSTOMER_BUSY, CUSTOMER_ENDED, MAX_CALL_LIMIT_REACHED)
+type CallEndedReason string
+
+// ENUM(UNKNOWN, CREATED, QUEUED, IN_PROGRESS, ENDED, FORWARDED)
 type CallStatus string
 
 // ENUM(CREATED, PENDING, PARTIALLY_PAID, PAID, CLOSED)
@@ -47,6 +50,7 @@ type Conversation struct {
 	RecordingURL    string          `db:"recording_url"`
 	CreatedAt       time.Time       `db:"created_at"`
 	UpdatedAt       *time.Time      `db:"updated_at"`
+	CallEndedReason CallEndedReason `db:"call_ended_reason"`
 
 	// Non-db
 	CustomerCaseStatus CustomerCaseStatus
@@ -57,4 +61,10 @@ type AugmentedCustomerCase struct {
 	CustomerCase  *CustomerCase
 	Customer      *Customer
 	Conversations []*Conversation
+}
+
+type AugmentedConversation struct {
+	CustomerCase *CustomerCase
+	Customer     *Customer
+	Conversation *Conversation
 }

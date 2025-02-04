@@ -169,21 +169,28 @@ func (s *Spooler) processCustomerCase(ctx context.Context, customerCase *models.
 	}
 
 	conversation.ExternalID = callResponse.CallID
-	conversation.CallStatus = callResponse.Status
+	conversation.CallStatus = callResponse.CallStatus
 	err = s.db.UpdateConversation(ctx, conversation)
 	if err != nil {
 		return fmt.Errorf("failed to update conversation for %s: %w", customerCase.CustomerCase.ID, err)
 	}
 
 	// Mark a call running
-	// TODO: Put the status check eg. QUEUED, IN_PROGRESS etc
-	if callResponse.CallID != "" {
-		err := s.state.KeepAlive(ctx, customerCase.CustomerCase.OrgID, customerCase.Customer.Phone)
-		if err != nil {
-			return fmt.Errorf("failed to keep alive for %s: %w", customerCase.CustomerCase.ID, err)
-		}
+	err = s.markCallAlive(ctx, callResponse, customerCase.CustomerCase.OrgID, customerCase.Customer.Phone)
+	if err != nil {
+		return err
 	}
 
+	return nil
+}
+
+func (s *Spooler) markCallAlive(ctx context.Context, callResponse *models.CallResponse, orgID, phone string) error {
+	if callResponse.CallID != "" && agents.IsCallRunning(callResponse.CallStatus) {
+		err := s.state.KeepAlive(ctx, orgID, phone)
+		if err != nil {
+			return fmt.Errorf("failed to keep alive for %s, phone %s: %w", callResponse.CallID, phone, err)
+		}
+	}
 	return nil
 }
 
@@ -228,7 +235,7 @@ func (s *Spooler) loadCustomerSessions(ctx context.Context) error {
 	// NextScheduledAt = NULL or <= current time
 	cases, err := s.db.GetCustomerCases(ctx, datastore.CustomerCaseFilter{
 		CaseStatus:      []models.CustomerCaseStatus{models.CustomerCaseStatusCREATED, models.CustomerCaseStatusPENDING},
-		LastCallStatus:  []models.CallStatus{models.CallStatusENDED, models.CallStatusAIENDED},
+		LastCallStatus:  []models.CallStatus{models.CallStatusENDED},
 		NextScheduledAt: time.Now(),
 	})
 	if err != nil {
