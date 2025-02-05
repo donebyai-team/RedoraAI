@@ -11,11 +11,10 @@ import (
 
 //go:generate go-enum -f=$GOFILE
 
-var knownTemplates = []Template{
-	{path: "classification.prompt.gotmpl", promptType: PromptTypeSYSTEM, promptFeature: PromptFeatureTEXTONLY},
-	{path: "classification_vision.prompt.gotmpl", promptType: PromptTypeSYSTEM, promptFeature: PromptFeatureIMAGEONLY},
-	{path: "classification.schema.gotmpl", promptType: PromptTypeResponseSchema, promptFeature: PromptFeatureBOTH},
-	{path: "human.gotmpl", promptType: PromptTypeSYSTEM, promptFeature: PromptFeatureBOTH},
+var caseDecisionTemplates = []Template{
+	{path: "case_decision.prompt.gotmpl", promptType: PromptTypeSYSTEM, promptFeature: PromptFeatureTEXTONLY},
+	{path: "case_decision.schema.gotmpl", promptType: PromptTypeResponseSchema, promptFeature: PromptFeatureBOTH},
+	{path: "case_decision.human.gotmpl", promptType: PromptTypeSYSTEM, promptFeature: PromptFeatureBOTH},
 }
 
 // ENUM(gpt-4-vision-preview, gpt-4-turbo, gpt-4-turbo-preview, gpt-4-0125-preview, gpt-4-turbo-2024-04-09, gpt-4o-2024-05-13, gpt-4o-2024-08-06)
@@ -28,6 +27,13 @@ func (g GPTModel) GetVars(customerCase *models.AugmentedCustomerCase) Variable {
 	if len(customerCase.Conversations) > 0 {
 		out = out.WithPastConversations(customerCase.Conversations)
 	}
+	return out
+}
+
+func (g GPTModel) GetCaseDecisionVars(customerCase *models.Conversation) Variable {
+	out := make(Variable).
+		WithConversationDate(customerCase.CreatedAt).
+		WithCallMessages(customerCase.CallMessages)
 	return out
 }
 
@@ -64,6 +70,33 @@ type Template struct {
 }
 
 type ResponseFormat []byte
+
+func (g *GPTModel) getCaseDecisionTemplates() (prompts.ChatPromptTemplate, *template.Template, []*template.Template) {
+	var chatPrompts []prompts.MessageFormatter
+	var tmpls []*template.Template
+	var responseSchemaTemplate *template.Template
+	supportsStructuredOutputs := g.SupportsStructuredOutput()
+
+	for _, tmpl := range caseDecisionTemplates {
+		data := rp(tmpl.path)
+		switch tmpl.promptType {
+		case PromptTypeSYSTEM:
+			chatPrompts = append(chatPrompts, prompts.NewSystemMessagePromptTemplate(data, nil))
+		case PromptTypeHUMAN:
+			chatPrompts = append(chatPrompts, prompts.NewHumanMessagePromptTemplate(data, nil))
+		case PromptTypeResponseSchema:
+			// If the model supports structured outputs
+			if supportsStructuredOutputs {
+				responseSchemaTemplate = template.Must(template.New(tmpl.path).Parse(data))
+			} else {
+				chatPrompts = append(chatPrompts, prompts.NewSystemMessagePromptTemplate(data, nil))
+			}
+		}
+
+		tmpls = append(tmpls, template.Must(template.New(tmpl.path).Parse(data)))
+	}
+	return prompts.NewChatPromptTemplate(chatPrompts), responseSchemaTemplate, tmpls
+}
 
 func (g *GPTModel) getPromptTemplate(p *Prompt, templatePrefix string, addImageSupport bool) (prompts.ChatPromptTemplate, *template.Template, []*template.Template) {
 	var chatPrompts []prompts.MessageFormatter

@@ -1,0 +1,7 @@
+Conversation Time: {{ .CalledAt }}
+
+
+{{ range $index, $element := .CallMessages }}
+Conversation {{ $index }} Role: {{ $element.Role }}
+Conversation {{ $index }} Message: {{ $element.Message }}
+{{ end }}

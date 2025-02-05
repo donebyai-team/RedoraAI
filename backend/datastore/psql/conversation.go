@@ -101,6 +101,7 @@ func (r *Database) UpdateConversation(ctx context.Context, obj *models.Conversat
 		"next_scheduled_at":  obj.NextScheduledAt,
 		"id":                 obj.ID,
 		"external_id":        obj.ExternalID,
+		"call_messages":      obj.CallMessages,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to update customer conversation %q: %w", obj.ID, err)
@@ -111,6 +112,7 @@ func (r *Database) UpdateConversation(ctx context.Context, obj *models.Conversat
 		"id":                obj.CustomerCaseID,
 		"last_call_status":  obj.CallStatus,
 		"summary":           obj.CaseSummary,
+		"case_reason":       obj.CustomerCaseReason,
 		"status":            obj.CustomerCaseStatus,
 		"next_scheduled_at": obj.NextScheduledAt,
 	})

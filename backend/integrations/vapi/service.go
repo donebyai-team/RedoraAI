@@ -39,8 +39,23 @@ func (m *VAPIVoiceProvider) HandleWebhook(ctx context.Context, req []byte) (*mod
 
 	if serverMessage.Message.ServerMessageEndOfCallReport != nil {
 		return m.handleEndOfCallReport(ctx, serverMessage.Message.ServerMessageEndOfCallReport)
+	} else if serverMessage.Message.ServerMessageStatusUpdate != nil {
+		return m.handleCallStatusUpdate(ctx, serverMessage.Message.ServerMessageStatusUpdate)
 	}
 	return nil, err
+}
+
+func (m *VAPIVoiceProvider) handleCallStatusUpdate(ctx context.Context, report *api.ServerMessageStatusUpdate) (*models.CallResponse, error) {
+	if report.Call == nil {
+		m.logger.Warn("handleCallStatusUpdate, no call found")
+		return nil, nil
+	}
+	call, err := m.client.Calls.Get(ctx, report.Call.Id)
+	if err != nil {
+		return nil, fmt.Errorf("could not get call '%s': %w", report.Call.Id, err)
+	}
+
+	return transformCallToCallResponse(call), nil
 }
 
 func (m *VAPIVoiceProvider) handleEndOfCallReport(ctx context.Context, report *api.ServerMessageEndOfCallReport) (*models.CallResponse, error) {
@@ -124,7 +139,7 @@ func (m *VAPIVoiceProvider) CreateCall(ctx context.Context, req models.CallReque
 			},
 			ServerMessages: []api.CreateAssistantDtoServerMessagesItem{
 				api.CreateAssistantDtoServerMessagesItemEndOfCallReport,
-				api.CreateAssistantDtoServerMessagesItemTranscript,
+				api.CreateAssistantDtoServerMessagesItemStatusUpdate,
 			},
 			Server: &api.Server{
 				Url: "",

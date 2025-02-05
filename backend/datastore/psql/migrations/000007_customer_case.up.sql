@@ -8,6 +8,7 @@ CREATE TABLE customer_cases
     due_date  timestamp NOT NULL,
     prompt_type character varying(255) NOT NULL,
     status character varying(255) NOT NULL DEFAULT 'CREATED',
+    case_reason character varying(255) NOT NULL DEFAULT 'UNKNOWN',
     summary TEXT DEFAULT '',
     next_scheduled_at timestamp,
     last_call_status character varying(255),

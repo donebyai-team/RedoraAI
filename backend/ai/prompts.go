@@ -1,7 +1,9 @@
 package ai
 
 import (
+	"embed"
 	"github.com/shank318/doota/models"
+	"github.com/streamingfast/cli"
 	"github.com/tmc/langchaingo/prompts"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -21,16 +23,16 @@ func (p *Prompt) getPromptTemplate(templatePrefix string, addImageSupport bool) 
 	return p.Model.getPromptTemplate(p, templatePrefix, addImageSupport)
 }
 
-////go:embed prompt/*.gotmpl
-//var promptTplFS embed.FS
+//go:embed prompt/*.gotmpl
+var promptTplFS embed.FS
 
-//func rp(name string) string {
-//	//cnt, err := promptTplFS.ReadFile("prompt/" + name)
-//	//if err != nil {
-//	//	panic(err)
-//	//}
-//	//return cli.Dedent(string(cnt))
-//}
+func rp(name string) string {
+	cnt, err := promptTplFS.ReadFile("prompt/" + name)
+	if err != nil {
+		panic(err)
+	}
+	return cli.Dedent(string(cnt))
+}
 
 type Variable map[string]any
 
@@ -43,6 +45,23 @@ func (v Variable) WithCustomer(customer *models.Customer) Variable {
 
 func (v Variable) WithCustomerCase(customer *models.CustomerCase) Variable {
 	v["dueDate"] = customer.DueDate.Format(time.RFC3339)
+	return v
+}
+
+func (v Variable) WithConversationDate(date time.Time) Variable {
+	v["CalledAt"] = date.Format(time.RFC3339)
+	return v
+}
+
+func (v Variable) WithCallMessages(messages []models.CallMessage) Variable {
+	var atts []map[string]any
+	for _, conversation := range messages {
+		atts = append(atts, map[string]any{
+			"Role":    conversation.Role,
+			"Message": conversation.Message,
+		})
+	}
+	v["CallMessages"] = atts
 	return v
 }
 

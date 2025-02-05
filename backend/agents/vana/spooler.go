@@ -168,22 +168,11 @@ func (s *Spooler) processCustomerCase(ctx context.Context, customerCase *models.
 		return fmt.Errorf("failed to create call response for %s: %w", customerCase.CustomerCase.ID, err)
 	}
 
-	conversation.ExternalID = callResponse.CallID
-	conversation.CallStatus = callResponse.CallStatus
-	err = s.db.UpdateConversation(ctx, conversation)
-	if err != nil {
-		return fmt.Errorf("failed to update conversation for %s: %w", customerCase.CustomerCase.ID, err)
-	}
-
-	// Mark a call running
-	if callResponse.CallID != "" && agents.IsCallRunning(callResponse.CallStatus) {
-		err := s.state.KeepAlive(ctx, customerCase.CustomerCase.OrgID, customerCase.Customer.Phone)
-		if err != nil {
-			return fmt.Errorf("failed to keep alive for %s, phone %s: %w", customerCase.CustomerCase.ID, customerCase.Customer.Phone, err)
-		}
-	}
-
-	return nil
+	return s.updateConversationFromCall(ctx, &models.AugmentedConversation{
+		CustomerCase: customerCase.CustomerCase,
+		Customer:     customerCase.Customer,
+		Conversation: conversation,
+	}, callResponse)
 }
 
 func (s *Spooler) pollCustomerCases(ctx context.Context) {
@@ -226,7 +215,7 @@ func (s *Spooler) loadCustomerSessions(ctx context.Context) error {
 	// LastCallStatus = NULL OR IN (ENDED, AI_ENDED)
 	// NextScheduledAt = NULL or <= current time
 	cases, err := s.db.GetCustomerCases(ctx, datastore.CustomerCaseFilter{
-		CaseStatus:      []models.CustomerCaseStatus{models.CustomerCaseStatusCREATED, models.CustomerCaseStatusPENDING},
+		CaseStatus:      []models.CustomerCaseStatus{models.CustomerCaseStatusCREATED, models.CustomerCaseStatusOPEN},
 		LastCallStatus:  []models.CallStatus{models.CallStatusENDED},
 		NextScheduledAt: time.Now(),
 	})
@@ -246,9 +235,7 @@ func (s *Spooler) loadCustomerSessions(ctx context.Context) error {
 }
 
 func (s *Spooler) shouldNotProcessCustomerCase(customerCase *models.AugmentedCustomerCase) bool {
-	return (customerCase.CustomerCase.Status == models.CustomerCaseStatusCLOSED ||
-		customerCase.CustomerCase.Status == models.CustomerCaseStatusPAID ||
-		customerCase.CustomerCase.Status == models.CustomerCaseStatusPARTIALLYPAID) &&
+	return customerCase.CustomerCase.Status == models.CustomerCaseStatusCLOSED &&
 		(customerCase.CustomerCase.LastCallStatus == models.CallStatusQUEUED ||
 			customerCase.CustomerCase.LastCallStatus == models.CallStatusINPROGRESS)
 }

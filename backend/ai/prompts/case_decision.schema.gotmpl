@@ -1,0 +1,44 @@
+{
+  "type": "json_schema",
+  "json_schema": {
+    "name": "case_decision_response",
+    "strict": true,
+    "schema": {
+      "type": "object",
+      "properties": {
+        "chain_of_thought_case_status": {
+          "type": "string",
+          "description": "Explanation of the chain of thought leading to the case_status"
+        },
+        "case_status": {
+          "type": "string",
+          "description": "Case status based on if the user has paid the EMI/debt amount or not. If not return UNKNOWN",
+          "enum":["PAID", "PARTIALLY_PAID", "UNKNOWN"]
+        },
+         "case_status_confidence_score": {
+              "type": "number"
+         },
+        "next_call_scheduled_at": {
+           "type": "string",
+           "description": "if the customer has asked to call on a specific time from the conversations. Make sure it should be greater than the last Conversation time. If no such information, return empty. Format: 2006-01-02T15:04:05Z07:00"
+        },
+         "chain_of_thought_next_call_scheduled_at": {
+            "type": "string",
+            "description": "if the customer has asked to call on a specific time from the conversations"
+         },
+         "next_call_scheduled_at_confidence_score": {
+             "type": "number"
+         },
+      },
+      "required": [
+        "chain_of_thought_case_status",
+        "case_status",
+        "case_status_confidence_score",
+        "next_call_scheduled_at",
+        "chain_of_thought_next_call_scheduled_at",
+        "next_call_scheduled_at_confidence_score"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

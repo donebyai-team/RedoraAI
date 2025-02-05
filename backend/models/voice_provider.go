@@ -18,4 +18,5 @@ type CallResponse struct {
 	CallStatus      CallStatus
 	CallEndedReason CallEndedReason
 	RawResponse     string
+	CallMessages    []CallMessage
 }

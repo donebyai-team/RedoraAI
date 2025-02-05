@@ -46,6 +46,7 @@ func (r *Database) UpdateCustomerCase(ctx context.Context, customer *models.Cust
 		"status":            customer.Status,
 		"last_call_status":  customer.LastCallStatus,
 		"next_scheduled_at": customer.NextScheduledAt,
+		"case_reason":       customer.CaseReason,
 		"summary":           customer.Summary,
 		"id":                customer.ID,
 	})

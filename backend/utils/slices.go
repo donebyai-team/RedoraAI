@@ -29,3 +29,23 @@ func Contains(haystack []string, needle string) bool {
 	}
 	return false
 }
+
+func Some[T any](slice []T, predicate func(T) bool) bool {
+	for _, item := range slice {
+		if predicate(item) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func FindOne[T any](slice []*T, predicate func(*T) bool) *T {
+	for _, item := range slice {
+		if predicate(item) {
+			return item
+		}
+	}
+
+	return nil
+}

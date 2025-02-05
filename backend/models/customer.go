@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+	"database/sql/driver"
+	"time"
+)
 
 type Customer struct {
 	ID        string     `db:"id"`
@@ -20,8 +23,11 @@ type CallEndedReason string
 // ENUM(UNKNOWN, CREATED, QUEUED, IN_PROGRESS, ENDED, FORWARDED)
 type CallStatus string
 
-// ENUM(CREATED, PENDING, PARTIALLY_PAID, PAID, CLOSED)
+// ENUM(CREATED, OPEN, CLOSED)
 type CustomerCaseStatus string
+
+// ENUM(UNKNOWN, PARTIALLY_PAID, PAID, MAX_CALL_TRIES_REACHED)
+type CustomerCaseReason string
 
 type CustomerCase struct {
 	ID              string             `db:"id"`
@@ -30,6 +36,7 @@ type CustomerCase struct {
 	CustomerID      string             `db:"customer_id"`
 	DueDate         time.Time          `db:"due_date"`
 	Status          CustomerCaseStatus `db:"status"`
+	CaseReason      CustomerCaseReason `db:"case_reason"`
 	Summary         string             `db:"summary"`
 	LastCallStatus  CallStatus         `db:"last_call_status"`
 	NextScheduledAt *time.Time         `db:"next_scheduled_at"`
@@ -51,10 +58,22 @@ type Conversation struct {
 	CreatedAt       time.Time       `db:"created_at"`
 	UpdatedAt       *time.Time      `db:"updated_at"`
 	CallEndedReason CallEndedReason `db:"call_ended_reason"`
+	CallMessages    CallMessages    `db:"call_messages"`
 
 	// Non-db
 	CustomerCaseStatus CustomerCaseStatus
+	CustomerCaseReason CustomerCaseReason
 	CaseSummary        string
+}
+
+type CallMessages []CallMessage
+
+func (b CallMessages) Value() (driver.Value, error) {
+	return valueAsJSON(b, "call_messages")
+}
+
+func (b *CallMessages) Scan(value interface{}) error {
+	return scanFromJSON(value, b, "call_messages")
 }
 
 type AugmentedCustomerCase struct {

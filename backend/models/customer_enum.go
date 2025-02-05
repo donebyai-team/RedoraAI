@@ -107,14 +107,50 @@ func ParseCallStatus(name string) (CallStatus, error) {
 }
 
 const (
+	// CustomerCaseReasonUNKNOWN is a CustomerCaseReason of type UNKNOWN.
+	CustomerCaseReasonUNKNOWN CustomerCaseReason = "UNKNOWN"
+	// CustomerCaseReasonPARTIALLYPAID is a CustomerCaseReason of type PARTIALLY_PAID.
+	CustomerCaseReasonPARTIALLYPAID CustomerCaseReason = "PARTIALLY_PAID"
+	// CustomerCaseReasonPAID is a CustomerCaseReason of type PAID.
+	CustomerCaseReasonPAID CustomerCaseReason = "PAID"
+	// CustomerCaseReasonMAXCALLTRIESREACHED is a CustomerCaseReason of type MAX_CALL_TRIES_REACHED.
+	CustomerCaseReasonMAXCALLTRIESREACHED CustomerCaseReason = "MAX_CALL_TRIES_REACHED"
+)
+
+var ErrInvalidCustomerCaseReason = errors.New("not a valid CustomerCaseReason")
+
+// String implements the Stringer interface.
+func (x CustomerCaseReason) String() string {
+	return string(x)
+}
+
+// IsValid provides a quick way to determine if the typed value is
+// part of the allowed enumerated values
+func (x CustomerCaseReason) IsValid() bool {
+	_, err := ParseCustomerCaseReason(string(x))
+	return err == nil
+}
+
+var _CustomerCaseReasonValue = map[string]CustomerCaseReason{
+	"UNKNOWN":                CustomerCaseReasonUNKNOWN,
+	"PARTIALLY_PAID":         CustomerCaseReasonPARTIALLYPAID,
+	"PAID":                   CustomerCaseReasonPAID,
+	"MAX_CALL_TRIES_REACHED": CustomerCaseReasonMAXCALLTRIESREACHED,
+}
+
+// ParseCustomerCaseReason attempts to convert a string to a CustomerCaseReason.
+func ParseCustomerCaseReason(name string) (CustomerCaseReason, error) {
+	if x, ok := _CustomerCaseReasonValue[name]; ok {
+		return x, nil
+	}
+	return CustomerCaseReason(""), fmt.Errorf("%s is %w", name, ErrInvalidCustomerCaseReason)
+}
+
+const (
 	// CustomerCaseStatusCREATED is a CustomerCaseStatus of type CREATED.
 	CustomerCaseStatusCREATED CustomerCaseStatus = "CREATED"
-	// CustomerCaseStatusPENDING is a CustomerCaseStatus of type PENDING.
-	CustomerCaseStatusPENDING CustomerCaseStatus = "PENDING"
-	// CustomerCaseStatusPARTIALLYPAID is a CustomerCaseStatus of type PARTIALLY_PAID.
-	CustomerCaseStatusPARTIALLYPAID CustomerCaseStatus = "PARTIALLY_PAID"
-	// CustomerCaseStatusPAID is a CustomerCaseStatus of type PAID.
-	CustomerCaseStatusPAID CustomerCaseStatus = "PAID"
+	// CustomerCaseStatusOPEN is a CustomerCaseStatus of type OPEN.
+	CustomerCaseStatusOPEN CustomerCaseStatus = "OPEN"
 	// CustomerCaseStatusCLOSED is a CustomerCaseStatus of type CLOSED.
 	CustomerCaseStatusCLOSED CustomerCaseStatus = "CLOSED"
 )
@@ -134,11 +170,9 @@ func (x CustomerCaseStatus) IsValid() bool {
 }
 
 var _CustomerCaseStatusValue = map[string]CustomerCaseStatus{
-	"CREATED":        CustomerCaseStatusCREATED,
-	"PENDING":        CustomerCaseStatusPENDING,
-	"PARTIALLY_PAID": CustomerCaseStatusPARTIALLYPAID,
-	"PAID":           CustomerCaseStatusPAID,
-	"CLOSED":         CustomerCaseStatusCLOSED,
+	"CREATED": CustomerCaseStatusCREATED,
+	"OPEN":    CustomerCaseStatusOPEN,
+	"CLOSED":  CustomerCaseStatusCLOSED,
 }
 
 // ParseCustomerCaseStatus attempts to convert a string to a CustomerCaseStatus.

@@ -13,6 +13,7 @@ CREATE TABLE conversations
     call_duration integer DEFAULT 0,
     recording_url TEXT,
     external_id varchar(255),
+    call_messages jsonb DEFAULT '[]'::jsonb,
     created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at  timestamp
 );
