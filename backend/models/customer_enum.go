@@ -24,8 +24,8 @@ const (
 	CallEndedReasonCUSTOMERBUSY CallEndedReason = "CUSTOMER_BUSY"
 	// CallEndedReasonCUSTOMERENDED is a CallEndedReason of type CUSTOMER_ENDED.
 	CallEndedReasonCUSTOMERENDED CallEndedReason = "CUSTOMER_ENDED"
-	// CallEndedReasonMAXCALLLIMITREACHED is a CallEndedReason of type MAX_CALL_LIMIT_REACHED.
-	CallEndedReasonMAXCALLLIMITREACHED CallEndedReason = "MAX_CALL_LIMIT_REACHED"
+	// CallEndedReasonMAXCALLDURATIONREACHED is a CallEndedReason of type MAX_CALL_DURATION_REACHED.
+	CallEndedReasonMAXCALLDURATIONREACHED CallEndedReason = "MAX_CALL_DURATION_REACHED"
 )
 
 var ErrInvalidCallEndedReason = errors.New("not a valid CallEndedReason")
@@ -43,13 +43,13 @@ func (x CallEndedReason) IsValid() bool {
 }
 
 var _CallEndedReasonValue = map[string]CallEndedReason{
-	"UNKNOWN":                CallEndedReasonUNKNOWN,
-	"ASSISTANT_ERROR":        CallEndedReasonASSISTANTERROR,
-	"ASSISTANT_ENDED":        CallEndedReasonASSISTANTENDED,
-	"ASSISTANT_FORWARDED":    CallEndedReasonASSISTANTFORWARDED,
-	"CUSTOMER_BUSY":          CallEndedReasonCUSTOMERBUSY,
-	"CUSTOMER_ENDED":         CallEndedReasonCUSTOMERENDED,
-	"MAX_CALL_LIMIT_REACHED": CallEndedReasonMAXCALLLIMITREACHED,
+	"UNKNOWN":                   CallEndedReasonUNKNOWN,
+	"ASSISTANT_ERROR":           CallEndedReasonASSISTANTERROR,
+	"ASSISTANT_ENDED":           CallEndedReasonASSISTANTENDED,
+	"ASSISTANT_FORWARDED":       CallEndedReasonASSISTANTFORWARDED,
+	"CUSTOMER_BUSY":             CallEndedReasonCUSTOMERBUSY,
+	"CUSTOMER_ENDED":            CallEndedReasonCUSTOMERENDED,
+	"MAX_CALL_DURATION_REACHED": CallEndedReasonMAXCALLDURATIONREACHED,
 }
 
 // ParseCallEndedReason attempts to convert a string to a CallEndedReason.

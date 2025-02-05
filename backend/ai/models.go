@@ -12,5 +12,6 @@ type CaseDecisionResponse struct {
 	NextCallScheduledAt                string                    `json:"next_call_scheduled_at"`
 	ChainOfThoughtNextCallScheduledAt  string                    `json:"chain_of_thought_next_call_scheduled_at"`
 	NextCallScheduledAtConfidenceScore float64                   `json:"next_call_scheduled_at_confidence_score"`
+	Summary                            string                    `json:"summary"`
 	NextCallScheduledAtTime            *time.Time                `json:"-"`
 }

@@ -62,17 +62,27 @@ func (s *Spooler) EndConversation(ctx context.Context, conversationID string, re
 	return s.updateConversationFromCall(ctx, augConversation, callResponse)
 }
 
+// TODO: Make it called only once
+// Only downside is that it might end up calling AI everytime this is hit in case duplicate webhooks
+// and the outcome of AI can change
 func (s *Spooler) updateCaseDecision(ctx context.Context, augConversation *models.AugmentedConversation, callResponse *models.CallResponse) {
 	conversation := augConversation.Conversation
 
 	if augConversation.CustomerCase.Status == models.CustomerCaseStatusCLOSED {
-		s.logger.Warn("cannot updateCaseDecision because it is already closed",
+		s.logger.Warn("cannot updateCaseDecision because it is already closed, skipped..",
+			zap.String("conversationID", conversation.ID))
+		return
+	}
+
+	// if either of these two are true, we have already taken the decision
+	if conversation.NextScheduledAt != nil || conversation.Summary != "" {
+		s.logger.Warn("next conversation is already scheduled, skipped..",
 			zap.String("conversationID", conversation.ID))
 		return
 	}
 
 	if callResponse.CallStatus != models.CallStatusENDED {
-		s.logger.Debug("end conversation call status is not ENDED",
+		s.logger.Debug("end conversation call status is not ENDED, skipped..",
 			zap.String("call id", callResponse.CallID),
 			zap.String("phone", augConversation.Customer.Phone),
 			zap.String("conversationID", conversation.ID),
@@ -97,6 +107,7 @@ func (s *Spooler) updateCaseDecision(ctx context.Context, augConversation *model
 	// Mark case failed if reached max tries
 	// Case Decision (using llm)
 	// Call again if customer not picked the call
+	// Note: Keep the priority
 	pastConversations, err := s.db.GetConversationsByCaseID(ctx, augConversation.CustomerCase.ID)
 	callsToday, totalCalls := getCustomerCallStats(pastConversations)
 	if totalCalls >= maxTotalAllowedCalls {
@@ -115,6 +126,7 @@ func (s *Spooler) updateCaseDecision(ctx context.Context, augConversation *model
 		} else {
 			conversation.CustomerCaseStatus = caseDecisionToStatus(decision.CaseStatusReason, conversation.CustomerCaseStatus)
 			conversation.CustomerCaseReason = decision.CaseStatusReason
+			conversation.Summary = decision.Summary
 			if decision.NextCallScheduledAtTime != nil {
 				conversation.NextScheduledAt = decision.NextCallScheduledAtTime
 			}
@@ -188,6 +200,7 @@ func hasCustomerPickedCall(callEndedReason models.CallEndedReason) bool {
 	})
 }
 
+// Ask AI only if there is any reply from a customer
 func shouldAskAI(augConversation *models.AugmentedConversation) bool {
 	if len(augConversation.Conversation.CallMessages) == 0 {
 		return false

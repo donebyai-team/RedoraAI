@@ -22,7 +22,7 @@ var endReasonMapping = map[models.CallEndedReason][]api.CallEndedReason{
 		api.CallEndedReasonCustomerEndedCall,
 		api.CallEndedReasonManuallyCanceled,
 	},
-	models.CallEndedReasonMAXCALLLIMITREACHED: {
+	models.CallEndedReasonMAXCALLDURATIONREACHED: {
 		api.CallEndedReasonExceededMaxDuration,
 	},
 }
