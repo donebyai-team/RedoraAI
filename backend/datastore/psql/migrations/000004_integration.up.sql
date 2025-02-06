@@ -7,9 +7,9 @@ CREATE TABLE integrations
     type character varying(255) NOT NULL,
     state character varying(255) NOT NULL,
     plain_text_config jsonb DEFAULT '{}'::jsonb  NOT NULL,
-    encrypted_config VARCHAR NOT NULL DEFAULT ''
-    created_at             timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at             timestamp
+    encrypted_config VARCHAR NOT NULL DEFAULT '',
+    created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp
 );
 
 CREATE UNIQUE INDEX idx1_integrations ON integrations (organization_id,type);

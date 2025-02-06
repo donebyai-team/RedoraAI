@@ -12,8 +12,8 @@ CREATE TABLE customers
 );
 
 ALTER TABLE customers ADD CONSTRAINT fk1_customers FOREIGN KEY (organization_id) REFERENCES organizations (id);
-CREATE UNIQUE INDEX idx1_customers ON entities (organization_id, phone);
-CREATE INDEX idx2_customers ON entities (organization_id, phone);
+CREATE UNIQUE INDEX idx1_customers ON customers (organization_id, phone);
+CREATE INDEX idx2_customers ON customers (organization_id, phone);
 
 CREATE TRIGGER trigger_record_changed_on_customers
     BEFORE UPDATE

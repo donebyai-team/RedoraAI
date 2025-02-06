@@ -18,7 +18,7 @@ CREATE TABLE conversations
     updated_at  timestamp
 );
 
-ALTER TABLE conversations ADD CONSTRAINT fk1_conversations FOREIGN KEY (session_id) REFERENCES customer_sessions (id);
+ALTER TABLE conversations ADD CONSTRAINT fk1_conversations FOREIGN KEY (customer_case_id) REFERENCES customer_cases (id);
 
 CREATE TRIGGER trigger_record_changed_on_conversations
     BEFORE UPDATE

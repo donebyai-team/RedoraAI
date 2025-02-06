@@ -47,9 +47,13 @@ main() {
     fi
 
     if [[ $# -gt 0 && $1 == "up" ]]; then
-      actual_raw=`$command version 2>&1`
+      actual_raw=`$command version 2>&1` || actual_raw="error: no migrations"
+      if [[ "$actual_raw" =~ "error: no migrations" ]]; then
+        actual=0
+      else
+        actual="`echo $actual_raw | sed 's/ (dirty)//g'`"
+      fi
 
-      actual="`echo $actual_raw | sed 's/ (dirty)//g'`"
       target=`ls "$MIGRATIONS" | grep -E "[0-9]{6}_" | cut -d "_" -f 1 | sort -n | tail -n 1 | sed -e 's/^0*//'`
       if [[ $# -gt 1 ]]; then
         target=$(($2))
