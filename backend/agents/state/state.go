@@ -2,7 +2,7 @@ package state
 
 import "context"
 
-type SpoolerState interface {
+type ConversationState interface {
 	// IsRunning returns true if a case is currently running
 	IsRunning(ctx context.Context, phone string) (bool, error)
 
@@ -12,5 +12,5 @@ type SpoolerState interface {
 	// KeepAlive signals that the case is still being processed, this should be called periodically
 	KeepAlive(ctx context.Context, organizationID, phone string) error
 
-	Release(ctx context.Context, organizationID, phone string) error
+	Release(ctx context.Context, phone string) error
 }

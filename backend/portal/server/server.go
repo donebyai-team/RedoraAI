@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"errors"
 	"fmt"
+	"github.com/shank318/doota/agents"
 	"github.com/shank318/doota/auth"
 	"github.com/shank318/doota/auth/middleware"
 	"github.com/shank318/doota/datastore"
@@ -50,9 +51,13 @@ func New(
 	}
 }
 
+type WebhooksHandler func(agent agents.AIAgent) http.HandlerFunc
+
 // this is a blocking call
 func (s *Server) Run(
 	portalHandler pbportalconnect.PortalServiceHandler,
+	callStatusUpdateHandler WebhooksHandler,
+	endConversationHandler WebhooksHandler,
 ) {
 	tracerProvider := otel.GetTracerProvider()
 	options := []dgrpcserver.Option{
@@ -87,6 +92,17 @@ func (s *Server) Run(
 		s.logger.Info("grpc server with plain text server")
 		options = append(options, dgrpcserver.WithPlainTextServer())
 	}
+
+	options = append(options,
+		dgrpcserver.WithConnectWebHTTPHandlers([]dgrpcserver.HTTPHandlerGetter{
+			func() (string, http.Handler) {
+				return "webhook/vana/call_status/{id}", callStatusUpdateHandler(agents.AIAgentVANA)
+			},
+			func() (string, http.Handler) {
+				return "webhook/vana/end_conversation/{id}", endConversationHandler(agents.AIAgentVANA)
+			},
+		}),
+	)
 
 	portalHandlerGetter := func(opts ...connect.HandlerOption) (string, http.Handler) {
 		return pbportalconnect.NewPortalServiceHandler(portalHandler, opts...)

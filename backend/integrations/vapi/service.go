@@ -11,6 +11,7 @@ import (
 	"github.com/shank318/doota/utils"
 	"github.com/tmc/langchaingo/llms"
 	"go.uber.org/zap"
+	"strings"
 )
 
 type VAPIVoiceProvider struct {
@@ -58,6 +59,8 @@ func (m *VAPIVoiceProvider) handleCallStatusUpdate(ctx context.Context, report *
 	return transformCallToCallResponse(call), nil
 }
 
+var assistantErrors = []string{"failed", "error", "invalid", "not-found", "shutdown", "blocked"}
+
 func (m *VAPIVoiceProvider) handleEndOfCallReport(ctx context.Context, report *api.ServerMessageEndOfCallReport) (*models.CallResponse, error) {
 	if report.Call == nil {
 		m.logger.Warn("handleEndOfCallReport, no call found")
@@ -85,6 +88,15 @@ func transformCallToCallResponse(call *api.Call) *models.CallResponse {
 				if reason == *call.EndedReason {
 					callResponse.CallEndedReason = key
 				}
+			}
+		}
+	}
+
+	// if still unknown, check for error reasons
+	if call.EndedReason != nil && callResponse.CallEndedReason == models.CallEndedReasonUNKNOWN {
+		for _, reason := range assistantErrors {
+			if strings.Contains(strings.ToLower(string(callResponse.CallEndedReason)), strings.ToLower(reason)) {
+				callResponse.CallEndedReason = models.CallEndedReasonASSISTANTERROR
 			}
 		}
 	}

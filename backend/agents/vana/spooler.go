@@ -18,14 +18,14 @@ import (
 
 type Spooler struct {
 	*shutter.Shutter
-	dbPollingInterval time.Duration
-
+	dbPollingInterval  time.Duration
+	gptModel           ai.GPTModel
 	db                 datastore.Repository
-	aiClient           ai.Client
+	aiClient           *ai.Client
 	queue              chan *models.AugmentedCustomerCase
 	queued             *agents.QueuedMap[string, bool]
-	integrationFactory integrations.Factory
-	state              state.SpoolerState
+	integrationFactory *integrations.Factory
+	state              state.ConversationState
 	appIsReady         func() bool
 	maxParallelCalls   uint64
 
@@ -34,9 +34,10 @@ type Spooler struct {
 
 func New(
 	db datastore.Repository,
-	aiClient ai.Client,
-	state state.SpoolerState,
-	integrationFactory integrations.Factory,
+	aiClient *ai.Client,
+	gptModel ai.GPTModel,
+	state state.ConversationState,
+	integrationFactory *integrations.Factory,
 	bufferSize int,
 	maxParallelCalls uint64,
 	dbPollingInterval time.Duration,
@@ -46,6 +47,7 @@ func New(
 	return &Spooler{
 		Shutter:            shutter.New(),
 		db:                 db,
+		gptModel:           gptModel,
 		state:              state,
 		maxParallelCalls:   maxParallelCalls,
 		aiClient:           aiClient,

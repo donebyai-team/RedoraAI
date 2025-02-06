@@ -9,6 +9,7 @@ var endReasonMapping = map[models.CallEndedReason][]api.CallEndedReason{
 	models.CallEndedReasonASSISTANTENDED: {
 		api.CallEndedReasonAssistantEndedCall,
 		api.CallEndedReasonAssistantSaidEndCallPhrase,
+		api.CallEndedReasonSilenceTimedOut,
 	},
 	models.CallEndedReasonASSISTANTFORWARDED: {
 		api.CallEndedReasonAssistantForwardedCall,
@@ -17,6 +18,7 @@ var endReasonMapping = map[models.CallEndedReason][]api.CallEndedReason{
 		api.CallEndedReasonCustomerBusy,
 		api.CallEndedReasonCustomerDidNotAnswer,
 		api.CallEndedReasonCustomerDidNotGiveMicrophonePermission,
+		api.CallEndedReasonVoicemail,
 	},
 	models.CallEndedReasonCUSTOMERENDED: {
 		api.CallEndedReasonCustomerEndedCall,

@@ -3,35 +3,29 @@ package app
 import (
 	"context"
 	"fmt"
+	"github.com/shank318/doota/agents/state"
 	"github.com/shank318/doota/ai"
 	"github.com/shank318/doota/auth"
 	"github.com/shank318/doota/auth/crypto"
 	"github.com/shank318/doota/datastore"
 	"github.com/streamingfast/dstore"
 	"regexp"
+	"time"
 
 	"github.com/streamingfast/logging"
 	"go.uber.org/dig"
 	"go.uber.org/zap"
-	"golang.org/x/oauth2"
 )
 
 type DependenciesBuilder struct {
-	PGDSN                   string
-	KMSKeyPath              string
-	CorsURLRegexAllow       string
-	AttachmentStoreURL      string
-	PubsubGCPProject        string
-	Processor               bool
-	MicrosoftConfig         *MicrosoftConfig
-	GoogleConfig            *GoogleConfig
-	AIConfig                *AIConfig
-	DocumentAIConfig        *DocumentAIConfig
-	MicrosoftServerGRPCAddr string
-	AirbrakeConfig          *AirbrakeConfig
-	GoogleServerGRPCAddr    string
-	GoogleGeocoderAPIKey    string
-	MessageCreatorGRPCAddr  string
+	PGDSN              string
+	KMSKeyPath         string
+	CorsURLRegexAllow  string
+	AttachmentStoreURL string
+	PubsubGCPProject   string
+	Processor          bool
+	AIConfig           *AIConfig
+	ConversationState  *conversationState
 
 	dig *dig.Container
 }
@@ -42,18 +36,10 @@ func NewDependenciesBuilder() *DependenciesBuilder {
 	}
 }
 
-type MicrosoftConfig struct {
-	ClientID     string
-	ClientSecret string
-	RedirectURL  string
-}
-
-type GoogleConfig struct {
-	ClientID     string
-	ClientSecret string
-	RedirectURL  string
-	Scopes       []string
-	Endpoint     oauth2.Endpoint
+type conversationState struct {
+	redisAddr                  string
+	investigationTTL           time.Duration
+	investigationRetryCooldown time.Duration
 }
 
 type AIConfig struct {
@@ -62,18 +48,6 @@ type AIConfig struct {
 	OpenAIDebugLogsStore string
 	LangsmithApiKey      string
 	LangsmithProject     string
-}
-
-type AirbrakeConfig struct {
-	ProjectID  int64
-	ProjectKey string
-	Env        string
-}
-
-type DocumentAIConfig struct {
-	GCPProject string
-	Location   string
-	DebugStore string
 }
 
 func (b *DependenciesBuilder) mustProvide(constructor interface{}) {
@@ -85,6 +59,11 @@ func (b *DependenciesBuilder) mustProvide(constructor interface{}) {
 func (b *DependenciesBuilder) WithDataStore(pgDSN string) *DependenciesBuilder {
 	b.mustProvide(func() PostgresDSNString { return PostgresDSNString(pgDSN) })
 	b.PGDSN = pgDSN
+	return b
+}
+
+func (b *DependenciesBuilder) WithConversationState(redisAddr string, investigationHeartbeat time.Duration, investigationRetryCooldown time.Duration) *DependenciesBuilder {
+	b.ConversationState = &conversationState{redisAddr, investigationHeartbeat * 2, investigationRetryCooldown}
 	return b
 }
 
@@ -169,6 +148,10 @@ func (b *DependenciesBuilder) Build(ctx context.Context, logger *zap.Logger, tra
 		}
 	}
 
+	if b.ConversationState != nil {
+		out.ConversationState = state.NewCustomerCaseState(b.ConversationState.redisAddr, b.ConversationState.investigationTTL, b.ConversationState.investigationRetryCooldown, logger)
+	}
+
 	return out, nil
 }
 
@@ -182,5 +165,6 @@ type Dependencies struct {
 
 	dootaDepMissing []string
 
-	AIClient *ai.Client
+	AIClient          *ai.Client
+	ConversationState state.ConversationState
 }

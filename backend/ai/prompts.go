@@ -56,10 +56,21 @@ func (v Variable) WithConversationDate(date time.Time) Variable {
 func (v Variable) WithCallMessages(messages []models.CallMessage) Variable {
 	var atts []map[string]any
 	for _, conversation := range messages {
-		atts = append(atts, map[string]any{
-			"Role":    conversation.Role,
-			"Message": conversation.Message,
-		})
+		if conversation.SystemMessage != nil {
+			continue
+		}
+
+		if conversation.UserMessage != nil {
+			atts = append(atts, map[string]any{
+				"Role":    "user",
+				"Message": conversation.UserMessage.Message,
+			})
+		} else if conversation.BotMessage != nil {
+			atts = append(atts, map[string]any{
+				"Role":    "bot",
+				"Message": conversation.BotMessage.Message,
+			})
+		}
 	}
 	v["CallMessages"] = atts
 	return v

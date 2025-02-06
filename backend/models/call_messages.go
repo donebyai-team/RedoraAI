@@ -4,9 +4,6 @@ type CallMessage struct {
 	UserMessage   *UserMessage
 	SystemMessage *SystemMessage
 	BotMessage    *BotMessage
-	Role          string `json:"role" url:"role"`
-	// The message content from the user.
-	Message string `json:"message" url:"message"`
 }
 
 type UserMessage struct {

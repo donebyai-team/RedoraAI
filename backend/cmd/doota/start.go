@@ -2,11 +2,16 @@ package main
 
 import (
 	"fmt"
+	"github.com/shank318/doota/agents/vana"
+	"github.com/shank318/doota/ai"
 	"github.com/shank318/doota/app"
 	"github.com/shank318/doota/auth"
+	"github.com/shank318/doota/integrations"
 	"github.com/shank318/doota/portal"
+	"github.com/shank318/doota/services"
 	"os"
 	"regexp"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -28,14 +33,13 @@ var StartCmd = cli.Command(startCmdE,
 		flags.String("common-openai-organization", "", "OpenAI Organization")
 		flags.String("common-langsmith-api-key", "", "Langsmith API key")
 		flags.String("common-langsmith-project", "", "Langsmith project name")
+		flags.Duration("spooler-db-polling-interval", 10*time.Second, "How often the spooler will check the database for new investigation")
 
 		flags.String("portal-http-listen-addr", ":8787", "http listen address")
 		flags.String("portal-auth0-domain", "", "Auth0 tenant domain")
 		flags.String("portal-auth0-portal-client-id", "", "Auth0 Portal AppFactory Client ID")
 		flags.String("portal-auth0-portal-client-secret", "", "Auth0 Portal AppFactory Client Secret")
 		flags.String("portal-auth0-api-redirect-uri", "http://localhost:8787/auth/callback", "The API Auth callback URL")
-		flags.String("portal-fullstory-org-id", "", "FullStory org id")
-		flags.String("quote-pubsub-partial-quotes-subscription", "quote-partial-quotes-dev", "Pubsub partial quote quote service subscription")
 	}),
 )
 
@@ -47,7 +51,8 @@ type App interface {
 type AppFactory func(cmd *cobra.Command, isAppReady func() bool) (App, error)
 
 var appToFactory = map[string]AppFactory{
-	"portal-api": portalApp,
+	"portal-api":   portalApp,
+	"vana-spooler": vanaSpoolerApp,
 }
 
 func startCmdE(cmd *cobra.Command, args []string) error {
@@ -91,12 +96,96 @@ func startCmdE(cmd *cobra.Command, args []string) error {
 	return main.WaitForTermination(zlog, shutdownUnreadyPeriod, shutdownGracePeriod)
 }
 
-func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
+func openAILangsmithLegacyHandling(cmd *cobra.Command, prefix string) (string, string, string, string, string) {
+	openaiApiKey, openaiApiKeyLegacyFlagPresent := sflags.MustGetStringProvided(cmd, prefix+"-openai-api-key")
+	openaiOrganization, openaiOrganizationLegacyFlagPresent := sflags.MustGetStringProvided(cmd, prefix+"-openai-organization")
+	openaiDebugStore, openaiDebugStoreLegacyFlagPresent := sflags.MustGetStringProvided(cmd, prefix+"-openai-debug-store")
+	langsmithApiKey, langsmithApiKeyLegacyFlagPresent := sflags.MustGetStringProvided(cmd, prefix+"-langsmith-api-key")
+	langsmithProject, langsmithProjectLegacyFlagPresent := sflags.MustGetStringProvided(cmd, prefix+"-langsmith-project")
 
+	if !openaiApiKeyLegacyFlagPresent {
+		openaiApiKey = sflags.MustGetString(cmd, "common-openai-api-key")
+	}
+
+	if !openaiOrganizationLegacyFlagPresent {
+		openaiOrganization = sflags.MustGetString(cmd, "common-openai-organization")
+	}
+
+	if !openaiDebugStoreLegacyFlagPresent {
+		openaiDebugStore = sflags.MustGetString(cmd, "common-openai-debug-store")
+	}
+
+	if !langsmithApiKeyLegacyFlagPresent {
+		langsmithApiKey = sflags.MustGetString(cmd, "common-langsmith-api-key")
+	}
+
+	if !langsmithProjectLegacyFlagPresent {
+		langsmithProject = sflags.MustGetString(cmd, "common-langsmith-project")
+	}
+
+	return openaiApiKey, openaiOrganization, openaiDebugStore, langsmithApiKey, langsmithProject
+}
+
+func vanaSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
+	openaiApiKey, openaiOrganization, openaiDebugStore, langsmithApiKey, langsmithProject := openAILangsmithLegacyHandling(cmd, "spooler")
+	deps, err := new(app.DependenciesBuilder).
+		WithDataStore(sflags.MustGetString(cmd, "pg-dsn")).
+		WithAI(
+			openaiApiKey,
+			openaiOrganization,
+			openaiDebugStore,
+			langsmithApiKey,
+			langsmithProject,
+		).
+		WithConversationState(
+			sflags.MustGetString(cmd, "redis-addr"),
+			sflags.MustGetDuration(cmd, "common-investigator-heartbeat"),
+			sflags.MustGetDuration(cmd, "common-investigation-cooldown"),
+		).
+		Build(cmd.Context(), zlog, tracer)
+	if err != nil {
+		return nil, err
+	}
+
+	gptModel, err := ai.ParseGPTModel(sflags.MustGetString(cmd, "common-gpt-model"))
+	if err != nil {
+		return nil, fmt.Errorf("initiated extractor with invalid gpt model: %w", err)
+	}
+
+	integrationsFactory := integrations.NewFactory(deps.DataStore, zlog.Named("spooler"))
+
+	return vana.New(
+		deps.DataStore,
+		deps.AIClient,
+		gptModel,
+		deps.ConversationState,
+		integrationsFactory,
+		1000,
+		10,
+		sflags.MustGetDuration(cmd, "spooler-db-polling-interval"),
+		isAppReady,
+		zlog.Named("spooler"),
+	), nil
+}
+
+func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
+	openaiApiKey, openaiOrganization, openaiDebugStore, langsmithApiKey, langsmithProject := openAILangsmithLegacyHandling(cmd, "spooler")
 	deps, err := app.NewDependenciesBuilder().
 		WithDataStore(sflags.MustGetString(cmd, "pg-dsn")).
 		WithKMSKeyPath(sflags.MustGetString(cmd, "jwt-kms-keypath")).
 		WithCORSURLRegexAllow(sflags.MustGetString(cmd, "portal-cors-url-regex-allow")).
+		WithConversationState(
+			sflags.MustGetString(cmd, "redis-addr"),
+			sflags.MustGetDuration(cmd, "common-investigator-heartbeat"),
+			sflags.MustGetDuration(cmd, "common-investigation-cooldown"),
+		).
+		WithAI(
+			openaiApiKey,
+			openaiOrganization,
+			openaiDebugStore,
+			langsmithApiKey,
+			langsmithProject,
+		).
 		Build(cmd.Context(), zlog, tracer)
 	if err != nil {
 		return nil, err
@@ -110,8 +199,26 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 
 	authenticator := auth.NewAuthenticator(deps.AuthTokenValidator, deps.DataStore, zlog)
 
+	gptModel, err := ai.ParseGPTModel(sflags.MustGetString(cmd, "common-gpt-model"))
+	if err != nil {
+		return nil, fmt.Errorf("initiated extractor with invalid gpt model: %w", err)
+	}
+
+	integrationsFactory := integrations.NewFactory(deps.DataStore, zlog.Named("portal"))
+
+	vanaWebhookHandler := vana.NewVanaWebhookHandler(
+		deps.DataStore,
+		deps.AIClient,
+		gptModel,
+		deps.ConversationState,
+		integrationsFactory,
+		zlog.Named("portal"),
+	)
+
 	p := portal.New(
 		authenticator,
+		services.NewCustomerCaseServiceImpl(deps.DataStore),
+		vanaWebhookHandler,
 		deps.DataStore,
 		sflags.MustGetString(cmd, "portal-http-listen-addr"),
 		deps.CorsURLRegexAllow,

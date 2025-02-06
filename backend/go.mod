@@ -12,6 +12,7 @@ require (
 	github.com/drone/envsubst v1.0.3
 	github.com/go-playground/validator/v10 v10.24.0
 	github.com/golang-migrate/migrate v3.5.4+incompatible
+	github.com/streamingfast/dhttp v0.0.2-0.20230607140548-a712757f43ee
 	github.com/golang-migrate/migrate/v4 v4.17.0
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/go-retryablehttp v0.7.7

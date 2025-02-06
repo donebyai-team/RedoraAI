@@ -26,7 +26,7 @@ type CallStatus string
 // ENUM(CREATED, OPEN, CLOSED)
 type CustomerCaseStatus string
 
-// ENUM(UNKNOWN, PARTIALLY_PAID, PAID, MAX_CALL_TRIES_REACHED)
+// ENUM(UNKNOWN, PARTIALLY_PAID, PAID, MAX_CALL_TRIES_REACHED, TALK_TO_SUPPORT)
 type CustomerCaseReason string
 
 type CustomerCase struct {

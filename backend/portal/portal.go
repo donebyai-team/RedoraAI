@@ -2,6 +2,7 @@ package portal
 
 import (
 	"context"
+	"github.com/shank318/doota/agents"
 	"github.com/shank318/doota/auth"
 	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/portal/server"
@@ -22,12 +23,14 @@ type Portal struct {
 	logger              *zap.Logger
 	tracer              logging.Tracer
 	authenticator       *auth.Authenticator
+	vanaWebhookHandler  agents.WebhookHandler
 	customerCaseService services.CustomerCaseService
 }
 
 func New(
 	authenticator *auth.Authenticator,
 	customerCaseService services.CustomerCaseService,
+	vanaWebhookHandler agents.WebhookHandler,
 	db datastore.Repository,
 	httpListenAddr string,
 	corsURLRegexAllow *regexp.Regexp,
@@ -39,6 +42,7 @@ func New(
 	return &Portal{
 		Shutter:             shutter.New(),
 		authenticator:       authenticator,
+		vanaWebhookHandler:  vanaWebhookHandler,
 		customerCaseService: customerCaseService,
 		db:                  db,
 		httpListenAddr:      httpListenAddr,
@@ -57,6 +61,6 @@ func (p *Portal) Run(ctx context.Context) error {
 		s.Shutdown(nil)
 	})
 
-	s.Run(p)
+	s.Run(p, p.UpdateCallStatusHandler, p.EndConversationHandler)
 	return nil
 }

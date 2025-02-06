@@ -115,6 +115,8 @@ const (
 	CustomerCaseReasonPAID CustomerCaseReason = "PAID"
 	// CustomerCaseReasonMAXCALLTRIESREACHED is a CustomerCaseReason of type MAX_CALL_TRIES_REACHED.
 	CustomerCaseReasonMAXCALLTRIESREACHED CustomerCaseReason = "MAX_CALL_TRIES_REACHED"
+	// CustomerCaseReasonTALKTOSUPPORT is a CustomerCaseReason of type TALK_TO_SUPPORT.
+	CustomerCaseReasonTALKTOSUPPORT CustomerCaseReason = "TALK_TO_SUPPORT"
 )
 
 var ErrInvalidCustomerCaseReason = errors.New("not a valid CustomerCaseReason")
@@ -136,6 +138,7 @@ var _CustomerCaseReasonValue = map[string]CustomerCaseReason{
 	"PARTIALLY_PAID":         CustomerCaseReasonPARTIALLYPAID,
 	"PAID":                   CustomerCaseReasonPAID,
 	"MAX_CALL_TRIES_REACHED": CustomerCaseReasonMAXCALLTRIESREACHED,
+	"TALK_TO_SUPPORT":        CustomerCaseReasonTALKTOSUPPORT,
 }
 
 // ParseCustomerCaseReason attempts to convert a string to a CustomerCaseReason.

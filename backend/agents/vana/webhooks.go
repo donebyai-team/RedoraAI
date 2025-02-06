@@ -3,13 +3,44 @@ package vana
 import (
 	"fmt"
 	"github.com/shank318/doota/agents"
+	"github.com/shank318/doota/agents/state"
+	"github.com/shank318/doota/ai"
+	"github.com/shank318/doota/datastore"
+	"github.com/shank318/doota/integrations"
 	"github.com/shank318/doota/models"
 	"github.com/shank318/doota/utils"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 )
 
-func (s *Spooler) UpdateCallStatus(ctx context.Context, conversationID string, req []byte) error {
+type vanaWebhookHandler struct {
+	gptModel           ai.GPTModel
+	db                 datastore.Repository
+	aiClient           *ai.Client
+	integrationFactory *integrations.Factory
+	state              state.ConversationState
+	logger             *zap.Logger
+}
+
+func NewVanaWebhookHandler(
+	db datastore.Repository,
+	aiClient *ai.Client,
+	gptModel ai.GPTModel,
+	state state.ConversationState,
+	integrationFactory *integrations.Factory,
+	logger *zap.Logger,
+) *vanaWebhookHandler {
+	return &vanaWebhookHandler{
+		db:                 db,
+		gptModel:           gptModel,
+		state:              state,
+		aiClient:           aiClient,
+		integrationFactory: integrationFactory,
+		logger:             logger,
+	}
+}
+
+func (s *vanaWebhookHandler) UpdateCallStatus(ctx context.Context, conversationID string, req []byte) error {
 	augConversation, err := s.db.GetConversationByID(ctx, conversationID)
 	if err != nil {
 		return fmt.Errorf("error while lookup conversation: %w", err)
@@ -27,8 +58,7 @@ func (s *Spooler) UpdateCallStatus(ctx context.Context, conversationID string, r
 	return s.updateConversationFromCall(ctx, augConversation, callResponse)
 }
 
-// TODO: Make it idempotent, CallStatus should not change once ended
-func (s *Spooler) EndConversation(ctx context.Context, conversationID string, req []byte) error {
+func (s *vanaWebhookHandler) EndConversation(ctx context.Context, conversationID string, req []byte) error {
 	augConversation, err := s.db.GetConversationByID(ctx, conversationID)
 	if err != nil {
 		return fmt.Errorf("error while lookup conversation: %w", err)
@@ -65,7 +95,7 @@ func (s *Spooler) EndConversation(ctx context.Context, conversationID string, re
 // TODO: Make it called only once
 // Only downside is that it might end up calling AI everytime this is hit in case duplicate webhooks
 // and the outcome of AI can change
-func (s *Spooler) updateCaseDecision(ctx context.Context, augConversation *models.AugmentedConversation, callResponse *models.CallResponse) {
+func (s *vanaWebhookHandler) updateCaseDecision(ctx context.Context, augConversation *models.AugmentedConversation, callResponse *models.CallResponse) {
 	conversation := augConversation.Conversation
 
 	if augConversation.CustomerCase.Status == models.CustomerCaseStatusCLOSED {
@@ -93,7 +123,7 @@ func (s *Spooler) updateCaseDecision(ctx context.Context, augConversation *model
 	// === END CONVERSATION AND UPDATE CASE ===
 
 	// Release call
-	err := s.state.Release(ctx, augConversation.CustomerCase.OrgID, augConversation.Customer.Phone)
+	err := s.state.Release(ctx, augConversation.Customer.Phone)
 	if err != nil {
 		if err != nil {
 			s.logger.Error("failed to release call",
@@ -116,13 +146,13 @@ func (s *Spooler) updateCaseDecision(ctx context.Context, augConversation *model
 	} else if !hasCustomerPickedCall(callResponse.CallEndedReason) {
 		conversation.NextScheduledAt = getNextCallTime(callsToday, conversation.CreatedAt)
 	} else if shouldAskAI(augConversation) {
-		decision, err := s.aiClient.CustomerCaseDecision(ctx, conversation, nil, s.logger)
+		decision, err := s.aiClient.CustomerCaseDecision(ctx, conversation, s.gptModel, s.logger)
 		if err != nil {
 			s.logger.Error("failed to ask customer case decision",
 				zap.Error(err),
 				zap.String("conversationID", conversation.ID),
 				zap.String("phone", augConversation.Customer.Phone),
-				zap.String("call id", callResponse.CallID))
+				zap.String("call_id", callResponse.CallID))
 		} else {
 			conversation.CustomerCaseStatus = caseDecisionToStatus(decision.CaseStatusReason, conversation.CustomerCaseStatus)
 			conversation.CustomerCaseReason = decision.CaseStatusReason
@@ -143,7 +173,7 @@ func (s *Spooler) updateCaseDecision(ctx context.Context, augConversation *model
 	}
 }
 
-func (s *Spooler) updateConversationFromCall(ctx context.Context, augConversation *models.AugmentedConversation, callResponse *models.CallResponse) error {
+func (s *vanaWebhookHandler) updateConversationFromCall(ctx context.Context, augConversation *models.AugmentedConversation, callResponse *models.CallResponse) error {
 	conversation := augConversation.Conversation
 	conversation.CallStatus = callResponse.CallStatus
 	conversation.ExternalID = callResponse.CallID
@@ -187,6 +217,7 @@ var caseClosedReasons = []models.CustomerCaseReason{
 	models.CustomerCaseReasonPAID,
 	models.CustomerCaseReasonPARTIALLYPAID,
 	models.CustomerCaseReasonMAXCALLTRIESREACHED,
+	models.CustomerCaseReasonTALKTOSUPPORT,
 }
 
 var callNotPickedReasons = []models.CallEndedReason{

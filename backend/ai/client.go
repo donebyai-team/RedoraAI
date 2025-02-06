@@ -90,6 +90,7 @@ func (c *Client) CustomerCaseDecision(ctx context.Context, lastConversation *mod
 		models.CustomerCaseReasonPARTIALLYPAID,
 		models.CustomerCaseReasonPAID,
 		models.CustomerCaseReasonUNKNOWN,
+		models.CustomerCaseReasonTALKTOSUPPORT,
 	}, func(matchType models.CustomerCaseReason) bool {
 		return matchType == data.CaseStatusReason
 	})

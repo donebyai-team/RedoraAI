@@ -26,6 +26,10 @@ type CustomerCaseServiceImpl struct {
 	db datastore.Repository
 }
 
+func NewCustomerCaseServiceImpl(db datastore.Repository) *CustomerCaseServiceImpl {
+	return &CustomerCaseServiceImpl{db: db}
+}
+
 func (c *CustomerCaseServiceImpl) Create(ctx context.Context, session *CreateCustomerCase) error {
 	customer, err := c.db.GetCustomerByPhone(ctx, session.Phone, session.OrgID)
 	if err != nil && !errors.Is(err, datastore.NotFound) {
