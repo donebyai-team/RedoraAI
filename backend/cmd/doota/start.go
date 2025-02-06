@@ -147,24 +147,28 @@ func vanaSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		return nil, err
 	}
 
+	logger := zlog.Named("spooler")
+
 	gptModel, err := ai.ParseGPTModel(sflags.MustGetString(cmd, "common-gpt-model"))
 	if err != nil {
 		return nil, fmt.Errorf("initiated extractor with invalid gpt model: %w", err)
 	}
 
-	integrationsFactory := integrations.NewFactory(deps.DataStore, zlog.Named("spooler"))
+	integrationsFactory := integrations.NewFactory(deps.DataStore, logger)
+	caseInvestigator := vana.NewCaseInvestigator(gptModel, deps.DataStore, deps.AIClient, logger, deps.ConversationState)
 
 	return vana.New(
 		deps.DataStore,
 		deps.AIClient,
 		gptModel,
 		deps.ConversationState,
+		caseInvestigator,
 		integrationsFactory,
 		1000,
 		10,
 		sflags.MustGetDuration(cmd, "spooler-db-polling-interval"),
 		isAppReady,
-		zlog.Named("spooler"),
+		logger,
 	), nil
 }
 
@@ -199,20 +203,23 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 
 	authenticator := auth.NewAuthenticator(deps.AuthTokenValidator, deps.DataStore, zlog)
 
+	logger := zlog.Named("portal")
+
 	gptModel, err := ai.ParseGPTModel(sflags.MustGetString(cmd, "common-gpt-model"))
 	if err != nil {
 		return nil, fmt.Errorf("initiated extractor with invalid gpt model: %w", err)
 	}
 
-	integrationsFactory := integrations.NewFactory(deps.DataStore, zlog.Named("portal"))
+	integrationsFactory := integrations.NewFactory(deps.DataStore, logger)
+
+	caseInvestigator := vana.NewCaseInvestigator(gptModel, deps.DataStore, deps.AIClient, logger, deps.ConversationState)
 
 	vanaWebhookHandler := vana.NewVanaWebhookHandler(
 		deps.DataStore,
-		deps.AIClient,
-		gptModel,
 		deps.ConversationState,
+		caseInvestigator,
 		integrationsFactory,
-		zlog.Named("portal"),
+		logger,
 	)
 
 	p := portal.New(

@@ -28,8 +28,8 @@ type Spooler struct {
 	state              state.ConversationState
 	appIsReady         func() bool
 	maxParallelCalls   uint64
-
-	logger *zap.Logger
+	caseInvestigator   *CaseInvestigator
+	logger             *zap.Logger
 }
 
 func New(
@@ -37,6 +37,7 @@ func New(
 	aiClient *ai.Client,
 	gptModel ai.GPTModel,
 	state state.ConversationState,
+	caseInvestigator *CaseInvestigator,
 	integrationFactory *integrations.Factory,
 	bufferSize int,
 	maxParallelCalls uint64,
@@ -49,6 +50,7 @@ func New(
 		db:                 db,
 		gptModel:           gptModel,
 		state:              state,
+		caseInvestigator:   caseInvestigator,
 		maxParallelCalls:   maxParallelCalls,
 		aiClient:           aiClient,
 		integrationFactory: integrationFactory,
@@ -169,8 +171,8 @@ func (s *Spooler) processCustomerCase(ctx context.Context, customerCase *models.
 	if err != nil {
 		return fmt.Errorf("failed to create call response for %s: %w", customerCase.CustomerCase.ID, err)
 	}
-
-	return s.updateConversationFromCall(ctx, &models.AugmentedConversation{
+	
+	return s.caseInvestigator.UpdateCaseDecision(ctx, &models.AugmentedConversation{
 		CustomerCase: customerCase.CustomerCase,
 		Customer:     customerCase.Customer,
 		Conversation: conversation,
