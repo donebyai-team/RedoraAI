@@ -59,14 +59,14 @@ func (s *Client) doRequest(ctx context.Context, method, path string, body interf
 		return resp, nil
 	}
 
-	errRes := []types.ErrorResponse{}
-	if err := json.NewDecoder(resp.Body).Decode(&errRes); err != nil {
-		return nil, fmt.Errorf("decode error response: %w", err)
-	}
-
-	if len(errRes) > 0 {
-		return nil, &errRes[0]
-	}
+	//errRes := []types.ErrorResponse{}
+	//if err := json.NewDecoder(resp.Body).Decode(&errRes); err != nil {
+	//	return nil, fmt.Errorf("decode error response: %w", err)
+	//}
+	//
+	//if len(errRes) > 0 {
+	//	return nil, &errRes[0]
+	//}
 
 	return nil, fmt.Errorf("request failed with status code %d", resp.StatusCode)
 }

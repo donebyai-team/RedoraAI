@@ -23,7 +23,7 @@ func (p *Prompt) getPromptTemplate(templatePrefix string, addImageSupport bool) 
 	return p.Model.getPromptTemplate(p, templatePrefix, addImageSupport)
 }
 
-//go:embed prompt/*.gotmpl
+//go:embed prompts/*.gotmpl
 var promptTplFS embed.FS
 
 func rp(name string) string {
