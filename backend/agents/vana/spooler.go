@@ -134,7 +134,7 @@ func (s *Spooler) processCustomerCase(ctx context.Context, customerCase *models.
 		return err
 	}
 
-	promptConfig, err := s.db.GetPromptTypeByName(ctx, customerCase.CustomerCase.OrgID, customerCase.CustomerCase.PromptType)
+	promptConfig, err := s.db.GetPromptTypeByName(ctx, customerCase.CustomerCase.PromptType)
 	if err != nil {
 		return fmt.Errorf("failed to get prompt type for %s: %w", customerCase.CustomerCase.OrgID, err)
 	}
@@ -171,7 +171,7 @@ func (s *Spooler) processCustomerCase(ctx context.Context, customerCase *models.
 	if err != nil {
 		return fmt.Errorf("failed to create call response for %s: %w", customerCase.CustomerCase.ID, err)
 	}
-	
+
 	return s.caseInvestigator.UpdateCaseDecision(ctx, &models.AugmentedConversation{
 		CustomerCase: customerCase.CustomerCase,
 		Customer:     customerCase.Customer,

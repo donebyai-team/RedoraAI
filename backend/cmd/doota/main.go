@@ -37,6 +37,9 @@ func main() {
 				flags.Duration("shutdown-grace-period", 5*time.Second, "[OPERATOR] If non-zero, the process upon receiving the first Ctrl-C and after the elapsed unready period (if set) will give this period of time to components shutdown gracefully before being forced killed")
 				flags.String("gcp-project", "doota-main", "GCP project name")
 				flags.String("pg-dsn", "postgresql://dev-node:insecure-change-me-in-prod@localhost:5432/dev-node?enable_incremental_sort=off&sslmode=disable", "PostgreSQL DSN, set to empty to disable")
+				flags.String("jwt-kms-keypath", "", "JWT signing/verifying key, set to empty to disable (e.g. projects/doota/locations/global/keyRings/api-auth/cryptoKeys/jwt-signing/cryptoKeyVersions/1)")
+				flags.String("encrypt-kms-keypath", "", "KMS key to encrypt/decrypt provider configs without version (e.g. projects/doota/locations/global/keyRings/encrypt-provider-credentials/cryptoKeys/encrypt-credentials-dev)")
+				flags.String("redis-addr", "localhost:6379", "Redis address to store investigator state, set to empty to disable")
 			},
 		),
 		AfterAllHook(func(cmd *cobra.Command) {

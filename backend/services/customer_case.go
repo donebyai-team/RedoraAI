@@ -49,7 +49,7 @@ func (c *CustomerCaseServiceImpl) Create(ctx context.Context, session *CreateCus
 	}
 
 	// Validate if the given prompt type is synced
-	promptType, err := c.db.GetPromptTypeByName(ctx, session.PromptType, session.OrgID)
+	promptType, err := c.db.GetPromptTypeByName(ctx, session.PromptType)
 	if err != nil {
 		if errors.Is(err, datastore.NotFound) {
 			return fmt.Errorf("prompt type not configured: %s", session.PromptType)

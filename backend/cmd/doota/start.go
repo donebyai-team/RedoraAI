@@ -26,6 +26,7 @@ var StartCmd = cli.Command(startCmdE,
 	"Starts the given applications, one of portal, extractor",
 	cli.ArbitraryArgs(),
 	cli.Flags(func(flags *pflag.FlagSet) {
+		flags.Duration("common-phone-call-ttl", 5*time.Minute, cli.FlagDescription(`TTL to set in redis for a phone call`))
 		flags.String("common-pubsub-project", "doota-local", "Google GCP Project")
 		flags.String("common-gpt-model", "gpt-4o-2024-08-06", "GPT Model to use for message creator and categorization")
 		flags.String("common-openai-api-key", "", "OpenAI API key")
@@ -35,6 +36,7 @@ var StartCmd = cli.Command(startCmdE,
 		flags.String("common-langsmith-project", "", "Langsmith project name")
 		flags.Duration("spooler-db-polling-interval", 10*time.Second, "How often the spooler will check the database for new investigation")
 
+		flags.String("portal-cors-url-regex-allow", "^.*", "Regex to allow CORS origin requests from, matched on the full URL (scheme, host, port, path, etc.), defaults to allow all")
 		flags.String("portal-http-listen-addr", ":8787", "http listen address")
 		flags.String("portal-auth0-domain", "", "Auth0 tenant domain")
 		flags.String("portal-auth0-portal-client-id", "", "Auth0 Portal AppFactory Client ID")
@@ -127,7 +129,7 @@ func openAILangsmithLegacyHandling(cmd *cobra.Command, prefix string) (string, s
 }
 
 func vanaSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
-	openaiApiKey, openaiOrganization, openaiDebugStore, langsmithApiKey, langsmithProject := openAILangsmithLegacyHandling(cmd, "spooler")
+	openaiApiKey, openaiOrganization, openaiDebugStore, langsmithApiKey, langsmithProject := openAILangsmithLegacyHandling(cmd, "common")
 	deps, err := new(app.DependenciesBuilder).
 		WithDataStore(sflags.MustGetString(cmd, "pg-dsn")).
 		WithAI(
@@ -139,8 +141,7 @@ func vanaSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		).
 		WithConversationState(
 			sflags.MustGetString(cmd, "redis-addr"),
-			sflags.MustGetDuration(cmd, "common-investigator-heartbeat"),
-			sflags.MustGetDuration(cmd, "common-investigation-cooldown"),
+			sflags.MustGetDuration(cmd, "common-phone-call-ttl"),
 		).
 		Build(cmd.Context(), zlog, tracer)
 	if err != nil {
@@ -173,15 +174,13 @@ func vanaSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 }
 
 func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
-	openaiApiKey, openaiOrganization, openaiDebugStore, langsmithApiKey, langsmithProject := openAILangsmithLegacyHandling(cmd, "spooler")
+	openaiApiKey, openaiOrganization, openaiDebugStore, langsmithApiKey, langsmithProject := openAILangsmithLegacyHandling(cmd, "common")
 	deps, err := app.NewDependenciesBuilder().
 		WithDataStore(sflags.MustGetString(cmd, "pg-dsn")).
-		WithKMSKeyPath(sflags.MustGetString(cmd, "jwt-kms-keypath")).
 		WithCORSURLRegexAllow(sflags.MustGetString(cmd, "portal-cors-url-regex-allow")).
 		WithConversationState(
 			sflags.MustGetString(cmd, "redis-addr"),
-			sflags.MustGetDuration(cmd, "common-investigator-heartbeat"),
-			sflags.MustGetDuration(cmd, "common-investigation-cooldown"),
+			sflags.MustGetDuration(cmd, "common-phone-call-ttl"),
 		).
 		WithAI(
 			openaiApiKey,

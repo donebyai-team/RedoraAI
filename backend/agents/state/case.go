@@ -11,19 +11,17 @@ import (
 )
 
 type customerCaseState struct {
-	redisClient               *redis.Client
-	customerCaseRunningTTL    time.Duration
-	customerCaseRetryCooldown time.Duration
-	logger                    *zap.Logger
+	redisClient            *redis.Client
+	customerCaseRunningTTL time.Duration
+	logger                 *zap.Logger
 }
 
-func NewCustomerCaseState(redisAddr string, customerCaseTTL time.Duration, customerCaseRetryCooldown time.Duration, logger *zap.Logger) *customerCaseState {
+func NewCustomerCaseState(redisAddr string, customerCaseTTL time.Duration, logger *zap.Logger) *customerCaseState {
 	redisClient := redis.NewClient(&redis.Options{Addr: redisAddr})
 	return &customerCaseState{
-		redisClient:               redisClient,
-		customerCaseRunningTTL:    customerCaseTTL,
-		customerCaseRetryCooldown: customerCaseRetryCooldown,
-		logger:                    logger,
+		redisClient:            redisClient,
+		customerCaseRunningTTL: customerCaseTTL,
+		logger:                 logger,
 	}
 }
 

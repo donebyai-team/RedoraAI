@@ -51,6 +51,8 @@ require (
 
 replace github.com/tmc/langchaingo => github.com/streamingfast/langchaingo v0.1.9-0.20241203182852-7b3db2b92bc1
 
+replace github.com/VapiAI/server-sdk-go => github.com/shank318/server-sdk-go v0.0.1
+
 require (
 	cel.dev/expr v0.18.0 // indirect
 	cloud.google.com/go v0.114.0 // indirect

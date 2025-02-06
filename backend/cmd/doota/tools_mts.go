@@ -169,7 +169,7 @@ func (m *PromptTypeSyncer) syncMessageType(ctx context.Context, promptType *mode
 		}
 
 		if org != nil {
-			promptType.OrganizationId = &org.ID
+			promptType.OrganizationId = org.ID
 		}
 
 		promptType, err = m.db.CreatePromptType(ctx, promptType)
@@ -230,9 +230,6 @@ func (m *PromptTypeSyncer) selectOrg() (*models.Organization, error) {
 	idx, _, err := choice.Run()
 	if err != nil {
 		return nil, err
-	}
-	if idx == 0 {
-		return nil, nil
 	}
 	return m.orgs[idx], nil
 }

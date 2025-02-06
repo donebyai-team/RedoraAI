@@ -12,6 +12,7 @@ CREATE TABLE prompt_types (
 
 
 ALTER TABLE prompt_types ADD CONSTRAINT fk1_prompt_types FOREIGN KEY (organization_id) REFERENCES organizations (id);
+CREATE UNIQUE INDEX idx1_prompt_types ON prompt_types (name);
 
 CREATE TRIGGER trigger_record_changed_on_prompt_types
     BEFORE UPDATE

@@ -43,7 +43,7 @@ func (p *Portal) Batch(ctx context.Context, req *connect.Request[pbportal.BatchR
 			break
 		}
 
-		promptType, err := p.db.GetPromptTypeByName(ctx, row.ProductType, orgDetails.ID)
+		promptType, err := p.db.GetPromptTypeByName(ctx, row.ProductType)
 		if err != nil {
 			return nil, fmt.Errorf("product type[%s], not configured for the given org: %w", row.ProductType, err)
 		}
