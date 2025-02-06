@@ -7,7 +7,7 @@ INSERT INTO prompt_types (
         :name,
         :description,
         :organization_id,
-        :config,
+        :config
 ) RETURNING *;
 
 
