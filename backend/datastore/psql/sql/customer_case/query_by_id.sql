@@ -1,3 +1,3 @@
 SELECT *
-FROM customer_cases WHERE
+FROM customer_cases
 WHERE id = :id;

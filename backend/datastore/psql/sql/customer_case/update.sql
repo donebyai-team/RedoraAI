@@ -1,4 +1,4 @@
-UPDATE customer_sessions
+UPDATE customer_cases
 SET status          = :status,
     last_call_status = :last_call_status,
     case_reason = :case_reason,

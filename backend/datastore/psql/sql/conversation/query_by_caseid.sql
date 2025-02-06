@@ -1,3 +1,3 @@
 SELECT *
-FROM conversations WHERE
+FROM conversations
 WHERE customer_case_id = :customer_case_id;

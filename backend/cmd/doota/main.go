@@ -40,6 +40,7 @@ func main() {
 				flags.String("jwt-kms-keypath", "", "JWT signing/verifying key, set to empty to disable (e.g. projects/doota/locations/global/keyRings/api-auth/cryptoKeys/jwt-signing/cryptoKeyVersions/1)")
 				flags.String("encrypt-kms-keypath", "", "KMS key to encrypt/decrypt provider configs without version (e.g. projects/doota/locations/global/keyRings/encrypt-provider-credentials/cryptoKeys/encrypt-credentials-dev)")
 				flags.String("redis-addr", "localhost:6379", "Redis address to store investigator state, set to empty to disable")
+				flags.String("prompt-type-store-url", "", "the path to the prompt type store, used in tools and testing")
 			},
 		),
 		AfterAllHook(func(cmd *cobra.Command) {

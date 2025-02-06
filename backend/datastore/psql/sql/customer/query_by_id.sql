@@ -1,3 +1,3 @@
 SELECT *
-FROM customers WHERE
+FROM customers
 WHERE id = :id;

@@ -1,3 +1,3 @@
 SELECT *
-FROM conversations WHERE
+FROM conversations
 WHERE id = :id;

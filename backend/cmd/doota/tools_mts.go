@@ -36,9 +36,9 @@ var toolsPTSSyncCmd = Command(
 )
 
 func getStore(cmd *cobra.Command) (*prompttypes.Store, error) {
-	storeUrl := sflags.MustGetString(cmd, "message-type-store-url")
+	storeUrl := sflags.MustGetString(cmd, "prompt-type-store-url")
 	if storeUrl == "" {
-		return nil, fmt.Errorf("message-type-store-url is required")
+		return nil, fmt.Errorf("prompt-type-store-url is required")
 	}
 	reader, err := prompttypes.NewReader(storeUrl, zlog)
 	if err != nil {
