@@ -3,6 +3,7 @@ package psql
 import (
 	"context"
 	"fmt"
+	"github.com/lib/pq"
 	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/models"
 )
@@ -58,8 +59,8 @@ func (r *Database) UpdateCustomerCase(ctx context.Context, customer *models.Cust
 
 func (r *Database) GetCustomerCases(ctx context.Context, filter datastore.CustomerCaseFilter) ([]*models.AugmentedCustomerCase, error) {
 	customerCases, err := getMany[models.CustomerCase](ctx, r, "customer_case/query_by_filter.sql", map[string]any{
-		"status":            filter.CaseStatus,
-		"last_call_status":  filter.LastCallStatus,
+		"status":            pq.Array(filter.CaseStatus),
+		"last_call_status":  pq.Array(filter.LastCallStatus),
 		"next_scheduled_at": filter.NextScheduledAt,
 	})
 	if err != nil {

@@ -34,6 +34,7 @@ var StartCmd = cli.Command(startCmdE,
 		flags.String("common-openai-organization", "", "OpenAI Organization")
 		flags.String("common-langsmith-api-key", "", "Langsmith API key")
 		flags.String("common-langsmith-project", "", "Langsmith project name")
+		flags.Uint64("common-auto-mem-limit-percent", 0, "Automatically sets GOMEMLIMIT to a percentage of memory limit from cgroup (useful for container environments)")
 		flags.Duration("spooler-db-polling-interval", 10*time.Second, "How often the spooler will check the database for new investigation")
 
 		flags.String("portal-cors-url-regex-allow", "^.*", "Regex to allow CORS origin requests from, matched on the full URL (scheme, host, port, path, etc.), defaults to allow all")
@@ -130,7 +131,7 @@ func openAILangsmithLegacyHandling(cmd *cobra.Command, prefix string) (string, s
 
 func vanaSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 	openaiApiKey, openaiOrganization, openaiDebugStore, langsmithApiKey, langsmithProject := openAILangsmithLegacyHandling(cmd, "common")
-	deps, err := new(app.DependenciesBuilder).
+	deps, err := app.NewDependenciesBuilder().
 		WithDataStore(sflags.MustGetString(cmd, "pg-dsn")).
 		WithAI(
 			openaiApiKey,

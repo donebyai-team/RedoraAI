@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/shank318/doota/agents"
 	"github.com/shank318/doota/auth"
-	"github.com/shank318/doota/auth/middleware"
 	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/errorx"
 	"github.com/shank318/doota/pb/doota/portal/v1/pbportalconnect"
@@ -66,7 +65,8 @@ func (s *Server) Run(
 		dgrpcserver.WithPostUnaryInterceptor(otelgrpc.UnaryServerInterceptor(otelgrpc.WithTracerProvider(tracerProvider))),
 		dgrpcserver.WithPostStreamInterceptor(otelgrpc.StreamServerInterceptor(otelgrpc.WithTracerProvider(tracerProvider))),
 		dgrpcserver.WithGRPCServerOptions(grpc.MaxRecvMsgSize(25 * 1024 * 1024)),
-		dgrpcserver.WithConnectInterceptor(middleware.NewAuthInterceptor(s.authenticator, s.logger)),
+		// TODO: Uncomment when auth is implemented
+		//dgrpcserver.WithConnectInterceptor(middleware.NewAuthInterceptor(s.authenticator, s.logger)),
 		dgrpcserver.WithConnectInterceptor(connectrpc.NewErrorsInterceptor(s.logger, connectrpc.WithErrorMapper(func(err error) error {
 
 			if baseError := (*errorx.BaseError)(nil); errors.As(err, &baseError) {
@@ -96,10 +96,10 @@ func (s *Server) Run(
 	options = append(options,
 		dgrpcserver.WithConnectWebHTTPHandlers([]dgrpcserver.HTTPHandlerGetter{
 			func() (string, http.Handler) {
-				return "webhook/vana/call_status/{id}", callStatusUpdateHandler(agents.AIAgentVANA)
+				return "/webhook/vana/call_status/{id}", callStatusUpdateHandler(agents.AIAgentVANA)
 			},
 			func() (string, http.Handler) {
-				return "webhook/vana/end_conversation/{id}", endConversationHandler(agents.AIAgentVANA)
+				return "/webhook/vana/end_conversation/{id}", endConversationHandler(agents.AIAgentVANA)
 			},
 		}),
 	)
