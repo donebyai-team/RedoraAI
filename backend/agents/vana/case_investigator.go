@@ -135,7 +135,7 @@ func (s *CaseInvestigator) updateCaseDecision(ctx context.Context, augConversati
 			zap.String("case_status_to_update", augConversation.CustomerCase.Status.String()),
 			zap.String("conversationID", conversation.ID),
 			zap.String("phone", augConversation.Customer.Phone),
-			zap.String("call id", callResponse.CallID))
+			zap.String("call_id", callResponse.CallID))
 	}
 
 	return err
