@@ -172,7 +172,9 @@ func (s *Spooler) processCustomerCase(ctx context.Context, customerCase *models.
 		return fmt.Errorf("failed to create call response for %s: %w", customerCase.CustomerCase.ID, err)
 	}
 
-	return s.caseInvestigator.UpdateCaseDecision(ctx, &models.AugmentedConversation{
+	// Move status to OPEN
+	customerCase.CustomerCase.Status = models.CustomerCaseStatusOPEN
+	return s.caseInvestigator.UpdateCustomerCase(ctx, &models.AugmentedConversation{
 		CustomerCase: customerCase.CustomerCase,
 		Customer:     customerCase.Customer,
 		Conversation: conversation,

@@ -2,12 +2,10 @@ package vana
 
 import (
 	"fmt"
-	"github.com/shank318/doota/agents"
 	"github.com/shank318/doota/agents/state"
 	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/integrations"
 	"github.com/shank318/doota/models"
-	"github.com/shank318/doota/utils"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 )
@@ -51,7 +49,7 @@ func (s *vanaWebhookHandler) UpdateCallStatus(ctx context.Context, conversationI
 		return fmt.Errorf("error while handling webhook: %w", err)
 	}
 
-	return s.updateConversationFromCall(ctx, augConversation, callResponse)
+	return s.caseInvestigator.UpdateCustomerCase(ctx, augConversation, callResponse)
 }
 
 func (s *vanaWebhookHandler) EndConversation(ctx context.Context, conversationID string, req []byte) error {
@@ -85,83 +83,5 @@ func (s *vanaWebhookHandler) EndConversation(ctx context.Context, conversationID
 		return nil
 	}
 
-	return s.updateConversationFromCall(ctx, augConversation, callResponse)
-}
-
-func (s *vanaWebhookHandler) updateConversationFromCall(ctx context.Context, augConversation *models.AugmentedConversation, callResponse *models.CallResponse) error {
-	conversation := augConversation.Conversation
-	conversation.CallStatus = callResponse.CallStatus
-	conversation.ExternalID = &callResponse.CallID
-	conversation.CallEndedReason = &callResponse.CallEndedReason
-
-	// Update conversation
-	err := s.db.UpdateConversation(ctx, conversation)
-	if err != nil {
-		s.logger.Error("failed to update conversation",
-			zap.Error(err),
-			zap.String("conversationID", conversation.ID),
-			zap.String("phone", augConversation.Customer.Phone),
-			zap.String("call id", callResponse.CallID))
-		return err
-	}
-
-	// Mark a call running
-	if callResponse.CallID != "" && agents.IsCallRunning(callResponse.CallStatus) {
-		err := s.state.KeepAlive(ctx, augConversation.CustomerCase.OrgID, augConversation.Customer.Phone)
-		if err != nil {
-			return fmt.Errorf("failed to keep alive for %s, phone %s: %w", augConversation.CustomerCase.ID, augConversation.Customer.Phone, err)
-		}
-	}
-
-	go func() {
-		err := s.caseInvestigator.UpdateCaseDecision(ctx, augConversation, callResponse)
-		if err != nil {
-			s.logger.Error("failed to update case decision", zap.String("conversationID", conversation.ID), zap.String("call id", callResponse.CallID))
-		}
-	}()
-
-	return nil
-}
-
-func caseDecisionToStatus(decision models.CustomerCaseReason, existingStatus models.CustomerCaseStatus) models.CustomerCaseStatus {
-	if utils.Some(caseClosedReasons, func(reason models.CustomerCaseReason) bool {
-		return reason == decision
-	}) {
-		return models.CustomerCaseStatusCLOSED
-	}
-
-	return existingStatus
-}
-
-var caseClosedReasons = []models.CustomerCaseReason{
-	models.CustomerCaseReasonPAID,
-	models.CustomerCaseReasonPARTIALLYPAID,
-	models.CustomerCaseReasonMAXCALLTRIESREACHED,
-	models.CustomerCaseReasonTALKTOSUPPORT,
-}
-
-var callNotPickedReasons = []models.CallEndedReason{
-	models.CallEndedReasonASSISTANTERROR,
-	models.CallEndedReasonCUSTOMERBUSY,
-}
-
-func hasCustomerPickedCall(callEndedReason models.CallEndedReason) bool {
-	return !utils.Some(callNotPickedReasons, func(matchType models.CallEndedReason) bool {
-		return matchType == callEndedReason
-	})
-}
-
-// Ask AI only if there is any reply from a customer
-func shouldAskAI(augConversation *models.AugmentedConversation) bool {
-	if len(augConversation.Conversation.CallMessages) == 0 {
-		return false
-	}
-	hasUserResponded := false
-	for _, msg := range augConversation.Conversation.CallMessages {
-		if msg.UserMessage != nil {
-			hasUserResponded = true
-		}
-	}
-
-	return hasUserResponded
+	return s.caseInvestigator.UpdateCustomerCase(ctx, augConversation, callResponse)
 }

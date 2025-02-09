@@ -2,10 +2,13 @@ package vana
 
 import (
 	"context"
+	"fmt"
+	"github.com/shank318/doota/agents"
 	"github.com/shank318/doota/agents/state"
 	"github.com/shank318/doota/ai"
 	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/models"
+	"github.com/shank318/doota/utils"
 	"go.uber.org/zap"
 )
 
@@ -21,10 +24,47 @@ func NewCaseInvestigator(gptModel ai.GPTModel, db datastore.Repository, aiClient
 	return &CaseInvestigator{gptModel: gptModel, db: db, aiClient: aiClient, logger: logger, state: state}
 }
 
+func (s *CaseInvestigator) UpdateCustomerCase(ctx context.Context, augConversation *models.AugmentedConversation, callResponse *models.CallResponse) error {
+	conversation := augConversation.Conversation
+	conversation.CallStatus = callResponse.CallStatus
+	conversation.ExternalID = &callResponse.CallID
+	conversation.CallEndedReason = &callResponse.CallEndedReason
+	conversation.CustomerCaseStatus = augConversation.CustomerCase.Status
+	conversation.CustomerCaseReason = augConversation.CustomerCase.CaseReason
+
+	// Update conversation
+	err := s.db.UpdateConversation(ctx, conversation)
+	if err != nil {
+		s.logger.Error("failed to update conversation",
+			zap.Error(err),
+			zap.String("conversationID", conversation.ID),
+			zap.String("phone", augConversation.Customer.Phone),
+			zap.String("call id", callResponse.CallID))
+		return err
+	}
+
+	// Mark a call running
+	if callResponse.CallID != "" && agents.IsCallRunning(callResponse.CallStatus) {
+		err := s.state.KeepAlive(ctx, augConversation.CustomerCase.OrgID, augConversation.Customer.Phone)
+		if err != nil {
+			return fmt.Errorf("failed to keep alive for %s, phone %s: %w", augConversation.CustomerCase.ID, augConversation.Customer.Phone, err)
+		}
+	}
+
+	go func() {
+		err := s.updateCaseDecision(ctx, augConversation, callResponse)
+		if err != nil {
+			s.logger.Error("failed to update case decision", zap.String("conversationID", conversation.ID), zap.String("call id", callResponse.CallID))
+		}
+	}()
+
+	return nil
+}
+
 // TODO: Make it called only once
 // Only downside is that it might end up calling AI everytime this is hit in case duplicate webhooks
 // and the outcome of AI can change
-func (s *CaseInvestigator) UpdateCaseDecision(ctx context.Context, augConversation *models.AugmentedConversation, callResponse *models.CallResponse) error {
+func (s *CaseInvestigator) updateCaseDecision(ctx context.Context, augConversation *models.AugmentedConversation, callResponse *models.CallResponse) error {
 	conversation := augConversation.Conversation
 
 	if augConversation.CustomerCase.Status == models.CustomerCaseStatusCLOSED {
@@ -102,4 +142,47 @@ func (s *CaseInvestigator) UpdateCaseDecision(ctx context.Context, augConversati
 	}
 
 	return err
+}
+
+func caseDecisionToStatus(decision models.CustomerCaseReason, existingStatus models.CustomerCaseStatus) models.CustomerCaseStatus {
+	if utils.Some(caseClosedReasons, func(reason models.CustomerCaseReason) bool {
+		return reason == decision
+	}) {
+		return models.CustomerCaseStatusCLOSED
+	}
+
+	return existingStatus
+}
+
+var caseClosedReasons = []models.CustomerCaseReason{
+	models.CustomerCaseReasonPAID,
+	models.CustomerCaseReasonPARTIALLYPAID,
+	models.CustomerCaseReasonMAXCALLTRIESREACHED,
+	models.CustomerCaseReasonTALKTOSUPPORT,
+}
+
+var callNotPickedReasons = []models.CallEndedReason{
+	models.CallEndedReasonASSISTANTERROR,
+	models.CallEndedReasonCUSTOMERBUSY,
+}
+
+func hasCustomerPickedCall(callEndedReason models.CallEndedReason) bool {
+	return !utils.Some(callNotPickedReasons, func(matchType models.CallEndedReason) bool {
+		return matchType == callEndedReason
+	})
+}
+
+// Ask AI only if there is any reply from a customer
+func shouldAskAI(augConversation *models.AugmentedConversation) bool {
+	if len(augConversation.Conversation.CallMessages) == 0 {
+		return false
+	}
+	hasUserResponded := false
+	for _, msg := range augConversation.Conversation.CallMessages {
+		if msg.UserMessage != nil {
+			hasUserResponded = true
+		}
+	}
+
+	return hasUserResponded
 }
