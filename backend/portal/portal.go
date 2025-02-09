@@ -61,6 +61,6 @@ func (p *Portal) Run(ctx context.Context) error {
 		s.Shutdown(nil)
 	})
 
-	s.Run(p, p.UpdateCallStatusHandler, p.EndConversationHandler)
+	s.Run(p, p.UpdateCallStatusHandler, p.EndConversationHandler, p.HandleBatchAdmin)
 	return nil
 }

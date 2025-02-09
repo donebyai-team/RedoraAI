@@ -20,8 +20,8 @@ func (r *Database) CreateCustomer(ctx context.Context, customer *models.Customer
 	var id string
 
 	err := stmt.GetContext(ctx, &id, map[string]interface{}{
-		"firstname":       customer.FirstName,
-		"lastname":        customer.LastName,
+		"first_name":      customer.FirstName,
+		"last_name":       customer.LastName,
 		"phone":           customer.Phone,
 		"organization_id": customer.OrgID,
 	})

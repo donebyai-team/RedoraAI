@@ -5,11 +5,11 @@ import (
 )
 
 type BatchRow struct {
-	FirstName   string    `validate:"required''"`
-	LastName    string    `validate:"required ''"`
+	FirstName   string    `validate:"required"`
+	LastName    string    `validate:"required"`
 	Phone       string    `validate:"required"`
 	DueDate     time.Time `validate:"required"`
-	ProductType string    `validate:"required'"`
+	ProductType string    `validate:"required"`
 }
 
 func NewBatchRow() *BatchRow {

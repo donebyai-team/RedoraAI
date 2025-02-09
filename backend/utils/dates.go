@@ -23,12 +23,10 @@ func timezoneless(layout string) Layout {
 
 var AcceptedLayouts = []Layout{
 	// Sorted from most probably to less probably
+	timezoneless("DD/MM/YYYY"),
 	timezoneless("2006-1-2"),
 	timezoneless("1/2/2006"),
 	timezoned(time.RFC3339),
-	timezoneless("01/2006"),
-	timezoneless("2006"),
-	timezoneless("2006-1"), // Add this as saw there are few cases in PEP Active where the endDate is parsed in this format
 }
 
 func ParseDateLikeInput(element string) (out time.Time, parsedFrom Layout, ok bool) {

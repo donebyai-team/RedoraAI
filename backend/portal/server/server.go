@@ -50,13 +50,14 @@ func New(
 	}
 }
 
-type WebhooksHandler func(agent agents.AIAgent) http.HandlerFunc
+type AgentHandler func(agent agents.AIAgent) http.HandlerFunc
 
 // this is a blocking call
 func (s *Server) Run(
 	portalHandler pbportalconnect.PortalServiceHandler,
-	callStatusUpdateHandler WebhooksHandler,
-	endConversationHandler WebhooksHandler,
+	callStatusUpdateHandler AgentHandler,
+	endConversationHandler AgentHandler,
+	adminBatchUpload AgentHandler,
 ) {
 	tracerProvider := otel.GetTracerProvider()
 	options := []dgrpcserver.Option{
@@ -100,6 +101,9 @@ func (s *Server) Run(
 			},
 			func() (string, http.Handler) {
 				return "/webhook/vana/end_conversation/{id}", endConversationHandler(agents.AIAgentVANA)
+			},
+			func() (string, http.Handler) {
+				return "/vana/admin/batch", adminBatchUpload(agents.AIAgentVANA)
 			},
 		}),
 	)

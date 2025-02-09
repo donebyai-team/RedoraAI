@@ -14,9 +14,8 @@ service PortalService {
 }
 
 message BatchReq {
-  string filename = 1;
-  bytes csv_data = 2;
-  string organization_id = 3;
+  bytes csv_data = 1;
+  string organization_id = 2;
 }
 
 message BatchResp {

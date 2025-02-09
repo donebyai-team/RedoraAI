@@ -19,6 +19,7 @@ require (
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/k3a/html2text v1.2.1
 	github.com/lib/pq v1.10.9
+	github.com/nyaruka/phonenumbers v1.5.0
 	github.com/pkg/errors v0.9.1
 	github.com/redis/go-redis/v9 v9.7.0
 	github.com/rs/cors v1.10.1

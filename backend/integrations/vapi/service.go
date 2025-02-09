@@ -135,12 +135,17 @@ func (m *VAPIVoiceProvider) CreateCall(ctx context.Context, req models.CallReque
 		}
 	}
 
+	toPhone, err := utils.ConvertToE164(req.ToPhone, "IN")
+	if err != nil {
+		return nil, fmt.Errorf("could not ToPhone convert to E164: %w", err)
+	}
+
 	registerCall := api.CreateCallDto{
 		Name:          &req.ConversationID,
 		PhoneNumberId: nil,
 		PhoneNumber:   nil,
 		Customer: &api.CreateCustomerDto{
-			Number: &req.ToPhone,
+			Number: &toPhone,
 		},
 		Assistant: &api.CreateAssistantDto{
 			Model: &api.CreateAssistantDtoModel{

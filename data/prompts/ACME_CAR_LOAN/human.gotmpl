@@ -3,6 +3,8 @@ Here is the client's information you are calling:
 - Last name: {{.lastName}}
 - Phone number: {{.phoneNumber}}
 - Due Date: {{.dueDate}}
+
+
 - Past Conversations:
 {{ range $index, $element := .Conversations }}
 Conversation {{ $index }} Date: {{ $element.CreatedAt }}
