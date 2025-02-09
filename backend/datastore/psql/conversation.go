@@ -81,7 +81,7 @@ func (r *Database) CreateConversation(ctx context.Context, obj *models.Conversat
 	return obj, nil
 }
 
-func (r *Database) UpdateConversation(ctx context.Context, obj *models.Conversation) error {
+func (r *Database) UpdateConversationAndCase(ctx context.Context, augConv *models.AugmentedConversation) error {
 	tx, err := r.BeginTxx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("begin transaction: %w", err)
@@ -89,6 +89,8 @@ func (r *Database) UpdateConversation(ctx context.Context, obj *models.Conversat
 	defer func() {
 		err = executePotentialRollback(tx, err)
 	}()
+
+	obj := augConv.Conversation
 
 	stmt := r.mustGetTxStmt(ctx, "conversation/update_conversation.sql", tx)
 	_, err = stmt.ExecContext(ctx, map[string]interface{}{
@@ -106,14 +108,17 @@ func (r *Database) UpdateConversation(ctx context.Context, obj *models.Conversat
 		return fmt.Errorf("failed to update customer conversation %q: %w", obj.ID, err)
 	}
 
+	caseObj := augConv.CustomerCase
+
 	stmt = r.mustGetTxStmt(ctx, "customer_case/update_customer_case.sql", tx)
 	_, err = stmt.ExecContext(ctx, map[string]interface{}{
 		"id":                obj.CustomerCaseID,
 		"last_call_status":  obj.CallStatus,
-		"summary":           obj.CaseSummary,
-		"case_reason":       obj.CustomerCaseReason,
-		"status":            obj.CustomerCaseStatus,
 		"next_scheduled_at": obj.NextScheduledAt,
+
+		"summary":     caseObj.Summary,
+		"case_reason": caseObj.CaseReason,
+		"status":      caseObj.Status,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to update customer_case %q: %w", obj.CustomerCaseID, err)

@@ -29,11 +29,9 @@ func (s *CaseInvestigator) UpdateCustomerCase(ctx context.Context, augConversati
 	conversation.CallStatus = callResponse.CallStatus
 	conversation.ExternalID = &callResponse.CallID
 	conversation.CallEndedReason = &callResponse.CallEndedReason
-	conversation.CustomerCaseStatus = augConversation.CustomerCase.Status
-	conversation.CustomerCaseReason = augConversation.CustomerCase.CaseReason
 
 	// Update conversation
-	err := s.db.UpdateConversation(ctx, conversation)
+	err := s.db.UpdateConversationAndCase(ctx, augConversation)
 	if err != nil {
 		s.logger.Error("failed to update conversation",
 			zap.Error(err),
@@ -52,7 +50,7 @@ func (s *CaseInvestigator) UpdateCustomerCase(ctx context.Context, augConversati
 	}
 
 	go func() {
-		err := s.updateCaseDecision(ctx, augConversation, callResponse)
+		err := s.updateCaseDecision(context.Background(), augConversation, callResponse)
 		if err != nil {
 			s.logger.Error("failed to update case decision", zap.String("conversationID", conversation.ID), zap.String("call id", callResponse.CallID))
 		}
@@ -94,13 +92,11 @@ func (s *CaseInvestigator) updateCaseDecision(ctx context.Context, augConversati
 	// Release call
 	err := s.state.Release(ctx, augConversation.Customer.Phone)
 	if err != nil {
-		if err != nil {
-			s.logger.Error("failed to release call",
-				zap.Error(err),
-				zap.String("conversationID", conversation.ID),
-				zap.String("phone", augConversation.Customer.Phone),
-				zap.String("call id", callResponse.CallID))
-		}
+		s.logger.Error("failed to release call",
+			zap.Error(err),
+			zap.String("conversationID", conversation.ID),
+			zap.String("phone", augConversation.Customer.Phone),
+			zap.String("call id", callResponse.CallID))
 	}
 
 	// Mark case failed if reached max tries
@@ -110,8 +106,8 @@ func (s *CaseInvestigator) updateCaseDecision(ctx context.Context, augConversati
 	pastConversations, err := s.db.GetConversationsByCaseID(ctx, augConversation.CustomerCase.ID)
 	callsToday, totalCalls := getCustomerCallStats(pastConversations)
 	if totalCalls >= maxTotalAllowedCalls {
-		conversation.CustomerCaseStatus = models.CustomerCaseStatusCLOSED
-		conversation.CustomerCaseReason = models.CustomerCaseReasonMAXCALLTRIESREACHED
+		augConversation.CustomerCase.Status = models.CustomerCaseStatusCLOSED
+		augConversation.CustomerCase.CaseReason = models.CustomerCaseReasonMAXCALLTRIESREACHED
 	} else if !hasCustomerPickedCall(callResponse.CallEndedReason) {
 		conversation.NextScheduledAt = getNextCallTime(callsToday, conversation.CreatedAt)
 	} else if shouldAskAI(augConversation) {
@@ -123,8 +119,8 @@ func (s *CaseInvestigator) updateCaseDecision(ctx context.Context, augConversati
 				zap.String("phone", augConversation.Customer.Phone),
 				zap.String("call_id", callResponse.CallID))
 		} else {
-			conversation.CustomerCaseStatus = caseDecisionToStatus(decision.CaseStatusReason, conversation.CustomerCaseStatus)
-			conversation.CustomerCaseReason = decision.CaseStatusReason
+			augConversation.CustomerCase.Status = caseDecisionToStatus(decision.CaseStatusReason, augConversation.CustomerCase.Status)
+			augConversation.CustomerCase.CaseReason = decision.CaseStatusReason
 			conversation.Summary = decision.Summary
 			if decision.NextCallScheduledAtTime != nil {
 				conversation.NextScheduledAt = decision.NextCallScheduledAtTime
@@ -132,10 +128,11 @@ func (s *CaseInvestigator) updateCaseDecision(ctx context.Context, augConversati
 		}
 	}
 
-	err = s.db.UpdateConversation(ctx, conversation)
+	err = s.db.UpdateConversationAndCase(ctx, augConversation)
 	if err != nil {
-		s.logger.Error("failed to update conversation",
+		s.logger.Error("failed to update conversation after evluation",
 			zap.Error(err),
+			zap.String("case_status_to_update", augConversation.CustomerCase.Status.String()),
 			zap.String("conversationID", conversation.ID),
 			zap.String("phone", augConversation.Customer.Phone),
 			zap.String("call id", callResponse.CallID))

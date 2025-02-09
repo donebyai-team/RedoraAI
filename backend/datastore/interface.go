@@ -58,7 +58,7 @@ type CustomerCaseRepository interface {
 
 type ConversationRepository interface {
 	CreateConversation(ctx context.Context, obj *models.Conversation) (*models.Conversation, error)
-	UpdateConversation(ctx context.Context, obj *models.Conversation) error
+	UpdateConversationAndCase(ctx context.Context, obj *models.AugmentedConversation) error
 	GetConversationsByCaseID(ctx context.Context, customerCaseID string) ([]*models.Conversation, error)
 	GetConversationByID(ctx context.Context, id string) (*models.AugmentedConversation, error)
 }

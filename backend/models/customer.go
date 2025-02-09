@@ -59,11 +59,6 @@ type Conversation struct {
 	UpdatedAt       *time.Time       `db:"updated_at"`
 	CallEndedReason *CallEndedReason `db:"end_of_call_reason"`
 	CallMessages    CallMessages     `db:"call_messages"`
-
-	// Non-db
-	CustomerCaseStatus CustomerCaseStatus
-	CustomerCaseReason CustomerCaseReason
-	CaseSummary        string
 }
 
 type CallMessages []CallMessage
