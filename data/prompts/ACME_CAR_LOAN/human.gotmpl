@@ -7,6 +7,6 @@ Here is the client's information you are calling:
 
 - Past Conversations:
 {{ range $index, $element := .Conversations }}
-Conversation {{ $index }} Date: {{ $element.CreatedAt }}
+Conversation {{ $index }} Date: {{ $element.Date }}
 Conversation {{ $index }} Summary: {{ $element.Summary }}
 {{ end }}

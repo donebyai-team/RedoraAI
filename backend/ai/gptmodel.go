@@ -23,10 +23,8 @@ type GPTModel string
 func (g GPTModel) GetVars(customerCase *models.AugmentedCustomerCase) Variable {
 	out := make(Variable).
 		WithCustomer(customerCase.Customer).
-		WithCustomerCase(customerCase.CustomerCase)
-	if len(customerCase.Conversations) > 0 {
-		out = out.WithPastConversations(customerCase.Conversations)
-	}
+		WithCustomerCase(customerCase.CustomerCase).
+		WithPastConversations(customerCase.Conversations)
 	return out
 }
 

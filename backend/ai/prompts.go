@@ -77,7 +77,7 @@ func (v Variable) WithCallMessages(messages []models.CallMessage) Variable {
 }
 
 func (v Variable) WithPastConversations(conversations []*models.Conversation) Variable {
-	var atts []map[string]any
+	atts := make([]map[string]any, 0, len(conversations))
 	for _, conversation := range conversations {
 		atts = append(atts, map[string]any{
 			"Date":    conversation.CreatedAt.Format(time.RFC3339),

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/shank318/doota/ai"
 	"io"
 	"strings"
 
@@ -64,6 +65,7 @@ func (r *Reader) Reader(ctx context.Context) (*Store, error) {
 				return fmt.Errorf("unmarshal basicInfo %s: %w", filename, err)
 			}
 			mt.description = info.Description
+			mt.getPromptConfig().Model = ai.GPTModel(info.Model)
 		case "human.gotmpl":
 			mt.getPromptConfig().HumanTmpl = string(content)
 		case "prompt.gotmpl":

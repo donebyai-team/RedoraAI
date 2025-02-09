@@ -9,6 +9,7 @@ import (
 )
 
 type basicInfo struct {
+	Model       string `json:"model"`
 	Description string `json:"description"`
 }
 

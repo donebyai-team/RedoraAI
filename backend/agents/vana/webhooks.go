@@ -91,8 +91,8 @@ func (s *vanaWebhookHandler) EndConversation(ctx context.Context, conversationID
 func (s *vanaWebhookHandler) updateConversationFromCall(ctx context.Context, augConversation *models.AugmentedConversation, callResponse *models.CallResponse) error {
 	conversation := augConversation.Conversation
 	conversation.CallStatus = callResponse.CallStatus
-	conversation.ExternalID = callResponse.CallID
-	conversation.CallEndedReason = callResponse.CallEndedReason
+	conversation.ExternalID = &callResponse.CallID
+	conversation.CallEndedReason = &callResponse.CallEndedReason
 
 	// Update conversation
 	err := s.db.UpdateConversation(ctx, conversation)
