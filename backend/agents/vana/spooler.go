@@ -239,9 +239,12 @@ func (s *Spooler) loadCustomerSessions(ctx context.Context) error {
 }
 
 func (s *Spooler) shouldNotProcessCustomerCase(customerCase *models.AugmentedCustomerCase) bool {
+	if customerCase.CustomerCase.LastCallStatus == nil {
+		return false
+	}
 	return customerCase.CustomerCase.Status == models.CustomerCaseStatusCLOSED &&
-		(customerCase.CustomerCase.LastCallStatus == models.CallStatusQUEUED ||
-			customerCase.CustomerCase.LastCallStatus == models.CallStatusINPROGRESS)
+		(*customerCase.CustomerCase.LastCallStatus == models.CallStatusQUEUED ||
+			*customerCase.CustomerCase.LastCallStatus == models.CallStatusINPROGRESS)
 }
 
 func (s *Spooler) pushCustomerSession(customerCase *models.AugmentedCustomerCase) {

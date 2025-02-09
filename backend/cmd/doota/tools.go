@@ -7,4 +7,5 @@ import (
 var ToolsGroup = Group("tools", "Doota admin & developer tools",
 	toolsPTSGroup,
 	toolsPTSSyncCmd,
+	toolsIntegrationsGroup,
 )

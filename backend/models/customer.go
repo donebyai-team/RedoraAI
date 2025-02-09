@@ -38,7 +38,7 @@ type CustomerCase struct {
 	Status          CustomerCaseStatus `db:"status"`
 	CaseReason      CustomerCaseReason `db:"case_reason"`
 	Summary         string             `db:"summary"`
-	LastCallStatus  CallStatus         `db:"last_call_status"`
+	LastCallStatus  *CallStatus        `db:"last_call_status"`
 	NextScheduledAt *time.Time         `db:"next_scheduled_at"`
 	CreatedAt       time.Time          `db:"created_at"`
 	UpdatedAt       *time.Time         `db:"updated_at"`
@@ -57,7 +57,7 @@ type Conversation struct {
 	RecordingURL    string          `db:"recording_url"`
 	CreatedAt       time.Time       `db:"created_at"`
 	UpdatedAt       *time.Time      `db:"updated_at"`
-	CallEndedReason CallEndedReason `db:"call_ended_reason"`
+	CallEndedReason CallEndedReason `db:"end_of_call_reason"`
 	CallMessages    CallMessages    `db:"call_messages"`
 
 	// Non-db

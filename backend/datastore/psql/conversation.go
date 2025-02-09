@@ -8,16 +8,15 @@ import (
 
 func init() {
 	registerFiles([]string{
-		"conversation/create.sql",
-		"conversation/update.sql",
-		"conversation/query_by_id.sql",
-		"conversation/query_by_caseid.sql",
-
-		"customer_case/update.sql",
+		"conversation/create_conversation.sql",
+		"conversation/update_conversation.sql",
+		"conversation/query_conversation_by_id.sql",
+		"conversation/query_conversation_by_caseid.sql",
+		"customer_case/update_customer_case.sql",
 	})
 }
 func (r *Database) GetConversationByID(ctx context.Context, id string) (*models.AugmentedConversation, error) {
-	conversation, err := getOne[models.Conversation](ctx, r, "conversation/query_by_id.sql", map[string]any{
+	conversation, err := getOne[models.Conversation](ctx, r, "conversation/query_conversation_by_id.sql", map[string]any{
 		"id": id,
 	})
 
@@ -51,7 +50,7 @@ func (r *Database) CreateConversation(ctx context.Context, obj *models.Conversat
 		err = executePotentialRollback(tx, err)
 	}()
 
-	stmt := r.mustGetTxStmt(ctx, "conversation/create.sql", tx)
+	stmt := r.mustGetTxStmt(ctx, "conversation/create_conversation.sql", tx)
 	var id string
 
 	err = stmt.GetContext(ctx, &id, map[string]interface{}{
@@ -91,7 +90,7 @@ func (r *Database) UpdateConversation(ctx context.Context, obj *models.Conversat
 		err = executePotentialRollback(tx, err)
 	}()
 
-	stmt := r.mustGetTxStmt(ctx, "conversation/update.sql", tx)
+	stmt := r.mustGetTxStmt(ctx, "conversation/update_conversation.sql", tx)
 	_, err = stmt.ExecContext(ctx, map[string]interface{}{
 		"summary":            obj.Summary,
 		"recording_url":      obj.RecordingURL,
@@ -107,7 +106,7 @@ func (r *Database) UpdateConversation(ctx context.Context, obj *models.Conversat
 		return fmt.Errorf("failed to update customer conversation %q: %w", obj.ID, err)
 	}
 
-	stmt = r.mustGetTxStmt(ctx, "customer_case/update.sql", tx)
+	stmt = r.mustGetTxStmt(ctx, "customer_case/update_customer_case.sql", tx)
 	_, err = stmt.ExecContext(ctx, map[string]interface{}{
 		"id":                obj.CustomerCaseID,
 		"last_call_status":  obj.CallStatus,
@@ -128,7 +127,7 @@ func (r *Database) UpdateConversation(ctx context.Context, obj *models.Conversat
 }
 
 func (r *Database) GetConversationsByCaseID(ctx context.Context, customerCaseID string) ([]*models.Conversation, error) {
-	return getMany[models.Conversation](ctx, r, "conversation/query_by_caseid.sql", map[string]any{
+	return getMany[models.Conversation](ctx, r, "conversation/query_conversation_by_caseid.sql", map[string]any{
 		"customer_case_id": customerCaseID,
 	})
 }

@@ -8,15 +8,15 @@ import (
 
 func init() {
 	registerFiles([]string{
-		"customer/create.sql",
-		"customer/query_by_phone.sql",
-		"customer/query_by_id.sql",
+		"customer/create_customer.sql",
+		"customer/query_customer_by_phone.sql",
+		"customer/query_customer_by_id.sql",
 	})
 
 }
 
 func (r *Database) CreateCustomer(ctx context.Context, customer *models.Customer) (*models.Customer, error) {
-	stmt := r.mustGetStmt("customer/create.sql")
+	stmt := r.mustGetStmt("customer/create_customer.sql")
 	var id string
 
 	err := stmt.GetContext(ctx, &id, map[string]interface{}{
@@ -33,14 +33,14 @@ func (r *Database) CreateCustomer(ctx context.Context, customer *models.Customer
 }
 
 func (r *Database) GetCustomerByPhone(ctx context.Context, phone, organizationID string) (*models.Customer, error) {
-	return getOne[models.Customer](ctx, r, "customer/query_by_phone.sql", map[string]any{
+	return getOne[models.Customer](ctx, r, "customer/query_customer_by_phone.sql", map[string]any{
 		"phone":           phone,
 		"organization_id": organizationID,
 	})
 }
 
 func (r *Database) GetCustomerByID(ctx context.Context, id string) (*models.Customer, error) {
-	return getOne[models.Customer](ctx, r, "customer/query_by_id.sql", map[string]any{
+	return getOne[models.Customer](ctx, r, "customer/query_customer_by_id.sql", map[string]any{
 		"id": id,
 	})
 }

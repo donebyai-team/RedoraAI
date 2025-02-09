@@ -203,3 +203,9 @@ You can find a sample seed file here [`./devel/seed.sql`](`./devel/seed.sql`)
 3. Total max no of calls limits
 4. Fanout limits to max no of calls per org at a time
 5. Polling interval
+
+```
+DAT:
+freight  tools integrations dat create <org-id> {\"auth_host\":\"identity.api.staging.dat.com\",\"api_host\":\"analytics.api.staging.dat.com\",\"org_user\":\"dat@loadlogic.ai\",\"org_password\":\"CHANGE_PASSWORD\",\"user_account\":\"mdm@streamingfast.io\"}
+
+```

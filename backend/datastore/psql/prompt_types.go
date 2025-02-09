@@ -9,14 +9,14 @@ import (
 
 func init() {
 	registerFiles([]string{
-		"prompt_type/create.sql",
-		"prompt_type/update.sql",
-		"prompt_type/query_by_name.sql",
+		"prompt_type/create_prompt_type.sql",
+		"prompt_type/update_prompt_type.sql",
+		"prompt_type/query_prompt_type_by_name.sql",
 	})
 }
 
 func (r *Database) CreatePromptType(ctx context.Context, PromptType *models.PromptType) (*models.PromptType, error) {
-	stmt := r.mustGetStmt("prompt_type/create.sql")
+	stmt := r.mustGetStmt("prompt_type/create_prompt_type.sql")
 
 	out := &models.PromptType{}
 	err := stmt.GetContext(ctx, out, map[string]interface{}{
@@ -32,7 +32,7 @@ func (r *Database) CreatePromptType(ctx context.Context, PromptType *models.Prom
 }
 
 func (r *Database) UpdatePromptType(ctx context.Context, PromptType *models.PromptType) error {
-	stmt := r.mustGetStmt("prompt_type/update.sql")
+	stmt := r.mustGetStmt("prompt_type/update_prompt_type.sql")
 	_, err := stmt.ExecContext(ctx, map[string]interface{}{
 		"description": PromptType.Description,
 		"name":        PromptType.Name,
@@ -45,7 +45,7 @@ func (r *Database) UpdatePromptType(ctx context.Context, PromptType *models.Prom
 }
 
 func (r *Database) GetPromptTypeByName(ctx context.Context, name string) (*models.PromptType, error) {
-	return getOne[models.PromptType](ctx, r, "prompt_type/query_by_name.sql", map[string]any{
+	return getOne[models.PromptType](ctx, r, "prompt_type/query_prompt_type_by_name.sql", map[string]any{
 		"name": name,
 	})
 }

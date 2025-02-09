@@ -68,9 +68,23 @@ func (r *Database) GetIntegrationByOrgAndType(ctx context.Context, organizationI
 }
 
 func (r *Database) GetIntegrationsByOrgID(ctx context.Context, orgID string) ([]*models.Integration, error) {
-	return getMany[models.Integration](ctx, r, "integration/query_integration_by_org.sql", map[string]any{
+	integrations, err := getMany[models.Integration](ctx, r, "integration/query_integration_by_org.sql", map[string]any{
 		"organization_id": orgID,
 	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, integration := range integrations {
+		integration.EncryptedConfig, err = r.decryptMessage(integration.EncryptedConfig)
+		if err != nil {
+			return nil, errors.Wrap(err, fmt.Sprintf("failed to decrypt [%s] config", integration.Type))
+		}
+
+	}
+
+	return integrations, nil
 }
 
 func (r *Database) GetIntegrationById(ctx context.Context, id string) (*models.Integration, error) {

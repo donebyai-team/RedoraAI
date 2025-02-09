@@ -10,39 +10,39 @@ import (
 
 func init() {
 	registerFiles([]string{
-		"customer_case/create.sql",
-		"customer_case/update.sql",
-		"customer_case/query_by_filter.sql",
-		"customer_case/query_by_id.sql",
+		"customer_case/create_customer_case.sql",
+		"customer_case/update_customer_case.sql",
+		"customer_case/query_customer_case_by_filter.sql",
+		"customer_case/query_customer_case_by_id.sql",
 	})
 
 }
 
 func (r *Database) GetCustomerCaseByID(ctx context.Context, id string) (*models.CustomerCase, error) {
-	return getOne[models.CustomerCase](ctx, r, "customer_case/query_by_id.sql", map[string]any{
+	return getOne[models.CustomerCase](ctx, r, "customer_case/query_customer_case_by_id.sql", map[string]any{
 		"id": id,
 	})
 }
 
 func (r *Database) CreateCustomerCase(ctx context.Context, customer *models.CustomerCase) (*models.CustomerCase, error) {
-	stmt := r.mustGetStmt("customer_case/create.sql")
+	stmt := r.mustGetStmt("customer_case/create_customer_case.sql")
 	var id string
 
 	err := stmt.GetContext(ctx, &id, map[string]interface{}{
-		"customer_id": customer.CustomerID,
-		"due_date":    customer.DueDate,
-		"status":      customer.Status,
-		"prompt_type": customer.PromptType,
+		"customer_id":     customer.CustomerID,
+		"due_date":        customer.DueDate,
+		"prompt_type":     customer.PromptType,
+		"organization_id": customer.OrgID,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to create customer session: %w", err)
+		return nil, fmt.Errorf("failed to create customer case: %w", err)
 	}
 	customer.ID = id
 	return customer, nil
 }
 
 func (r *Database) UpdateCustomerCase(ctx context.Context, customer *models.CustomerCase) error {
-	stmt := r.mustGetStmt("customer_case/update.sql")
+	stmt := r.mustGetStmt("customer_case/update_customer_case.sql")
 	_, err := stmt.ExecContext(ctx, map[string]interface{}{
 		"status":            customer.Status,
 		"last_call_status":  customer.LastCallStatus,
@@ -58,7 +58,7 @@ func (r *Database) UpdateCustomerCase(ctx context.Context, customer *models.Cust
 }
 
 func (r *Database) GetCustomerCases(ctx context.Context, filter datastore.CustomerCaseFilter) ([]*models.AugmentedCustomerCase, error) {
-	customerCases, err := getMany[models.CustomerCase](ctx, r, "customer_case/query_by_filter.sql", map[string]any{
+	customerCases, err := getMany[models.CustomerCase](ctx, r, "customer_case/query_customer_case_by_filter.sql", map[string]any{
 		"status":            pq.Array(filter.CaseStatus),
 		"last_call_status":  pq.Array(filter.LastCallStatus),
 		"next_scheduled_at": filter.NextScheduledAt,
