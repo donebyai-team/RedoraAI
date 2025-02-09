@@ -129,7 +129,7 @@ func (m *VAPIVoiceProvider) CreateCall(ctx context.Context, req models.CallReque
 
 		if message.GetType() == llms.ChatMessageTypeHuman {
 			messages = append(messages, &api.OpenAiMessage{
-				Role:    api.OpenAiMessageRoleUser,
+				Role:    api.OpenAiMessageRoleAssistant,
 				Content: utils.Ptr(message.GetContent()),
 			})
 		}
@@ -142,8 +142,7 @@ func (m *VAPIVoiceProvider) CreateCall(ctx context.Context, req models.CallReque
 
 	registerCall := api.CreateCallDto{
 		Name:          &req.ConversationID,
-		PhoneNumberId: nil,
-		PhoneNumber:   nil,
+		PhoneNumberId: &req.FromPhone,
 		Customer: &api.CreateCustomerDto{
 			Number: &toPhone,
 		},
@@ -159,11 +158,7 @@ func (m *VAPIVoiceProvider) CreateCall(ctx context.Context, req models.CallReque
 				api.CreateAssistantDtoServerMessagesItemStatusUpdate,
 			},
 			Server: &api.Server{
-				Url: "",
-				Headers: map[string]interface{}{
-					"Content-Type":    "application/json",
-					"conversation_id": req.ConversationID,
-				},
+				Url: fmt.Sprintf("https://9ba5-122-171-17-143.ngrok-free.app/webhook/vana/call_status/%s", req.ConversationID),
 			},
 		},
 	}

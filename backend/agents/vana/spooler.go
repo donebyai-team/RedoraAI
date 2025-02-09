@@ -96,7 +96,7 @@ func (s *Spooler) runLoop(ctx context.Context) {
 	}
 }
 
-const fromPhone = ""
+const fromPhone = "6e35359c-fa82-44a6-89fa-953b701b9116"
 
 func (s *Spooler) processCustomerCase(ctx context.Context, customerCase *models.AugmentedCustomerCase) error {
 	logger := s.logger.With(
