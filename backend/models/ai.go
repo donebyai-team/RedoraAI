@@ -16,9 +16,21 @@ type CaseDecisionResponse struct {
 }
 
 func (b CaseDecisionResponse) Value() (driver.Value, error) {
+	if b.IsEmpty() {
+		return "{}", nil // Return empty JSON object if struct is empty
+	}
 	return valueAsJSON(b, "ai_decision")
 }
 
 func (b *CaseDecisionResponse) Scan(value interface{}) error {
 	return scanFromJSON(value, b, "ai_decision")
+}
+
+func (b CaseDecisionResponse) IsEmpty() bool {
+	return b.ChainOfThoughtCaseStatus == "" &&
+		b.CaseStatusReason == "" &&
+		b.CaseStatusConfidenceScore == 0 &&
+		b.NextCallScheduledAt == "" &&
+		b.ChainOfThoughtNextCallScheduledAt == "" &&
+		b.NextCallScheduledAtConfidenceScore == 0
 }
