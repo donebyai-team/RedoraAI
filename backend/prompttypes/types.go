@@ -36,8 +36,8 @@ func (m *promptTypeFiles) validate() error {
 	}
 
 	if m.promptConfig != nil {
-		if m.promptConfig.PromptTmpl == "" || m.promptConfig.HumanTmpl == "" {
-			return fmt.Errorf("prompt and human are required for llm message types")
+		if m.promptConfig.PromptTmpl == "" {
+			return fmt.Errorf("prompt are required for llm message types")
 		}
 	}
 

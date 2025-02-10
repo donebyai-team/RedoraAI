@@ -29,6 +29,7 @@ func (s *CaseInvestigator) UpdateCustomerCase(ctx context.Context, augConversati
 	conversation.CallStatus = callResponse.CallStatus
 	conversation.ExternalID = &callResponse.CallID
 	conversation.CallEndedReason = &callResponse.CallEndedReason
+	conversation.CallMessages = callResponse.CallMessages
 
 	// Update conversation
 	err := s.db.UpdateConversationAndCase(ctx, augConversation)

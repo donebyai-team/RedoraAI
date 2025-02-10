@@ -67,7 +67,7 @@ func (v Variable) WithCallMessages(messages []models.CallMessage) Variable {
 			})
 		} else if conversation.BotMessage != nil {
 			atts = append(atts, map[string]any{
-				"Role":    "bot",
+				"Role":    "assistant",
 				"Message": conversation.BotMessage.Message,
 			})
 		}

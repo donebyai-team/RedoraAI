@@ -5,6 +5,7 @@ import (
 	"github.com/shank318/doota/models"
 	"slices"
 	"text/template"
+	"time"
 
 	"github.com/tmc/langchaingo/prompts"
 )
@@ -20,11 +21,12 @@ var caseDecisionTemplates = []Template{
 // ENUM(gpt-4-vision-preview, gpt-4-turbo, gpt-4-turbo-preview, gpt-4-0125-preview, gpt-4-turbo-2024-04-09, gpt-4o-2024-05-13, gpt-4o-2024-08-06)
 type GPTModel string
 
-func (g GPTModel) GetVars(customerCase *models.AugmentedCustomerCase) Variable {
+func (g GPTModel) GetVars(customerCase *models.AugmentedCustomerCase, currentTime time.Time) Variable {
 	out := make(Variable).
 		WithCustomer(customerCase.Customer).
 		WithCustomerCase(customerCase.CustomerCase).
-		WithPastConversations(customerCase.Conversations)
+		WithPastConversations(customerCase.Conversations).
+		WithConversationDate(currentTime)
 	return out
 }
 

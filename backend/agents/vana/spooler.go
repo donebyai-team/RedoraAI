@@ -155,7 +155,7 @@ func (s *Spooler) processCustomerCase(ctx context.Context, customerCase *models.
 
 	debugTemplateName := fmt.Sprintf("voice.%s", strings.ToLower(promptConfig.Name))
 
-	vars := prompt.Model.GetVars(customerCase)
+	vars := prompt.Model.GetVars(customerCase, time.Now())
 	chatMessages, err := s.aiClient.ExtractMessages(ctx, debugTemplateName, prompt, vars, conversation.ID, logger)
 	if err != nil {
 		return fmt.Errorf("failed to extract messages from prompt: %w", err)

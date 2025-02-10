@@ -18,7 +18,7 @@ func getCustomerCallStats(conversations []*models.Conversation) (int, int) {
 	loc, _ := time.LoadLocation(istLocation)
 	now := time.Now().In(loc)
 	today := now.Format("2006-01-02")
-	totalCalls := len(conversations)
+	totalCalls := 0
 	callsToday := 0
 
 	for _, conv := range conversations {
