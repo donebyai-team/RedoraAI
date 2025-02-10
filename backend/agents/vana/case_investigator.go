@@ -27,38 +27,40 @@ func NewCaseInvestigator(gptModel ai.GPTModel, db datastore.Repository, aiClient
 
 func (s *CaseInvestigator) UpdateCustomerCase(ctx context.Context, augConversation *models.AugmentedConversation, callResponse *models.CallResponse) error {
 	conversation := augConversation.Conversation
-	conversation.CallStatus = callResponse.CallStatus
-	conversation.ExternalID = &callResponse.CallID
-	conversation.CallEndedReason = &callResponse.CallEndedReason
-	conversation.CallMessages = callResponse.CallMessages
-	conversation.Summary = callResponse.Summary
-	conversation.RecordingURL = utils.Ptr(callResponse.RecordingURL)
+	// Update the conversation if the call is not ended
+	// Else update the conversation and case together
+	if conversation.CallStatus != models.CallStatusENDED {
+		conversation.CallStatus = callResponse.CallStatus
+		conversation.ExternalID = &callResponse.CallID
+		conversation.CallMessages = callResponse.CallMessages
 
-	// Update conversation
-	err := s.db.UpdateConversationAndCase(ctx, augConversation)
-	if err != nil {
-		s.logger.Error("failed to update conversation",
-			zap.Error(err),
-			zap.String("conversationID", conversation.ID),
-			zap.String("phone", augConversation.Customer.Phone),
-			zap.String("call id", callResponse.CallID))
-		return err
-	}
-
-	// Mark a call running
-	if callResponse.CallID != "" && agents.IsCallRunning(callResponse.CallStatus) {
-		err := s.state.KeepAlive(ctx, augConversation.CustomerCase.OrgID, augConversation.Customer.Phone)
+		// Update conversation
+		err := s.db.UpdateConversationAndCase(ctx, augConversation)
 		if err != nil {
-			return fmt.Errorf("failed to keep alive for %s, phone %s: %w", augConversation.CustomerCase.ID, augConversation.Customer.Phone, err)
+			s.logger.Error("failed to update conversation",
+				zap.Error(err),
+				zap.String("conversationID", conversation.ID),
+				zap.String("phone", augConversation.Customer.Phone),
+				zap.String("call id", callResponse.CallID))
+			return err
 		}
-	}
 
-	go func() {
-		err := s.updateCaseDecision(context.Background(), augConversation, callResponse)
-		if err != nil {
-			s.logger.Error("failed to update case decision", zap.String("conversationID", conversation.ID), zap.String("call id", callResponse.CallID))
+		// Mark a call running
+		if callResponse.CallID != "" && agents.IsCallRunning(callResponse.CallStatus) {
+			err := s.state.KeepAlive(ctx, augConversation.CustomerCase.OrgID, augConversation.Customer.Phone)
+			if err != nil {
+				return fmt.Errorf("failed to keep alive for %s, phone %s: %w", augConversation.CustomerCase.ID, augConversation.Customer.Phone, err)
+			}
 		}
-	}()
+	} else {
+		// End the call
+		go func() {
+			err := s.updateCaseDecision(context.Background(), augConversation, callResponse)
+			if err != nil {
+				s.logger.Error("failed to update case decision", zap.String("conversationID", conversation.ID), zap.String("call id", callResponse.CallID))
+			}
+		}()
+	}
 
 	return nil
 }
@@ -102,6 +104,10 @@ func (s *CaseInvestigator) updateCaseDecision(ctx context.Context, augConversati
 			zap.String("phone", augConversation.Customer.Phone),
 			zap.String("call id", callResponse.CallID))
 	}
+
+	conversation.CallEndedReason = &callResponse.CallEndedReason
+	conversation.Summary = callResponse.Summary
+	conversation.RecordingURL = utils.Ptr(callResponse.RecordingURL)
 
 	// Mark case failed if reached max tries
 	// Case Decision (using llm)
