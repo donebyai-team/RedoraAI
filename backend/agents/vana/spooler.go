@@ -231,7 +231,7 @@ func (s *Spooler) loadCustomerSessions(ctx context.Context) error {
 
 	casesToProcess := 0
 	for _, customerCase := range cases {
-		if !s.shouldNotProcessCustomerCase(customerCase) {
+		if s.shouldProcessCustomerCase(customerCase) {
 			casesToProcess++
 			s.pushCustomerSession(customerCase)
 		}
@@ -240,13 +240,24 @@ func (s *Spooler) loadCustomerSessions(ctx context.Context) error {
 	return nil
 }
 
-func (s *Spooler) shouldNotProcessCustomerCase(customerCase *models.AugmentedCustomerCase) bool {
-	if customerCase.CustomerCase.LastCallStatus == nil {
+func (s *Spooler) shouldProcessCustomerCase(customerCase *models.AugmentedCustomerCase) bool {
+	// no conversation happened so far
+	if customerCase.CustomerCase.LastCallStatus == nil || len(customerCase.Conversations) == 0 {
+		return true
+	}
+
+	if customerCase.CustomerCase.Status == models.CustomerCaseStatusCLOSED {
 		return false
 	}
-	return customerCase.CustomerCase.Status == models.CustomerCaseStatusCLOSED &&
-		(*customerCase.CustomerCase.LastCallStatus == models.CallStatusQUEUED ||
-			*customerCase.CustomerCase.LastCallStatus == models.CallStatusINPROGRESS)
+
+	// if any of the past conversation is not ended
+	for _, conv := range customerCase.Conversations {
+		if conv.CallStatus != models.CallStatusENDED {
+			return false
+		}
+	}
+
+	return *customerCase.CustomerCase.LastCallStatus == models.CallStatusENDED
 }
 
 func (s *Spooler) pushCustomerSession(customerCase *models.AugmentedCustomerCase) {
