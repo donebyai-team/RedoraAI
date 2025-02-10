@@ -88,6 +88,50 @@ func transformCallToCallResponse(call *api.Call) *models.CallResponse {
 		RawResponse:     call.String(),
 	}
 
+	if call.Analysis != nil {
+		callResponse.Summary = *call.Analysis.Summary
+	}
+
+	if call.Artifact != nil {
+		callResponse.RecordingURL = *call.Artifact.RecordingUrl
+	}
+
+	for _, message := range call.Messages {
+		if message.SystemMessage != nil {
+			callResponse.CallMessages = append(callResponse.CallMessages, models.CallMessage{
+				SystemMessage: &models.SystemMessage{
+					Role:             message.SystemMessage.Role,
+					Message:          message.SystemMessage.Message,
+					Time:             message.SystemMessage.Time,
+					SecondsFromStart: message.SystemMessage.SecondsFromStart,
+				},
+			})
+		} else if message.UserMessage != nil {
+			callResponse.CallMessages = append(callResponse.CallMessages, models.CallMessage{
+				UserMessage: &models.UserMessage{
+					Role:             message.UserMessage.Role,
+					Message:          message.UserMessage.Message,
+					Time:             message.UserMessage.Time,
+					SecondsFromStart: message.UserMessage.SecondsFromStart,
+					EndTime:          message.UserMessage.EndTime,
+					Duration:         message.UserMessage.Duration,
+				},
+			})
+		} else if message.BotMessage != nil {
+			callResponse.CallMessages = append(callResponse.CallMessages, models.CallMessage{
+				BotMessage: &models.BotMessage{
+					Role:             message.BotMessage.Role,
+					Message:          message.BotMessage.Message,
+					Time:             message.BotMessage.Time,
+					EndTime:          message.BotMessage.EndTime,
+					SecondsFromStart: message.BotMessage.SecondsFromStart,
+					Source:           message.BotMessage.Source,
+					Duration:         message.BotMessage.Duration,
+				},
+			})
+		}
+	}
+
 	if call.EndedReason != nil {
 		for key, reasons := range endReasonMapping {
 			for _, reason := range reasons {

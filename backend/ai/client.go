@@ -64,7 +64,7 @@ func NewOpenAI(apiKey, openAIOrganization string, config LangsmithConfig, debugF
 	return newClient(model, config, debugFileStore)
 }
 
-func (c *Client) CustomerCaseDecision(ctx context.Context, lastConversation *models.Conversation, gptModel GPTModel, logger *zap.Logger) (*CaseDecisionResponse, error) {
+func (c *Client) CustomerCaseDecision(ctx context.Context, lastConversation *models.Conversation, gptModel GPTModel, logger *zap.Logger) (*models.CaseDecisionResponse, error) {
 	vars := gptModel.GetCaseDecisionVars(lastConversation)
 
 	runID := lastConversation.ID
@@ -77,7 +77,7 @@ func (c *Client) CustomerCaseDecision(ctx context.Context, lastConversation *mod
 	}
 
 	c.saveOutput(ctx, runID, "classification.output", []byte(output), logger)
-	var data CaseDecisionResponse
+	var data models.CaseDecisionResponse
 	if err := json.Unmarshal([]byte(output), &data); err != nil {
 		return nil, fmt.Errorf("unable to unmarshal response: %w", err)
 	}

@@ -5,5 +5,7 @@ SET summary          = :summary,
     end_of_call_reason = :end_of_call_reason,
     call_status        = :call_status,
     next_scheduled_at = :next_scheduled_at,
+    call_messages = :call_messages,
+    ai_decision = :ai_decision,
     external_id    = :external_id
 WHERE id = :id;

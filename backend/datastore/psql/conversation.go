@@ -103,6 +103,7 @@ func (r *Database) UpdateConversationAndCase(ctx context.Context, augConv *model
 		"id":                 obj.ID,
 		"external_id":        obj.ExternalID,
 		"call_messages":      obj.CallMessages,
+		"ai_decision":        obj.AIDecision,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to update customer conversation %q: %w", obj.ID, err)

@@ -10,6 +10,7 @@ import (
 	"github.com/shank318/doota/models"
 	"github.com/shank318/doota/utils"
 	"go.uber.org/zap"
+	"time"
 )
 
 type CaseInvestigator struct {
@@ -30,6 +31,8 @@ func (s *CaseInvestigator) UpdateCustomerCase(ctx context.Context, augConversati
 	conversation.ExternalID = &callResponse.CallID
 	conversation.CallEndedReason = &callResponse.CallEndedReason
 	conversation.CallMessages = callResponse.CallMessages
+	conversation.Summary = callResponse.Summary
+	conversation.RecordingURL = utils.Ptr(callResponse.RecordingURL)
 
 	// Update conversation
 	err := s.db.UpdateConversationAndCase(ctx, augConversation)
@@ -109,9 +112,12 @@ func (s *CaseInvestigator) updateCaseDecision(ctx context.Context, augConversati
 	if totalCalls >= maxTotalAllowedCalls {
 		augConversation.CustomerCase.Status = models.CustomerCaseStatusCLOSED
 		augConversation.CustomerCase.CaseReason = models.CustomerCaseReasonMAXCALLTRIESREACHED
+		augConversation.CustomerCase.Summary = "Case closed as max no of tries reached"
 	} else if !hasCustomerPickedCall(callResponse.CallEndedReason) {
 		conversation.NextScheduledAt = getNextCallTime(callsToday, conversation.CreatedAt)
+		augConversation.CustomerCase.Summary = "Customer didn't pick the call, next call is scheduled"
 	} else if shouldAskAI(augConversation) {
+		s.logger.Info("ai making case decision..", zap.String("conversationID", conversation.ID), zap.String("call_id", callResponse.CallID))
 		decision, err := s.aiClient.CustomerCaseDecision(ctx, conversation, s.gptModel, s.logger)
 		if err != nil {
 			s.logger.Error("failed to ask customer case decision",
@@ -120,13 +126,29 @@ func (s *CaseInvestigator) updateCaseDecision(ctx context.Context, augConversati
 				zap.String("phone", augConversation.Customer.Phone),
 				zap.String("call_id", callResponse.CallID))
 		} else {
+			s.logger.Info("ai made case decision..",
+				zap.String("conversationID", conversation.ID),
+				zap.String("call_id", callResponse.CallID),
+				zap.Any("response", decision),
+			)
 			augConversation.CustomerCase.Status = caseDecisionToStatus(decision.CaseStatusReason, augConversation.CustomerCase.Status)
 			augConversation.CustomerCase.CaseReason = decision.CaseStatusReason
-			conversation.Summary = decision.Summary
-			if decision.NextCallScheduledAtTime != nil {
+			augConversation.CustomerCase.Summary = decision.ChainOfThoughtCaseStatus
+			if augConversation.CustomerCase.Status != models.CustomerCaseStatusCLOSED && decision.NextCallScheduledAtTime != nil {
 				conversation.NextScheduledAt = decision.NextCallScheduledAtTime
+			} else {
+				// In case if the AI does not close the case and also don't schedule the next call
+				conversation.NextScheduledAt = getNextCallTime(callsToday, conversation.CreatedAt)
 			}
 		}
+	}
+
+	if augConversation.CustomerCase.Status != models.CustomerCaseStatusCLOSED && conversation.NextScheduledAt != nil {
+		s.logger.Info("next call scheduled",
+			zap.String("conversationID", conversation.ID),
+			zap.String("call_id", callResponse.CallID),
+			zap.String("next_scheduled_at", conversation.NextScheduledAt.Format(time.RFC3339)),
+		)
 	}
 
 	err = s.db.UpdateConversationAndCase(ctx, augConversation)
@@ -137,9 +159,17 @@ func (s *CaseInvestigator) updateCaseDecision(ctx context.Context, augConversati
 			zap.String("conversationID", conversation.ID),
 			zap.String("phone", augConversation.Customer.Phone),
 			zap.String("call_id", callResponse.CallID))
+		return err
 	}
 
-	return err
+	s.logger.Info("case updated",
+		zap.String("conversationID", conversation.ID),
+		zap.String("call_id", callResponse.CallID),
+		zap.String("status", augConversation.CustomerCase.Status.String()),
+		zap.String("reason", augConversation.CustomerCase.CaseReason.String()),
+	)
+
+	return nil
 }
 
 func caseDecisionToStatus(decision models.CustomerCaseReason, existingStatus models.CustomerCaseStatus) models.CustomerCaseStatus {

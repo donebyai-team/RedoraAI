@@ -1,0 +1,5 @@
+BEGIN;
+
+ALTER TABLE conversations DROP COLUMN IF EXISTS ai_decision;
+
+COMMIT;

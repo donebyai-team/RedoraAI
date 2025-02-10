@@ -45,20 +45,21 @@ type CustomerCase struct {
 }
 
 type Conversation struct {
-	ID              string           `db:"id"`
-	CustomerCaseID  string           `db:"customer_case_id"`
-	FromPhone       string           `db:"from_phone"`
-	CallStatus      CallStatus       `db:"call_status"`
-	NextScheduledAt *time.Time       `db:"next_scheduled_at"`
-	Summary         string           `db:"summary"`
-	Provider        IntegrationType  `db:"provider"`
-	ExternalID      *string          `db:"external_id"`
-	CallDuration    uint32           `db:"call_duration"` // in milliseconds
-	RecordingURL    *string          `db:"recording_url"`
-	CreatedAt       time.Time        `db:"created_at"`
-	UpdatedAt       *time.Time       `db:"updated_at"`
-	CallEndedReason *CallEndedReason `db:"end_of_call_reason"`
-	CallMessages    CallMessages     `db:"call_messages"`
+	ID              string               `db:"id"`
+	CustomerCaseID  string               `db:"customer_case_id"`
+	FromPhone       string               `db:"from_phone"`
+	CallStatus      CallStatus           `db:"call_status"`
+	NextScheduledAt *time.Time           `db:"next_scheduled_at"`
+	Summary         string               `db:"summary"`
+	Provider        IntegrationType      `db:"provider"`
+	ExternalID      *string              `db:"external_id"`
+	CallDuration    uint32               `db:"call_duration"` // in milliseconds
+	RecordingURL    *string              `db:"recording_url"`
+	CreatedAt       time.Time            `db:"created_at"`
+	UpdatedAt       *time.Time           `db:"updated_at"`
+	CallEndedReason *CallEndedReason     `db:"end_of_call_reason"`
+	CallMessages    CallMessages         `db:"call_messages"`
+	AIDecision      CaseDecisionResponse `db:"ai_decision"`
 }
 
 type CallMessages []CallMessage
