@@ -190,7 +190,7 @@ func (s *Spooler) pollCustomerCases(ctx context.Context) {
 		select {
 		case <-time.After(interval):
 			now := time.Now().In(location)
-			if now.Hour() >= 10 && now.Hour() < 18 { // Run only between 10 AM and 6 PM IST
+			if now.Hour() >= 10 && now.Hour() < 6 { // Run only between 10 AM and 6 PM IST
 				if err := s.loadCustomerSessions(ctx); err != nil {
 					s.Shutdown(fmt.Errorf("fail to load customer sessions from db: %w", err))
 				}

@@ -27,7 +27,7 @@ func (p *Prompt) getPromptTemplate(templatePrefix string, addImageSupport bool) 
 var promptTplFS embed.FS
 
 func rp(name string) string {
-	cnt, err := promptTplFS.ReadFile("prompt/" + name)
+	cnt, err := promptTplFS.ReadFile("prompts/" + name)
 	if err != nil {
 		panic(err)
 	}

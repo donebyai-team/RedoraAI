@@ -76,7 +76,7 @@ func (s *CaseInvestigator) updateCaseDecision(ctx context.Context, augConversati
 	}
 
 	// if either of these two are true, we have already taken the decision
-	if conversation.NextScheduledAt != nil || conversation.Summary != "" {
+	if conversation.NextScheduledAt != nil {
 		s.logger.Warn("next conversation is already scheduled, skipped..",
 			zap.String("conversationID", conversation.ID))
 		return nil
@@ -135,11 +135,13 @@ func (s *CaseInvestigator) updateCaseDecision(ctx context.Context, augConversati
 			augConversation.CustomerCase.Status = caseDecisionToStatus(decision.CaseStatusReason, augConversation.CustomerCase.Status)
 			augConversation.CustomerCase.CaseReason = decision.CaseStatusReason
 			augConversation.CustomerCase.Summary = decision.ChainOfThoughtCaseStatus
-			if augConversation.CustomerCase.Status != models.CustomerCaseStatusCLOSED && decision.NextCallScheduledAtTime != nil {
-				conversation.NextScheduledAt = decision.NextCallScheduledAtTime
-			} else {
-				// In case if the AI does not close the case and also don't schedule the next call
-				conversation.NextScheduledAt = getNextCallTime(callsToday, conversation.CreatedAt)
+			if augConversation.CustomerCase.Status != models.CustomerCaseStatusCLOSED {
+				if decision.NextCallScheduledAtTime != nil {
+					conversation.NextScheduledAt = decision.NextCallScheduledAtTime
+				} else if augConversation.CustomerCase.Status != models.CustomerCaseStatusCLOSED {
+					// In case if the AI does not close the case and also don't schedule the next call
+					conversation.NextScheduledAt = getNextCallTime(callsToday, conversation.CreatedAt)
+				}
 			}
 		}
 	}

@@ -12,26 +12,28 @@
         },
         "case_status": {
           "type": "string",
-          "description": "Get Case status based on the following info from the conversations.
-                           if the user has paid the EMI/debt amount return PAID or PARTIALLY_PAID,
-                           if you think the conversation needs to be handed over to a customer support, return TALK_TO_SUPPORT,
-                           If none of the above return UNKNOWN",
-          "enum":[ "UNKNOWN", "PAID", "PARTIALLY_PAID", "TALK_TO_SUPPORT"]
+          "description": "Get Case status based on the following info from the conversations.if the user has paid the EMI/debt amount return PAID or PARTIALLY_PAID, if you think the conversation needs to be handed over to a customer support, return TALK_TO_SUPPORT,If none of the above return UNKNOWN",
+          "enum": [
+            "UNKNOWN",
+            "PAID",
+            "PARTIALLY_PAID",
+            "TALK_TO_SUPPORT"
+          ]
         },
-         "case_status_confidence_score": {
-              "type": "number"
-         },
+        "case_status_confidence_score": {
+          "type": "number"
+        },
         "next_call_scheduled_at": {
-           "type": "string",
-           "description": "if the customer has asked to call on a specific time from the conversations. Make sure it should be greater than the last Conversation time. If no such information, return empty. Format: 2006-01-02T15:04:05Z07:00"
+          "type": "string",
+          "description": "if the customer has asked to call on a specific time from the conversations. Make sure it should be greater than the last Conversation time. If no such information, return empty. Format: 2006-01-02T15:04:05Z07:00"
         },
-         "chain_of_thought_next_call_scheduled_at": {
-            "type": "string",
-            "description": "Explanation of the chain of thought leading to the next_call_scheduled_at"
-         },
-         "next_call_scheduled_at_confidence_score": {
-             "type": "number"
-         }
+        "chain_of_thought_next_call_scheduled_at": {
+          "type": "string",
+          "description": "Explanation of the chain of thought leading to the next_call_scheduled_at"
+        },
+        "next_call_scheduled_at_confidence_score": {
+          "type": "number"
+        }
       },
       "required": [
         "chain_of_thought_case_status",
