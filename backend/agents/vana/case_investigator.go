@@ -131,6 +131,7 @@ func (s *CaseInvestigator) updateCaseDecision(ctx context.Context, augConversati
 				zap.String("call_id", callResponse.CallID),
 				zap.Any("response", decision),
 			)
+			conversation.AIDecision = *decision
 			augConversation.CustomerCase.Status = caseDecisionToStatus(decision.CaseStatusReason, augConversation.CustomerCase.Status)
 			augConversation.CustomerCase.CaseReason = decision.CaseStatusReason
 			augConversation.CustomerCase.Summary = decision.ChainOfThoughtCaseStatus
