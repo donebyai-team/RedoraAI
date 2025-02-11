@@ -197,7 +197,7 @@ func (m *VAPIVoiceProvider) CreateCall(ctx context.Context, req models.CallReque
 			Number: &toPhone,
 		},
 		Assistant: &api.CreateAssistantDto{
-			EndCallPhrases: []string{"bye", "googbye", "call again later"},
+			EndCallPhrases: []string{"bye", "googbye", "call again later", "have a nice day", "thanks you bye", "see you"},
 			EndCallMessage: utils.Ptr("bye! have a nice day"),
 			Voice: &api.CreateAssistantDtoVoice{
 				ElevenLabsVoice: &api.ElevenLabsVoice{

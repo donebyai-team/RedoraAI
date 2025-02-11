@@ -257,6 +257,11 @@ func (s *Spooler) shouldProcessCustomerCase(customerCase *models.AugmentedCustom
 		}
 	}
 
+	callsToday, totalCalls := getCustomerCallStats(customerCase.Conversations)
+	if totalCalls >= maxTotalAllowedCalls || callsToday >= maxCallPerDay {
+		return false
+	}
+
 	return *customerCase.CustomerCase.LastCallStatus == models.CallStatusENDED
 }
 

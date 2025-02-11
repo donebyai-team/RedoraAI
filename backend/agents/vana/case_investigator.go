@@ -13,6 +13,15 @@ import (
 	"time"
 )
 
+type CallLimitsConfig struct {
+	MaxCallPerDay         int
+	MaxTotalCalls         int
+	MinCallHour           int
+	MaxCallHour           int
+	CallRetryDelayMinutes int
+	Location              string
+}
+
 type CaseInvestigator struct {
 	gptModel ai.GPTModel
 	db       datastore.Repository
@@ -26,10 +35,16 @@ func NewCaseInvestigator(gptModel ai.GPTModel, db datastore.Repository, aiClient
 }
 
 func (s *CaseInvestigator) UpdateCustomerCase(ctx context.Context, augConversation *models.AugmentedConversation, callResponse *models.CallResponse) error {
+	s.logger.Info("updating customer case...",
+		zap.String("conversation_id", augConversation.Conversation.ID),
+		zap.String("call_id", callResponse.CallID),
+		zap.String("call_status", callResponse.CallStatus.String()),
+		zap.String("ended_reason", callResponse.CallEndedReason.String()),
+	)
 	conversation := augConversation.Conversation
 	// Update the conversation if the call is not ended
 	// Else update the conversation and case together
-	if conversation.CallStatus != models.CallStatusENDED {
+	if callResponse.CallStatus != models.CallStatusENDED {
 		conversation.CallStatus = callResponse.CallStatus
 		conversation.ExternalID = &callResponse.CallID
 		conversation.CallMessages = callResponse.CallMessages
@@ -44,6 +59,12 @@ func (s *CaseInvestigator) UpdateCustomerCase(ctx context.Context, augConversati
 				zap.String("call id", callResponse.CallID))
 			return err
 		}
+
+		s.logger.Info("updated customer case...",
+			zap.String("conversation_id", augConversation.Conversation.ID),
+			zap.String("call_id", callResponse.CallID),
+			zap.String("call_status", conversation.CallStatus.String()),
+		)
 
 		// Mark a call running
 		if callResponse.CallID != "" && agents.IsCallRunning(callResponse.CallStatus) {
@@ -92,6 +113,12 @@ func (s *CaseInvestigator) updateCaseDecision(ctx context.Context, augConversati
 		return nil
 	}
 
+	s.logger.Info("ending conversation and updating customer case...",
+		zap.String("conversation_id", augConversation.Conversation.ID),
+		zap.String("call_id", callResponse.CallID),
+		zap.String("ended_reason", callResponse.CallEndedReason.String()),
+	)
+
 	// === END CONVERSATION AND UPDATE CASE ===
 
 	// Release call
@@ -105,6 +132,9 @@ func (s *CaseInvestigator) updateCaseDecision(ctx context.Context, augConversati
 	}
 
 	// If the call is ended, we should have the summary and call end reason
+	conversation.CallStatus = callResponse.CallStatus
+	conversation.ExternalID = &callResponse.CallID
+	conversation.CallMessages = callResponse.CallMessages
 	conversation.CallEndedReason = &callResponse.CallEndedReason
 	conversation.Summary = callResponse.Summary
 	conversation.RecordingURL = utils.Ptr(callResponse.RecordingURL)
