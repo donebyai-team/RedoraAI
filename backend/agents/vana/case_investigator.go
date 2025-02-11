@@ -53,7 +53,7 @@ func (s *CaseInvestigator) UpdateCustomerCase(ctx context.Context, augConversati
 			}
 		}
 	} else {
-		// End the call
+		// End the call async
 		go func() {
 			err := s.updateCaseDecision(context.Background(), augConversation, callResponse)
 			if err != nil {
@@ -65,9 +65,7 @@ func (s *CaseInvestigator) UpdateCustomerCase(ctx context.Context, augConversati
 	return nil
 }
 
-// TODO: Make it called only once
-// Only downside is that it might end up calling AI everytime this is hit in case duplicate webhooks
-// and the outcome of AI can change
+// updateCaseDecision when the call is ended
 func (s *CaseInvestigator) updateCaseDecision(ctx context.Context, augConversation *models.AugmentedConversation, callResponse *models.CallResponse) error {
 	conversation := augConversation.Conversation
 
@@ -77,13 +75,14 @@ func (s *CaseInvestigator) updateCaseDecision(ctx context.Context, augConversati
 		return nil
 	}
 
-	// if either of these two are true, we have already taken the decision
+	// if already scheduled, skip it
 	if conversation.NextScheduledAt != nil {
 		s.logger.Warn("next conversation is already scheduled, skipped..",
 			zap.String("conversationID", conversation.ID))
 		return nil
 	}
 
+	// if already ended, skip it
 	if callResponse.CallStatus != models.CallStatusENDED {
 		s.logger.Debug("end conversation call status is not ENDED, skipped..",
 			zap.String("call id", callResponse.CallID),
@@ -105,6 +104,7 @@ func (s *CaseInvestigator) updateCaseDecision(ctx context.Context, augConversati
 			zap.String("call id", callResponse.CallID))
 	}
 
+	// If the call is ended, we should have the summary and call end reason
 	conversation.CallEndedReason = &callResponse.CallEndedReason
 	conversation.Summary = callResponse.Summary
 	conversation.RecordingURL = utils.Ptr(callResponse.RecordingURL)
@@ -137,13 +137,15 @@ func (s *CaseInvestigator) updateCaseDecision(ctx context.Context, augConversati
 				zap.String("call_id", callResponse.CallID),
 				zap.Any("response", decision),
 			)
+
+			// Update the properties and decision status
 			conversation.AIDecision = *decision
 			augConversation.CustomerCase.Status = caseDecisionToStatus(decision.CaseStatusReason, augConversation.CustomerCase.Status)
 			augConversation.CustomerCase.CaseReason = decision.CaseStatusReason
 			augConversation.CustomerCase.Summary = decision.ChainOfThoughtCaseStatus
 			if augConversation.CustomerCase.Status != models.CustomerCaseStatusCLOSED {
 				if decision.NextCallScheduledAtTime != nil {
-					conversation.NextScheduledAt = decision.NextCallScheduledAtTime
+					conversation.NextScheduledAt = getNextCallTime(callsToday, *decision.NextCallScheduledAtTime)
 				} else if augConversation.CustomerCase.Status != models.CustomerCaseStatusCLOSED {
 					// In case if the AI does not close the case and also don't schedule the next call
 					conversation.NextScheduledAt = getNextCallTime(callsToday, conversation.CreatedAt)
