@@ -190,7 +190,7 @@ func (s *Spooler) pollCustomerCases(ctx context.Context) {
 		select {
 		case <-time.After(interval):
 			now := time.Now().In(location)
-			if now.Hour() >= 10 && now.Hour() < 6 { // Run only between 10 AM and 6 PM IST
+			if now.Hour() >= 10 && now.Hour() < 18 { // Run only between 10 AM and 6 PM IST
 				if err := s.loadCustomerSessions(ctx); err != nil {
 					s.Shutdown(fmt.Errorf("fail to load customer sessions from db: %w", err))
 				}
@@ -221,9 +221,9 @@ func (s *Spooler) loadCustomerSessions(ctx context.Context) error {
 	// LastCallStatus = NULL OR IN (ENDED, AI_ENDED)
 	// NextScheduledAt = NULL or <= current time
 	cases, err := s.db.GetCustomerCases(ctx, datastore.CustomerCaseFilter{
-		CaseStatus:      []models.CustomerCaseStatus{models.CustomerCaseStatusCREATED, models.CustomerCaseStatusOPEN},
-		LastCallStatus:  []models.CallStatus{models.CallStatusENDED},
-		NextScheduledAt: time.Now(),
+		CaseStatus:     []models.CustomerCaseStatus{models.CustomerCaseStatusCREATED, models.CustomerCaseStatusOPEN},
+		LastCallStatus: []models.CallStatus{models.CallStatusENDED},
+		CurrentTime:    time.Now(),
 	})
 	if err != nil {
 		return fmt.Errorf("processing customer cases: %w", err)

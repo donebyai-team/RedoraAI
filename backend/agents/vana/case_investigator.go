@@ -198,6 +198,8 @@ var caseClosedReasons = []models.CustomerCaseReason{
 	models.CustomerCaseReasonPARTIALLYPAID,
 	models.CustomerCaseReasonMAXCALLTRIESREACHED,
 	models.CustomerCaseReasonTALKTOSUPPORT,
+	models.CustomerCaseReasonWILLNOTPAY,
+	models.CustomerCaseReasonWILLPAYLATER,
 }
 
 var callNotPickedReasons = []models.CallEndedReason{

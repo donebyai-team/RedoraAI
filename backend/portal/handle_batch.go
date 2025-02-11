@@ -57,7 +57,7 @@ func (p *Portal) HandleBatchAdmin(agent agents.AIAgent) http.HandlerFunc {
 		}
 		csvData := buf.Bytes()
 
-		logger.Info("handling update call status request", zap.String("organizationID", organizationID))
+		logger.Info("handling HandleBatchAdmin request", zap.String("organizationID", organizationID))
 		req := &connect.Request[pbportal.BatchReq]{
 			Msg: &pbportal.BatchReq{
 				CsvData:        csvData,

@@ -70,7 +70,7 @@ type PromptTypeRepository interface {
 }
 
 type CustomerCaseFilter struct {
-	LastCallStatus  []models.CallStatus
-	CaseStatus      []models.CustomerCaseStatus
-	NextScheduledAt time.Time
+	LastCallStatus []models.CallStatus
+	CaseStatus     []models.CustomerCaseStatus
+	CurrentTime    time.Time
 }

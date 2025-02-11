@@ -17,7 +17,9 @@
             "UNKNOWN",
             "PAID",
             "PARTIALLY_PAID",
-            "TALK_TO_SUPPORT"
+            "TALK_TO_SUPPORT",
+            "WILL_NOT_PAY",
+            "WILL_PAY_LATER"
           ]
         },
         "case_status_confidence_score": {
@@ -25,7 +27,7 @@
         },
         "next_call_scheduled_at": {
           "type": "string",
-          "description": "if the customer has asked to call on a specific time from the conversations. Make sure it should be greater than the last Conversation time. If no such information, return empty. Format: 2006-01-02T15:04:05Z07:00"
+          "description": "if the customer has asked to call on a specific time or the conversation seem to be ended without a conclusion. If no such information, return empty. Format: 2006-01-02T15:04:05Z07:00"
         },
         "chain_of_thought_next_call_scheduled_at": {
           "type": "string",

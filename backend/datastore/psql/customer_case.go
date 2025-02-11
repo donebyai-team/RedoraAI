@@ -59,9 +59,9 @@ func (r *Database) UpdateCustomerCase(ctx context.Context, customer *models.Cust
 
 func (r *Database) GetCustomerCases(ctx context.Context, filter datastore.CustomerCaseFilter) ([]*models.AugmentedCustomerCase, error) {
 	customerCases, err := getMany[models.CustomerCase](ctx, r, "customer_case/query_customer_case_by_filter.sql", map[string]any{
-		"status":            pq.Array(filter.CaseStatus),
-		"last_call_status":  pq.Array(filter.LastCallStatus),
-		"next_scheduled_at": filter.NextScheduledAt,
+		"status":           pq.Array(filter.CaseStatus),
+		"last_call_status": pq.Array(filter.LastCallStatus),
+		"current_time":     filter.CurrentTime,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get customer cases: %w", err)

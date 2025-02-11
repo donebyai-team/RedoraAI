@@ -197,18 +197,28 @@ func (m *VAPIVoiceProvider) CreateCall(ctx context.Context, req models.CallReque
 			Number: &toPhone,
 		},
 		Assistant: &api.CreateAssistantDto{
+			EndCallPhrases: []string{"bye", "googbye", "call again later"},
+			EndCallMessage: utils.Ptr("bye! have a nice day"),
+			Voice: &api.CreateAssistantDtoVoice{
+				ElevenLabsVoice: &api.ElevenLabsVoice{
+					VoiceId: &api.ElevenLabsVoiceId{
+						String: "pzxut4zZz4GImZNlqQ3H",
+					},
+				},
+			},
 			Model: &api.CreateAssistantDtoModel{
 				OpenAiModel: &api.OpenAiModel{
 					Messages: messages,
 					Model:    model,
 				},
 			},
+			MaxDurationSeconds: utils.Ptr(300.0),
 			ServerMessages: []api.CreateAssistantDtoServerMessagesItem{
 				api.CreateAssistantDtoServerMessagesItemEndOfCallReport,
 				api.CreateAssistantDtoServerMessagesItemStatusUpdate,
 			},
 			Server: &api.Server{
-				Url: fmt.Sprintf("https://9ba5-122-171-17-143.ngrok-free.app/webhook/vana/call_status/%s", req.ConversationID),
+				Url: fmt.Sprintf("https://592b-122-171-23-192.ngrok-free.app/webhook/vana/call_status/%s", req.ConversationID),
 			},
 		},
 	}
