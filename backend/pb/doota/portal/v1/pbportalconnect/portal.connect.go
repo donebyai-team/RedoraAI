@@ -41,14 +41,18 @@ const (
 	PortalServiceGetIntegrationProcedure = "/doota.portal.v1.PortalService/GetIntegration"
 	// PortalServiceBatchProcedure is the fully-qualified name of the PortalService's Batch RPC.
 	PortalServiceBatchProcedure = "/doota.portal.v1.PortalService/Batch"
+	// PortalServiceCreateCustomerCaseProcedure is the fully-qualified name of the PortalService's
+	// CreateCustomerCase RPC.
+	PortalServiceCreateCustomerCaseProcedure = "/doota.portal.v1.PortalService/CreateCustomerCase"
 )
 
 // These variables are the protoreflect.Descriptor objects for the RPCs defined in this package.
 var (
-	portalServiceServiceDescriptor              = v1.File_doota_portal_v1_portal_proto.Services().ByName("PortalService")
-	portalServiceSelfMethodDescriptor           = portalServiceServiceDescriptor.Methods().ByName("Self")
-	portalServiceGetIntegrationMethodDescriptor = portalServiceServiceDescriptor.Methods().ByName("GetIntegration")
-	portalServiceBatchMethodDescriptor          = portalServiceServiceDescriptor.Methods().ByName("Batch")
+	portalServiceServiceDescriptor                  = v1.File_doota_portal_v1_portal_proto.Services().ByName("PortalService")
+	portalServiceSelfMethodDescriptor               = portalServiceServiceDescriptor.Methods().ByName("Self")
+	portalServiceGetIntegrationMethodDescriptor     = portalServiceServiceDescriptor.Methods().ByName("GetIntegration")
+	portalServiceBatchMethodDescriptor              = portalServiceServiceDescriptor.Methods().ByName("Batch")
+	portalServiceCreateCustomerCaseMethodDescriptor = portalServiceServiceDescriptor.Methods().ByName("CreateCustomerCase")
 )
 
 // PortalServiceClient is a client for the doota.portal.v1.PortalService service.
@@ -56,6 +60,7 @@ type PortalServiceClient interface {
 	Self(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.User], error)
 	GetIntegration(context.Context, *connect.Request[v1.GetIntegrationRequest]) (*connect.Response[v1.Integration], error)
 	Batch(context.Context, *connect.Request[v1.BatchReq]) (*connect.Response[v1.BatchResp], error)
+	CreateCustomerCase(context.Context, *connect.Request[v1.CreateCustomerCaseReq]) (*connect.Response[emptypb.Empty], error)
 }
 
 // NewPortalServiceClient constructs a client for the doota.portal.v1.PortalService service. By
@@ -86,14 +91,21 @@ func NewPortalServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(portalServiceBatchMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
+		createCustomerCase: connect.NewClient[v1.CreateCustomerCaseReq, emptypb.Empty](
+			httpClient,
+			baseURL+PortalServiceCreateCustomerCaseProcedure,
+			connect.WithSchema(portalServiceCreateCustomerCaseMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // portalServiceClient implements PortalServiceClient.
 type portalServiceClient struct {
-	self           *connect.Client[emptypb.Empty, v1.User]
-	getIntegration *connect.Client[v1.GetIntegrationRequest, v1.Integration]
-	batch          *connect.Client[v1.BatchReq, v1.BatchResp]
+	self               *connect.Client[emptypb.Empty, v1.User]
+	getIntegration     *connect.Client[v1.GetIntegrationRequest, v1.Integration]
+	batch              *connect.Client[v1.BatchReq, v1.BatchResp]
+	createCustomerCase *connect.Client[v1.CreateCustomerCaseReq, emptypb.Empty]
 }
 
 // Self calls doota.portal.v1.PortalService.Self.
@@ -111,11 +123,17 @@ func (c *portalServiceClient) Batch(ctx context.Context, req *connect.Request[v1
 	return c.batch.CallUnary(ctx, req)
 }
 
+// CreateCustomerCase calls doota.portal.v1.PortalService.CreateCustomerCase.
+func (c *portalServiceClient) CreateCustomerCase(ctx context.Context, req *connect.Request[v1.CreateCustomerCaseReq]) (*connect.Response[emptypb.Empty], error) {
+	return c.createCustomerCase.CallUnary(ctx, req)
+}
+
 // PortalServiceHandler is an implementation of the doota.portal.v1.PortalService service.
 type PortalServiceHandler interface {
 	Self(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.User], error)
 	GetIntegration(context.Context, *connect.Request[v1.GetIntegrationRequest]) (*connect.Response[v1.Integration], error)
 	Batch(context.Context, *connect.Request[v1.BatchReq]) (*connect.Response[v1.BatchResp], error)
+	CreateCustomerCase(context.Context, *connect.Request[v1.CreateCustomerCaseReq]) (*connect.Response[emptypb.Empty], error)
 }
 
 // NewPortalServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -142,6 +160,12 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(portalServiceBatchMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
+	portalServiceCreateCustomerCaseHandler := connect.NewUnaryHandler(
+		PortalServiceCreateCustomerCaseProcedure,
+		svc.CreateCustomerCase,
+		connect.WithSchema(portalServiceCreateCustomerCaseMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/doota.portal.v1.PortalService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case PortalServiceSelfProcedure:
@@ -150,6 +174,8 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 			portalServiceGetIntegrationHandler.ServeHTTP(w, r)
 		case PortalServiceBatchProcedure:
 			portalServiceBatchHandler.ServeHTTP(w, r)
+		case PortalServiceCreateCustomerCaseProcedure:
+			portalServiceCreateCustomerCaseHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -169,4 +195,8 @@ func (UnimplementedPortalServiceHandler) GetIntegration(context.Context, *connec
 
 func (UnimplementedPortalServiceHandler) Batch(context.Context, *connect.Request[v1.BatchReq]) (*connect.Response[v1.BatchResp], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.Batch is not implemented"))
+}
+
+func (UnimplementedPortalServiceHandler) CreateCustomerCase(context.Context, *connect.Request[v1.CreateCustomerCaseReq]) (*connect.Response[emptypb.Empty], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.CreateCustomerCase is not implemented"))
 }

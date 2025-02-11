@@ -11,6 +11,16 @@ service PortalService {
   rpc Self(.google.protobuf.Empty) returns (User);
   rpc GetIntegration(GetIntegrationRequest) returns (Integration);
   rpc Batch(BatchReq) returns (BatchResp);
+  rpc CreateCustomerCase(CreateCustomerCaseReq) returns (.google.protobuf.Empty);
+}
+
+message CreateCustomerCaseReq {
+  string first_name = 1;
+  string last_name = 2;
+  string phone = 3;
+  string organization_id = 4;
+  string due_date = 5;
+  string prompt_type = 6;
 }
 
 message BatchReq {

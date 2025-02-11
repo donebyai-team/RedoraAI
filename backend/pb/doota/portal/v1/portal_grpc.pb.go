@@ -20,9 +20,10 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	PortalService_Self_FullMethodName           = "/doota.portal.v1.PortalService/Self"
-	PortalService_GetIntegration_FullMethodName = "/doota.portal.v1.PortalService/GetIntegration"
-	PortalService_Batch_FullMethodName          = "/doota.portal.v1.PortalService/Batch"
+	PortalService_Self_FullMethodName               = "/doota.portal.v1.PortalService/Self"
+	PortalService_GetIntegration_FullMethodName     = "/doota.portal.v1.PortalService/GetIntegration"
+	PortalService_Batch_FullMethodName              = "/doota.portal.v1.PortalService/Batch"
+	PortalService_CreateCustomerCase_FullMethodName = "/doota.portal.v1.PortalService/CreateCustomerCase"
 )
 
 // PortalServiceClient is the client API for PortalService service.
@@ -32,6 +33,7 @@ type PortalServiceClient interface {
 	Self(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*User, error)
 	GetIntegration(ctx context.Context, in *GetIntegrationRequest, opts ...grpc.CallOption) (*Integration, error)
 	Batch(ctx context.Context, in *BatchReq, opts ...grpc.CallOption) (*BatchResp, error)
+	CreateCustomerCase(ctx context.Context, in *CreateCustomerCaseReq, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type portalServiceClient struct {
@@ -69,6 +71,15 @@ func (c *portalServiceClient) Batch(ctx context.Context, in *BatchReq, opts ...g
 	return out, nil
 }
 
+func (c *portalServiceClient) CreateCustomerCase(ctx context.Context, in *CreateCustomerCaseReq, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, PortalService_CreateCustomerCase_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PortalServiceServer is the server API for PortalService service.
 // All implementations must embed UnimplementedPortalServiceServer
 // for forward compatibility
@@ -76,6 +87,7 @@ type PortalServiceServer interface {
 	Self(context.Context, *emptypb.Empty) (*User, error)
 	GetIntegration(context.Context, *GetIntegrationRequest) (*Integration, error)
 	Batch(context.Context, *BatchReq) (*BatchResp, error)
+	CreateCustomerCase(context.Context, *CreateCustomerCaseReq) (*emptypb.Empty, error)
 	mustEmbedUnimplementedPortalServiceServer()
 }
 
@@ -91,6 +103,9 @@ func (UnimplementedPortalServiceServer) GetIntegration(context.Context, *GetInte
 }
 func (UnimplementedPortalServiceServer) Batch(context.Context, *BatchReq) (*BatchResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Batch not implemented")
+}
+func (UnimplementedPortalServiceServer) CreateCustomerCase(context.Context, *CreateCustomerCaseReq) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateCustomerCase not implemented")
 }
 func (UnimplementedPortalServiceServer) mustEmbedUnimplementedPortalServiceServer() {}
 
@@ -159,6 +174,24 @@ func _PortalService_Batch_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PortalService_CreateCustomerCase_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateCustomerCaseReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortalServiceServer).CreateCustomerCase(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortalService_CreateCustomerCase_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortalServiceServer).CreateCustomerCase(ctx, req.(*CreateCustomerCaseReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // PortalService_ServiceDesc is the grpc.ServiceDesc for PortalService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -177,6 +210,10 @@ var PortalService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Batch",
 			Handler:    _PortalService_Batch_Handler,
+		},
+		{
+			MethodName: "CreateCustomerCase",
+			Handler:    _PortalService_CreateCustomerCase_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
