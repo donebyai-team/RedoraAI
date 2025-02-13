@@ -54,7 +54,7 @@ func (s *CaseInvestigator) UpdateCustomerCase(ctx context.Context, augConversati
 		if err != nil {
 			s.logger.Error("failed to update conversation",
 				zap.Error(err),
-				zap.String("conversationID", conversation.ID),
+				zap.String("conversation_id", conversation.ID),
 				zap.String("phone", augConversation.Customer.Phone),
 				zap.String("call id", callResponse.CallID))
 			return err
@@ -78,7 +78,7 @@ func (s *CaseInvestigator) UpdateCustomerCase(ctx context.Context, augConversati
 		go func() {
 			err := s.updateCaseDecision(context.Background(), augConversation, callResponse)
 			if err != nil {
-				s.logger.Error("failed to update case decision", zap.String("conversationID", conversation.ID), zap.String("call id", callResponse.CallID))
+				s.logger.Error("failed to update case decision", zap.String("conversation_id", conversation.ID), zap.String("call id", callResponse.CallID))
 			}
 		}()
 	}
@@ -92,14 +92,14 @@ func (s *CaseInvestigator) updateCaseDecision(ctx context.Context, augConversati
 
 	if augConversation.CustomerCase.Status == models.CustomerCaseStatusCLOSED {
 		s.logger.Warn("cannot updateCaseDecision because it is already closed, skipped..",
-			zap.String("conversationID", conversation.ID))
+			zap.String("conversation_id", conversation.ID))
 		return nil
 	}
 
 	// if already scheduled, skip it
 	if conversation.NextScheduledAt != nil {
 		s.logger.Warn("next conversation is already scheduled, skipped..",
-			zap.String("conversationID", conversation.ID))
+			zap.String("conversation_id", conversation.ID))
 		return nil
 	}
 
@@ -108,7 +108,7 @@ func (s *CaseInvestigator) updateCaseDecision(ctx context.Context, augConversati
 		s.logger.Debug("end conversation call status is not ENDED, skipped..",
 			zap.String("call id", callResponse.CallID),
 			zap.String("phone", augConversation.Customer.Phone),
-			zap.String("conversationID", conversation.ID),
+			zap.String("conversation_id", conversation.ID),
 		)
 		return nil
 	}
@@ -126,7 +126,7 @@ func (s *CaseInvestigator) updateCaseDecision(ctx context.Context, augConversati
 	if err != nil {
 		s.logger.Error("failed to release call",
 			zap.Error(err),
-			zap.String("conversationID", conversation.ID),
+			zap.String("conversation_id", conversation.ID),
 			zap.String("phone", augConversation.Customer.Phone),
 			zap.String("call id", callResponse.CallID))
 	}
@@ -153,17 +153,17 @@ func (s *CaseInvestigator) updateCaseDecision(ctx context.Context, augConversati
 		conversation.NextScheduledAt = getNextCallTime(callsToday, conversation.CreatedAt)
 		augConversation.CustomerCase.Summary = "Customer didn't pick the call, next call is scheduled"
 	} else if shouldAskAI(augConversation) {
-		s.logger.Info("ai making case decision..", zap.String("conversationID", conversation.ID), zap.String("call_id", callResponse.CallID))
+		s.logger.Info("ai making case decision..", zap.String("conversation_id", conversation.ID), zap.String("call_id", callResponse.CallID))
 		decision, err := s.aiClient.CustomerCaseDecision(ctx, conversation, s.gptModel, s.logger)
 		if err != nil {
 			s.logger.Error("failed to ask customer case decision",
 				zap.Error(err),
-				zap.String("conversationID", conversation.ID),
+				zap.String("conversation_id", conversation.ID),
 				zap.String("phone", augConversation.Customer.Phone),
 				zap.String("call_id", callResponse.CallID))
 		} else {
 			s.logger.Info("ai made case decision..",
-				zap.String("conversationID", conversation.ID),
+				zap.String("conversation_id", conversation.ID),
 				zap.String("call_id", callResponse.CallID),
 				zap.Any("response", decision),
 			)
@@ -186,7 +186,9 @@ func (s *CaseInvestigator) updateCaseDecision(ctx context.Context, augConversati
 
 	if augConversation.CustomerCase.Status != models.CustomerCaseStatusCLOSED && conversation.NextScheduledAt != nil {
 		s.logger.Info("next call scheduled",
-			zap.String("conversationID", conversation.ID),
+			zap.String("conversation_id", conversation.ID),
+			zap.Int("total_retries_left", maxTotalAllowedCalls-totalCalls),
+			zap.Int("total_retries_left_today", maxCallPerDay-callsToday),
 			zap.String("call_id", callResponse.CallID),
 			zap.String("next_scheduled_at", conversation.NextScheduledAt.Format(time.RFC3339)),
 		)
@@ -197,15 +199,17 @@ func (s *CaseInvestigator) updateCaseDecision(ctx context.Context, augConversati
 		s.logger.Error("failed to update conversation after evluation",
 			zap.Error(err),
 			zap.String("case_status_to_update", augConversation.CustomerCase.Status.String()),
-			zap.String("conversationID", conversation.ID),
+			zap.String("conversation_id", conversation.ID),
 			zap.String("phone", augConversation.Customer.Phone),
 			zap.String("call_id", callResponse.CallID))
 		return err
 	}
 
 	s.logger.Info("case updated",
-		zap.String("conversationID", conversation.ID),
+		zap.String("conversation_id", conversation.ID),
 		zap.String("call_id", callResponse.CallID),
+		zap.Int("total_retries_left", maxTotalAllowedCalls-totalCalls),
+		zap.Int("total_retries_left_today", maxCallPerDay-callsToday),
 		zap.String("status", augConversation.CustomerCase.Status.String()),
 		zap.String("reason", augConversation.CustomerCase.CaseReason.String()),
 	)
