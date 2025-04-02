@@ -1,13 +1,14 @@
 module github.com/shank318/doota
 
-go 1.22.0
+go 1.23.0
 
-toolchain go1.22.6
+toolchain go1.23.4
 
 require (
 	connectrpc.com/connect v1.14.0
 	github.com/KimMachineGun/automemlimit v0.6.0
 	github.com/VapiAI/server-sdk-go v0.4.0
+	github.com/coreos/go-oidc/v3 v3.13.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/drone/envsubst v1.0.3
 	github.com/go-playground/validator/v10 v10.24.0
@@ -36,8 +37,9 @@ require (
 	github.com/streamingfast/dstore v0.1.1-0.20240215171730-493ad5a0f537
 	github.com/streamingfast/logging v0.0.0-20230608130331-f22c91403091
 	github.com/streamingfast/shutter v1.5.0
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	github.com/test-go/testify v1.1.4
+	github.com/tidwall/gjson v1.14.4
 	github.com/tmc/langchaingo v0.0.0-00010101000000-000000000000
 	github.com/uptrace/opentelemetry-go-extra/otelsqlx v0.3.2
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.51.0
@@ -46,6 +48,7 @@ require (
 	go.uber.org/multierr v1.11.0
 	go.uber.org/zap v1.26.0
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
+	golang.org/x/oauth2 v0.28.0
 	google.golang.org/grpc v1.65.0
 	google.golang.org/protobuf v1.34.2
 )
@@ -90,6 +93,7 @@ require (
 	github.com/eoscanada/eos-go v0.9.1-0.20200415144303-2adb25bcdeca // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.8 // indirect
+	github.com/go-jose/go-jose/v4 v4.0.5 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/godbus/dbus/v5 v5.0.4 // indirect
@@ -124,7 +128,6 @@ require (
 	github.com/streamingfast/opaque v0.0.0-20210811180740-0c01d37ea308 // indirect
 	github.com/streamingfast/validator v0.0.0-20210812013448-b9da5752ce14 // indirect
 	github.com/thedevsaddam/govalidator v1.9.6 // indirect
-	github.com/tidwall/gjson v1.14.4 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/tidwall/sjson v1.0.4 // indirect
@@ -134,7 +137,6 @@ require (
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.51.0 // indirect
 	go.starlark.net v0.0.0-20230302034142-4b1e35fe2254 // indirect
 	go.uber.org/goleak v1.3.0 // indirect
-	golang.org/x/oauth2 v0.21.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/tools v0.24.0 // indirect
 )
@@ -197,12 +199,12 @@ require (
 	go.opentelemetry.io/otel/sdk v1.26.0 // indirect
 	go.opentelemetry.io/otel/trace v1.30.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
-	golang.org/x/crypto v0.32.0 // indirect
-	golang.org/x/net v0.34.0
-	golang.org/x/sync v0.10.0 // indirect
-	golang.org/x/sys v0.29.0 // indirect
-	golang.org/x/term v0.28.0 // indirect
-	golang.org/x/text v0.21.0
+	golang.org/x/crypto v0.36.0 // indirect
+	golang.org/x/net v0.37.0
+	golang.org/x/sync v0.12.0 // indirect
+	golang.org/x/sys v0.31.0 // indirect
+	golang.org/x/term v0.30.0 // indirect
+	golang.org/x/text v0.23.0
 	google.golang.org/api v0.183.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto v0.0.0-20240528184218-531527333157 // indirect

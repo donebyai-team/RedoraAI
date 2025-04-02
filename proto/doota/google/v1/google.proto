@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+package doota.google.v1;
+
+option go_package = "github.com/shank318/doota/pb/doota/google/v1;pbgoogle";
+
+service GoogleService {
+  // this should be called when the user consents when he logs in
+  rpc SetupMailboxWatch(SetupMailboxWatchRequest)
+      returns (SetupMailboxWatchResponse);
+  rpc GetIntegration(GetIntegrationRequest) returns (IntegrationResponse);
+  // this should be called when the admin initially connect to their google
+  // workspace, it will return a refresh token
+  rpc SetupWorkspaceAdmin(SetupWorkspaceAdminRequest)
+      returns (SetupWorkspaceAdminResponse);
+}
+
+message IntegrationResponse {
+  oneof result {
+    Integration integration = 1;
+    IntegrationInvalidRefreshTokenError invalid_refresh_token = 2;
+  }
+}
+
+message Integration { repeated User users = 1; }
+
+message SetupMailboxWatchRequest { string code = 2; }
+
+message RenewMessageSourceRequest { string message_source_id = 1; }
+
+message SetupMailboxWatchResponse {
+  string refresh_token = 1;
+  string email = 2;
+  uint64 history_id = 3;
+  int64 expiration = 4;
+}
+
+message SetupWorkspaceAdminRequest { string code = 1; }
+
+message SetupWorkspaceAdminResponse { string refresh_token = 1; }
+
+message User {
+  // google user's id
+  string id = 1;
+  // google user's email
+  string email = 2;
+  // google user's name
+  string name = 3;
+  // freighstream system user id
+  optional string user_id = 4;
+  // freighstream system message source id ID
+  optional string message_source_id = 5;
+  bool active_watch = 6;
+}
+
+message GetIntegrationRequest { string integration_id = 1; }
+
+message IntegrationInvalidRefreshTokenError {
+  string cause = 1;
+}

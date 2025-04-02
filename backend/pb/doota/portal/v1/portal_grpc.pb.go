@@ -24,16 +24,23 @@ const (
 	PortalService_GetIntegration_FullMethodName     = "/doota.portal.v1.PortalService/GetIntegration"
 	PortalService_Batch_FullMethodName              = "/doota.portal.v1.PortalService/Batch"
 	PortalService_CreateCustomerCase_FullMethodName = "/doota.portal.v1.PortalService/CreateCustomerCase"
+	PortalService_PasswordlessStart_FullMethodName  = "/doota.portal.v1.PortalService/PasswordlessStart"
+	PortalService_PasswordlessVerify_FullMethodName = "/doota.portal.v1.PortalService/PasswordlessVerify"
 )
 
 // PortalServiceClient is the client API for PortalService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type PortalServiceClient interface {
+	// rpc GetConfig(.google.protobuf.Empty) returns (Config);
 	Self(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*User, error)
+	// rpc AddUser(AddUserRequest) returns (User);
+	// rpc RenewUser(RenewUserRequest) returns (.google.protobuf.Empty);
 	GetIntegration(ctx context.Context, in *GetIntegrationRequest, opts ...grpc.CallOption) (*Integration, error)
 	Batch(ctx context.Context, in *BatchReq, opts ...grpc.CallOption) (*BatchResp, error)
 	CreateCustomerCase(ctx context.Context, in *CreateCustomerCaseReq, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	PasswordlessStart(ctx context.Context, in *PasswordlessStartRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	PasswordlessVerify(ctx context.Context, in *PasswordlessStartVerify, opts ...grpc.CallOption) (*JWT, error)
 }
 
 type portalServiceClient struct {
@@ -80,14 +87,37 @@ func (c *portalServiceClient) CreateCustomerCase(ctx context.Context, in *Create
 	return out, nil
 }
 
+func (c *portalServiceClient) PasswordlessStart(ctx context.Context, in *PasswordlessStartRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, PortalService_PasswordlessStart_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *portalServiceClient) PasswordlessVerify(ctx context.Context, in *PasswordlessStartVerify, opts ...grpc.CallOption) (*JWT, error) {
+	out := new(JWT)
+	err := c.cc.Invoke(ctx, PortalService_PasswordlessVerify_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PortalServiceServer is the server API for PortalService service.
 // All implementations must embed UnimplementedPortalServiceServer
 // for forward compatibility
 type PortalServiceServer interface {
+	// rpc GetConfig(.google.protobuf.Empty) returns (Config);
 	Self(context.Context, *emptypb.Empty) (*User, error)
+	// rpc AddUser(AddUserRequest) returns (User);
+	// rpc RenewUser(RenewUserRequest) returns (.google.protobuf.Empty);
 	GetIntegration(context.Context, *GetIntegrationRequest) (*Integration, error)
 	Batch(context.Context, *BatchReq) (*BatchResp, error)
 	CreateCustomerCase(context.Context, *CreateCustomerCaseReq) (*emptypb.Empty, error)
+	PasswordlessStart(context.Context, *PasswordlessStartRequest) (*emptypb.Empty, error)
+	PasswordlessVerify(context.Context, *PasswordlessStartVerify) (*JWT, error)
 	mustEmbedUnimplementedPortalServiceServer()
 }
 
@@ -106,6 +136,12 @@ func (UnimplementedPortalServiceServer) Batch(context.Context, *BatchReq) (*Batc
 }
 func (UnimplementedPortalServiceServer) CreateCustomerCase(context.Context, *CreateCustomerCaseReq) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateCustomerCase not implemented")
+}
+func (UnimplementedPortalServiceServer) PasswordlessStart(context.Context, *PasswordlessStartRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PasswordlessStart not implemented")
+}
+func (UnimplementedPortalServiceServer) PasswordlessVerify(context.Context, *PasswordlessStartVerify) (*JWT, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PasswordlessVerify not implemented")
 }
 func (UnimplementedPortalServiceServer) mustEmbedUnimplementedPortalServiceServer() {}
 
@@ -192,6 +228,42 @@ func _PortalService_CreateCustomerCase_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PortalService_PasswordlessStart_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PasswordlessStartRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortalServiceServer).PasswordlessStart(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortalService_PasswordlessStart_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortalServiceServer).PasswordlessStart(ctx, req.(*PasswordlessStartRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PortalService_PasswordlessVerify_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PasswordlessStartVerify)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortalServiceServer).PasswordlessVerify(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortalService_PasswordlessVerify_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortalServiceServer).PasswordlessVerify(ctx, req.(*PasswordlessStartVerify))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // PortalService_ServiceDesc is the grpc.ServiceDesc for PortalService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -214,6 +286,14 @@ var PortalService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateCustomerCase",
 			Handler:    _PortalService_CreateCustomerCase_Handler,
+		},
+		{
+			MethodName: "PasswordlessStart",
+			Handler:    _PortalService_PasswordlessStart_Handler,
+		},
+		{
+			MethodName: "PasswordlessVerify",
+			Handler:    _PortalService_PasswordlessVerify_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

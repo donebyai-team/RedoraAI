@@ -1,0 +1,112 @@
+syntax = "proto3";
+
+package doota.microsoft.v1;
+
+option go_package = "github.com/shank318/doota/pb/doota/microsoft/v1;pbmicrosoft";
+
+import "google/protobuf/empty.proto";
+
+service MicrosoftService {
+    rpc SetupMailboxSubscription(SetupMailboxSubscriptionRequest) returns (SetupMailboxSubscriptionResponse);
+    rpc RenewMailboxSubscription(RenewMailboxSubscriptionRequest) returns (RenewMailboxSubscriptionResponse);
+    rpc GetIntegration(GetIntegrationRequest) returns (Integration);
+}
+
+message Integration {
+    string tenant = 1;
+    repeated User users = 2;
+}
+
+message SetupMailboxSubscriptionRequest {
+    string tenant_id = 1;
+    // corresponds to the message source id, this is the id that will be used
+    // in the subscription webhook URL
+    string subscription_internal_id = 2;
+    // this is a secret that we will use to validate the inbound subscription webhook
+    string subscription_secret = 3;
+    string user_id = 4;
+}
+
+message SetupMailboxSubscriptionResponse {
+    string email = 1;
+    string user_id = 2;
+    string subscription_id = 3;
+}
+message RenewMailboxSubscriptionResponse {
+    string new_subscription_id = 3;
+
+}
+
+message RenewMailboxSubscriptionRequest {
+    // microsft subcription id
+    string subscription_id = 1;
+    string tenant_id = 2;
+    // corresponds to the message source id, this is the id that will be used
+    // in the subscription webhook URL
+    string subscription_internal_id = 3;
+    // this is a secret that we will use to validate the inbound subscription webhook
+    string subscription_secret = 4;
+    string user_id = 5;
+}
+
+
+message User {
+    // microsoft user's id
+    string id = 1;
+    // microsoft user's email
+    string email = 2;
+    // microsoft user's name
+    string name = 3;
+    // freighstream system user id
+    optional string user_id = 4;
+    // freighstream system message source id ID
+    optional string message_source_id = 5;
+    bool active_subscription = 6;
+
+}
+
+message GetIntegrationRequest {
+    string integration_id = 1;
+}
+
+
+message Notification {
+    // FreigthStream: generate UUID for the inbound HTTP request, linked in logs
+    string request_id = 1;
+    // FreigthStream: message source id
+    string message_source_id = 15;
+    // FreigthStream: The date and time when the webhook event was emitted.
+    string received_at = 2;
+    // Microsoft: Unique ID for the notification. Optional.
+    optional string notification_id = 3;
+    // LoadLogic: either "message" or "status" depeneing on the msoft endpoint
+    string notification_type = 4;
+	// Microsoft: The unique identifier of the subscription that generated the notification.Required.
+    string subscription_id = 5;
+    // Microsoft: The expiration time for the subscription. Required.
+    optional string subscription_expiration_date_time = 6;
+	// Microsoft: The unique identifier of the tenant from which the change notification originated. Required.
+    string tenant_id = 7;
+	// Microsoft: The type of lifecycle notification if the current notification is a lifecycle notification. Optional. Supported values are missed, subscriptionRemoved, reauthorizationRequired. Optional.
+    optional string lifecycle_event = 8;
+    ////-----------------------------------------------
+    /// These are only set when Type = message
+    ////-----------------------------------------------
+    // Microsoft: Indicates the type of change that will raise the change notification. The supported values are: created, updated, deleted. Required
+    optional string change_type = 9;
+	// Microsoft: The URI of the resource that emitted the change notification relative to https://graph.microsoft.com. Required.
+    optional string resource_uri = 10;
+	//The content of this property depends on the type of resource being subscribed to. Optional.
+    // Microsoft: The OData entity type in Microsoft Graph that describes the represented object.
+    optional string resource_odata_type = 11;
+    // Microsoft: The OData identifier of the object.
+    optional string resource_odata_id = 12;
+    // Microsoft: The HTTP entity tag that represents the version of the object.
+    optional string resource_odata_etag = 13;
+    // Microsoft: The identifier of the object.
+    optional string resource_id = 14;
+    // FreigthStream: message source id
+    optional string conversation_id = 16;
+    optional uint64 conversation_index = 17;
+    optional string handling_error = 18;
+}

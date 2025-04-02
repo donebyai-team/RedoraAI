@@ -8,10 +8,17 @@ import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
 
 service PortalService {
+//  rpc GetConfig(.google.protobuf.Empty) returns (Config);
   rpc Self(.google.protobuf.Empty) returns (User);
+//  rpc AddUser(AddUserRequest) returns (User);
+//  rpc RenewUser(RenewUserRequest) returns (.google.protobuf.Empty);
   rpc GetIntegration(GetIntegrationRequest) returns (Integration);
   rpc Batch(BatchReq) returns (BatchResp);
   rpc CreateCustomerCase(CreateCustomerCaseReq) returns (.google.protobuf.Empty);
+  rpc PasswordlessStart(PasswordlessStartRequest) returns (.google.protobuf.Empty);
+  rpc PasswordlessVerify(PasswordlessStartVerify) returns (JWT);
+//  rpc OauthAuthorize(OauthAuthorizeRequest) returns (OauthAuthorizeResponse);
+//  rpc OauthCallback(OauthCallbackRequest) returns (OauthCallbackResponse);
 }
 
 message CreateCustomerCaseReq {
@@ -34,6 +41,32 @@ message BatchResp {
   repeated string rejected_rows = 3;
 }
 
+message Config {
+  string auth0_domain = 1;
+  string auth0_client_id = 2;
+  string auth0_scope = 3;
+  string msoft_auth0_callback_url = 4;
+  string full_story_org_id = 5;
+  string google_auth0_callback_url = 6;
+}
+
+message PasswordlessStartRequest {
+  string redirect_uri = 1;
+  string email = 2;
+}
+
+message PasswordlessStartVerify {
+  string email = 1;
+  string code = 2;
+}
+
+message AuthStateRequest { string redirect_uri = 1; }
+
+message State {
+  string state = 1;
+  string nonce = 2;
+}
+
 message User {
   string id = 1;
   string email = 2;
@@ -43,11 +76,36 @@ message User {
   .google.protobuf.Timestamp created_at = 10;
 }
 
+message OauthAuthorizeRequest {
+  IntegrationType integration_type = 1;
+  string redirect_url = 2;
+  OauthAuthorizeType type = 3;
+  // resource_id represents the resource we are trying to link
+  // via the oauth flow. Will mainly be used when a regular google
+  // mail user consents their account
+  // OAUTH_AUTHORIZE_TYPE_INTEGRATION -> null / ignore
+  // OAUTH_AUTHORIZE_TYPE_MESSAGE_SOURCE -> message_source.id
+  optional string resource_id = 4;
+}
+
+enum OauthAuthorizeType {
+  OAUTH_AUTHORIZE_TYPE_UNSPECIFIED = 0;
+  OAUTH_AUTHORIZE_TYPE_INTEGRATION = 1;
+  OAUTH_AUTHORIZE_TYPE_MESSAGE_SOURCE = 2;
+}
+
+message OauthAuthorizeResponse { string authorize_url = 1; }
+
 enum UserRole {
   USER_ROLE_UNSPECIFIED = 0;
   USER_ROLE_USER = 1;
   USER_ROLE_ADMIN = 2;
   USER_ROLE_PLATFORM_ADMIN = 3;
+}
+
+message IssueRequest {
+  string code = 1;
+  string state = 2;
 }
 
 message JWT {
@@ -88,3 +146,23 @@ enum IntegrationState {
   // revoked.
   INTEGRATION_STATE_AUTH_REVOKED = 2;
 }
+
+message AddUserRequest {
+  string email = 1;
+  optional MessageSourceOptions message_source = 2;
+  IntegrationType integration_type = 3;
+}
+
+message RenewUserRequest { string message_source_id = 1; }
+
+message MessageSourceOptions {
+  string integration_id = 1;
+  string integration_external_id = 2;
+}
+
+message OauthCallbackRequest {
+  string state = 1;
+  optional string external_code = 2;
+}
+
+message OauthCallbackResponse { string redirect_url = 1; }

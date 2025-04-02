@@ -44,6 +44,12 @@ const (
 	// PortalServiceCreateCustomerCaseProcedure is the fully-qualified name of the PortalService's
 	// CreateCustomerCase RPC.
 	PortalServiceCreateCustomerCaseProcedure = "/doota.portal.v1.PortalService/CreateCustomerCase"
+	// PortalServicePasswordlessStartProcedure is the fully-qualified name of the PortalService's
+	// PasswordlessStart RPC.
+	PortalServicePasswordlessStartProcedure = "/doota.portal.v1.PortalService/PasswordlessStart"
+	// PortalServicePasswordlessVerifyProcedure is the fully-qualified name of the PortalService's
+	// PasswordlessVerify RPC.
+	PortalServicePasswordlessVerifyProcedure = "/doota.portal.v1.PortalService/PasswordlessVerify"
 )
 
 // These variables are the protoreflect.Descriptor objects for the RPCs defined in this package.
@@ -53,14 +59,21 @@ var (
 	portalServiceGetIntegrationMethodDescriptor     = portalServiceServiceDescriptor.Methods().ByName("GetIntegration")
 	portalServiceBatchMethodDescriptor              = portalServiceServiceDescriptor.Methods().ByName("Batch")
 	portalServiceCreateCustomerCaseMethodDescriptor = portalServiceServiceDescriptor.Methods().ByName("CreateCustomerCase")
+	portalServicePasswordlessStartMethodDescriptor  = portalServiceServiceDescriptor.Methods().ByName("PasswordlessStart")
+	portalServicePasswordlessVerifyMethodDescriptor = portalServiceServiceDescriptor.Methods().ByName("PasswordlessVerify")
 )
 
 // PortalServiceClient is a client for the doota.portal.v1.PortalService service.
 type PortalServiceClient interface {
+	// rpc GetConfig(.google.protobuf.Empty) returns (Config);
 	Self(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.User], error)
+	// rpc AddUser(AddUserRequest) returns (User);
+	// rpc RenewUser(RenewUserRequest) returns (.google.protobuf.Empty);
 	GetIntegration(context.Context, *connect.Request[v1.GetIntegrationRequest]) (*connect.Response[v1.Integration], error)
 	Batch(context.Context, *connect.Request[v1.BatchReq]) (*connect.Response[v1.BatchResp], error)
 	CreateCustomerCase(context.Context, *connect.Request[v1.CreateCustomerCaseReq]) (*connect.Response[emptypb.Empty], error)
+	PasswordlessStart(context.Context, *connect.Request[v1.PasswordlessStartRequest]) (*connect.Response[emptypb.Empty], error)
+	PasswordlessVerify(context.Context, *connect.Request[v1.PasswordlessStartVerify]) (*connect.Response[v1.JWT], error)
 }
 
 // NewPortalServiceClient constructs a client for the doota.portal.v1.PortalService service. By
@@ -97,6 +110,18 @@ func NewPortalServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(portalServiceCreateCustomerCaseMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
+		passwordlessStart: connect.NewClient[v1.PasswordlessStartRequest, emptypb.Empty](
+			httpClient,
+			baseURL+PortalServicePasswordlessStartProcedure,
+			connect.WithSchema(portalServicePasswordlessStartMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
+		passwordlessVerify: connect.NewClient[v1.PasswordlessStartVerify, v1.JWT](
+			httpClient,
+			baseURL+PortalServicePasswordlessVerifyProcedure,
+			connect.WithSchema(portalServicePasswordlessVerifyMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -106,6 +131,8 @@ type portalServiceClient struct {
 	getIntegration     *connect.Client[v1.GetIntegrationRequest, v1.Integration]
 	batch              *connect.Client[v1.BatchReq, v1.BatchResp]
 	createCustomerCase *connect.Client[v1.CreateCustomerCaseReq, emptypb.Empty]
+	passwordlessStart  *connect.Client[v1.PasswordlessStartRequest, emptypb.Empty]
+	passwordlessVerify *connect.Client[v1.PasswordlessStartVerify, v1.JWT]
 }
 
 // Self calls doota.portal.v1.PortalService.Self.
@@ -128,12 +155,27 @@ func (c *portalServiceClient) CreateCustomerCase(ctx context.Context, req *conne
 	return c.createCustomerCase.CallUnary(ctx, req)
 }
 
+// PasswordlessStart calls doota.portal.v1.PortalService.PasswordlessStart.
+func (c *portalServiceClient) PasswordlessStart(ctx context.Context, req *connect.Request[v1.PasswordlessStartRequest]) (*connect.Response[emptypb.Empty], error) {
+	return c.passwordlessStart.CallUnary(ctx, req)
+}
+
+// PasswordlessVerify calls doota.portal.v1.PortalService.PasswordlessVerify.
+func (c *portalServiceClient) PasswordlessVerify(ctx context.Context, req *connect.Request[v1.PasswordlessStartVerify]) (*connect.Response[v1.JWT], error) {
+	return c.passwordlessVerify.CallUnary(ctx, req)
+}
+
 // PortalServiceHandler is an implementation of the doota.portal.v1.PortalService service.
 type PortalServiceHandler interface {
+	// rpc GetConfig(.google.protobuf.Empty) returns (Config);
 	Self(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.User], error)
+	// rpc AddUser(AddUserRequest) returns (User);
+	// rpc RenewUser(RenewUserRequest) returns (.google.protobuf.Empty);
 	GetIntegration(context.Context, *connect.Request[v1.GetIntegrationRequest]) (*connect.Response[v1.Integration], error)
 	Batch(context.Context, *connect.Request[v1.BatchReq]) (*connect.Response[v1.BatchResp], error)
 	CreateCustomerCase(context.Context, *connect.Request[v1.CreateCustomerCaseReq]) (*connect.Response[emptypb.Empty], error)
+	PasswordlessStart(context.Context, *connect.Request[v1.PasswordlessStartRequest]) (*connect.Response[emptypb.Empty], error)
+	PasswordlessVerify(context.Context, *connect.Request[v1.PasswordlessStartVerify]) (*connect.Response[v1.JWT], error)
 }
 
 // NewPortalServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -166,6 +208,18 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(portalServiceCreateCustomerCaseMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
+	portalServicePasswordlessStartHandler := connect.NewUnaryHandler(
+		PortalServicePasswordlessStartProcedure,
+		svc.PasswordlessStart,
+		connect.WithSchema(portalServicePasswordlessStartMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	portalServicePasswordlessVerifyHandler := connect.NewUnaryHandler(
+		PortalServicePasswordlessVerifyProcedure,
+		svc.PasswordlessVerify,
+		connect.WithSchema(portalServicePasswordlessVerifyMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/doota.portal.v1.PortalService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case PortalServiceSelfProcedure:
@@ -176,6 +230,10 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 			portalServiceBatchHandler.ServeHTTP(w, r)
 		case PortalServiceCreateCustomerCaseProcedure:
 			portalServiceCreateCustomerCaseHandler.ServeHTTP(w, r)
+		case PortalServicePasswordlessStartProcedure:
+			portalServicePasswordlessStartHandler.ServeHTTP(w, r)
+		case PortalServicePasswordlessVerifyProcedure:
+			portalServicePasswordlessVerifyHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -199,4 +257,12 @@ func (UnimplementedPortalServiceHandler) Batch(context.Context, *connect.Request
 
 func (UnimplementedPortalServiceHandler) CreateCustomerCase(context.Context, *connect.Request[v1.CreateCustomerCaseReq]) (*connect.Response[emptypb.Empty], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.CreateCustomerCase is not implemented"))
+}
+
+func (UnimplementedPortalServiceHandler) PasswordlessStart(context.Context, *connect.Request[v1.PasswordlessStartRequest]) (*connect.Response[emptypb.Empty], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.PasswordlessStart is not implemented"))
+}
+
+func (UnimplementedPortalServiceHandler) PasswordlessVerify(context.Context, *connect.Request[v1.PasswordlessStartVerify]) (*connect.Response[v1.JWT], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.PasswordlessVerify is not implemented"))
 }

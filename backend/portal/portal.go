@@ -15,6 +15,7 @@ import (
 
 type Portal struct {
 	*shutter.Shutter
+	authUsecase         *services.AuthUsecase
 	isAppReady          func() bool
 	httpListenAddr      string
 	corsURLRegexAllow   *regexp.Regexp

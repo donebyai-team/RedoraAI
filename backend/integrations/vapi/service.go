@@ -218,7 +218,7 @@ func (m *VAPIVoiceProvider) CreateCall(ctx context.Context, req models.CallReque
 				api.CreateAssistantDtoServerMessagesItemStatusUpdate,
 			},
 			Server: &api.Server{
-				Url: fmt.Sprintf("https://5820-122-171-23-192.ngrok-free.app/webhook/vana/call_status/%s", req.ConversationID),
+				Url: fmt.Sprintf("https://8d87-122-171-23-192.ngrok-free.app/webhook/vana/call_status/%s", req.ConversationID),
 			},
 		},
 	}
