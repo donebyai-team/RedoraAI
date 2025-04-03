@@ -8,7 +8,7 @@ import (
 
 //go:generate go-enum -f=$GOFILE
 
-// ENUM(VOICE_MILLIS, VOICE_VAPI)
+// ENUM(VOICE_MILLIS, VOICE_VAPI, REDDIT)
 type IntegrationType string
 
 // ENUM(ACTIVE)

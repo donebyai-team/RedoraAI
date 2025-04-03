@@ -47,6 +47,8 @@ const (
 	IntegrationTypeVOICEMILLIS IntegrationType = "VOICE_MILLIS"
 	// IntegrationTypeVOICEVAPI is a IntegrationType of type VOICE_VAPI.
 	IntegrationTypeVOICEVAPI IntegrationType = "VOICE_VAPI"
+	// IntegrationTypeREDDIT is a IntegrationType of type REDDIT.
+	IntegrationTypeREDDIT IntegrationType = "REDDIT"
 )
 
 var ErrInvalidIntegrationType = errors.New("not a valid IntegrationType")
@@ -66,6 +68,7 @@ func (x IntegrationType) IsValid() bool {
 var _IntegrationTypeValue = map[string]IntegrationType{
 	"VOICE_MILLIS": IntegrationTypeVOICEMILLIS,
 	"VOICE_VAPI":   IntegrationTypeVOICEVAPI,
+	"REDDIT":       IntegrationTypeREDDIT,
 }
 
 // ParseIntegrationType attempts to convert a string to a IntegrationType.
