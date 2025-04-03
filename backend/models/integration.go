@@ -39,6 +39,53 @@ func SetIntegrationType[T Serializable](integration *Integration, integrationTyp
 
 var _ Serializable = (*VAPIConfig)(nil)
 
+type RedditConfig struct {
+	AccessToken string `json:"-"`
+}
+
+func (i *RedditConfig) EncryptedData() []byte {
+	toEncrypt := struct {
+		AccessToken string `json:"access_token"`
+	}{
+		AccessToken: i.AccessToken,
+	}
+	data, err := json.Marshal(toEncrypt)
+	if err != nil {
+		panic(err)
+	}
+	return data
+
+}
+
+func (i *RedditConfig) PlainTextData() []byte {
+	data, err := json.Marshal(i)
+	if err != nil {
+		panic(err)
+	}
+	return data
+}
+
+func (i *Integration) GetRedditConfig() *RedditConfig {
+	if i.Type != IntegrationTypeREDDIT {
+		panic(fmt.Errorf("integration is not a reddit integration"))
+	}
+
+	out := RedditConfig{}
+	if err := json.Unmarshal([]byte(i.PlainTextConfig), &out); err != nil {
+		panic(fmt.Errorf("unable to unmarshal reddit config: %w", err))
+	}
+
+	encryptedData := struct {
+		APIKey string `json:"access_token"`
+	}{}
+
+	if err := json.Unmarshal([]byte(i.EncryptedConfig), &encryptedData); err != nil {
+		panic(fmt.Errorf("unable to unmarshal reddit config: %w", err))
+	}
+	out.AccessToken = encryptedData.APIKey
+	return &out
+}
+
 type VAPIConfig struct {
 	APIKey   string `json:"-"`
 	HostName string `json:"hostname"`
