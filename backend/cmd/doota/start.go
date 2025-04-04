@@ -181,6 +181,7 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 	openaiApiKey, openaiOrganization, openaiDebugStore, langsmithApiKey, langsmithProject := openAILangsmithLegacyHandling(cmd, "common")
 	deps, err := app.NewDependenciesBuilder().
 		WithDataStore(sflags.MustGetString(cmd, "pg-dsn")).
+		WithKMSKeyPath(sflags.MustGetString(cmd, "jwt-kms-keypath")).
 		WithCORSURLRegexAllow(sflags.MustGetString(cmd, "portal-cors-url-regex-allow")).
 		WithConversationState(
 			sflags.MustGetString(cmd, "redis-addr"),
@@ -240,9 +241,15 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		FullStoryOrgId: sflags.MustGetString(cmd, "portal-fullstory-org-id"),
 	}
 
+	authUsecase, err := services.NewAuthUsecase(cmd.Context(), authConfig, deps.DataStore, deps.AuthSigningKeyGetter, zlog)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create auth usecase: %w", err)
+	}
+
 	p := portal.New(
 		authenticator,
 		services.NewCustomerCaseServiceImpl(deps.DataStore),
+		authUsecase,
 		vanaWebhookHandler,
 		deps.DataStore,
 		sflags.MustGetString(cmd, "portal-http-listen-addr"),

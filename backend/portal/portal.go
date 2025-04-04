@@ -33,6 +33,7 @@ type Portal struct {
 func New(
 	authenticator *auth.Authenticator,
 	customerCaseService services.CustomerCaseService,
+	authUsecase *services.AuthUsecase,
 	vanaWebhookHandler agents.WebhookHandler,
 	db datastore.Repository,
 	httpListenAddr string,
@@ -44,6 +45,7 @@ func New(
 	tracer logging.Tracer,
 ) *Portal {
 	return &Portal{
+		authUsecase:         authUsecase,
 		Shutter:             shutter.New(),
 		config:              config,
 		authenticator:       authenticator,
