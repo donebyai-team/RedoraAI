@@ -27,6 +27,7 @@ const (
 	PortalService_CreateCustomerCase_FullMethodName = "/doota.portal.v1.PortalService/CreateCustomerCase"
 	PortalService_PasswordlessStart_FullMethodName  = "/doota.portal.v1.PortalService/PasswordlessStart"
 	PortalService_PasswordlessVerify_FullMethodName = "/doota.portal.v1.PortalService/PasswordlessVerify"
+	PortalService_CreateKeyword_FullMethodName      = "/doota.portal.v1.PortalService/CreateKeyword"
 )
 
 // PortalServiceClient is the client API for PortalService service.
@@ -42,6 +43,7 @@ type PortalServiceClient interface {
 	CreateCustomerCase(ctx context.Context, in *CreateCustomerCaseReq, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	PasswordlessStart(ctx context.Context, in *PasswordlessStartRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	PasswordlessVerify(ctx context.Context, in *PasswordlessStartVerify, opts ...grpc.CallOption) (*JWT, error)
+	CreateKeyword(ctx context.Context, in *CreateKeywordReq, opts ...grpc.CallOption) (*CreateKeywordRes, error)
 }
 
 type portalServiceClient struct {
@@ -115,6 +117,15 @@ func (c *portalServiceClient) PasswordlessVerify(ctx context.Context, in *Passwo
 	return out, nil
 }
 
+func (c *portalServiceClient) CreateKeyword(ctx context.Context, in *CreateKeywordReq, opts ...grpc.CallOption) (*CreateKeywordRes, error) {
+	out := new(CreateKeywordRes)
+	err := c.cc.Invoke(ctx, PortalService_CreateKeyword_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PortalServiceServer is the server API for PortalService service.
 // All implementations must embed UnimplementedPortalServiceServer
 // for forward compatibility
@@ -128,6 +139,7 @@ type PortalServiceServer interface {
 	CreateCustomerCase(context.Context, *CreateCustomerCaseReq) (*emptypb.Empty, error)
 	PasswordlessStart(context.Context, *PasswordlessStartRequest) (*emptypb.Empty, error)
 	PasswordlessVerify(context.Context, *PasswordlessStartVerify) (*JWT, error)
+	CreateKeyword(context.Context, *CreateKeywordReq) (*CreateKeywordRes, error)
 	mustEmbedUnimplementedPortalServiceServer()
 }
 
@@ -155,6 +167,9 @@ func (UnimplementedPortalServiceServer) PasswordlessStart(context.Context, *Pass
 }
 func (UnimplementedPortalServiceServer) PasswordlessVerify(context.Context, *PasswordlessStartVerify) (*JWT, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PasswordlessVerify not implemented")
+}
+func (UnimplementedPortalServiceServer) CreateKeyword(context.Context, *CreateKeywordReq) (*CreateKeywordRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateKeyword not implemented")
 }
 func (UnimplementedPortalServiceServer) mustEmbedUnimplementedPortalServiceServer() {}
 
@@ -295,6 +310,24 @@ func _PortalService_PasswordlessVerify_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PortalService_CreateKeyword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateKeywordReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortalServiceServer).CreateKeyword(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortalService_CreateKeyword_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortalServiceServer).CreateKeyword(ctx, req.(*CreateKeywordReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // PortalService_ServiceDesc is the grpc.ServiceDesc for PortalService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -329,6 +362,10 @@ var PortalService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "PasswordlessVerify",
 			Handler:    _PortalService_PasswordlessVerify_Handler,
+		},
+		{
+			MethodName: "CreateKeyword",
+			Handler:    _PortalService_CreateKeyword_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

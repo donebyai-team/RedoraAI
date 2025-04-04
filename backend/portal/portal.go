@@ -2,6 +2,8 @@ package portal
 
 import (
 	"context"
+	"regexp"
+
 	"github.com/shank318/doota/agents"
 	"github.com/shank318/doota/auth"
 	"github.com/shank318/doota/datastore"
@@ -11,7 +13,6 @@ import (
 	"github.com/streamingfast/logging"
 	"github.com/streamingfast/shutter"
 	"go.uber.org/zap"
-	"regexp"
 )
 
 type Portal struct {
@@ -28,12 +29,14 @@ type Portal struct {
 	authenticator       *auth.Authenticator
 	vanaWebhookHandler  agents.WebhookHandler
 	customerCaseService services.CustomerCaseService
+	keywordService      services.KeywordService
 }
 
 func New(
 	authenticator *auth.Authenticator,
 	customerCaseService services.CustomerCaseService,
 	authUsecase *services.AuthUsecase,
+	keywordService services.KeywordService,
 	vanaWebhookHandler agents.WebhookHandler,
 	db datastore.Repository,
 	httpListenAddr string,
@@ -51,6 +54,7 @@ func New(
 		authenticator:       authenticator,
 		vanaWebhookHandler:  vanaWebhookHandler,
 		customerCaseService: customerCaseService,
+		keywordService:      keywordService,
 		db:                  db,
 		httpListenAddr:      httpListenAddr,
 		corsURLRegexAllow:   corsURLRegexAllow,

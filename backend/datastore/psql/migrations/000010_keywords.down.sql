@@ -1,0 +1,6 @@
+BEGIN;
+
+DROP TABLE IF EXISTS keywords;
+DROP INDEX IF EXISTS fk_keywords;
+
+COMMIT;

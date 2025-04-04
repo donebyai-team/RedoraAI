@@ -17,6 +17,7 @@ service PortalService {
   rpc CreateCustomerCase(CreateCustomerCaseReq) returns (.google.protobuf.Empty);
   rpc PasswordlessStart(PasswordlessStartRequest) returns (.google.protobuf.Empty);
   rpc PasswordlessVerify(PasswordlessStartVerify) returns (JWT);
+  rpc CreateKeyword(CreateKeywordReq) returns (CreateKeywordRes);
 //  rpc OauthAuthorize(OauthAuthorizeRequest) returns (OauthAuthorizeResponse);
 //  rpc OauthCallback(OauthCallbackRequest) returns (OauthCallbackResponse);
 }
@@ -28,6 +29,20 @@ message CreateCustomerCaseReq {
   string organization_id = 4;
   string due_date = 5;
   string prompt_type = 6;
+}
+
+message CreateKeywordReq {
+  string keyword = 1;
+  string organization_id = 2;
+}
+
+message CreateKeywordRes {
+  string id = 1;
+  string message = 2;
+}
+
+message CreateCustomerCaseRes {
+  string message = 1;
 }
 
 message BatchReq {

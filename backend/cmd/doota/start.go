@@ -181,7 +181,7 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 	openaiApiKey, openaiOrganization, openaiDebugStore, langsmithApiKey, langsmithProject := openAILangsmithLegacyHandling(cmd, "common")
 	deps, err := app.NewDependenciesBuilder().
 		WithDataStore(sflags.MustGetString(cmd, "pg-dsn")).
-		WithKMSKeyPath(sflags.MustGetString(cmd, "jwt-kms-keypath")).
+		//WithKMSKeyPath(sflags.MustGetString(cmd, "jwt-kms-keypath")).
 		WithCORSURLRegexAllow(sflags.MustGetString(cmd, "portal-cors-url-regex-allow")).
 		WithConversationState(
 			sflags.MustGetString(cmd, "redis-addr"),
@@ -250,6 +250,7 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		authenticator,
 		services.NewCustomerCaseServiceImpl(deps.DataStore),
 		authUsecase,
+		services.NewCreateKeywordImpl(deps.DataStore),
 		vanaWebhookHandler,
 		deps.DataStore,
 		sflags.MustGetString(cmd, "portal-http-listen-addr"),
