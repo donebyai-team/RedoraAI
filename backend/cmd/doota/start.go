@@ -40,6 +40,8 @@ var StartCmd = cli.Command(startCmdE,
 
 		flags.String("portal-cors-url-regex-allow", "^.*", "Regex to allow CORS origin requests from, matched on the full URL (scheme, host, port, path, etc.), defaults to allow all")
 		flags.String("portal-http-listen-addr", ":8787", "http listen address")
+
+		flags.String("portal-fullstory-org-id", "", "FullStory org id")
 		flags.String("portal-auth0-domain", "", "Auth0 tenant domain")
 		flags.String("portal-auth0-portal-client-id", "", "Auth0 Portal AppFactory Client ID")
 		flags.String("portal-auth0-portal-client-secret", "", "Auth0 Portal AppFactory Client Secret")
