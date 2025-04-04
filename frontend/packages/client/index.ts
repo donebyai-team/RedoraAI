@@ -1,4 +1,4 @@
-import { Interceptor, createPromiseClient } from '@connectrpc/connect'
+import { Interceptor, createClient } from '@connectrpc/connect'
 import { createConnectTransport } from '@connectrpc/connect-web'
 import { OrganizationStore, TokenStore } from '@doota/store'
 import { PortalService } from '@doota/pb/doota/portal/v1/portal_pb'
@@ -43,6 +43,6 @@ export const createClients = (
   })
 
   return {
-    portalClient: createPromiseClient(PortalService, transport),
+    portalClient: createClient(PortalService, transport),
   }
 }
