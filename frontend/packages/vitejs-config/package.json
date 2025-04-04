@@ -1,0 +1,11 @@
+{
+  "name": "@doota/vitejs-config",
+  "version": "1.0.15",
+  "description": "Vite.js shared config across project",
+  "private": true,
+  "main": "index.mjs",
+  "type": "module",
+  "devDependencies": {
+    "rollup-preserve-directives": "^1.1.1"
+  }
+}

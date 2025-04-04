@@ -1,0 +1,7 @@
+{
+  "extends": "@doota/ts-config/base",
+  "compilerOptions": {
+    "jsx": "react-jsx"
+  },
+  "include": ["**/*.ts", "**/*.tsx"]
+}

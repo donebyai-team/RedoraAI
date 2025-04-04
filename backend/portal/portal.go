@@ -5,6 +5,7 @@ import (
 	"github.com/shank318/doota/agents"
 	"github.com/shank318/doota/auth"
 	"github.com/shank318/doota/datastore"
+	pbportal "github.com/shank318/doota/pb/doota/portal/v1"
 	"github.com/shank318/doota/portal/server"
 	"github.com/shank318/doota/services"
 	"github.com/streamingfast/logging"
@@ -21,6 +22,7 @@ type Portal struct {
 	corsURLRegexAllow   *regexp.Regexp
 	domainWhitelist     []*regexp.Regexp
 	db                  datastore.Repository
+	config              *pbportal.Config
 	logger              *zap.Logger
 	tracer              logging.Tracer
 	authenticator       *auth.Authenticator
@@ -35,6 +37,7 @@ func New(
 	db datastore.Repository,
 	httpListenAddr string,
 	corsURLRegexAllow *regexp.Regexp,
+	config *pbportal.Config,
 	domainWhitelist []*regexp.Regexp,
 	isAppReady func() bool,
 	logger *zap.Logger,
@@ -42,6 +45,7 @@ func New(
 ) *Portal {
 	return &Portal{
 		Shutter:             shutter.New(),
+		config:              config,
 		authenticator:       authenticator,
 		vanaWebhookHandler:  vanaWebhookHandler,
 		customerCaseService: customerCaseService,

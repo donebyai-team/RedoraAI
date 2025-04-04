@@ -7,6 +7,7 @@ import (
 	"github.com/shank318/doota/app"
 	"github.com/shank318/doota/auth"
 	"github.com/shank318/doota/integrations"
+	pbportal "github.com/shank318/doota/pb/doota/portal/v1"
 	"github.com/shank318/doota/portal"
 	"github.com/shank318/doota/services"
 	"os"
@@ -222,6 +223,21 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		logger,
 	)
 
+	authConfig := &services.Auth0Config{
+		Auth0PortalClientID:     sflags.MustGetString(cmd, "portal-auth0-portal-client-id"),
+		Auth0PortalClientSecret: sflags.MustGetString(cmd, "portal-auth0-portal-client-secret"),
+		Auth0ApiRedirectURL:     sflags.MustGetString(cmd, "portal-auth0-api-redirect-uri"),
+		Auth0Domain:             sflags.MustGetString(cmd, "portal-auth0-domain"),
+	}
+
+	// TODO: Understand how to setup this as part of an auth use case
+	config := &pbportal.Config{
+		Auth0Domain:    authConfig.Auth0Domain,
+		Auth0ClientId:  authConfig.Auth0PortalClientID,
+		Auth0Scope:     "openid email",
+		FullStoryOrgId: sflags.MustGetString(cmd, "portal-fullstory-org-id"),
+	}
+
 	p := portal.New(
 		authenticator,
 		services.NewCustomerCaseServiceImpl(deps.DataStore),
@@ -229,6 +245,7 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		deps.DataStore,
 		sflags.MustGetString(cmd, "portal-http-listen-addr"),
 		deps.CorsURLRegexAllow,
+		config,
 		whitelistDomains,
 		isAppReady,
 		zlog.Named("portal"),

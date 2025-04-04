@@ -20,6 +20,7 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
+	PortalService_GetConfig_FullMethodName          = "/doota.portal.v1.PortalService/GetConfig"
 	PortalService_Self_FullMethodName               = "/doota.portal.v1.PortalService/Self"
 	PortalService_GetIntegration_FullMethodName     = "/doota.portal.v1.PortalService/GetIntegration"
 	PortalService_Batch_FullMethodName              = "/doota.portal.v1.PortalService/Batch"
@@ -32,7 +33,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type PortalServiceClient interface {
-	// rpc GetConfig(.google.protobuf.Empty) returns (Config);
+	GetConfig(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Config, error)
 	Self(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*User, error)
 	// rpc AddUser(AddUserRequest) returns (User);
 	// rpc RenewUser(RenewUserRequest) returns (.google.protobuf.Empty);
@@ -49,6 +50,15 @@ type portalServiceClient struct {
 
 func NewPortalServiceClient(cc grpc.ClientConnInterface) PortalServiceClient {
 	return &portalServiceClient{cc}
+}
+
+func (c *portalServiceClient) GetConfig(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Config, error) {
+	out := new(Config)
+	err := c.cc.Invoke(ctx, PortalService_GetConfig_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *portalServiceClient) Self(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*User, error) {
@@ -109,7 +119,7 @@ func (c *portalServiceClient) PasswordlessVerify(ctx context.Context, in *Passwo
 // All implementations must embed UnimplementedPortalServiceServer
 // for forward compatibility
 type PortalServiceServer interface {
-	// rpc GetConfig(.google.protobuf.Empty) returns (Config);
+	GetConfig(context.Context, *emptypb.Empty) (*Config, error)
 	Self(context.Context, *emptypb.Empty) (*User, error)
 	// rpc AddUser(AddUserRequest) returns (User);
 	// rpc RenewUser(RenewUserRequest) returns (.google.protobuf.Empty);
@@ -125,6 +135,9 @@ type PortalServiceServer interface {
 type UnimplementedPortalServiceServer struct {
 }
 
+func (UnimplementedPortalServiceServer) GetConfig(context.Context, *emptypb.Empty) (*Config, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetConfig not implemented")
+}
 func (UnimplementedPortalServiceServer) Self(context.Context, *emptypb.Empty) (*User, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Self not implemented")
 }
@@ -154,6 +167,24 @@ type UnsafePortalServiceServer interface {
 
 func RegisterPortalServiceServer(s grpc.ServiceRegistrar, srv PortalServiceServer) {
 	s.RegisterService(&PortalService_ServiceDesc, srv)
+}
+
+func _PortalService_GetConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortalServiceServer).GetConfig(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortalService_GetConfig_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortalServiceServer).GetConfig(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _PortalService_Self_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -271,6 +302,10 @@ var PortalService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "doota.portal.v1.PortalService",
 	HandlerType: (*PortalServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "GetConfig",
+			Handler:    _PortalService_GetConfig_Handler,
+		},
 		{
 			MethodName: "Self",
 			Handler:    _PortalService_Self_Handler,

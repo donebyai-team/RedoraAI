@@ -12,6 +12,6 @@ plugins:
     out: backend/pb
     opt: paths=source_relative
 
-#  - plugin: buf.build/bufbuild/es:v2.0.0
-#    out: frontend/packages/pb
-#    opt: target=js+dts
+  - plugin: buf.build/bufbuild/es:v2.0.0
+    out: frontend/packages/pb
+    opt: target=js+dts

@@ -1,0 +1,22 @@
+{
+  "name": "@doota/pb",
+  "version": "1.0.15",
+  "description": "Tailwind ESM Protobuf shared across all packages",
+  "private": true,
+  "packageManager": "pnpm@9.15.5",
+  "scripts": {
+    "dep-check": "depcheck --ignores='@types/chrome'",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "pnpm lint --fix",
+    "prettier": "prettier . --write",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "luxon": "^3.5.0",
+    "@bufbuild/protobuf": "catalog:",
+    "@connectrpc/connect": "catalog:"
+  },
+  "devDependencies": {
+    "@doota/ts-config": "workspace:*"
+  }
+}

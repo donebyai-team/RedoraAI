@@ -1,0 +1,6 @@
+{
+  "name": "@doota/ts-config",
+  "version": "1.0.15",
+  "description": "Typescript shared config across the various apps & packages",
+  "private": true
+}

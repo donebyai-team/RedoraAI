@@ -1,0 +1,52 @@
+@import url(fonts/fonts.css);
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  font-size: 14px;
+}
+
+::selection {
+  @apply bg-purple-3 text-white;
+}
+
+:focus {
+  @apply outline-purple-3 outline-2;
+}
+
+html,
+body {
+  min-height: 100%;
+  font-size: 14px;
+}
+
+#__next {
+  height: 100%;
+}
+
+pre {
+  white-space: pre-wrap !important;
+}
+
+.blink {
+  animation: blink-animation 0.5s steps(5, start) 2;
+  transition: all ease-in-out 250ms;
+}
+
+@keyframes blink-animation {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+::placeholder {
+  opacity: 1 !important;
+}

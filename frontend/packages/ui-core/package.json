@@ -1,0 +1,50 @@
+{
+  "name": "@doota/ui-core",
+  "version": "1.0.15",
+  "description": "doota core shared UI components across portal and extensions",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@9.15.5",
+  "scripts": {
+    "dep-check": "depcheck --ignores='@types/chrome'",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "pnpm lint --fix",
+    "prettier": "prettier . --write",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@bufbuild/protobuf": "catalog:",
+    "@connectrpc/connect": "catalog:",
+    "@emotion/react": "catalog:",
+    "@emotion/styled": "catalog:",
+    "@fullstory/browser": "^2.0.5",
+    "@doota/client": "workspace:*",
+    "@doota/pb": "workspace:*",
+    "@doota/store": "workspace:*",
+    "@mui/material": "catalog:",
+    "@mui/x-date-pickers": "^7.10.0",
+    "@types/humanize-duration": "^3.27.4",
+    "@zerodep/app": "^2.10.0",
+    "animate.css": "^4.1.1",
+    "country-state-city": "^3.2.1",
+    "date-fns": "^3.6.0",
+    "dayjs": "^1.11.11",
+    "deepmerge-ts": "^7.1.0",
+    "humanize-duration": "^3.32.1",
+    "lodash": "^4.17.21",
+    "lucide-react": "^0.408.0",
+    "nanoid": "^5.0.7",
+    "react": "catalog:",
+    "react-apexcharts": "^1.3.7",
+    "react-dom": "catalog:",
+    "react-error-boundary": "^4.1.2",
+    "react-hot-toast": "2.4.1",
+    "react-number-format": "^5.4.1",
+    "swr": "^2.2.5",
+    "luxon": "^3.5.0"
+  },
+  "devDependencies": {
+    "@doota/ts-config": "workspace:*",
+    "@types/lodash": "^4.17.7"
+  }
+}

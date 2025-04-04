@@ -1,0 +1,23 @@
+{
+  "name": "@doota/mui-config",
+  "version": "1.0.15",
+  "description": "Material UI shared configuration shared across all packages",
+  "module": "index.ts",
+  "private": true,
+  "packageManager": "pnpm@9.15.5",
+  "scripts": {
+    "dep-check": "depcheck --ignores='@types/chrome'",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "pnpm lint --fix",
+    "prettier": "prettier . --write",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@emotion/react": "catalog:",
+    "@emotion/styled": "catalog:",
+    "@mui/material": "catalog:"
+  },
+  "devDependencies": {
+    "@doota/ts-config": "workspace:*"
+  }
+}

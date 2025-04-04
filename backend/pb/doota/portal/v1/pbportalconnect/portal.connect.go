@@ -34,6 +34,8 @@ const (
 // reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 // period.
 const (
+	// PortalServiceGetConfigProcedure is the fully-qualified name of the PortalService's GetConfig RPC.
+	PortalServiceGetConfigProcedure = "/doota.portal.v1.PortalService/GetConfig"
 	// PortalServiceSelfProcedure is the fully-qualified name of the PortalService's Self RPC.
 	PortalServiceSelfProcedure = "/doota.portal.v1.PortalService/Self"
 	// PortalServiceGetIntegrationProcedure is the fully-qualified name of the PortalService's
@@ -55,6 +57,7 @@ const (
 // These variables are the protoreflect.Descriptor objects for the RPCs defined in this package.
 var (
 	portalServiceServiceDescriptor                  = v1.File_doota_portal_v1_portal_proto.Services().ByName("PortalService")
+	portalServiceGetConfigMethodDescriptor          = portalServiceServiceDescriptor.Methods().ByName("GetConfig")
 	portalServiceSelfMethodDescriptor               = portalServiceServiceDescriptor.Methods().ByName("Self")
 	portalServiceGetIntegrationMethodDescriptor     = portalServiceServiceDescriptor.Methods().ByName("GetIntegration")
 	portalServiceBatchMethodDescriptor              = portalServiceServiceDescriptor.Methods().ByName("Batch")
@@ -65,7 +68,7 @@ var (
 
 // PortalServiceClient is a client for the doota.portal.v1.PortalService service.
 type PortalServiceClient interface {
-	// rpc GetConfig(.google.protobuf.Empty) returns (Config);
+	GetConfig(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.Config], error)
 	Self(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.User], error)
 	// rpc AddUser(AddUserRequest) returns (User);
 	// rpc RenewUser(RenewUserRequest) returns (.google.protobuf.Empty);
@@ -86,6 +89,12 @@ type PortalServiceClient interface {
 func NewPortalServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...connect.ClientOption) PortalServiceClient {
 	baseURL = strings.TrimRight(baseURL, "/")
 	return &portalServiceClient{
+		getConfig: connect.NewClient[emptypb.Empty, v1.Config](
+			httpClient,
+			baseURL+PortalServiceGetConfigProcedure,
+			connect.WithSchema(portalServiceGetConfigMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
 		self: connect.NewClient[emptypb.Empty, v1.User](
 			httpClient,
 			baseURL+PortalServiceSelfProcedure,
@@ -127,12 +136,18 @@ func NewPortalServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 
 // portalServiceClient implements PortalServiceClient.
 type portalServiceClient struct {
+	getConfig          *connect.Client[emptypb.Empty, v1.Config]
 	self               *connect.Client[emptypb.Empty, v1.User]
 	getIntegration     *connect.Client[v1.GetIntegrationRequest, v1.Integration]
 	batch              *connect.Client[v1.BatchReq, v1.BatchResp]
 	createCustomerCase *connect.Client[v1.CreateCustomerCaseReq, emptypb.Empty]
 	passwordlessStart  *connect.Client[v1.PasswordlessStartRequest, emptypb.Empty]
 	passwordlessVerify *connect.Client[v1.PasswordlessStartVerify, v1.JWT]
+}
+
+// GetConfig calls doota.portal.v1.PortalService.GetConfig.
+func (c *portalServiceClient) GetConfig(ctx context.Context, req *connect.Request[emptypb.Empty]) (*connect.Response[v1.Config], error) {
+	return c.getConfig.CallUnary(ctx, req)
 }
 
 // Self calls doota.portal.v1.PortalService.Self.
@@ -167,7 +182,7 @@ func (c *portalServiceClient) PasswordlessVerify(ctx context.Context, req *conne
 
 // PortalServiceHandler is an implementation of the doota.portal.v1.PortalService service.
 type PortalServiceHandler interface {
-	// rpc GetConfig(.google.protobuf.Empty) returns (Config);
+	GetConfig(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.Config], error)
 	Self(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.User], error)
 	// rpc AddUser(AddUserRequest) returns (User);
 	// rpc RenewUser(RenewUserRequest) returns (.google.protobuf.Empty);
@@ -184,6 +199,12 @@ type PortalServiceHandler interface {
 // By default, handlers support the Connect, gRPC, and gRPC-Web protocols with the binary Protobuf
 // and JSON codecs. They also support gzip compression.
 func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
+	portalServiceGetConfigHandler := connect.NewUnaryHandler(
+		PortalServiceGetConfigProcedure,
+		svc.GetConfig,
+		connect.WithSchema(portalServiceGetConfigMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
 	portalServiceSelfHandler := connect.NewUnaryHandler(
 		PortalServiceSelfProcedure,
 		svc.Self,
@@ -222,6 +243,8 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 	)
 	return "/doota.portal.v1.PortalService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
+		case PortalServiceGetConfigProcedure:
+			portalServiceGetConfigHandler.ServeHTTP(w, r)
 		case PortalServiceSelfProcedure:
 			portalServiceSelfHandler.ServeHTTP(w, r)
 		case PortalServiceGetIntegrationProcedure:
@@ -242,6 +265,10 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 
 // UnimplementedPortalServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedPortalServiceHandler struct{}
+
+func (UnimplementedPortalServiceHandler) GetConfig(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.Config], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.GetConfig is not implemented"))
+}
 
 func (UnimplementedPortalServiceHandler) Self(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.User], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.Self is not implemented"))

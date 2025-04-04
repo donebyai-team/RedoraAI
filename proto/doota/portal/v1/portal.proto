@@ -8,7 +8,7 @@ import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
 
 service PortalService {
-//  rpc GetConfig(.google.protobuf.Empty) returns (Config);
+  rpc GetConfig(.google.protobuf.Empty) returns (Config);
   rpc Self(.google.protobuf.Empty) returns (User);
 //  rpc AddUser(AddUserRequest) returns (User);
 //  rpc RenewUser(RenewUserRequest) returns (.google.protobuf.Empty);

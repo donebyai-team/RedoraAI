@@ -1,0 +1,16 @@
+packages:
+  - "packages/*"
+  - "portal"
+
+catalog:
+  "@bufbuild/protobuf": "^2.0.0"
+  "@connectrpc/connect": "^2.0.0-alpha.1"
+  "@connectrpc/connect-web": "^2.0.0-alpha.1"
+  "@emotion/cache": "^11.11.0"
+  "@emotion/react": "^11.11.4"
+  "@emotion/server": "^11.11.0"
+  "@emotion/styled": "^11.11.5"
+  "@mui/material": "^5.16.1"
+  "@mui/system": "^5.16.1"
+  react: "^18.3.1"
+  react-dom: "^18.3.1"

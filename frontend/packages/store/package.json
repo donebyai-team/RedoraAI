@@ -1,0 +1,20 @@
+{
+  "name": "@doota/store",
+  "version": "1.0.15",
+  "description": "Tailwind store interface shared across all packages",
+  "private": true,
+  "packageManager": "pnpm@9.15.5",
+  "scripts": {
+    "dep-check": "depcheck --ignores='@types/chrome'",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "pnpm lint --fix",
+    "prettier": "prettier . --write",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@doota/pb": "workspace:*"
+  },
+  "devDependencies": {
+    "@doota/ts-config": "workspace:*"
+  }
+}

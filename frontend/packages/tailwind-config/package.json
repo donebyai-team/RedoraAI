@@ -1,0 +1,8 @@
+{
+  "name": "@doota/tailwindcss-config",
+  "version": "1.0.15",
+  "description": "Tailwind CSS configuration shared across all packages",
+  "main": "./tailwind.config.js",
+  "private": true,
+  "packageManager": "pnpm@9.15.5"
+}
