@@ -10,12 +10,12 @@ import (
 
 func init() {
 	registerFiles([]string{
-		"keyword/keyword.sql",
+		"keyword/create_keyword.sql",
 	})
 }
 
 func (r *Database) CreateKeyword(ctx context.Context, keywords *models.Keyword) (*models.Keyword, error) {
-	stmt := r.mustGetStmt("keyword/keyword.sql")
+	stmt := r.mustGetStmt("keyword/create_keyword.sql")
 	var id string
 
 	err := stmt.GetContext(ctx, &id, map[string]interface{}{

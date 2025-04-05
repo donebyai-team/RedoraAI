@@ -250,7 +250,7 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		authenticator,
 		services.NewCustomerCaseServiceImpl(deps.DataStore),
 		authUsecase,
-		services.NewCreateKeywordImpl(deps.DataStore),
+		services.NewKeywordServiceImpl(deps.DataStore),
 		vanaWebhookHandler,
 		deps.DataStore,
 		sflags.MustGetString(cmd, "portal-http-listen-addr"),

@@ -16,15 +16,15 @@ type KeywordService interface {
 	CreateKeyword(ctx context.Context, session *CreateKeyword) (*models.Keyword, error)
 }
 
-type CreateKeywordImpl struct {
+type KeywordServiceImpl struct {
 	db datastore.Repository
 }
 
-func NewCreateKeywordImpl(db datastore.Repository) *CreateKeywordImpl {
-	return &CreateKeywordImpl{db: db}
+func NewKeywordServiceImpl(db datastore.Repository) *KeywordServiceImpl {
+	return &KeywordServiceImpl{db: db}
 }
 
-func (c *CreateKeywordImpl) CreateKeyword(ctx context.Context, session *CreateKeyword) (*models.Keyword, error) {
+func (c *KeywordServiceImpl) CreateKeyword(ctx context.Context, session *CreateKeyword) (*models.Keyword, error) {
 	keyword, err := c.db.CreateKeyword(context.Background(), &models.Keyword{
 		Keyword: session.Keyword,
 		OrgID:   session.OrgID,
