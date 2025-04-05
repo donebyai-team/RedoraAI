@@ -36,10 +36,6 @@ message CreateKeywordReq {
   string organization_id = 2;
 }
 
-message CreateCustomerCaseRes {
-  string message = 1;
-}
-
 message BatchReq {
   bytes csv_data = 1;
   string organization_id = 2;
