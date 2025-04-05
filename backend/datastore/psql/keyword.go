@@ -1,28 +1,30 @@
 package psql
 
 import (
+	"connectrpc.com/connect"
 	"context"
 	"fmt"
 	"github.com/shank318/doota/models"
+	"google.golang.org/grpc/codes"
 )
 
 func init() {
 	registerFiles([]string{
-		"keywords/keywords.sql",
+		"keyword/keyword.sql",
 	})
 }
 
 func (r *Database) CreateKeyword(ctx context.Context, keywords *models.Keyword) (*models.Keyword, error) {
-	stmt := r.mustGetStmt("keywords/keywords.sql")
+	stmt := r.mustGetStmt("keyword/keyword.sql")
 	var id string
 
 	err := stmt.GetContext(ctx, &id, map[string]interface{}{
 		"keyword":         keywords.Keyword,
-		"organization_id": "dd80c434-43c3-41aa-84a6-fc908e7b36ad",
+		"organization_id": keywords.OrgID,
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to create keyword for organization: %w", err)
+		return nil, connect.NewError(connect.Code(codes.InvalidArgument), fmt.Errorf("failed to create keyword for organization: %w", err))
 	}
 
 	keywords.ID = id

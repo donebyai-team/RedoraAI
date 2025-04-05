@@ -43,7 +43,7 @@ type PortalServiceClient interface {
 	CreateCustomerCase(ctx context.Context, in *CreateCustomerCaseReq, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	PasswordlessStart(ctx context.Context, in *PasswordlessStartRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	PasswordlessVerify(ctx context.Context, in *PasswordlessStartVerify, opts ...grpc.CallOption) (*JWT, error)
-	CreateKeyword(ctx context.Context, in *CreateKeywordReq, opts ...grpc.CallOption) (*CreateKeywordRes, error)
+	CreateKeyword(ctx context.Context, in *CreateKeywordReq, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type portalServiceClient struct {
@@ -117,8 +117,8 @@ func (c *portalServiceClient) PasswordlessVerify(ctx context.Context, in *Passwo
 	return out, nil
 }
 
-func (c *portalServiceClient) CreateKeyword(ctx context.Context, in *CreateKeywordReq, opts ...grpc.CallOption) (*CreateKeywordRes, error) {
-	out := new(CreateKeywordRes)
+func (c *portalServiceClient) CreateKeyword(ctx context.Context, in *CreateKeywordReq, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, PortalService_CreateKeyword_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -139,7 +139,7 @@ type PortalServiceServer interface {
 	CreateCustomerCase(context.Context, *CreateCustomerCaseReq) (*emptypb.Empty, error)
 	PasswordlessStart(context.Context, *PasswordlessStartRequest) (*emptypb.Empty, error)
 	PasswordlessVerify(context.Context, *PasswordlessStartVerify) (*JWT, error)
-	CreateKeyword(context.Context, *CreateKeywordReq) (*CreateKeywordRes, error)
+	CreateKeyword(context.Context, *CreateKeywordReq) (*emptypb.Empty, error)
 	mustEmbedUnimplementedPortalServiceServer()
 }
 
@@ -168,7 +168,7 @@ func (UnimplementedPortalServiceServer) PasswordlessStart(context.Context, *Pass
 func (UnimplementedPortalServiceServer) PasswordlessVerify(context.Context, *PasswordlessStartVerify) (*JWT, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PasswordlessVerify not implemented")
 }
-func (UnimplementedPortalServiceServer) CreateKeyword(context.Context, *CreateKeywordReq) (*CreateKeywordRes, error) {
+func (UnimplementedPortalServiceServer) CreateKeyword(context.Context, *CreateKeywordReq) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateKeyword not implemented")
 }
 func (UnimplementedPortalServiceServer) mustEmbedUnimplementedPortalServiceServer() {}

@@ -31,7 +31,7 @@ func (c *CreateKeywordImpl) CreateKeyword(ctx context.Context, session *CreateKe
 	})
 
 	if err != nil {
-		_ = fmt.Errorf("failed to create keyword for organization: %w", err)
+		return nil, fmt.Errorf("failed to create keyword for organization: %w", err)
 	}
 
 	return keyword, nil

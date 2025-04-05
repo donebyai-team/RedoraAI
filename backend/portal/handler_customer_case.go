@@ -32,19 +32,16 @@ func (p *Portal) CreateCustomerCase(ctx context.Context, c *connect.Request[pbpo
 	return connect.NewResponse(&emptypb.Empty{}), nil
 }
 
-func (p *Portal) CreateKeyword(ctx context.Context, c *connect.Request[pbportal.CreateKeywordReq]) (*connect.Response[pbportal.CreateKeywordRes], error) {
+func (p *Portal) CreateKeyword(ctx context.Context, c *connect.Request[pbportal.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error) {
 	req := services.CreateKeyword{
 		Keyword: c.Msg.Keyword,
 		OrgID:   c.Msg.OrganizationId,
 	}
 
-	res, err := p.keywordService.CreateKeyword(ctx, &req)
+	_, err := p.keywordService.CreateKeyword(ctx, &req)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create keyword: %w", err)
 	}
 
-	return response(&pbportal.CreateKeywordRes{
-		Id:      res.ID,
-		Message: "Keyword Created!",
-	}), nil
+	return connect.NewResponse(&emptypb.Empty{}), nil
 }
