@@ -19,7 +19,7 @@ type Repository interface {
 	ConversationRepository
 	CustomerRepository
 	CustomerCaseRepository
-	KeywordRepository
+	RedditRepository
 }
 
 type OrganizationRepository interface {
@@ -57,8 +57,10 @@ type CustomerCaseRepository interface {
 	GetCustomerCaseByID(ctx context.Context, id string) (*models.CustomerCase, error)
 }
 
-type KeywordRepository interface {
+type RedditRepository interface {
 	CreateKeyword(ctx context.Context, keyword *models.Keyword) (*models.Keyword, error)
+	GetSubReddits(ctx context.Context) ([]*models.AugmentedSubReddit, error)
+	AddSubReddit(ctx context.Context, subreddit *models.SubReddit) (*models.SubReddit, error)
 }
 
 type ConversationRepository interface {

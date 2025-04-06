@@ -94,8 +94,6 @@ func (s *Spooler) runLoop(ctx context.Context) {
 	}
 }
 
-const fromPhone = "6e35359c-fa82-44a6-89fa-953b701b9116"
-
 func (s *Spooler) processKeywordsTracking(ctx context.Context, subReddit *models.AugmentedSubReddit) error {
 	logger := s.logger.With(
 		zap.String("subreddit_id", subReddit.SubReddit.SubRedditID),
@@ -140,8 +138,19 @@ func (s *Spooler) pollSubReddits(ctx context.Context) {
 }
 
 func (s *Spooler) loadSubRedditsToTrack(ctx context.Context) error {
+	t0 := time.Now()
 	// Query all subreddits per org based on lastTrackedAt, should be > 24hours
 	// For each subreddit start the process
+	subReddits, err := s.db.GetSubReddits(ctx)
+	if err != nil {
+		return fmt.Errorf("processing subreddits: %w", err)
+	}
+
+	for _, reddit := range subReddits {
+		s.pushSubRedditToTack(reddit)
+	}
+	s.logger.Info("found subreddit to process from db", zap.Int("count", len(subReddits)), zap.Duration("elapsed", time.Since(t0)))
+
 	return nil
 }
 
