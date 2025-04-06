@@ -18,6 +18,12 @@ var caseDecisionTemplates = []Template{
 	{path: "case_decision.human.gotmpl", promptType: PromptTypeSYSTEM, promptFeature: PromptFeatureBOTH},
 }
 
+var redditPostRelevancyTemplates = []Template{
+	{path: "reddit_post.prompt.gotmpl", promptType: PromptTypeSYSTEM, promptFeature: PromptFeatureTEXTONLY},
+	{path: "reddit_post.schema.gotmpl", promptType: PromptTypeResponseSchema, promptFeature: PromptFeatureBOTH},
+	{path: "reddit_post.human.gotmpl", promptType: PromptTypeSYSTEM, promptFeature: PromptFeatureBOTH},
+}
+
 // ENUM(gpt-4-vision-preview, gpt-4-turbo, gpt-4-turbo-preview, gpt-4-0125-preview, gpt-4-turbo-2024-04-09, gpt-4o-2024-05-13, gpt-4o-2024-08-06)
 type GPTModel string
 
@@ -34,6 +40,13 @@ func (g GPTModel) GetCaseDecisionVars(customerCase *models.Conversation) Variabl
 	out := make(Variable).
 		WithConversationDate(customerCase.CreatedAt).
 		WithCallMessages(customerCase.CallMessages)
+	return out
+}
+
+func (g GPTModel) GetRedditPostRelevancyVars(org *models.Organization, subReddit *models.SubReddit) Variable {
+	out := make(Variable).
+		WithCompanyDetails(org).
+		WithSubReddit(subReddit)
 	return out
 }
 
@@ -71,13 +84,13 @@ type Template struct {
 
 type ResponseFormat []byte
 
-func (g *GPTModel) getCaseDecisionTemplates() (prompts.ChatPromptTemplate, *template.Template, []*template.Template) {
+func (g *GPTModel) getPromptTemplates(templates []Template) (prompts.ChatPromptTemplate, *template.Template, []*template.Template) {
 	var chatPrompts []prompts.MessageFormatter
 	var tmpls []*template.Template
 	var responseSchemaTemplate *template.Template
 	supportsStructuredOutputs := g.SupportsStructuredOutput()
 
-	for _, tmpl := range caseDecisionTemplates {
+	for _, tmpl := range templates {
 		data := rp(tmpl.path)
 		switch tmpl.promptType {
 		case PromptTypeSYSTEM:

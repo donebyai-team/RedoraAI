@@ -36,6 +36,21 @@ func rp(name string) string {
 
 type Variable map[string]any
 
+func (v Variable) WithCompanyDetails(org *models.Organization) Variable {
+	v["CompanyName"] = org.Name
+	v["CompanyDescription"] = org.FeatureFlags.CompanyDescription
+	v["TargetCustomerPersona"] = org.FeatureFlags.CustomerPersona
+	v["ProductDescription"] = org.FeatureFlags.ProductDescription
+	v["EngagementGoals"] = strings.Join(org.FeatureFlags.EngagementGoals, ",")
+	return v
+}
+
+func (v Variable) WithSubReddit(org *models.SubReddit) Variable {
+	v["Title"] = org.Title
+	v["Description"] = org.Description
+	return v
+}
+
 func (v Variable) WithCustomer(customer *models.Customer) Variable {
 	v["firstName"] = customer.FirstName
 	v["lastName"] = customer.LastName

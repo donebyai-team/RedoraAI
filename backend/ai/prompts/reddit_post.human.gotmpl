@@ -2,8 +2,6 @@ Title: {{ .Title }}
 Description: {{ .Description }}
 CompanyName: {{ .CompanyName }}
 CompanyDescription: {{ .CompanyDescription }}
-
-Product Features list:
-{{ range $index, $element := .ProductFeatures }}
-    {{ $element }}
-{{ end }}
+TargetCustomerPersona = {{ .TargetCustomerPersona }}
+ProductDescription = {{ .ProductDescription }}
+EngagementGoals = {{ .EngagementGoals }}

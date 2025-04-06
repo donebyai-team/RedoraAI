@@ -5,6 +5,16 @@ import (
 	"time"
 )
 
+type RedditPostRelevanceResponse struct {
+	ChainOfThoughtIsRelevant       string  `json:"chain_of_thought_is_relevant"`
+	IsRelevant                     bool    `json:"is_relevant"`
+	IsRelevantConfidenceScore      float64 `json:"is_relevant_confidence_score"`
+	SuggestedDM                    string  `json:"suggested_dm"`
+	ChainOfThoughtSuggestedDM      string  `json:"chain_of_thought_suggested_dm"`
+	SuggestedComment               string  `json:"suggested_comment"`
+	ChainOfThoughtSuggestedComment string  `json:"chain_of_thought_suggested_comment"`
+}
+
 type CaseDecisionResponse struct {
 	ChainOfThoughtCaseStatus           string             `json:"chain_of_thought_case_status"`
 	CaseStatusReason                   CustomerCaseReason `json:"case_status"`

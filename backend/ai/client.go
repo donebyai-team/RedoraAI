@@ -64,11 +64,32 @@ func NewOpenAI(apiKey, openAIOrganization string, config LangsmithConfig, debugF
 	return newClient(model, config, debugFileStore)
 }
 
+func (c *Client) IsRedditPostRelevant(ctx context.Context, org *models.Organization, subReddit *models.SubReddit, gptModel GPTModel, logger *zap.Logger) (*models.RedditPostRelevanceResponse, error) {
+	vars := gptModel.GetRedditPostRelevancyVars(org, subReddit)
+
+	runID := subReddit.ID
+	prompts, responseSchemaTemplate, debugTemplates := gptModel.getPromptTemplates(redditPostRelevancyTemplates)
+	c.debugTemplates(ctx, runID, vars, debugTemplates, logger)
+
+	output, err := c.call(ctx, runID, prompts, responseSchemaTemplate, vars, gptModel, logger)
+	if err != nil {
+		return nil, fmt.Errorf("llm: %w", err)
+	}
+
+	c.saveOutput(ctx, runID, "reddit_post_relevancy.output", []byte(output), logger)
+	var data models.RedditPostRelevanceResponse
+	if err := json.Unmarshal([]byte(output), &data); err != nil {
+		return nil, fmt.Errorf("unable to unmarshal response: %w", err)
+	}
+
+	return &data, nil
+}
+
 func (c *Client) CustomerCaseDecision(ctx context.Context, lastConversation *models.Conversation, gptModel GPTModel, logger *zap.Logger) (*models.CaseDecisionResponse, error) {
 	vars := gptModel.GetCaseDecisionVars(lastConversation)
 
 	runID := lastConversation.ID
-	prompts, responseSchemaTemplate, debugTemplates := gptModel.getCaseDecisionTemplates()
+	prompts, responseSchemaTemplate, debugTemplates := gptModel.getPromptTemplates(caseDecisionTemplates)
 	c.debugTemplates(ctx, runID, vars, debugTemplates, logger)
 
 	output, err := c.call(ctx, runID, prompts, responseSchemaTemplate, vars, gptModel, logger)
