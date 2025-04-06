@@ -19,6 +19,7 @@ type Repository interface {
 	ConversationRepository
 	CustomerRepository
 	CustomerCaseRepository
+	KeywordRepository
 }
 
 type OrganizationRepository interface {
@@ -54,6 +55,10 @@ type CustomerCaseRepository interface {
 	UpdateCustomerCase(ctx context.Context, customer *models.CustomerCase) error
 	GetCustomerCases(ctx context.Context, filter CustomerCaseFilter) ([]*models.AugmentedCustomerCase, error)
 	GetCustomerCaseByID(ctx context.Context, id string) (*models.CustomerCase, error)
+}
+
+type KeywordRepository interface {
+	CreateKeyword(ctx context.Context, keyword *models.Keyword) (*models.Keyword, error)
 }
 
 type ConversationRepository interface {

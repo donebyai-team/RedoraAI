@@ -52,6 +52,9 @@ const (
 	// PortalServicePasswordlessVerifyProcedure is the fully-qualified name of the PortalService's
 	// PasswordlessVerify RPC.
 	PortalServicePasswordlessVerifyProcedure = "/doota.portal.v1.PortalService/PasswordlessVerify"
+	// PortalServiceCreateKeywordProcedure is the fully-qualified name of the PortalService's
+	// CreateKeyword RPC.
+	PortalServiceCreateKeywordProcedure = "/doota.portal.v1.PortalService/CreateKeyword"
 )
 
 // These variables are the protoreflect.Descriptor objects for the RPCs defined in this package.
@@ -64,6 +67,7 @@ var (
 	portalServiceCreateCustomerCaseMethodDescriptor = portalServiceServiceDescriptor.Methods().ByName("CreateCustomerCase")
 	portalServicePasswordlessStartMethodDescriptor  = portalServiceServiceDescriptor.Methods().ByName("PasswordlessStart")
 	portalServicePasswordlessVerifyMethodDescriptor = portalServiceServiceDescriptor.Methods().ByName("PasswordlessVerify")
+	portalServiceCreateKeywordMethodDescriptor      = portalServiceServiceDescriptor.Methods().ByName("CreateKeyword")
 )
 
 // PortalServiceClient is a client for the doota.portal.v1.PortalService service.
@@ -77,6 +81,7 @@ type PortalServiceClient interface {
 	CreateCustomerCase(context.Context, *connect.Request[v1.CreateCustomerCaseReq]) (*connect.Response[emptypb.Empty], error)
 	PasswordlessStart(context.Context, *connect.Request[v1.PasswordlessStartRequest]) (*connect.Response[emptypb.Empty], error)
 	PasswordlessVerify(context.Context, *connect.Request[v1.PasswordlessStartVerify]) (*connect.Response[v1.JWT], error)
+	CreateKeyword(context.Context, *connect.Request[v1.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error)
 }
 
 // NewPortalServiceClient constructs a client for the doota.portal.v1.PortalService service. By
@@ -131,6 +136,12 @@ func NewPortalServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(portalServicePasswordlessVerifyMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
+		createKeyword: connect.NewClient[v1.CreateKeywordReq, emptypb.Empty](
+			httpClient,
+			baseURL+PortalServiceCreateKeywordProcedure,
+			connect.WithSchema(portalServiceCreateKeywordMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -143,6 +154,7 @@ type portalServiceClient struct {
 	createCustomerCase *connect.Client[v1.CreateCustomerCaseReq, emptypb.Empty]
 	passwordlessStart  *connect.Client[v1.PasswordlessStartRequest, emptypb.Empty]
 	passwordlessVerify *connect.Client[v1.PasswordlessStartVerify, v1.JWT]
+	createKeyword      *connect.Client[v1.CreateKeywordReq, emptypb.Empty]
 }
 
 // GetConfig calls doota.portal.v1.PortalService.GetConfig.
@@ -180,6 +192,11 @@ func (c *portalServiceClient) PasswordlessVerify(ctx context.Context, req *conne
 	return c.passwordlessVerify.CallUnary(ctx, req)
 }
 
+// CreateKeyword calls doota.portal.v1.PortalService.CreateKeyword.
+func (c *portalServiceClient) CreateKeyword(ctx context.Context, req *connect.Request[v1.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error) {
+	return c.createKeyword.CallUnary(ctx, req)
+}
+
 // PortalServiceHandler is an implementation of the doota.portal.v1.PortalService service.
 type PortalServiceHandler interface {
 	GetConfig(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.Config], error)
@@ -191,6 +208,7 @@ type PortalServiceHandler interface {
 	CreateCustomerCase(context.Context, *connect.Request[v1.CreateCustomerCaseReq]) (*connect.Response[emptypb.Empty], error)
 	PasswordlessStart(context.Context, *connect.Request[v1.PasswordlessStartRequest]) (*connect.Response[emptypb.Empty], error)
 	PasswordlessVerify(context.Context, *connect.Request[v1.PasswordlessStartVerify]) (*connect.Response[v1.JWT], error)
+	CreateKeyword(context.Context, *connect.Request[v1.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error)
 }
 
 // NewPortalServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -241,6 +259,12 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(portalServicePasswordlessVerifyMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
+	portalServiceCreateKeywordHandler := connect.NewUnaryHandler(
+		PortalServiceCreateKeywordProcedure,
+		svc.CreateKeyword,
+		connect.WithSchema(portalServiceCreateKeywordMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/doota.portal.v1.PortalService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case PortalServiceGetConfigProcedure:
@@ -257,6 +281,8 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 			portalServicePasswordlessStartHandler.ServeHTTP(w, r)
 		case PortalServicePasswordlessVerifyProcedure:
 			portalServicePasswordlessVerifyHandler.ServeHTTP(w, r)
+		case PortalServiceCreateKeywordProcedure:
+			portalServiceCreateKeywordHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -292,4 +318,8 @@ func (UnimplementedPortalServiceHandler) PasswordlessStart(context.Context, *con
 
 func (UnimplementedPortalServiceHandler) PasswordlessVerify(context.Context, *connect.Request[v1.PasswordlessStartVerify]) (*connect.Response[v1.JWT], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.PasswordlessVerify is not implemented"))
+}
+
+func (UnimplementedPortalServiceHandler) CreateKeyword(context.Context, *connect.Request[v1.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.CreateKeyword is not implemented"))
 }
