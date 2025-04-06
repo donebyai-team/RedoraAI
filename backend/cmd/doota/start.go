@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/shank318/doota/agents/redora"
 	"github.com/shank318/doota/agents/vana"
 	"github.com/shank318/doota/ai"
 	"github.com/shank318/doota/app"
@@ -57,8 +58,9 @@ type App interface {
 type AppFactory func(cmd *cobra.Command, isAppReady func() bool) (App, error)
 
 var appToFactory = map[string]AppFactory{
-	"portal-api":   portalApp,
-	"vana-spooler": vanaSpoolerApp,
+	"portal-api": portalApp,
+	//"vana-spooler":   vanaSpoolerApp,
+	"redora-spooler": redoraSpoolerApp,
 }
 
 func startCmdE(cmd *cobra.Command, args []string) error {
@@ -130,6 +132,51 @@ func openAILangsmithLegacyHandling(cmd *cobra.Command, prefix string) (string, s
 	}
 
 	return openaiApiKey, openaiOrganization, openaiDebugStore, langsmithApiKey, langsmithProject
+}
+
+func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
+	openaiApiKey, openaiOrganization, openaiDebugStore, langsmithApiKey, langsmithProject := openAILangsmithLegacyHandling(cmd, "common")
+	deps, err := app.NewDependenciesBuilder().
+		WithDataStore(sflags.MustGetString(cmd, "pg-dsn")).
+		WithAI(
+			openaiApiKey,
+			openaiOrganization,
+			openaiDebugStore,
+			langsmithApiKey,
+			langsmithProject,
+		).
+		WithConversationState(
+			sflags.MustGetString(cmd, "redis-addr"),
+			sflags.MustGetDuration(cmd, "common-phone-call-ttl"),
+		).
+		Build(cmd.Context(), zlog, tracer)
+	if err != nil {
+		return nil, err
+	}
+
+	logger := zlog.Named("spooler")
+
+	gptModel, err := ai.ParseGPTModel(sflags.MustGetString(cmd, "common-gpt-model"))
+	if err != nil {
+		return nil, fmt.Errorf("initiated extractor with invalid gpt model: %w", err)
+	}
+
+	integrationsFactory := integrations.NewFactory(deps.DataStore, logger)
+	tracker := redora.NewSubRedditTracker(gptModel, deps.DataStore, deps.AIClient, logger, deps.ConversationState)
+
+	return redora.New(
+		deps.DataStore,
+		deps.AIClient,
+		gptModel,
+		deps.ConversationState,
+		integrationsFactory,
+		1000,
+		10,
+		sflags.MustGetDuration(cmd, "spooler-db-polling-interval"),
+		isAppReady,
+		tracker,
+		logger,
+	), nil
 }
 
 func vanaSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
