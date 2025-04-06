@@ -1,0 +1,49 @@
+{
+  "type": "json_schema",
+  "json_schema": {
+    "name": "relevant_post_schema",
+    "strict": true,
+    "schema": {
+      "type": "object",
+      "properties": {
+        "chain_of_thought_is_relevant": {
+          "type": "string",
+          "description": "Explanation of the chain of thought leading to the suggestion"
+        },
+        "is_relevant": {
+          "type": "boolean",
+          "description": "is the reddit post relevant to the mentioned product"
+        },
+        "is_relevant_confidence_score": {
+          "type": "number"
+        },
+        "suggested_dm": {
+          "type": "string",
+          "description": "suggest a DM message to send to the author"
+        },
+        "chain_of_thought_suggested_dm": {
+          "type": "string",
+          "description": "Explanation of the chain of thought leading to the suggested_dm"
+        },
+        "suggested_comment": {
+          "type": "string",
+          "description": "suggest a comment I should post on the reddit post"
+        },
+        "chain_of_thought_suggested_comment": {
+          "type": "string",
+          "description": "Explanation of the chain of thought leading to the suggested_comment"
+        },
+      },
+      "required": [
+        "chain_of_thought_is_relevant",
+        "is_relevant",
+        "is_relevant_confidence_score",
+        "suggested_dm",
+        "chain_of_thought_suggested_dm",
+        "suggested_comment",
+        "chain_of_thought_suggested_comment"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

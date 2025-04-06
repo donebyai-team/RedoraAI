@@ -113,9 +113,7 @@ func (s *Spooler) processKeywordsTracking(ctx context.Context, subReddit *models
 		return nil
 	}
 
-	// Call Reddit APIs to fetch the list of posts
-
-	return nil
+	return s.subRedditTracker.TrackSubreddit(ctx, subReddit)
 }
 
 func (s *Spooler) pollSubReddits(ctx context.Context) {
