@@ -21,40 +21,15 @@ func (o *Organization) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
 	return nil
 }
 
+// TODO: Move it to a better place
 type OrganizationFeatureFlags struct {
-	QuoteTTL *time.Duration `json:"quote_ttl,omitempty"`
-	// Quote proposals template name
-	// - quick_reply
-	// - quick_reply_amt
-	QuoteProposalEmailTemplate *string  `json:"quote_proposal_email_template,omitempty"`
-	DefaultQuoteMarkupPercent  *float32 `json:"default_quote_markup_percent,omitempty"`
-	EnableLoadDiffEmail        bool     `json:"enable_load_diff_email"`
-	EnableAccessorials         bool     `json:"enable_accessorials"`
-	EnableCarrierRates         bool     `json:"enable_carrier_rates"`
+	Industry           string   `json:"industry"`
+	CompanyDescription string   `json:"company_description"`
+	ProductDescription string   `json:"product_description"`
+	CustomerPersona    string   `json:"customer_persona"`
+	EngagementGoals    []string `json:"engagement_goals"`
 }
 
-func (b OrganizationFeatureFlags) IsAccessorialsEnabled() bool {
-	return b.EnableAccessorials
-}
-
-func (b OrganizationFeatureFlags) CanSendQuoteProposalEmail() bool {
-	return b.QuoteProposalEmailTemplate != nil
-}
-
-func (b OrganizationFeatureFlags) CanAddAccessorial() bool {
-	return b.EnableAccessorials
-}
-
-func (b OrganizationFeatureFlags) CanViewCarrierRates() bool {
-	return b.EnableCarrierRates
-}
-
-func (b OrganizationFeatureFlags) GetDefaultQuoteMarkupPercent() float32 {
-	if b.DefaultQuoteMarkupPercent == nil {
-		return 0.25
-	}
-	return *b.DefaultQuoteMarkupPercent
-}
 func (b OrganizationFeatureFlags) Value() (driver.Value, error) {
 	return valueAsJSON(b, "organization feature flags")
 }
