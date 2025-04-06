@@ -9,7 +9,6 @@ CREATE TABLE sub_reddits
     description varchar(255) NOT NULL,
     organization_id uuid NOT NULL,
     subreddit_created_at timestamp NOT NULL,
-    
     last_tracked_at timestamp,
     subscribers integer,
     title varchar(255),
