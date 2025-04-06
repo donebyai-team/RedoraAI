@@ -40,7 +40,7 @@ func (p *Portal) CreateKeyword(ctx context.Context, c *connect.Request[pbportal.
 
 	_, err := p.keywordService.CreateKeyword(ctx, &req)
 	if err != nil {
-		return nil, fmt.Errorf("unable to create keyword: %w", err)
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to create keyword: %w", err))
 	}
 
 	return connect.NewResponse(&emptypb.Empty{}), nil
