@@ -39,6 +39,8 @@ func SetIntegrationType[T Serializable](integration *Integration, integrationTyp
 
 var _ Serializable = (*VAPIConfig)(nil)
 
+var _ Serializable = (*RedditConfig)(nil)
+
 type RedditConfig struct {
 	AccessToken string `json:"-"`
 }

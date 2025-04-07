@@ -294,22 +294,6 @@ export declare type OauthAuthorizeRequest = Message<"doota.portal.v1.OauthAuthor
    * @generated from field: string redirect_url = 2;
    */
   redirectUrl: string;
-
-  /**
-   * @generated from field: doota.portal.v1.OauthAuthorizeType type = 3;
-   */
-  type: OauthAuthorizeType;
-
-  /**
-   * resource_id represents the resource we are trying to link
-   * via the oauth flow. Will mainly be used when a regular google
-   * mail user consents their account
-   * OAUTH_AUTHORIZE_TYPE_INTEGRATION -> null / ignore
-   * OAUTH_AUTHORIZE_TYPE_MESSAGE_SOURCE -> message_source.id
-   *
-   * @generated from field: optional string resource_id = 4;
-   */
-  resourceId?: string;
 };
 
 /**
@@ -579,11 +563,6 @@ export enum OauthAuthorizeType {
    * @generated from enum value: OAUTH_AUTHORIZE_TYPE_INTEGRATION = 1;
    */
   INTEGRATION = 1,
-
-  /**
-   * @generated from enum value: OAUTH_AUTHORIZE_TYPE_MESSAGE_SOURCE = 2;
-   */
-  MESSAGE_SOURCE = 2,
 }
 
 /**
@@ -744,15 +723,28 @@ export declare const PortalService: GenService<{
     output: typeof JWTSchema;
   },
   /**
-   *  rpc OauthAuthorize(OauthAuthorizeRequest) returns (OauthAuthorizeResponse);
-   *  rpc OauthCallback(OauthCallbackRequest) returns (OauthCallbackResponse);
-   *
    * @generated from rpc doota.portal.v1.PortalService.CreateKeyword
    */
   createKeyword: {
     methodKind: "unary";
     input: typeof CreateKeywordReqSchema;
     output: typeof EmptySchema;
+  },
+  /**
+   * @generated from rpc doota.portal.v1.PortalService.OauthAuthorize
+   */
+  oauthAuthorize: {
+    methodKind: "unary";
+    input: typeof OauthAuthorizeRequestSchema;
+    output: typeof OauthAuthorizeResponseSchema;
+  },
+  /**
+   * @generated from rpc doota.portal.v1.PortalService.OauthCallback
+   */
+  oauthCallback: {
+    methodKind: "unary";
+    input: typeof OauthCallbackRequestSchema;
+    output: typeof OauthCallbackResponseSchema;
   },
 }>;
 

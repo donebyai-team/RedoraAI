@@ -2,6 +2,8 @@ package portal
 
 import (
 	"context"
+	"github.com/shank318/doota/integrations/reddit"
+	"github.com/shank318/doota/portal/state"
 	"regexp"
 
 	"github.com/shank318/doota/agents"
@@ -30,10 +32,14 @@ type Portal struct {
 	vanaWebhookHandler  agents.WebhookHandler
 	customerCaseService services.CustomerCaseService
 	keywordService      services.KeywordService
+	authStateStore      state.AuthStateStore
+	redditOauthClient   *reddit.OauthClient
 }
 
 func New(
+	redditOauthClient *reddit.OauthClient,
 	authenticator *auth.Authenticator,
+	authStateStore state.AuthStateStore,
 	customerCaseService services.CustomerCaseService,
 	authUsecase *services.AuthUsecase,
 	keywordService services.KeywordService,
@@ -48,6 +54,8 @@ func New(
 	tracer logging.Tracer,
 ) *Portal {
 	return &Portal{
+		redditOauthClient:   redditOauthClient,
+		authStateStore:      authStateStore,
 		authUsecase:         authUsecase,
 		Shutter:             shutter.New(),
 		config:              config,

@@ -55,6 +55,12 @@ const (
 	// PortalServiceCreateKeywordProcedure is the fully-qualified name of the PortalService's
 	// CreateKeyword RPC.
 	PortalServiceCreateKeywordProcedure = "/doota.portal.v1.PortalService/CreateKeyword"
+	// PortalServiceOauthAuthorizeProcedure is the fully-qualified name of the PortalService's
+	// OauthAuthorize RPC.
+	PortalServiceOauthAuthorizeProcedure = "/doota.portal.v1.PortalService/OauthAuthorize"
+	// PortalServiceOauthCallbackProcedure is the fully-qualified name of the PortalService's
+	// OauthCallback RPC.
+	PortalServiceOauthCallbackProcedure = "/doota.portal.v1.PortalService/OauthCallback"
 )
 
 // These variables are the protoreflect.Descriptor objects for the RPCs defined in this package.
@@ -68,6 +74,8 @@ var (
 	portalServicePasswordlessStartMethodDescriptor  = portalServiceServiceDescriptor.Methods().ByName("PasswordlessStart")
 	portalServicePasswordlessVerifyMethodDescriptor = portalServiceServiceDescriptor.Methods().ByName("PasswordlessVerify")
 	portalServiceCreateKeywordMethodDescriptor      = portalServiceServiceDescriptor.Methods().ByName("CreateKeyword")
+	portalServiceOauthAuthorizeMethodDescriptor     = portalServiceServiceDescriptor.Methods().ByName("OauthAuthorize")
+	portalServiceOauthCallbackMethodDescriptor      = portalServiceServiceDescriptor.Methods().ByName("OauthCallback")
 )
 
 // PortalServiceClient is a client for the doota.portal.v1.PortalService service.
@@ -82,6 +90,8 @@ type PortalServiceClient interface {
 	PasswordlessStart(context.Context, *connect.Request[v1.PasswordlessStartRequest]) (*connect.Response[emptypb.Empty], error)
 	PasswordlessVerify(context.Context, *connect.Request[v1.PasswordlessStartVerify]) (*connect.Response[v1.JWT], error)
 	CreateKeyword(context.Context, *connect.Request[v1.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error)
+	OauthAuthorize(context.Context, *connect.Request[v1.OauthAuthorizeRequest]) (*connect.Response[v1.OauthAuthorizeResponse], error)
+	OauthCallback(context.Context, *connect.Request[v1.OauthCallbackRequest]) (*connect.Response[v1.OauthCallbackResponse], error)
 }
 
 // NewPortalServiceClient constructs a client for the doota.portal.v1.PortalService service. By
@@ -142,6 +152,18 @@ func NewPortalServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(portalServiceCreateKeywordMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
+		oauthAuthorize: connect.NewClient[v1.OauthAuthorizeRequest, v1.OauthAuthorizeResponse](
+			httpClient,
+			baseURL+PortalServiceOauthAuthorizeProcedure,
+			connect.WithSchema(portalServiceOauthAuthorizeMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
+		oauthCallback: connect.NewClient[v1.OauthCallbackRequest, v1.OauthCallbackResponse](
+			httpClient,
+			baseURL+PortalServiceOauthCallbackProcedure,
+			connect.WithSchema(portalServiceOauthCallbackMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -155,6 +177,8 @@ type portalServiceClient struct {
 	passwordlessStart  *connect.Client[v1.PasswordlessStartRequest, emptypb.Empty]
 	passwordlessVerify *connect.Client[v1.PasswordlessStartVerify, v1.JWT]
 	createKeyword      *connect.Client[v1.CreateKeywordReq, emptypb.Empty]
+	oauthAuthorize     *connect.Client[v1.OauthAuthorizeRequest, v1.OauthAuthorizeResponse]
+	oauthCallback      *connect.Client[v1.OauthCallbackRequest, v1.OauthCallbackResponse]
 }
 
 // GetConfig calls doota.portal.v1.PortalService.GetConfig.
@@ -197,6 +221,16 @@ func (c *portalServiceClient) CreateKeyword(ctx context.Context, req *connect.Re
 	return c.createKeyword.CallUnary(ctx, req)
 }
 
+// OauthAuthorize calls doota.portal.v1.PortalService.OauthAuthorize.
+func (c *portalServiceClient) OauthAuthorize(ctx context.Context, req *connect.Request[v1.OauthAuthorizeRequest]) (*connect.Response[v1.OauthAuthorizeResponse], error) {
+	return c.oauthAuthorize.CallUnary(ctx, req)
+}
+
+// OauthCallback calls doota.portal.v1.PortalService.OauthCallback.
+func (c *portalServiceClient) OauthCallback(ctx context.Context, req *connect.Request[v1.OauthCallbackRequest]) (*connect.Response[v1.OauthCallbackResponse], error) {
+	return c.oauthCallback.CallUnary(ctx, req)
+}
+
 // PortalServiceHandler is an implementation of the doota.portal.v1.PortalService service.
 type PortalServiceHandler interface {
 	GetConfig(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.Config], error)
@@ -209,6 +243,8 @@ type PortalServiceHandler interface {
 	PasswordlessStart(context.Context, *connect.Request[v1.PasswordlessStartRequest]) (*connect.Response[emptypb.Empty], error)
 	PasswordlessVerify(context.Context, *connect.Request[v1.PasswordlessStartVerify]) (*connect.Response[v1.JWT], error)
 	CreateKeyword(context.Context, *connect.Request[v1.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error)
+	OauthAuthorize(context.Context, *connect.Request[v1.OauthAuthorizeRequest]) (*connect.Response[v1.OauthAuthorizeResponse], error)
+	OauthCallback(context.Context, *connect.Request[v1.OauthCallbackRequest]) (*connect.Response[v1.OauthCallbackResponse], error)
 }
 
 // NewPortalServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -265,6 +301,18 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(portalServiceCreateKeywordMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
+	portalServiceOauthAuthorizeHandler := connect.NewUnaryHandler(
+		PortalServiceOauthAuthorizeProcedure,
+		svc.OauthAuthorize,
+		connect.WithSchema(portalServiceOauthAuthorizeMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	portalServiceOauthCallbackHandler := connect.NewUnaryHandler(
+		PortalServiceOauthCallbackProcedure,
+		svc.OauthCallback,
+		connect.WithSchema(portalServiceOauthCallbackMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/doota.portal.v1.PortalService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case PortalServiceGetConfigProcedure:
@@ -283,6 +331,10 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 			portalServicePasswordlessVerifyHandler.ServeHTTP(w, r)
 		case PortalServiceCreateKeywordProcedure:
 			portalServiceCreateKeywordHandler.ServeHTTP(w, r)
+		case PortalServiceOauthAuthorizeProcedure:
+			portalServiceOauthAuthorizeHandler.ServeHTTP(w, r)
+		case PortalServiceOauthCallbackProcedure:
+			portalServiceOauthCallbackHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -322,4 +374,12 @@ func (UnimplementedPortalServiceHandler) PasswordlessVerify(context.Context, *co
 
 func (UnimplementedPortalServiceHandler) CreateKeyword(context.Context, *connect.Request[v1.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.CreateKeyword is not implemented"))
+}
+
+func (UnimplementedPortalServiceHandler) OauthAuthorize(context.Context, *connect.Request[v1.OauthAuthorizeRequest]) (*connect.Response[v1.OauthAuthorizeResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.OauthAuthorize is not implemented"))
+}
+
+func (UnimplementedPortalServiceHandler) OauthCallback(context.Context, *connect.Request[v1.OauthCallbackRequest]) (*connect.Response[v1.OauthCallbackResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.OauthCallback is not implemented"))
 }

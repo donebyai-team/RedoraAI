@@ -28,6 +28,8 @@ const (
 	PortalService_PasswordlessStart_FullMethodName  = "/doota.portal.v1.PortalService/PasswordlessStart"
 	PortalService_PasswordlessVerify_FullMethodName = "/doota.portal.v1.PortalService/PasswordlessVerify"
 	PortalService_CreateKeyword_FullMethodName      = "/doota.portal.v1.PortalService/CreateKeyword"
+	PortalService_OauthAuthorize_FullMethodName     = "/doota.portal.v1.PortalService/OauthAuthorize"
+	PortalService_OauthCallback_FullMethodName      = "/doota.portal.v1.PortalService/OauthCallback"
 )
 
 // PortalServiceClient is the client API for PortalService service.
@@ -44,6 +46,8 @@ type PortalServiceClient interface {
 	PasswordlessStart(ctx context.Context, in *PasswordlessStartRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	PasswordlessVerify(ctx context.Context, in *PasswordlessStartVerify, opts ...grpc.CallOption) (*JWT, error)
 	CreateKeyword(ctx context.Context, in *CreateKeywordReq, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	OauthAuthorize(ctx context.Context, in *OauthAuthorizeRequest, opts ...grpc.CallOption) (*OauthAuthorizeResponse, error)
+	OauthCallback(ctx context.Context, in *OauthCallbackRequest, opts ...grpc.CallOption) (*OauthCallbackResponse, error)
 }
 
 type portalServiceClient struct {
@@ -126,6 +130,24 @@ func (c *portalServiceClient) CreateKeyword(ctx context.Context, in *CreateKeywo
 	return out, nil
 }
 
+func (c *portalServiceClient) OauthAuthorize(ctx context.Context, in *OauthAuthorizeRequest, opts ...grpc.CallOption) (*OauthAuthorizeResponse, error) {
+	out := new(OauthAuthorizeResponse)
+	err := c.cc.Invoke(ctx, PortalService_OauthAuthorize_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *portalServiceClient) OauthCallback(ctx context.Context, in *OauthCallbackRequest, opts ...grpc.CallOption) (*OauthCallbackResponse, error) {
+	out := new(OauthCallbackResponse)
+	err := c.cc.Invoke(ctx, PortalService_OauthCallback_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PortalServiceServer is the server API for PortalService service.
 // All implementations must embed UnimplementedPortalServiceServer
 // for forward compatibility
@@ -140,6 +162,8 @@ type PortalServiceServer interface {
 	PasswordlessStart(context.Context, *PasswordlessStartRequest) (*emptypb.Empty, error)
 	PasswordlessVerify(context.Context, *PasswordlessStartVerify) (*JWT, error)
 	CreateKeyword(context.Context, *CreateKeywordReq) (*emptypb.Empty, error)
+	OauthAuthorize(context.Context, *OauthAuthorizeRequest) (*OauthAuthorizeResponse, error)
+	OauthCallback(context.Context, *OauthCallbackRequest) (*OauthCallbackResponse, error)
 	mustEmbedUnimplementedPortalServiceServer()
 }
 
@@ -170,6 +194,12 @@ func (UnimplementedPortalServiceServer) PasswordlessVerify(context.Context, *Pas
 }
 func (UnimplementedPortalServiceServer) CreateKeyword(context.Context, *CreateKeywordReq) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateKeyword not implemented")
+}
+func (UnimplementedPortalServiceServer) OauthAuthorize(context.Context, *OauthAuthorizeRequest) (*OauthAuthorizeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method OauthAuthorize not implemented")
+}
+func (UnimplementedPortalServiceServer) OauthCallback(context.Context, *OauthCallbackRequest) (*OauthCallbackResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method OauthCallback not implemented")
 }
 func (UnimplementedPortalServiceServer) mustEmbedUnimplementedPortalServiceServer() {}
 
@@ -328,6 +358,42 @@ func _PortalService_CreateKeyword_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PortalService_OauthAuthorize_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(OauthAuthorizeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortalServiceServer).OauthAuthorize(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortalService_OauthAuthorize_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortalServiceServer).OauthAuthorize(ctx, req.(*OauthAuthorizeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PortalService_OauthCallback_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(OauthCallbackRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortalServiceServer).OauthCallback(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortalService_OauthCallback_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortalServiceServer).OauthCallback(ctx, req.(*OauthCallbackRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // PortalService_ServiceDesc is the grpc.ServiceDesc for PortalService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -366,6 +432,14 @@ var PortalService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateKeyword",
 			Handler:    _PortalService_CreateKeyword_Handler,
+		},
+		{
+			MethodName: "OauthAuthorize",
+			Handler:    _PortalService_OauthAuthorize_Handler,
+		},
+		{
+			MethodName: "OauthCallback",
+			Handler:    _PortalService_OauthCallback_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

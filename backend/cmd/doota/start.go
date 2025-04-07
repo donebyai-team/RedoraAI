@@ -8,8 +8,10 @@ import (
 	"github.com/shank318/doota/app"
 	"github.com/shank318/doota/auth"
 	"github.com/shank318/doota/integrations"
+	"github.com/shank318/doota/integrations/reddit"
 	pbportal "github.com/shank318/doota/pb/doota/portal/v1"
 	"github.com/shank318/doota/portal"
+	"github.com/shank318/doota/portal/state"
 	"github.com/shank318/doota/services"
 	"os"
 	"regexp"
@@ -38,6 +40,9 @@ var StartCmd = cli.Command(startCmdE,
 		flags.String("common-langsmith-project", "", "Langsmith project name")
 		flags.Uint64("common-auto-mem-limit-percent", 0, "Automatically sets GOMEMLIMIT to a percentage of memory limit from cgroup (useful for container environments)")
 		flags.Duration("spooler-db-polling-interval", 10*time.Second, "How often the spooler will check the database for new investigation")
+
+		flags.String("portal-reddit-client-id", "", "Reddit App Client ID")
+		flags.String("portal-reddit-client-secret", "", "Reddit App Client Secret")
 
 		flags.String("portal-cors-url-regex-allow", "^.*", "Regex to allow CORS origin requests from, matched on the full URL (scheme, host, port, path, etc.), defaults to allow all")
 		flags.String("portal-http-listen-addr", ":8787", "http listen address")
@@ -293,8 +298,12 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		return nil, fmt.Errorf("unable to create auth usecase: %w", err)
 	}
 
+	redditClient := reddit.NewRedditOauthClient(sflags.MustGetString(cmd, "portal-reddit-client-id"), sflags.MustGetString(cmd, "portal-reddit-client-secret"))
+
 	p := portal.New(
+		redditClient,
 		authenticator,
+		state.NewRedisStore(sflags.MustGetString(cmd, "redis-addr"), zlog),
 		services.NewCustomerCaseServiceImpl(deps.DataStore),
 		authUsecase,
 		services.NewKeywordServiceImpl(deps.DataStore),

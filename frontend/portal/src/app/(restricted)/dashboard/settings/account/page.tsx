@@ -6,6 +6,9 @@ import { Box } from '@mui/system'
 import {  IntegrationType } from '@doota/pb/doota/portal/v1/portal_pb'
 import { FallbackSpinner } from '../../../../../atoms/FallbackSpinner'
 import { Button } from '../../../../../atoms/Button'
+import { portalClient } from '../../../../../services/grpc'
+import { buildAppUrl } from '../../../../routes'
+import { routes } from '@doota/ui-core/routing'
 
 import Table from '@mui/material/Table'
 import TableBody from '@mui/material/TableBody'
@@ -33,16 +36,14 @@ export default function Page() {
   }
 
   const openOauthConsentScreen = (integrationType: IntegrationType) => {
-    // Call reddit GetAuthURL here
-    // portalClient
-    //   .oauthAuthorize({
-    //     integrationType: integrationType,
-    //     redirectUrl: buildAppUrl(routes.app.settings.account),
-    //     type: OauthAuthorizeType.INTEGRATION
-    //   })
-    //   .then(oAuthAuthorizeResp => {
-    //     window.open(oAuthAuthorizeResp.authorizeUrl, '_self')
-    //   })
+    portalClient
+      .oauthAuthorize({
+        integrationType: integrationType,
+        redirectUrl: buildAppUrl(routes.app.settings.account),
+      })
+      .then(oAuthAuthorizeResp => {
+        window.open(oAuthAuthorizeResp.authorizeUrl, '_self')
+      })
   }
 
   return (

@@ -18,8 +18,8 @@ service PortalService {
   rpc PasswordlessStart(PasswordlessStartRequest) returns (.google.protobuf.Empty);
   rpc PasswordlessVerify(PasswordlessStartVerify) returns (JWT);
   rpc CreateKeyword(CreateKeywordReq) returns (.google.protobuf.Empty);
-//  rpc OauthAuthorize(OauthAuthorizeRequest) returns (OauthAuthorizeResponse);
-//  rpc OauthCallback(OauthCallbackRequest) returns (OauthCallbackResponse);
+  rpc OauthAuthorize(OauthAuthorizeRequest) returns (OauthAuthorizeResponse);
+  rpc OauthCallback(OauthCallbackRequest) returns (OauthCallbackResponse);
 }
 
 message CreateCustomerCaseReq {
@@ -85,19 +85,11 @@ message User {
 message OauthAuthorizeRequest {
   IntegrationType integration_type = 1;
   string redirect_url = 2;
-  OauthAuthorizeType type = 3;
-  // resource_id represents the resource we are trying to link
-  // via the oauth flow. Will mainly be used when a regular google
-  // mail user consents their account
-  // OAUTH_AUTHORIZE_TYPE_INTEGRATION -> null / ignore
-  // OAUTH_AUTHORIZE_TYPE_MESSAGE_SOURCE -> message_source.id
-  optional string resource_id = 4;
 }
 
 enum OauthAuthorizeType {
   OAUTH_AUTHORIZE_TYPE_UNSPECIFIED = 0;
   OAUTH_AUTHORIZE_TYPE_INTEGRATION = 1;
-  OAUTH_AUTHORIZE_TYPE_MESSAGE_SOURCE = 2;
 }
 
 message OauthAuthorizeResponse { string authorize_url = 1; }
