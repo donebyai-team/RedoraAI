@@ -9,6 +9,7 @@ import (
 	"golang.org/x/oauth2"
 	"io"
 	"net/http"
+	"time"
 )
 
 const (
@@ -48,11 +49,6 @@ func (r *OauthClient) GetAuthURL(state string, redirectURI string) string {
 	return r.config.AuthCodeURL(state, oauth2.AccessTypeOffline)
 }
 
-type RedditConfig struct {
-	AccessToken string `json:"-"`
-	UserName    string `json:"user_name"`
-}
-
 // Authorize exchanges the auth code for access + refresh tokens
 func (r *OauthClient) Authorize(ctx context.Context, code string) (*models.RedditConfig, error) {
 	token, err := r.config.Exchange(ctx, code)
@@ -90,8 +86,10 @@ func (r *OauthClient) Authorize(ctx context.Context, code string) (*models.Reddi
 	}
 
 	return &models.RedditConfig{
-		AccessToken: token.AccessToken,
-		UserName:    userInfo.Name,
+		AccessToken:  token.AccessToken,
+		RefreshToken: token.RefreshToken,
+		ExpiresAt:    token.Expiry,
+		UserName:     userInfo.Name,
 	}, nil
 }
 
@@ -106,4 +104,9 @@ func NewRedditClient(logger *zap.Logger, config *models.RedditConfig) *Client {
 
 func (r *Client) GetUser(ctx context.Context, userId string) (string, error) {
 	panic("implement me")
+}
+
+func (r *Client) isTokenExpired() bool {
+	// Refresh if within 60 seconds of expiry
+	return time.Now().After(r.config.ExpiresAt.Add(-1 * time.Minute))
 }

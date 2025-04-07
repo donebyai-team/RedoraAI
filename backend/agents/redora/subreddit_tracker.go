@@ -22,6 +22,12 @@ func NewSubRedditTracker(gptModel ai.GPTModel, db datastore.Repository, aiClient
 }
 
 func (s *SubRedditTracker) TrackSubreddit(ctx context.Context, subReddit *models.AugmentedSubReddit) error {
+	//integration, err := s.db.GetIntegrationByOrgAndType(ctx, subReddit.SubReddit.OrganizationID, models.IntegrationTypeREDDIT)
+	//if err != nil {
+	//	return err
+	//}
+	//redditClient := reddit.NewRedditClient(s.logger, integration.GetRedditConfig())
+
 	// Call GetPosts of a subreddit created on and after subReddit LastPostCreatedAt
 	// Filter them via a criteria - https://www.notion.so/Criteria-for-filtering-the-relevant-post-1c70029aaf8f80ec8ba6fd4e29342d6a
 	// After filtering, ask AI to filter again

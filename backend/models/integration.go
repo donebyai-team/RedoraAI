@@ -42,15 +42,19 @@ var _ Serializable = (*VAPIConfig)(nil)
 var _ Serializable = (*RedditConfig)(nil)
 
 type RedditConfig struct {
-	AccessToken string `json:"-"`
-	UserName    string `json:"user_name"`
+	AccessToken  string    `json:"-"`
+	RefreshToken string    `json:"-"`
+	UserName     string    `json:"user_name"`
+	ExpiresAt    time.Time `json:"expires_at"`
 }
 
 func (i *RedditConfig) EncryptedData() []byte {
 	toEncrypt := struct {
-		AccessToken string `json:"access_token"`
+		AccessToken  string `json:"access_token"`
+		RefreshToken string `json:"refresh_token"`
 	}{
-		AccessToken: i.AccessToken,
+		AccessToken:  i.AccessToken,
+		RefreshToken: i.RefreshToken,
 	}
 	data, err := json.Marshal(toEncrypt)
 	if err != nil {
