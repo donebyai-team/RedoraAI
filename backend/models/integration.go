@@ -43,6 +43,7 @@ var _ Serializable = (*RedditConfig)(nil)
 
 type RedditConfig struct {
 	AccessToken string `json:"-"`
+	UserName    string `json:"user_name"`
 }
 
 func (i *RedditConfig) EncryptedData() []byte {

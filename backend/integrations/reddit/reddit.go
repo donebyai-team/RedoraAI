@@ -2,13 +2,17 @@ package reddit
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/shank318/doota/models"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
+	"io"
+	"net/http"
 )
 
 const (
+	redditAPIBase  = "https://oauth.reddit.com"
 	redditAuthURL  = "https://www.reddit.com/api/v1/authorize"
 	redditTokenURL = "https://www.reddit.com/api/v1/access_token"
 )
@@ -44,14 +48,51 @@ func (r *OauthClient) GetAuthURL(state string, redirectURI string) string {
 	return r.config.AuthCodeURL(state, oauth2.AccessTypeOffline)
 }
 
+type RedditConfig struct {
+	AccessToken string `json:"-"`
+	UserName    string `json:"user_name"`
+}
+
 // Authorize exchanges the auth code for access + refresh tokens
-func (r *OauthClient) Authorize(ctx context.Context, code string) (string, error) {
+func (r *OauthClient) Authorize(ctx context.Context, code string) (*models.RedditConfig, error) {
 	token, err := r.config.Exchange(ctx, code)
 	if err != nil {
-		return "", fmt.Errorf("failed to exchange token: %w", err)
+		return nil, fmt.Errorf("failed to exchange token: %w", err)
 	}
 
-	return token.AccessToken, nil
+	// Step 2: Create an authenticated HTTP client
+	client := r.config.Client(ctx, token)
+
+	// Step 3: Call Reddit API to get user info
+	req, err := http.NewRequestWithContext(ctx, "GET", redditAPIBase+"/api/v1/me", nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create user info request: %w", err)
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user info: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("reddit API error: %s", string(body))
+	}
+
+	// Step 4: Parse JSON response
+	var userInfo struct {
+		Name string `json:"name"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&userInfo); err != nil {
+		return nil, fmt.Errorf("failed to parse user info: %w", err)
+	}
+
+	return &models.RedditConfig{
+		AccessToken: token.AccessToken,
+		UserName:    userInfo.Name,
+	}, nil
 }
 
 type Client struct {

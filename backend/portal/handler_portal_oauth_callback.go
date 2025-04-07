@@ -40,7 +40,7 @@ func (p *Portal) OauthCallback(ctx context.Context, c *connect.Request[pbportal.
 }
 
 func handleRedditOauth(ctx context.Context, p *Portal, code string, organizationID string, oauthState *state.State) error {
-	token, err := p.redditOauthClient.Authorize(ctx, code)
+	config, err := p.redditOauthClient.Authorize(ctx, code)
 	if err != nil {
 		return err
 	}
@@ -50,8 +50,7 @@ func handleRedditOauth(ctx context.Context, p *Portal, code string, organization
 		State:          models.IntegrationStateACTIVE,
 	}
 
-	out := &models.RedditConfig{AccessToken: token}
-	integrationType := models.SetIntegrationType(integration, models.IntegrationTypeREDDIT, out)
+	integrationType := models.SetIntegrationType(integration, models.IntegrationTypeREDDIT, config)
 
 	integration, err = p.db.UpsertIntegration(ctx, integrationType)
 	if err != nil {
