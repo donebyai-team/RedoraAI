@@ -53,6 +53,27 @@ export declare type CreateCustomerCaseReq = Message<"doota.portal.v1.CreateCusto
 export declare const CreateCustomerCaseReqSchema: GenMessage<CreateCustomerCaseReq>;
 
 /**
+ * @generated from message doota.portal.v1.CreateKeywordReq
+ */
+export declare type CreateKeywordReq = Message<"doota.portal.v1.CreateKeywordReq"> & {
+  /**
+   * @generated from field: string keyword = 1;
+   */
+  keyword: string;
+
+  /**
+   * @generated from field: string organization_id = 2;
+   */
+  organizationId: string;
+};
+
+/**
+ * Describes the message doota.portal.v1.CreateKeywordReq.
+ * Use `create(CreateKeywordReqSchema)` to create a new message.
+ */
+export declare const CreateKeywordReqSchema: GenMessage<CreateKeywordReq>;
+
+/**
  * @generated from message doota.portal.v1.BatchReq
  */
 export declare type BatchReq = Message<"doota.portal.v1.BatchReq"> & {
@@ -618,6 +639,11 @@ export enum IntegrationType {
    * @generated from enum value: INTEGRATION_TYPE_GOOGLE = 2;
    */
   GOOGLE = 2,
+
+  /**
+   * @generated from enum value: INTEGRATION_TYPE_REDDIT = 3;
+   */
+  REDDIT = 3,
 }
 
 /**
@@ -710,15 +736,23 @@ export declare const PortalService: GenService<{
     output: typeof EmptySchema;
   },
   /**
-   *  rpc OauthAuthorize(OauthAuthorizeRequest) returns (OauthAuthorizeResponse);
-   *  rpc OauthCallback(OauthCallbackRequest) returns (OauthCallbackResponse);
-   *
    * @generated from rpc doota.portal.v1.PortalService.PasswordlessVerify
    */
   passwordlessVerify: {
     methodKind: "unary";
     input: typeof PasswordlessStartVerifySchema;
     output: typeof JWTSchema;
+  },
+  /**
+   *  rpc OauthAuthorize(OauthAuthorizeRequest) returns (OauthAuthorizeResponse);
+   *  rpc OauthCallback(OauthCallbackRequest) returns (OauthCallbackResponse);
+   *
+   * @generated from rpc doota.portal.v1.PortalService.CreateKeyword
+   */
+  createKeyword: {
+    methodKind: "unary";
+    input: typeof CreateKeywordReqSchema;
+    output: typeof EmptySchema;
   },
 }>;
 

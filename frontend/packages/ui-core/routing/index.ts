@@ -12,6 +12,11 @@ export const routes = {
 
   app: {
     home: '/dashboard',
+    settings: {
+      account: '/dashboard/settings/account',
+      security: '/dashboard/settings/security',
+      notification: '/dashboard/settings/notification'
+    },
     auth: {
       login: '/auth/login',
       callback: '/auth/callback'
