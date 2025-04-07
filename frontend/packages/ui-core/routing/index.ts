@@ -11,7 +11,7 @@ export const routes = {
   },
 
   app: {
-    home: '/dashboard',
+    home: '/dashboard/leads',
     settings: {
       account: '/dashboard/settings/account',
       security: '/dashboard/settings/security',
