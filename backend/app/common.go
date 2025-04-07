@@ -25,6 +25,19 @@ func SetupKMS(ctx context.Context, kmsKeyPath string, logger *zap.Logger) (crypt
 	return signingKeyGetter, tokenValidator, nil
 }
 
+func SetupMockKMS(ctx context.Context, kmsKeyPath string, logger *zap.Logger) (crypto.SigningKeyGetter, auth.TokenValidationFunc, error) {
+	mockKey := "dummy_key"
+	signingKeyGetter := crypto.NewMockKeyGetter(mockKey)
+
+	logger.Info("setting up mock authenticator", zap.Any("kmsKeyPath", kmsKeyPath))
+	tokenValidator, err := auth.NewMockKMSTokenValidator(ctx, mockKey)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to setup kms token validator: %w", err)
+	}
+
+	return signingKeyGetter, tokenValidator, nil
+}
+
 type PostgresDSNString string
 
 func newDataStore(ctx context.Context, dsnStr PostgresDSNString, logger *zap.Logger, tracer logging.Tracer) (datastore.Repository, error) {

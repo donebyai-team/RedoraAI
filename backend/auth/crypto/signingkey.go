@@ -13,6 +13,27 @@ type SigningKeyGetter interface {
 	GetKeyVerificationFunc(context.Context) (jwt.Keyfunc, error)
 }
 
+type MockKeyGetter struct {
+	key string
+}
+
+func NewMockKeyGetter(key string) *MockKeyGetter {
+	return &MockKeyGetter{key: key}
+}
+
+func (m MockKeyGetter) GetName() string {
+	return "Mock KMS Signing"
+}
+
+func (m MockKeyGetter) GetKey(ctx context.Context) interface{} {
+	return m.key
+}
+
+func (m MockKeyGetter) GetKeyVerificationFunc(ctx context.Context) (jwt.Keyfunc, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 type KMSSigningKeyGetter struct {
 	kmsSignAPIKeyPath string
 	config            *gcpjwt.KMSConfig

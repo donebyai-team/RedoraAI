@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/shank318/doota/models"
@@ -16,14 +17,26 @@ var JwtValiditySecond = int64(31 * 24 * 60 * 60)
 const Issuer = "doota"
 const version = 1
 
-func NewTokenFromUser(user *models.User, signingKey interface{}) (unsignedToken *jwt.Token, signedToken string, err error) {
+func NewTokenFromUser(user *models.User, signingKey interface{}) (*jwt.Token, string, error) {
 	jti, err := newUUID()
 	if err != nil {
 		return nil, "", fmt.Errorf("unable to generate JWT token id(jti): %w", err)
 	}
 
-	unsignedToken = newUnsignedJWTTokenFromUser(jti, user)
-	signedToken, err = unsignedToken.SignedString(signingKey)
+	var method jwt.SigningMethod
+
+	// Default to KMS
+	method = gcpjwt.SigningMethodKMSES256
+
+	// Check if the signingKey is a string and contains "dummy"
+	if strKey, ok := signingKey.(string); ok && strings.Contains(strKey, "dummy") {
+		method = jwt.SigningMethodHS256
+		signingKey = []byte(strKey) // 🔥 convert string to []byte
+	}
+
+	unsignedToken := newUnsignedJWTTokenFromUser(jti, user, method)
+
+	signedToken, err := unsignedToken.SignedString(signingKey)
 	if err != nil {
 		return nil, "", fmt.Errorf("unable to sign jwt: %w", err)
 	}
@@ -31,7 +44,7 @@ func NewTokenFromUser(user *models.User, signingKey interface{}) (unsignedToken 
 	return unsignedToken, signedToken, nil
 }
 
-func newUnsignedJWTTokenFromUser(jti string, user *models.User) (unsignedToken *jwt.Token) {
+func newUnsignedJWTTokenFromUser(jti string, user *models.User, method jwt.SigningMethod) (unsignedToken *jwt.Token) {
 	nowInSeconds := jwt.TimeFunc().Unix()
 	expiresAtInSeconds := nowInSeconds + JwtValiditySecond
 
@@ -46,7 +59,8 @@ func newUnsignedJWTTokenFromUser(jti string, user *models.User) (unsignedToken *
 		Version: version,
 		UserId:  user.ID,
 	}
-	return jwt.NewWithClaims(gcpjwt.SigningMethodKMSES256, claims)
+
+	return jwt.NewWithClaims(method, claims)
 }
 
 func defaultNewUUID() (string, error) {

@@ -112,7 +112,7 @@ func (b *DependenciesBuilder) Build(ctx context.Context, logger *zap.Logger, tra
 	}
 
 	if b.KMSKeyPath != "" {
-		out.AuthSigningKeyGetter, out.AuthTokenValidator, err = SetupKMS(ctx, b.KMSKeyPath, logger)
+		out.AuthSigningKeyGetter, out.AuthTokenValidator, err = SetupMockKMS(ctx, b.KMSKeyPath, logger)
 		if err != nil {
 			return nil, fmt.Errorf("failed to setup kms: %w", err)
 		}
