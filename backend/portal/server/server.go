@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/shank318/doota/agents"
 	"github.com/shank318/doota/auth"
-	"github.com/shank318/doota/auth/middleware"
 	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/errorx"
 	"github.com/shank318/doota/pb/doota/portal/v1/pbportalconnect"
@@ -68,7 +67,7 @@ func (s *Server) Run(
 		dgrpcserver.WithPostStreamInterceptor(otelgrpc.StreamServerInterceptor(otelgrpc.WithTracerProvider(tracerProvider))),
 		dgrpcserver.WithGRPCServerOptions(grpc.MaxRecvMsgSize(25 * 1024 * 1024)),
 		// TODO: Uncomment when auth is implemented
-		dgrpcserver.WithConnectInterceptor(middleware.NewAuthInterceptor(s.authenticator, s.logger)),
+		//dgrpcserver.WithConnectInterceptor(middleware.NewAuthInterceptor(s.authenticator, s.logger)),
 		dgrpcserver.WithConnectInterceptor(connectrpc.NewErrorsInterceptor(s.logger, connectrpc.WithErrorMapper(func(err error) error {
 
 			if baseError := (*errorx.BaseError)(nil); errors.As(err, &baseError) {
