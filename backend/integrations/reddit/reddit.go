@@ -25,9 +25,10 @@ type OauthClient struct {
 	clientID     string
 	clientSecret string
 	config       *oauth2.Config
+	db           datastore.Repository
 }
 
-func NewRedditOauthClient(clientID, clientSecret string) *OauthClient {
+func NewRedditOauthClient(logger *zap.Logger, db datastore.Repository, clientID, clientSecret string) *OauthClient {
 	config := &oauth2.Config{
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
@@ -43,6 +44,8 @@ func NewRedditOauthClient(clientID, clientSecret string) *OauthClient {
 		clientID:     clientID,
 		clientSecret: clientSecret,
 		config:       config,
+		logger:       logger,
+		db:           db,
 	}
 }
 
@@ -95,8 +98,13 @@ func (r *OauthClient) Authorize(ctx context.Context, code string) (*models.Reddi
 	}, nil
 }
 
-func (r *OauthClient) NewRedditClient(ctx context.Context, logger *zap.Logger, db datastore.Repository, integration *models.Integration) (*Client, error) {
-	client := &Client{logger: logger, config: integration.GetRedditConfig()}
+func (r *OauthClient) NewRedditClient(ctx context.Context, orgID string) (*Client, error) {
+	integration, err := r.db.GetIntegrationByOrgAndType(ctx, orgID, models.IntegrationTypeREDDIT)
+	if err != nil {
+		return nil, err
+	}
+
+	client := &Client{logger: r.logger, config: integration.GetRedditConfig()}
 	if client.isTokenExpired() {
 		err := client.refreshToken(ctx)
 		if err != nil {
@@ -105,7 +113,7 @@ func (r *OauthClient) NewRedditClient(ctx context.Context, logger *zap.Logger, d
 
 		// Update the credentials
 		integrationType := models.SetIntegrationType(integration, models.IntegrationTypeREDDIT, client.config)
-		integration, err = db.UpsertIntegration(ctx, integrationType)
+		integration, err = r.db.UpsertIntegration(ctx, integrationType)
 		if err != nil {
 			return nil, fmt.Errorf("upsert integration: %w", err)
 		}

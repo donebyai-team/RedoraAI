@@ -147,11 +147,6 @@ export declare type CreateKeywordReq = Message<"doota.portal.v1.CreateKeywordReq
    * @generated from field: string keyword = 1;
    */
   keyword: string;
-
-  /**
-   * @generated from field: string organization_id = 2;
-   */
-  organizationId: string;
 };
 
 /**

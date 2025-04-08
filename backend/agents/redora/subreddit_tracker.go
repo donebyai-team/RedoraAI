@@ -37,11 +37,7 @@ func NewSubRedditTracker(
 }
 
 func (s *SubRedditTracker) TrackSubreddit(ctx context.Context, subReddit *models.AugmentedSubReddit) error {
-	//integration, err := s.db.GetIntegrationByOrgAndType(ctx, subReddit.SubReddit.OrganizationID, models.IntegrationTypeREDDIT)
-	//if err != nil {
-	//	return err
-	//}
-	//redditClient, err := s.redditOauthClient.NewRedditClient(ctx, s.logger, s.db, integration)
+	//redditClient, err := s.redditOauthClient.NewRedditClient(ctx, subReddit.SubReddit.OrganizationID)
 	//if err != nil {
 	//	return fmt.Errorf("redditOauthClient.NewRedditClient: %w", err)
 	//}

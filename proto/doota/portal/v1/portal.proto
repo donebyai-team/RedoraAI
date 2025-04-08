@@ -54,7 +54,6 @@ message CreateCustomerCaseReq {
 
 message CreateKeywordReq {
   string keyword = 1;
-  string organization_id = 2;
 }
 
 message BatchReq {
