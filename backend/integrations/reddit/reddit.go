@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/models"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
@@ -94,13 +95,57 @@ func (r *OauthClient) Authorize(ctx context.Context, code string) (*models.Reddi
 	}, nil
 }
 
-type Client struct {
-	logger *zap.Logger
-	config *models.RedditConfig
+func (r *OauthClient) NewRedditClient(ctx context.Context, logger *zap.Logger, db datastore.Repository, integration *models.Integration) (*Client, error) {
+	client := &Client{logger: logger, config: integration.GetRedditConfig()}
+	if client.isTokenExpired() {
+		err := client.refreshToken(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to reddit refresh token: %w", err)
+		}
+
+		// Update the credentials
+		integrationType := models.SetIntegrationType(integration, models.IntegrationTypeREDDIT, client.config)
+		integration, err = db.UpsertIntegration(ctx, integrationType)
+		if err != nil {
+			return nil, fmt.Errorf("upsert integration: %w", err)
+		}
+	}
+	return client, nil
 }
 
-func NewRedditClient(logger *zap.Logger, config *models.RedditConfig) *Client {
-	return &Client{logger: logger, config: config}
+type Client struct {
+	logger      *zap.Logger
+	config      *models.RedditConfig
+	db          datastore.Repository
+	oauthConfig *oauth2.Config
+}
+
+func (r *Client) refreshToken(ctx context.Context) error {
+	// Build the current token manually
+	oldToken := &oauth2.Token{
+		AccessToken:  r.config.AccessToken,
+		RefreshToken: r.config.RefreshToken,
+		Expiry:       r.config.ExpiresAt,
+	}
+
+	// Create a token source that can refresh
+	tokenSource := r.oauthConfig.TokenSource(ctx, oldToken)
+
+	newToken, err := tokenSource.Token()
+	if err != nil {
+		return fmt.Errorf("failed to refresh token: %w", err)
+	}
+
+	// Update the config with new token details
+	r.config.AccessToken = newToken.AccessToken
+	r.config.ExpiresAt = newToken.Expiry
+
+	// Only update refresh token if it's provided
+	if newToken.RefreshToken != "" {
+		r.config.RefreshToken = newToken.RefreshToken
+	}
+
+	return nil
 }
 
 func (r *Client) GetUser(ctx context.Context, userId string) (string, error) {

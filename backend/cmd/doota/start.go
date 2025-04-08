@@ -166,15 +166,14 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		return nil, fmt.Errorf("initiated extractor with invalid gpt model: %w", err)
 	}
 
-	integrationsFactory := integrations.NewFactory(deps.DataStore, logger)
-	tracker := redora.NewSubRedditTracker(gptModel, deps.DataStore, deps.AIClient, logger, deps.ConversationState)
+	redditOauthClient := reddit.NewRedditOauthClient(sflags.MustGetString(cmd, "portal-reddit-client-id"), sflags.MustGetString(cmd, "portal-reddit-client-secret"))
+	tracker := redora.NewSubRedditTracker(gptModel, redditOauthClient, deps.DataStore, deps.AIClient, logger, deps.ConversationState)
 
 	return redora.New(
 		deps.DataStore,
 		deps.AIClient,
 		gptModel,
 		deps.ConversationState,
-		integrationsFactory,
 		1000,
 		10,
 		sflags.MustGetDuration(cmd, "spooler-db-polling-interval"),
@@ -298,10 +297,10 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		return nil, fmt.Errorf("unable to create auth usecase: %w", err)
 	}
 
-	redditClient := reddit.NewRedditOauthClient(sflags.MustGetString(cmd, "portal-reddit-client-id"), sflags.MustGetString(cmd, "portal-reddit-client-secret"))
+	redditOauthClient := reddit.NewRedditOauthClient(sflags.MustGetString(cmd, "portal-reddit-client-id"), sflags.MustGetString(cmd, "portal-reddit-client-secret"))
 
 	p := portal.New(
-		redditClient,
+		redditOauthClient,
 		authenticator,
 		state.NewRedisStore(sflags.MustGetString(cmd, "redis-addr"), zlog),
 		services.NewCustomerCaseServiceImpl(deps.DataStore),

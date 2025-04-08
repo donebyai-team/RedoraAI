@@ -7,7 +7,6 @@ import (
 	"github.com/shank318/doota/agents/state"
 	"github.com/shank318/doota/ai"
 	"github.com/shank318/doota/datastore"
-	"github.com/shank318/doota/integrations"
 	"github.com/shank318/doota/models"
 	"github.com/streamingfast/shutter"
 	"go.uber.org/zap"
@@ -16,18 +15,17 @@ import (
 
 type Spooler struct {
 	*shutter.Shutter
-	dbPollingInterval  time.Duration
-	gptModel           ai.GPTModel
-	db                 datastore.Repository
-	aiClient           *ai.Client
-	queue              chan *models.AugmentedSubReddit
-	queued             *agents.QueuedMap[string, bool]
-	integrationFactory *integrations.Factory
-	state              state.ConversationState
-	appIsReady         func() bool
-	maxParallelCalls   uint64
-	subRedditTracker   *SubRedditTracker
-	logger             *zap.Logger
+	dbPollingInterval time.Duration
+	gptModel          ai.GPTModel
+	db                datastore.Repository
+	aiClient          *ai.Client
+	queue             chan *models.AugmentedSubReddit
+	queued            *agents.QueuedMap[string, bool]
+	state             state.ConversationState
+	appIsReady        func() bool
+	maxParallelCalls  uint64
+	subRedditTracker  *SubRedditTracker
+	logger            *zap.Logger
 }
 
 func New(
@@ -35,7 +33,6 @@ func New(
 	aiClient *ai.Client,
 	gptModel ai.GPTModel,
 	state state.ConversationState,
-	integrationFactory *integrations.Factory,
 	bufferSize int,
 	maxParallelCalls uint64,
 	dbPollingInterval time.Duration,
@@ -44,19 +41,18 @@ func New(
 	logger *zap.Logger,
 ) *Spooler {
 	return &Spooler{
-		Shutter:            shutter.New(),
-		db:                 db,
-		gptModel:           gptModel,
-		state:              state,
-		maxParallelCalls:   maxParallelCalls,
-		aiClient:           aiClient,
-		integrationFactory: integrationFactory,
-		dbPollingInterval:  dbPollingInterval,
-		appIsReady:         isShuttingDown,
-		queue:              make(chan *models.AugmentedSubReddit, bufferSize),
-		queued:             agents.NewQueuedMap[string, bool](bufferSize),
-		logger:             logger,
-		subRedditTracker:   subRedditTracker,
+		Shutter:           shutter.New(),
+		db:                db,
+		gptModel:          gptModel,
+		state:             state,
+		maxParallelCalls:  maxParallelCalls,
+		aiClient:          aiClient,
+		dbPollingInterval: dbPollingInterval,
+		appIsReady:        isShuttingDown,
+		queue:             make(chan *models.AugmentedSubReddit, bufferSize),
+		queued:            agents.NewQueuedMap[string, bool](bufferSize),
+		logger:            logger,
+		subRedditTracker:  subRedditTracker,
 	}
 }
 
