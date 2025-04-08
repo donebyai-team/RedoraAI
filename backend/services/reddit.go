@@ -34,4 +34,5 @@ func (r redditService) CreateSubReddit(ctx context.Context, subReddit *models.Su
 func (r redditService) GetSubReddits(ctx context.Context, orgID string) ([]*models.SubReddit, error) {
 	//TODO implement me
 	panic("implement me")
+	// Query the subreddits from Db and return
 }
