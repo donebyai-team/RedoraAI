@@ -22,6 +22,11 @@ service PortalService {
   rpc OauthCallback(OauthCallbackRequest) returns (OauthCallbackResponse);
   rpc AddSubReddit(AddSubRedditRequest) returns (.google.protobuf.Empty);
   rpc GetSubReddits(.google.protobuf.Empty) returns (GetSubredditsResponse);
+  rpc RemoveSubReddit(RemoveSubRedditRequest) returns (.google.protobuf.Empty);
+}
+
+message RemoveSubRedditRequest {
+  string id = 1; // eg. r/SAAS
 }
 
 message AddSubRedditRequest {

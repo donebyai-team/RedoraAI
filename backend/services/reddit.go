@@ -11,6 +11,7 @@ import (
 type RedditService interface {
 	CreateSubReddit(ctx context.Context, subReddit *models.SubReddit) error
 	GetSubReddits(ctx context.Context, orgID string) ([]*models.SubReddit, error)
+	RemoveSubReddit(ctx context.Context, id string) error
 }
 
 type redditService struct {
@@ -35,4 +36,10 @@ func (r redditService) GetSubReddits(ctx context.Context, orgID string) ([]*mode
 	//TODO implement me
 	panic("implement me")
 	// Query the subreddits from Db and return
+}
+
+func (r redditService) RemoveSubReddit(ctx context.Context, id string) error {
+	panic("implement me")
+	// Query if the subreddit exists
+	// if yes, delete it
 }

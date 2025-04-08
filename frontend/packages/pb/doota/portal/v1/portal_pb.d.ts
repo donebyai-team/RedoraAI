@@ -12,6 +12,24 @@ import type { EmptySchema, Timestamp } from "@bufbuild/protobuf/wkt";
 export declare const file_doota_portal_v1_portal: GenFile;
 
 /**
+ * @generated from message doota.portal.v1.RemoveSubRedditRequest
+ */
+export declare type RemoveSubRedditRequest = Message<"doota.portal.v1.RemoveSubRedditRequest"> & {
+  /**
+   * eg. r/SAAS
+   *
+   * @generated from field: string id = 1;
+   */
+  id: string;
+};
+
+/**
+ * Describes the message doota.portal.v1.RemoveSubRedditRequest.
+ * Use `create(RemoveSubRedditRequestSchema)` to create a new message.
+ */
+export declare const RemoveSubRedditRequestSchema: GenMessage<RemoveSubRedditRequest>;
+
+/**
  * @generated from message doota.portal.v1.AddSubRedditRequest
  */
 export declare type AddSubRedditRequest = Message<"doota.portal.v1.AddSubRedditRequest"> & {
@@ -843,6 +861,14 @@ export declare const PortalService: GenService<{
     methodKind: "unary";
     input: typeof EmptySchema;
     output: typeof GetSubredditsResponseSchema;
+  },
+  /**
+   * @generated from rpc doota.portal.v1.PortalService.RemoveSubReddit
+   */
+  removeSubReddit: {
+    methodKind: "unary";
+    input: typeof RemoveSubRedditRequestSchema;
+    output: typeof EmptySchema;
   },
 }>;
 

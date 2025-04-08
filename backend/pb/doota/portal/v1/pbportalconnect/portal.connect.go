@@ -67,6 +67,9 @@ const (
 	// PortalServiceGetSubRedditsProcedure is the fully-qualified name of the PortalService's
 	// GetSubReddits RPC.
 	PortalServiceGetSubRedditsProcedure = "/doota.portal.v1.PortalService/GetSubReddits"
+	// PortalServiceRemoveSubRedditProcedure is the fully-qualified name of the PortalService's
+	// RemoveSubReddit RPC.
+	PortalServiceRemoveSubRedditProcedure = "/doota.portal.v1.PortalService/RemoveSubReddit"
 )
 
 // These variables are the protoreflect.Descriptor objects for the RPCs defined in this package.
@@ -84,6 +87,7 @@ var (
 	portalServiceOauthCallbackMethodDescriptor      = portalServiceServiceDescriptor.Methods().ByName("OauthCallback")
 	portalServiceAddSubRedditMethodDescriptor       = portalServiceServiceDescriptor.Methods().ByName("AddSubReddit")
 	portalServiceGetSubRedditsMethodDescriptor      = portalServiceServiceDescriptor.Methods().ByName("GetSubReddits")
+	portalServiceRemoveSubRedditMethodDescriptor    = portalServiceServiceDescriptor.Methods().ByName("RemoveSubReddit")
 )
 
 // PortalServiceClient is a client for the doota.portal.v1.PortalService service.
@@ -102,6 +106,7 @@ type PortalServiceClient interface {
 	OauthCallback(context.Context, *connect.Request[v1.OauthCallbackRequest]) (*connect.Response[v1.OauthCallbackResponse], error)
 	AddSubReddit(context.Context, *connect.Request[v1.AddSubRedditRequest]) (*connect.Response[emptypb.Empty], error)
 	GetSubReddits(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetSubredditsResponse], error)
+	RemoveSubReddit(context.Context, *connect.Request[v1.RemoveSubRedditRequest]) (*connect.Response[emptypb.Empty], error)
 }
 
 // NewPortalServiceClient constructs a client for the doota.portal.v1.PortalService service. By
@@ -186,6 +191,12 @@ func NewPortalServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(portalServiceGetSubRedditsMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
+		removeSubReddit: connect.NewClient[v1.RemoveSubRedditRequest, emptypb.Empty](
+			httpClient,
+			baseURL+PortalServiceRemoveSubRedditProcedure,
+			connect.WithSchema(portalServiceRemoveSubRedditMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -203,6 +214,7 @@ type portalServiceClient struct {
 	oauthCallback      *connect.Client[v1.OauthCallbackRequest, v1.OauthCallbackResponse]
 	addSubReddit       *connect.Client[v1.AddSubRedditRequest, emptypb.Empty]
 	getSubReddits      *connect.Client[emptypb.Empty, v1.GetSubredditsResponse]
+	removeSubReddit    *connect.Client[v1.RemoveSubRedditRequest, emptypb.Empty]
 }
 
 // GetConfig calls doota.portal.v1.PortalService.GetConfig.
@@ -265,6 +277,11 @@ func (c *portalServiceClient) GetSubReddits(ctx context.Context, req *connect.Re
 	return c.getSubReddits.CallUnary(ctx, req)
 }
 
+// RemoveSubReddit calls doota.portal.v1.PortalService.RemoveSubReddit.
+func (c *portalServiceClient) RemoveSubReddit(ctx context.Context, req *connect.Request[v1.RemoveSubRedditRequest]) (*connect.Response[emptypb.Empty], error) {
+	return c.removeSubReddit.CallUnary(ctx, req)
+}
+
 // PortalServiceHandler is an implementation of the doota.portal.v1.PortalService service.
 type PortalServiceHandler interface {
 	GetConfig(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.Config], error)
@@ -281,6 +298,7 @@ type PortalServiceHandler interface {
 	OauthCallback(context.Context, *connect.Request[v1.OauthCallbackRequest]) (*connect.Response[v1.OauthCallbackResponse], error)
 	AddSubReddit(context.Context, *connect.Request[v1.AddSubRedditRequest]) (*connect.Response[emptypb.Empty], error)
 	GetSubReddits(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetSubredditsResponse], error)
+	RemoveSubReddit(context.Context, *connect.Request[v1.RemoveSubRedditRequest]) (*connect.Response[emptypb.Empty], error)
 }
 
 // NewPortalServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -361,6 +379,12 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(portalServiceGetSubRedditsMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
+	portalServiceRemoveSubRedditHandler := connect.NewUnaryHandler(
+		PortalServiceRemoveSubRedditProcedure,
+		svc.RemoveSubReddit,
+		connect.WithSchema(portalServiceRemoveSubRedditMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/doota.portal.v1.PortalService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case PortalServiceGetConfigProcedure:
@@ -387,6 +411,8 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 			portalServiceAddSubRedditHandler.ServeHTTP(w, r)
 		case PortalServiceGetSubRedditsProcedure:
 			portalServiceGetSubRedditsHandler.ServeHTTP(w, r)
+		case PortalServiceRemoveSubRedditProcedure:
+			portalServiceRemoveSubRedditHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -442,4 +468,8 @@ func (UnimplementedPortalServiceHandler) AddSubReddit(context.Context, *connect.
 
 func (UnimplementedPortalServiceHandler) GetSubReddits(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetSubredditsResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.GetSubReddits is not implemented"))
+}
+
+func (UnimplementedPortalServiceHandler) RemoveSubReddit(context.Context, *connect.Request[v1.RemoveSubRedditRequest]) (*connect.Response[emptypb.Empty], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.RemoveSubReddit is not implemented"))
 }

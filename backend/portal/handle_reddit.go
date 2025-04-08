@@ -79,3 +79,22 @@ func (p *Portal) GetSubReddits(ctx context.Context, c *connect.Request[emptypb.E
 
 	return connect.NewResponse(&pbportal.GetSubredditsResponse{Subreddits: subRedditProto}), nil
 }
+
+func (p *Portal) RemoveSubReddit(ctx context.Context, c *connect.Request[pbportal.RemoveSubRedditRequest]) (*connect.Response[emptypb.Empty], error) {
+	actor, err := p.gethAuthContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	redditClient, err := p.redditOauthClient.NewRedditClient(ctx, actor.OrganizationID)
+	if err != nil {
+		return nil, err
+	}
+	redditService := services.NewRedditService(p.logger, p.db, redditClient)
+	err = redditService.RemoveSubReddit(ctx, c.Msg.Id)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to add subreddit: %w", err))
+	}
+
+	return connect.NewResponse(&emptypb.Empty{}), nil
+}

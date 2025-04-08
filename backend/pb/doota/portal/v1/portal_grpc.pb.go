@@ -32,6 +32,7 @@ const (
 	PortalService_OauthCallback_FullMethodName      = "/doota.portal.v1.PortalService/OauthCallback"
 	PortalService_AddSubReddit_FullMethodName       = "/doota.portal.v1.PortalService/AddSubReddit"
 	PortalService_GetSubReddits_FullMethodName      = "/doota.portal.v1.PortalService/GetSubReddits"
+	PortalService_RemoveSubReddit_FullMethodName    = "/doota.portal.v1.PortalService/RemoveSubReddit"
 )
 
 // PortalServiceClient is the client API for PortalService service.
@@ -52,6 +53,7 @@ type PortalServiceClient interface {
 	OauthCallback(ctx context.Context, in *OauthCallbackRequest, opts ...grpc.CallOption) (*OauthCallbackResponse, error)
 	AddSubReddit(ctx context.Context, in *AddSubRedditRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GetSubReddits(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetSubredditsResponse, error)
+	RemoveSubReddit(ctx context.Context, in *RemoveSubRedditRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type portalServiceClient struct {
@@ -170,6 +172,15 @@ func (c *portalServiceClient) GetSubReddits(ctx context.Context, in *emptypb.Emp
 	return out, nil
 }
 
+func (c *portalServiceClient) RemoveSubReddit(ctx context.Context, in *RemoveSubRedditRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, PortalService_RemoveSubReddit_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PortalServiceServer is the server API for PortalService service.
 // All implementations must embed UnimplementedPortalServiceServer
 // for forward compatibility
@@ -188,6 +199,7 @@ type PortalServiceServer interface {
 	OauthCallback(context.Context, *OauthCallbackRequest) (*OauthCallbackResponse, error)
 	AddSubReddit(context.Context, *AddSubRedditRequest) (*emptypb.Empty, error)
 	GetSubReddits(context.Context, *emptypb.Empty) (*GetSubredditsResponse, error)
+	RemoveSubReddit(context.Context, *RemoveSubRedditRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedPortalServiceServer()
 }
 
@@ -230,6 +242,9 @@ func (UnimplementedPortalServiceServer) AddSubReddit(context.Context, *AddSubRed
 }
 func (UnimplementedPortalServiceServer) GetSubReddits(context.Context, *emptypb.Empty) (*GetSubredditsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetSubReddits not implemented")
+}
+func (UnimplementedPortalServiceServer) RemoveSubReddit(context.Context, *RemoveSubRedditRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveSubReddit not implemented")
 }
 func (UnimplementedPortalServiceServer) mustEmbedUnimplementedPortalServiceServer() {}
 
@@ -460,6 +475,24 @@ func _PortalService_GetSubReddits_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PortalService_RemoveSubReddit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RemoveSubRedditRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortalServiceServer).RemoveSubReddit(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortalService_RemoveSubReddit_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortalServiceServer).RemoveSubReddit(ctx, req.(*RemoveSubRedditRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // PortalService_ServiceDesc is the grpc.ServiceDesc for PortalService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -514,6 +547,10 @@ var PortalService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetSubReddits",
 			Handler:    _PortalService_GetSubReddits_Handler,
+		},
+		{
+			MethodName: "RemoveSubReddit",
+			Handler:    _PortalService_RemoveSubReddit_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
