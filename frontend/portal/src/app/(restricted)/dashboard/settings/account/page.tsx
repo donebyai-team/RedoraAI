@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { useAuthUser } from '@doota/ui-core/hooks/useAuth'
 import { Box } from '@mui/system'
 import {  IntegrationType } from '@doota/pb/doota/portal/v1/portal_pb'
+import {  Integration } from '@doota/pb/doota/reddit/v1/reddit_pb'
 import { FallbackSpinner } from '../../../../../atoms/FallbackSpinner'
 import { Button } from '../../../../../atoms/Button'
 import { portalClient } from '../../../../../services/grpc'
@@ -27,6 +28,7 @@ export default function Page() {
   const [open, setOpen] = React.useState(false)
   const handleOpen = () => setOpen(true)
   const handleClose = () => setOpen(false)
+  const [integrations, setIntegrations] = useState<Integration[]>([]);
 
   useEffect(() => {
   }, [setLoading])
@@ -46,31 +48,22 @@ export default function Page() {
       })
   }
 
+  useEffect(() => {
+    portalClient.getIntegrationByOrgId({})
+        .then((res) => {
+          setIntegrations(res.reddit);
+        })
+        .catch((err) => {
+          console.error("Error fetching integrations:", err);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+  }, []);
+
+
   return (
     <>
-      {user && isAdmin(user) && (
-        <Modal
-          open={open}
-          onClose={handleClose}
-          aria-labelledby='modal-modal-title'
-          aria-describedby='modal-modal-description'
-        >
-          <Box className='absolute top-[50%] text-center left-[50%] w-[600px] max-w-full translate-x-[-50%] translate-y-[-50%] p-2 bg-white rounded-xl'>
-            <div className='text-xl font-semibold'>Select your email provider</div>
-            <div className='flex mt-2 gap-2'>
-              <div
-                role='presentation'
-                className='border border-neutral-200 hover:bg-neutral-50 hover:border-neutral-300 rounded-lg flex-1 flex items-center justify-center h-[70px] cursor-pointer'
-                onClick={() => openOauthConsentScreen(IntegrationType.REDDIT)}
-              >
-                <Image src='/images/exchange_logo.png' alt='Exchange' width={100} height={100} />
-              </div>
-
-            </div>
-          </Box>
-        </Modal>
-      )}
-
       <div className='absolute bg-neutral-50 border border-neutral-200 rounded-lg top-0 right-0 p-1.5 px-2.5 text-sm m-2.5'>
         {user && user.email}
       </div>
@@ -87,9 +80,9 @@ export default function Page() {
                   <Button
                     variant='contained'
                     className='!shadow-none !bg-purple-6 !text-purple-3 !rounded-md !font-semibold'
-                    onClick={handleOpen}
+                    onClick={() => openOauthConsentScreen(IntegrationType.REDDIT)}
                   >
-                    Set up your provider
+                    Connect Reddit
                   </Button>
                 </div>
               </>
@@ -99,12 +92,20 @@ export default function Page() {
               <TableHead>
                 <TableRow className='bg-neutral-50'>
                   <TableCell className='!p-1'>Provider</TableCell>
-                  <TableCell className='!p-1'>Mail</TableCell>
+                  <TableCell className='!p-1'>Username</TableCell>
                   <TableCell align='right'></TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-
+                {integrations.map((row, index) => (
+                    <TableRow key={index}>
+                      <TableCell className='!p-1'>Reddit</TableCell>
+                      <TableCell className='!p-1'>{row.userName}</TableCell>
+                      <TableCell align='right' className='!p-1'>
+                        {/* Action buttons like Edit/Delete can go here */}
+                      </TableCell>
+                    </TableRow>
+                ))}
               </TableBody>
             </Table>
           </TableContainer>

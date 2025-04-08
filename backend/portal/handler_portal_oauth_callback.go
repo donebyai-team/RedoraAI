@@ -32,7 +32,7 @@ func (p *Portal) OauthCallback(ctx context.Context, c *connect.Request[pbportal.
 	if !ok {
 		return nil, fmt.Errorf("unknown %s handler: %w", authState.IntegrationType.String(), err)
 	}
-	if err = handler(ctx, p, c.Msg.GetExternalCode(), "e250ced8-7441-4805-b9dd-2686d9492c4f", authState); err != nil {
+	if err = handler(ctx, p, c.Msg.GetExternalCode(), "dd80c434-43c3-41aa-84a6-fc908e7b36ad", authState); err != nil {
 		return nil, fmt.Errorf("error handling %s: %w", authState.IntegrationType.String(), err)
 	}
 

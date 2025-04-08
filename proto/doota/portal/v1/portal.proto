@@ -24,6 +24,7 @@ service PortalService {
   rpc AddSubReddit(doota.reddit.v1.AddSubRedditRequest) returns (.google.protobuf.Empty);
   rpc GetSubReddits(.google.protobuf.Empty) returns (doota.reddit.v1.GetSubredditsResponse);
   rpc RemoveSubReddit(doota.reddit.v1.RemoveSubRedditRequest) returns (.google.protobuf.Empty);
+  rpc GetIntegrationByOrgId(.google.protobuf.Empty) returns (IntegrationByOrgIdResponse);
 }
 
 message CreateCustomerCaseReq {
@@ -131,6 +132,10 @@ message Integration {
   oneof details {
     doota.reddit.v1.Integration reddit = 6;
   }
+}
+
+message IntegrationByOrgIdResponse {
+  repeated doota.reddit.v1.Integration reddit = 1;
 }
 
 message GetIntegrationRequest { IntegrationType type = 1; }
