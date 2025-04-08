@@ -8,7 +8,7 @@ import { fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv1";
  * Describes the file doota/reddit/v1/reddit.proto.
  */
 export const file_doota_reddit_v1_reddit = /*@__PURE__*/
-  fileDesc("Chxkb290YS9yZWRkaXQvdjEvcmVkZGl0LnByb3RvEg9kb290YS5yZWRkaXQudjEiIAoLSW50ZWdyYXRpb24SEQoJdXNlcl9uYW1lGAEgASgJQjdaNWdpdGh1Yi5jb20vc2hhbmszMTgvZG9vdGEvcGIvZG9vdGEvcmVkZGl0L3YxO3BicmVkZGl0YgZwcm90bzM");
+  fileDesc("Chxkb290YS9yZWRkaXQvdjEvcmVkZGl0LnByb3RvEg9kb290YS5yZWRkaXQudjEiIAoLSW50ZWdyYXRpb24SEQoJdXNlcl9uYW1lGAEgASgJIiQKFlJlbW92ZVN1YlJlZGRpdFJlcXVlc3QSCgoCaWQYASABKAkiIgoTQWRkU3ViUmVkZGl0UmVxdWVzdBILCgN1cmwYASABKAkimwEKCVN1YlJlZGRpdBIKCgJpZBgBIAEoCRILCgN1cmwYAiABKAkSDAoEbmFtZRgDIAEoCRITCgtkZXNjcmlwdGlvbhgEIAEoCRI0CghtZXRhZGF0YRgFIAEoCzIiLmRvb3RhLnJlZGRpdC52MS5TdWJSZWRkaXRNZXRhZGF0YRISCgV0aXRsZRgGIAEoCUgAiAEBQggKBl90aXRsZSITChFTdWJSZWRkaXRNZXRhZGF0YSJHChVHZXRTdWJyZWRkaXRzUmVzcG9uc2USLgoKc3VicmVkZGl0cxgBIAMoCzIaLmRvb3RhLnJlZGRpdC52MS5TdWJSZWRkaXRCN1o1Z2l0aHViLmNvbS9zaGFuazMxOC9kb290YS9wYi9kb290YS9yZWRkaXQvdjE7cGJyZWRkaXRiBnByb3RvMw");
 
 /**
  * Describes the message doota.reddit.v1.Integration.
@@ -16,4 +16,39 @@ export const file_doota_reddit_v1_reddit = /*@__PURE__*/
  */
 export const IntegrationSchema = /*@__PURE__*/
   messageDesc(file_doota_reddit_v1_reddit, 0);
+
+/**
+ * Describes the message doota.reddit.v1.RemoveSubRedditRequest.
+ * Use `create(RemoveSubRedditRequestSchema)` to create a new message.
+ */
+export const RemoveSubRedditRequestSchema = /*@__PURE__*/
+  messageDesc(file_doota_reddit_v1_reddit, 1);
+
+/**
+ * Describes the message doota.reddit.v1.AddSubRedditRequest.
+ * Use `create(AddSubRedditRequestSchema)` to create a new message.
+ */
+export const AddSubRedditRequestSchema = /*@__PURE__*/
+  messageDesc(file_doota_reddit_v1_reddit, 2);
+
+/**
+ * Describes the message doota.reddit.v1.SubReddit.
+ * Use `create(SubRedditSchema)` to create a new message.
+ */
+export const SubRedditSchema = /*@__PURE__*/
+  messageDesc(file_doota_reddit_v1_reddit, 3);
+
+/**
+ * Describes the message doota.reddit.v1.SubRedditMetadata.
+ * Use `create(SubRedditMetadataSchema)` to create a new message.
+ */
+export const SubRedditMetadataSchema = /*@__PURE__*/
+  messageDesc(file_doota_reddit_v1_reddit, 4);
+
+/**
+ * Describes the message doota.reddit.v1.GetSubredditsResponse.
+ * Use `create(GetSubredditsResponseSchema)` to create a new message.
+ */
+export const GetSubredditsResponseSchema = /*@__PURE__*/
+  messageDesc(file_doota_reddit_v1_reddit, 5);
 

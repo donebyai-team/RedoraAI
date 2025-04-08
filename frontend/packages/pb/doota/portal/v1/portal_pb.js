@@ -10,203 +10,168 @@ import { file_doota_reddit_v1_reddit } from "../../reddit/v1/reddit_pb";
  * Describes the file doota/portal/v1/portal.proto.
  */
 export const file_doota_portal_v1_portal = /*@__PURE__*/
-  fileDesc("Chxkb290YS9wb3J0YWwvdjEvcG9ydGFsLnByb3RvEg9kb290YS5wb3J0YWwudjEiJAoWUmVtb3ZlU3ViUmVkZGl0UmVxdWVzdBIKCgJpZBgBIAEoCSIiChNBZGRTdWJSZWRkaXRSZXF1ZXN0EgsKA3VybBgBIAEoCSKbAQoJU3ViUmVkZGl0EgoKAmlkGAEgASgJEgsKA3VybBgCIAEoCRIMCgRuYW1lGAMgASgJEhMKC2Rlc2NyaXB0aW9uGAQgASgJEjQKCG1ldGFkYXRhGAUgASgLMiIuZG9vdGEucG9ydGFsLnYxLlN1YlJlZGRpdE1ldGFkYXRhEhIKBXRpdGxlGAYgASgJSACIAQFCCAoGX3RpdGxlIhMKEVN1YlJlZGRpdE1ldGFkYXRhIkcKFUdldFN1YnJlZGRpdHNSZXNwb25zZRIuCgpzdWJyZWRkaXRzGAEgAygLMhouZG9vdGEucG9ydGFsLnYxLlN1YlJlZGRpdCKNAQoVQ3JlYXRlQ3VzdG9tZXJDYXNlUmVxEhIKCmZpcnN0X25hbWUYASABKAkSEQoJbGFzdF9uYW1lGAIgASgJEg0KBXBob25lGAMgASgJEhcKD29yZ2FuaXphdGlvbl9pZBgEIAEoCRIQCghkdWVfZGF0ZRgFIAEoCRITCgtwcm9tcHRfdHlwZRgGIAEoCSIjChBDcmVhdGVLZXl3b3JkUmVxEg8KB2tleXdvcmQYASABKAkiNQoIQmF0Y2hSZXESEAoIY3N2X2RhdGEYASABKAwSFwoPb3JnYW5pemF0aW9uX2lkGAIgASgJIkgKCUJhdGNoUmVzcBIMCgRyb3dzGAEgASgFEhYKDnJvd3NfZXh0cmFjdGVkGAIgASgFEhUKDXJlamVjdGVkX3Jvd3MYAyADKAkirAEKBkNvbmZpZxIUCgxhdXRoMF9kb21haW4YASABKAkSFwoPYXV0aDBfY2xpZW50X2lkGAIgASgJEhMKC2F1dGgwX3Njb3BlGAMgASgJEiAKGG1zb2Z0X2F1dGgwX2NhbGxiYWNrX3VybBgEIAEoCRIZChFmdWxsX3N0b3J5X29yZ19pZBgFIAEoCRIhChlnb29nbGVfYXV0aDBfY2FsbGJhY2tfdXJsGAYgASgJIj8KGFBhc3N3b3JkbGVzc1N0YXJ0UmVxdWVzdBIUCgxyZWRpcmVjdF91cmkYASABKAkSDQoFZW1haWwYAiABKAkiNgoXUGFzc3dvcmRsZXNzU3RhcnRWZXJpZnkSDQoFZW1haWwYASABKAkSDAoEY29kZRgCIAEoCSIoChBBdXRoU3RhdGVSZXF1ZXN0EhQKDHJlZGlyZWN0X3VyaRgBIAEoCSIlCgVTdGF0ZRINCgVzdGF0ZRgBIAEoCRINCgVub25jZRgCIAEoCSLIAQoEVXNlchIKCgJpZBgBIAEoCRINCgVlbWFpbBgCIAEoCRIWCg5lbWFpbF92ZXJpZmllZBgDIAEoCBInCgRyb2xlGAQgASgOMhkuZG9vdGEucG9ydGFsLnYxLlVzZXJSb2xlEjQKDW9yZ2FuaXphdGlvbnMYByADKAsyHS5kb290YS5wb3J0YWwudjEuT3JnYW5pemF0aW9uEi4KCmNyZWF0ZWRfYXQYCiABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wImkKFU9hdXRoQXV0aG9yaXplUmVxdWVzdBI6ChBpbnRlZ3JhdGlvbl90eXBlGAEgASgOMiAuZG9vdGEucG9ydGFsLnYxLkludGVncmF0aW9uVHlwZRIUCgxyZWRpcmVjdF91cmwYAiABKAkiLwoWT2F1dGhBdXRob3JpemVSZXNwb25zZRIVCg1hdXRob3JpemVfdXJsGAEgASgJIisKDElzc3VlUmVxdWVzdBIMCgRjb2RlGAEgASgJEg0KBXN0YXRlGAIgASgJIigKA0pXVBINCgV0b2tlbhgBIAEoCRISCgpleHBpcmVzX2F0GAIgASgDIpoBCgxPcmdhbml6YXRpb24SCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCRJACg1mZWF0dXJlX2ZsYWdzGAMgASgLMikuZG9vdGEucG9ydGFsLnYxLk9yZ2FuaXphdGlvbkZlYXR1cmVGbGFncxIuCgpjcmVhdGVkX2F0GAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCIaChhPcmdhbml6YXRpb25GZWF0dXJlRmxhZ3Mi0AEKC0ludGVncmF0aW9uEgoKAmlkGAEgASgJEhcKD29yZ2FuaXphdGlvbl9pZBgCIAEoCRIuCgR0eXBlGAMgASgOMiAuZG9vdGEucG9ydGFsLnYxLkludGVncmF0aW9uVHlwZRIxCgZzdGF0dXMYBCABKA4yIS5kb290YS5wb3J0YWwudjEuSW50ZWdyYXRpb25TdGF0ZRIuCgZyZWRkaXQYBiABKAsyHC5kb290YS5yZWRkaXQudjEuSW50ZWdyYXRpb25IAEIJCgdkZXRhaWxzIkcKFUdldEludGVncmF0aW9uUmVxdWVzdBIuCgR0eXBlGAEgASgOMiAuZG9vdGEucG9ydGFsLnYxLkludGVncmF0aW9uVHlwZSKyAQoOQWRkVXNlclJlcXVlc3QSDQoFZW1haWwYASABKAkSQgoObWVzc2FnZV9zb3VyY2UYAiABKAsyJS5kb290YS5wb3J0YWwudjEuTWVzc2FnZVNvdXJjZU9wdGlvbnNIAIgBARI6ChBpbnRlZ3JhdGlvbl90eXBlGAMgASgOMiAuZG9vdGEucG9ydGFsLnYxLkludGVncmF0aW9uVHlwZUIRCg9fbWVzc2FnZV9zb3VyY2UiLQoQUmVuZXdVc2VyUmVxdWVzdBIZChFtZXNzYWdlX3NvdXJjZV9pZBgBIAEoCSJPChRNZXNzYWdlU291cmNlT3B0aW9ucxIWCg5pbnRlZ3JhdGlvbl9pZBgBIAEoCRIfChdpbnRlZ3JhdGlvbl9leHRlcm5hbF9pZBgCIAEoCSJTChRPYXV0aENhbGxiYWNrUmVxdWVzdBINCgVzdGF0ZRgBIAEoCRIaCg1leHRlcm5hbF9jb2RlGAIgASgJSACIAQFCEAoOX2V4dGVybmFsX2NvZGUiLQoVT2F1dGhDYWxsYmFja1Jlc3BvbnNlEhQKDHJlZGlyZWN0X3VybBgBIAEoCSpgChJPYXV0aEF1dGhvcml6ZVR5cGUSJAogT0FVVEhfQVVUSE9SSVpFX1RZUEVfVU5TUEVDSUZJRUQQABIkCiBPQVVUSF9BVVRIT1JJWkVfVFlQRV9JTlRFR1JBVElPThABKmwKCFVzZXJSb2xlEhkKFVVTRVJfUk9MRV9VTlNQRUNJRklFRBAAEhIKDlVTRVJfUk9MRV9VU0VSEAESEwoPVVNFUl9ST0xFX0FETUlOEAISHAoYVVNFUl9ST0xFX1BMQVRGT1JNX0FETUlOEAMqjQEKD0ludGVncmF0aW9uVHlwZRIgChxJTlRFR1JBVElPTl9UWVBFX1VOU1BFQ0lGSUVEEAASHgoaSU5URUdSQVRJT05fVFlQRV9NSUNST1NPRlQQARIbChdJTlRFR1JBVElPTl9UWVBFX0dPT0dMRRACEhsKF0lOVEVHUkFUSU9OX1RZUEVfUkVERElUEAMqdwoQSW50ZWdyYXRpb25TdGF0ZRIhCh1JTlRFR1JBVElPTl9TVEFURV9VTlNQRUNJRklFRBAAEhwKGElOVEVHUkFUSU9OX1NUQVRFX0FDVElWRRABEiIKHklOVEVHUkFUSU9OX1NUQVRFX0FVVEhfUkVWT0tFRBACMqIICg1Qb3J0YWxTZXJ2aWNlEjwKCUdldENvbmZpZxIWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eRoXLmRvb3RhLnBvcnRhbC52MS5Db25maWcSNQoEU2VsZhIWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eRoVLmRvb3RhLnBvcnRhbC52MS5Vc2VyElYKDkdldEludGVncmF0aW9uEiYuZG9vdGEucG9ydGFsLnYxLkdldEludGVncmF0aW9uUmVxdWVzdBocLmRvb3RhLnBvcnRhbC52MS5JbnRlZ3JhdGlvbhI+CgVCYXRjaBIZLmRvb3RhLnBvcnRhbC52MS5CYXRjaFJlcRoaLmRvb3RhLnBvcnRhbC52MS5CYXRjaFJlc3ASVAoSQ3JlYXRlQ3VzdG9tZXJDYXNlEiYuZG9vdGEucG9ydGFsLnYxLkNyZWF0ZUN1c3RvbWVyQ2FzZVJlcRoWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eRJWChFQYXNzd29yZGxlc3NTdGFydBIpLmRvb3RhLnBvcnRhbC52MS5QYXNzd29yZGxlc3NTdGFydFJlcXVlc3QaFi5nb29nbGUucHJvdG9idWYuRW1wdHkSVAoSUGFzc3dvcmRsZXNzVmVyaWZ5EiguZG9vdGEucG9ydGFsLnYxLlBhc3N3b3JkbGVzc1N0YXJ0VmVyaWZ5GhQuZG9vdGEucG9ydGFsLnYxLkpXVBJKCg1DcmVhdGVLZXl3b3JkEiEuZG9vdGEucG9ydGFsLnYxLkNyZWF0ZUtleXdvcmRSZXEaFi5nb29nbGUucHJvdG9idWYuRW1wdHkSYQoOT2F1dGhBdXRob3JpemUSJi5kb290YS5wb3J0YWwudjEuT2F1dGhBdXRob3JpemVSZXF1ZXN0GicuZG9vdGEucG9ydGFsLnYxLk9hdXRoQXV0aG9yaXplUmVzcG9uc2USXgoNT2F1dGhDYWxsYmFjaxIlLmRvb3RhLnBvcnRhbC52MS5PYXV0aENhbGxiYWNrUmVxdWVzdBomLmRvb3RhLnBvcnRhbC52MS5PYXV0aENhbGxiYWNrUmVzcG9uc2USTAoMQWRkU3ViUmVkZGl0EiQuZG9vdGEucG9ydGFsLnYxLkFkZFN1YlJlZGRpdFJlcXVlc3QaFi5nb29nbGUucHJvdG9idWYuRW1wdHkSTwoNR2V0U3ViUmVkZGl0cxIWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eRomLmRvb3RhLnBvcnRhbC52MS5HZXRTdWJyZWRkaXRzUmVzcG9uc2USUgoPUmVtb3ZlU3ViUmVkZGl0EicuZG9vdGEucG9ydGFsLnYxLlJlbW92ZVN1YlJlZGRpdFJlcXVlc3QaFi5nb29nbGUucHJvdG9idWYuRW1wdHlCN1o1Z2l0aHViLmNvbS9zaGFuazMxOC9kb290YS9wYi9kb290YS9wb3J0YWwvdjE7cGJwb3J0YWxiBnByb3RvMw", [file_google_protobuf_timestamp, file_google_protobuf_empty, file_doota_reddit_v1_reddit]);
-
-/**
- * Describes the message doota.portal.v1.RemoveSubRedditRequest.
- * Use `create(RemoveSubRedditRequestSchema)` to create a new message.
- */
-export const RemoveSubRedditRequestSchema = /*@__PURE__*/
-  messageDesc(file_doota_portal_v1_portal, 0);
-
-/**
- * Describes the message doota.portal.v1.AddSubRedditRequest.
- * Use `create(AddSubRedditRequestSchema)` to create a new message.
- */
-export const AddSubRedditRequestSchema = /*@__PURE__*/
-  messageDesc(file_doota_portal_v1_portal, 1);
-
-/**
- * Describes the message doota.portal.v1.SubReddit.
- * Use `create(SubRedditSchema)` to create a new message.
- */
-export const SubRedditSchema = /*@__PURE__*/
-  messageDesc(file_doota_portal_v1_portal, 2);
-
-/**
- * Describes the message doota.portal.v1.SubRedditMetadata.
- * Use `create(SubRedditMetadataSchema)` to create a new message.
- */
-export const SubRedditMetadataSchema = /*@__PURE__*/
-  messageDesc(file_doota_portal_v1_portal, 3);
-
-/**
- * Describes the message doota.portal.v1.GetSubredditsResponse.
- * Use `create(GetSubredditsResponseSchema)` to create a new message.
- */
-export const GetSubredditsResponseSchema = /*@__PURE__*/
-  messageDesc(file_doota_portal_v1_portal, 4);
+  fileDesc("Chxkb290YS9wb3J0YWwvdjEvcG9ydGFsLnByb3RvEg9kb290YS5wb3J0YWwudjEijQEKFUNyZWF0ZUN1c3RvbWVyQ2FzZVJlcRISCgpmaXJzdF9uYW1lGAEgASgJEhEKCWxhc3RfbmFtZRgCIAEoCRINCgVwaG9uZRgDIAEoCRIXCg9vcmdhbml6YXRpb25faWQYBCABKAkSEAoIZHVlX2RhdGUYBSABKAkSEwoLcHJvbXB0X3R5cGUYBiABKAkiIwoQQ3JlYXRlS2V5d29yZFJlcRIPCgdrZXl3b3JkGAEgASgJIjUKCEJhdGNoUmVxEhAKCGNzdl9kYXRhGAEgASgMEhcKD29yZ2FuaXphdGlvbl9pZBgCIAEoCSJICglCYXRjaFJlc3ASDAoEcm93cxgBIAEoBRIWCg5yb3dzX2V4dHJhY3RlZBgCIAEoBRIVCg1yZWplY3RlZF9yb3dzGAMgAygJIqwBCgZDb25maWcSFAoMYXV0aDBfZG9tYWluGAEgASgJEhcKD2F1dGgwX2NsaWVudF9pZBgCIAEoCRITCgthdXRoMF9zY29wZRgDIAEoCRIgChhtc29mdF9hdXRoMF9jYWxsYmFja191cmwYBCABKAkSGQoRZnVsbF9zdG9yeV9vcmdfaWQYBSABKAkSIQoZZ29vZ2xlX2F1dGgwX2NhbGxiYWNrX3VybBgGIAEoCSI/ChhQYXNzd29yZGxlc3NTdGFydFJlcXVlc3QSFAoMcmVkaXJlY3RfdXJpGAEgASgJEg0KBWVtYWlsGAIgASgJIjYKF1Bhc3N3b3JkbGVzc1N0YXJ0VmVyaWZ5Eg0KBWVtYWlsGAEgASgJEgwKBGNvZGUYAiABKAkiKAoQQXV0aFN0YXRlUmVxdWVzdBIUCgxyZWRpcmVjdF91cmkYASABKAkiJQoFU3RhdGUSDQoFc3RhdGUYASABKAkSDQoFbm9uY2UYAiABKAkiyAEKBFVzZXISCgoCaWQYASABKAkSDQoFZW1haWwYAiABKAkSFgoOZW1haWxfdmVyaWZpZWQYAyABKAgSJwoEcm9sZRgEIAEoDjIZLmRvb3RhLnBvcnRhbC52MS5Vc2VyUm9sZRI0Cg1vcmdhbml6YXRpb25zGAcgAygLMh0uZG9vdGEucG9ydGFsLnYxLk9yZ2FuaXphdGlvbhIuCgpjcmVhdGVkX2F0GAogASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCJpChVPYXV0aEF1dGhvcml6ZVJlcXVlc3QSOgoQaW50ZWdyYXRpb25fdHlwZRgBIAEoDjIgLmRvb3RhLnBvcnRhbC52MS5JbnRlZ3JhdGlvblR5cGUSFAoMcmVkaXJlY3RfdXJsGAIgASgJIi8KFk9hdXRoQXV0aG9yaXplUmVzcG9uc2USFQoNYXV0aG9yaXplX3VybBgBIAEoCSIrCgxJc3N1ZVJlcXVlc3QSDAoEY29kZRgBIAEoCRINCgVzdGF0ZRgCIAEoCSIoCgNKV1QSDQoFdG9rZW4YASABKAkSEgoKZXhwaXJlc19hdBgCIAEoAyKaAQoMT3JnYW5pemF0aW9uEgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkSQAoNZmVhdHVyZV9mbGFncxgDIAEoCzIpLmRvb3RhLnBvcnRhbC52MS5Pcmdhbml6YXRpb25GZWF0dXJlRmxhZ3MSLgoKY3JlYXRlZF9hdBgEIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAiGgoYT3JnYW5pemF0aW9uRmVhdHVyZUZsYWdzItABCgtJbnRlZ3JhdGlvbhIKCgJpZBgBIAEoCRIXCg9vcmdhbml6YXRpb25faWQYAiABKAkSLgoEdHlwZRgDIAEoDjIgLmRvb3RhLnBvcnRhbC52MS5JbnRlZ3JhdGlvblR5cGUSMQoGc3RhdHVzGAQgASgOMiEuZG9vdGEucG9ydGFsLnYxLkludGVncmF0aW9uU3RhdGUSLgoGcmVkZGl0GAYgASgLMhwuZG9vdGEucmVkZGl0LnYxLkludGVncmF0aW9uSABCCQoHZGV0YWlscyJHChVHZXRJbnRlZ3JhdGlvblJlcXVlc3QSLgoEdHlwZRgBIAEoDjIgLmRvb3RhLnBvcnRhbC52MS5JbnRlZ3JhdGlvblR5cGUisgEKDkFkZFVzZXJSZXF1ZXN0Eg0KBWVtYWlsGAEgASgJEkIKDm1lc3NhZ2Vfc291cmNlGAIgASgLMiUuZG9vdGEucG9ydGFsLnYxLk1lc3NhZ2VTb3VyY2VPcHRpb25zSACIAQESOgoQaW50ZWdyYXRpb25fdHlwZRgDIAEoDjIgLmRvb3RhLnBvcnRhbC52MS5JbnRlZ3JhdGlvblR5cGVCEQoPX21lc3NhZ2Vfc291cmNlIi0KEFJlbmV3VXNlclJlcXVlc3QSGQoRbWVzc2FnZV9zb3VyY2VfaWQYASABKAkiTwoUTWVzc2FnZVNvdXJjZU9wdGlvbnMSFgoOaW50ZWdyYXRpb25faWQYASABKAkSHwoXaW50ZWdyYXRpb25fZXh0ZXJuYWxfaWQYAiABKAkiUwoUT2F1dGhDYWxsYmFja1JlcXVlc3QSDQoFc3RhdGUYASABKAkSGgoNZXh0ZXJuYWxfY29kZRgCIAEoCUgAiAEBQhAKDl9leHRlcm5hbF9jb2RlIi0KFU9hdXRoQ2FsbGJhY2tSZXNwb25zZRIUCgxyZWRpcmVjdF91cmwYASABKAkqYAoST2F1dGhBdXRob3JpemVUeXBlEiQKIE9BVVRIX0FVVEhPUklaRV9UWVBFX1VOU1BFQ0lGSUVEEAASJAogT0FVVEhfQVVUSE9SSVpFX1RZUEVfSU5URUdSQVRJT04QASpsCghVc2VyUm9sZRIZChVVU0VSX1JPTEVfVU5TUEVDSUZJRUQQABISCg5VU0VSX1JPTEVfVVNFUhABEhMKD1VTRVJfUk9MRV9BRE1JThACEhwKGFVTRVJfUk9MRV9QTEFURk9STV9BRE1JThADKo0BCg9JbnRlZ3JhdGlvblR5cGUSIAocSU5URUdSQVRJT05fVFlQRV9VTlNQRUNJRklFRBAAEh4KGklOVEVHUkFUSU9OX1RZUEVfTUlDUk9TT0ZUEAESGwoXSU5URUdSQVRJT05fVFlQRV9HT09HTEUQAhIbChdJTlRFR1JBVElPTl9UWVBFX1JFRERJVBADKncKEEludGVncmF0aW9uU3RhdGUSIQodSU5URUdSQVRJT05fU1RBVEVfVU5TUEVDSUZJRUQQABIcChhJTlRFR1JBVElPTl9TVEFURV9BQ1RJVkUQARIiCh5JTlRFR1JBVElPTl9TVEFURV9BVVRIX1JFVk9LRUQQAjKiCAoNUG9ydGFsU2VydmljZRI8CglHZXRDb25maWcSFi5nb29nbGUucHJvdG9idWYuRW1wdHkaFy5kb290YS5wb3J0YWwudjEuQ29uZmlnEjUKBFNlbGYSFi5nb29nbGUucHJvdG9idWYuRW1wdHkaFS5kb290YS5wb3J0YWwudjEuVXNlchJWCg5HZXRJbnRlZ3JhdGlvbhImLmRvb3RhLnBvcnRhbC52MS5HZXRJbnRlZ3JhdGlvblJlcXVlc3QaHC5kb290YS5wb3J0YWwudjEuSW50ZWdyYXRpb24SPgoFQmF0Y2gSGS5kb290YS5wb3J0YWwudjEuQmF0Y2hSZXEaGi5kb290YS5wb3J0YWwudjEuQmF0Y2hSZXNwElQKEkNyZWF0ZUN1c3RvbWVyQ2FzZRImLmRvb3RhLnBvcnRhbC52MS5DcmVhdGVDdXN0b21lckNhc2VSZXEaFi5nb29nbGUucHJvdG9idWYuRW1wdHkSVgoRUGFzc3dvcmRsZXNzU3RhcnQSKS5kb290YS5wb3J0YWwudjEuUGFzc3dvcmRsZXNzU3RhcnRSZXF1ZXN0GhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5ElQKElBhc3N3b3JkbGVzc1ZlcmlmeRIoLmRvb3RhLnBvcnRhbC52MS5QYXNzd29yZGxlc3NTdGFydFZlcmlmeRoULmRvb3RhLnBvcnRhbC52MS5KV1QSSgoNQ3JlYXRlS2V5d29yZBIhLmRvb3RhLnBvcnRhbC52MS5DcmVhdGVLZXl3b3JkUmVxGhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5EmEKDk9hdXRoQXV0aG9yaXplEiYuZG9vdGEucG9ydGFsLnYxLk9hdXRoQXV0aG9yaXplUmVxdWVzdBonLmRvb3RhLnBvcnRhbC52MS5PYXV0aEF1dGhvcml6ZVJlc3BvbnNlEl4KDU9hdXRoQ2FsbGJhY2sSJS5kb290YS5wb3J0YWwudjEuT2F1dGhDYWxsYmFja1JlcXVlc3QaJi5kb290YS5wb3J0YWwudjEuT2F1dGhDYWxsYmFja1Jlc3BvbnNlEkwKDEFkZFN1YlJlZGRpdBIkLmRvb3RhLnJlZGRpdC52MS5BZGRTdWJSZWRkaXRSZXF1ZXN0GhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5Ek8KDUdldFN1YlJlZGRpdHMSFi5nb29nbGUucHJvdG9idWYuRW1wdHkaJi5kb290YS5yZWRkaXQudjEuR2V0U3VicmVkZGl0c1Jlc3BvbnNlElIKD1JlbW92ZVN1YlJlZGRpdBInLmRvb3RhLnJlZGRpdC52MS5SZW1vdmVTdWJSZWRkaXRSZXF1ZXN0GhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5QjdaNWdpdGh1Yi5jb20vc2hhbmszMTgvZG9vdGEvcGIvZG9vdGEvcG9ydGFsL3YxO3BicG9ydGFsYgZwcm90bzM", [file_google_protobuf_timestamp, file_google_protobuf_empty, file_doota_reddit_v1_reddit]);
 
 /**
  * Describes the message doota.portal.v1.CreateCustomerCaseReq.
  * Use `create(CreateCustomerCaseReqSchema)` to create a new message.
  */
 export const CreateCustomerCaseReqSchema = /*@__PURE__*/
-  messageDesc(file_doota_portal_v1_portal, 5);
+  messageDesc(file_doota_portal_v1_portal, 0);
 
 /**
  * Describes the message doota.portal.v1.CreateKeywordReq.
  * Use `create(CreateKeywordReqSchema)` to create a new message.
  */
 export const CreateKeywordReqSchema = /*@__PURE__*/
-  messageDesc(file_doota_portal_v1_portal, 6);
+  messageDesc(file_doota_portal_v1_portal, 1);
 
 /**
  * Describes the message doota.portal.v1.BatchReq.
  * Use `create(BatchReqSchema)` to create a new message.
  */
 export const BatchReqSchema = /*@__PURE__*/
-  messageDesc(file_doota_portal_v1_portal, 7);
+  messageDesc(file_doota_portal_v1_portal, 2);
 
 /**
  * Describes the message doota.portal.v1.BatchResp.
  * Use `create(BatchRespSchema)` to create a new message.
  */
 export const BatchRespSchema = /*@__PURE__*/
-  messageDesc(file_doota_portal_v1_portal, 8);
+  messageDesc(file_doota_portal_v1_portal, 3);
 
 /**
  * Describes the message doota.portal.v1.Config.
  * Use `create(ConfigSchema)` to create a new message.
  */
 export const ConfigSchema = /*@__PURE__*/
-  messageDesc(file_doota_portal_v1_portal, 9);
+  messageDesc(file_doota_portal_v1_portal, 4);
 
 /**
  * Describes the message doota.portal.v1.PasswordlessStartRequest.
  * Use `create(PasswordlessStartRequestSchema)` to create a new message.
  */
 export const PasswordlessStartRequestSchema = /*@__PURE__*/
-  messageDesc(file_doota_portal_v1_portal, 10);
+  messageDesc(file_doota_portal_v1_portal, 5);
 
 /**
  * Describes the message doota.portal.v1.PasswordlessStartVerify.
  * Use `create(PasswordlessStartVerifySchema)` to create a new message.
  */
 export const PasswordlessStartVerifySchema = /*@__PURE__*/
-  messageDesc(file_doota_portal_v1_portal, 11);
+  messageDesc(file_doota_portal_v1_portal, 6);
 
 /**
  * Describes the message doota.portal.v1.AuthStateRequest.
  * Use `create(AuthStateRequestSchema)` to create a new message.
  */
 export const AuthStateRequestSchema = /*@__PURE__*/
-  messageDesc(file_doota_portal_v1_portal, 12);
+  messageDesc(file_doota_portal_v1_portal, 7);
 
 /**
  * Describes the message doota.portal.v1.State.
  * Use `create(StateSchema)` to create a new message.
  */
 export const StateSchema = /*@__PURE__*/
-  messageDesc(file_doota_portal_v1_portal, 13);
+  messageDesc(file_doota_portal_v1_portal, 8);
 
 /**
  * Describes the message doota.portal.v1.User.
  * Use `create(UserSchema)` to create a new message.
  */
 export const UserSchema = /*@__PURE__*/
-  messageDesc(file_doota_portal_v1_portal, 14);
+  messageDesc(file_doota_portal_v1_portal, 9);
 
 /**
  * Describes the message doota.portal.v1.OauthAuthorizeRequest.
  * Use `create(OauthAuthorizeRequestSchema)` to create a new message.
  */
 export const OauthAuthorizeRequestSchema = /*@__PURE__*/
-  messageDesc(file_doota_portal_v1_portal, 15);
+  messageDesc(file_doota_portal_v1_portal, 10);
 
 /**
  * Describes the message doota.portal.v1.OauthAuthorizeResponse.
  * Use `create(OauthAuthorizeResponseSchema)` to create a new message.
  */
 export const OauthAuthorizeResponseSchema = /*@__PURE__*/
-  messageDesc(file_doota_portal_v1_portal, 16);
+  messageDesc(file_doota_portal_v1_portal, 11);
 
 /**
  * Describes the message doota.portal.v1.IssueRequest.
  * Use `create(IssueRequestSchema)` to create a new message.
  */
 export const IssueRequestSchema = /*@__PURE__*/
-  messageDesc(file_doota_portal_v1_portal, 17);
+  messageDesc(file_doota_portal_v1_portal, 12);
 
 /**
  * Describes the message doota.portal.v1.JWT.
  * Use `create(JWTSchema)` to create a new message.
  */
 export const JWTSchema = /*@__PURE__*/
-  messageDesc(file_doota_portal_v1_portal, 18);
+  messageDesc(file_doota_portal_v1_portal, 13);
 
 /**
  * Describes the message doota.portal.v1.Organization.
  * Use `create(OrganizationSchema)` to create a new message.
  */
 export const OrganizationSchema = /*@__PURE__*/
-  messageDesc(file_doota_portal_v1_portal, 19);
+  messageDesc(file_doota_portal_v1_portal, 14);
 
 /**
  * Describes the message doota.portal.v1.OrganizationFeatureFlags.
  * Use `create(OrganizationFeatureFlagsSchema)` to create a new message.
  */
 export const OrganizationFeatureFlagsSchema = /*@__PURE__*/
-  messageDesc(file_doota_portal_v1_portal, 20);
+  messageDesc(file_doota_portal_v1_portal, 15);
 
 /**
  * Describes the message doota.portal.v1.Integration.
  * Use `create(IntegrationSchema)` to create a new message.
  */
 export const IntegrationSchema = /*@__PURE__*/
-  messageDesc(file_doota_portal_v1_portal, 21);
+  messageDesc(file_doota_portal_v1_portal, 16);
 
 /**
  * Describes the message doota.portal.v1.GetIntegrationRequest.
  * Use `create(GetIntegrationRequestSchema)` to create a new message.
  */
 export const GetIntegrationRequestSchema = /*@__PURE__*/
-  messageDesc(file_doota_portal_v1_portal, 22);
+  messageDesc(file_doota_portal_v1_portal, 17);
 
 /**
  * Describes the message doota.portal.v1.AddUserRequest.
  * Use `create(AddUserRequestSchema)` to create a new message.
  */
 export const AddUserRequestSchema = /*@__PURE__*/
-  messageDesc(file_doota_portal_v1_portal, 23);
+  messageDesc(file_doota_portal_v1_portal, 18);
 
 /**
  * Describes the message doota.portal.v1.RenewUserRequest.
  * Use `create(RenewUserRequestSchema)` to create a new message.
  */
 export const RenewUserRequestSchema = /*@__PURE__*/
-  messageDesc(file_doota_portal_v1_portal, 24);
+  messageDesc(file_doota_portal_v1_portal, 19);
 
 /**
  * Describes the message doota.portal.v1.MessageSourceOptions.
  * Use `create(MessageSourceOptionsSchema)` to create a new message.
  */
 export const MessageSourceOptionsSchema = /*@__PURE__*/
-  messageDesc(file_doota_portal_v1_portal, 25);
+  messageDesc(file_doota_portal_v1_portal, 20);
 
 /**
  * Describes the message doota.portal.v1.OauthCallbackRequest.
  * Use `create(OauthCallbackRequestSchema)` to create a new message.
  */
 export const OauthCallbackRequestSchema = /*@__PURE__*/
-  messageDesc(file_doota_portal_v1_portal, 26);
+  messageDesc(file_doota_portal_v1_portal, 21);
 
 /**
  * Describes the message doota.portal.v1.OauthCallbackResponse.
  * Use `create(OauthCallbackResponseSchema)` to create a new message.
  */
 export const OauthCallbackResponseSchema = /*@__PURE__*/
-  messageDesc(file_doota_portal_v1_portal, 27);
+  messageDesc(file_doota_portal_v1_portal, 22);
 
 /**
  * Describes the enum doota.portal.v1.OauthAuthorizeType.

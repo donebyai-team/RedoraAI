@@ -5,117 +5,12 @@
 import type { GenEnum, GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv1";
 import type { Message } from "@bufbuild/protobuf";
 import type { EmptySchema, Timestamp } from "@bufbuild/protobuf/wkt";
-import type { Integration as Integration$1 } from "../../reddit/v1/reddit_pb";
+import type { AddSubRedditRequestSchema, GetSubredditsResponseSchema, Integration as Integration$1, RemoveSubRedditRequestSchema } from "../../reddit/v1/reddit_pb";
 
 /**
  * Describes the file doota/portal/v1/portal.proto.
  */
 export declare const file_doota_portal_v1_portal: GenFile;
-
-/**
- * @generated from message doota.portal.v1.RemoveSubRedditRequest
- */
-export declare type RemoveSubRedditRequest = Message<"doota.portal.v1.RemoveSubRedditRequest"> & {
-  /**
-   * eg. r/SAAS
-   *
-   * @generated from field: string id = 1;
-   */
-  id: string;
-};
-
-/**
- * Describes the message doota.portal.v1.RemoveSubRedditRequest.
- * Use `create(RemoveSubRedditRequestSchema)` to create a new message.
- */
-export declare const RemoveSubRedditRequestSchema: GenMessage<RemoveSubRedditRequest>;
-
-/**
- * @generated from message doota.portal.v1.AddSubRedditRequest
- */
-export declare type AddSubRedditRequest = Message<"doota.portal.v1.AddSubRedditRequest"> & {
-  /**
-   * eg. r/SAAS
-   *
-   * @generated from field: string url = 1;
-   */
-  url: string;
-};
-
-/**
- * Describes the message doota.portal.v1.AddSubRedditRequest.
- * Use `create(AddSubRedditRequestSchema)` to create a new message.
- */
-export declare const AddSubRedditRequestSchema: GenMessage<AddSubRedditRequest>;
-
-/**
- * @generated from message doota.portal.v1.SubReddit
- */
-export declare type SubReddit = Message<"doota.portal.v1.SubReddit"> & {
-  /**
-   * @generated from field: string id = 1;
-   */
-  id: string;
-
-  /**
-   * @generated from field: string url = 2;
-   */
-  url: string;
-
-  /**
-   * @generated from field: string name = 3;
-   */
-  name: string;
-
-  /**
-   * @generated from field: string description = 4;
-   */
-  description: string;
-
-  /**
-   * @generated from field: doota.portal.v1.SubRedditMetadata metadata = 5;
-   */
-  metadata?: SubRedditMetadata;
-
-  /**
-   * @generated from field: optional string title = 6;
-   */
-  title?: string;
-};
-
-/**
- * Describes the message doota.portal.v1.SubReddit.
- * Use `create(SubRedditSchema)` to create a new message.
- */
-export declare const SubRedditSchema: GenMessage<SubReddit>;
-
-/**
- * @generated from message doota.portal.v1.SubRedditMetadata
- */
-export declare type SubRedditMetadata = Message<"doota.portal.v1.SubRedditMetadata"> & {
-};
-
-/**
- * Describes the message doota.portal.v1.SubRedditMetadata.
- * Use `create(SubRedditMetadataSchema)` to create a new message.
- */
-export declare const SubRedditMetadataSchema: GenMessage<SubRedditMetadata>;
-
-/**
- * @generated from message doota.portal.v1.GetSubredditsResponse
- */
-export declare type GetSubredditsResponse = Message<"doota.portal.v1.GetSubredditsResponse"> & {
-  /**
-   * @generated from field: repeated doota.portal.v1.SubReddit subreddits = 1;
-   */
-  subreddits: SubReddit[];
-};
-
-/**
- * Describes the message doota.portal.v1.GetSubredditsResponse.
- * Use `create(GetSubredditsResponseSchema)` to create a new message.
- */
-export declare const GetSubredditsResponseSchema: GenMessage<GetSubredditsResponse>;
 
 /**
  * @generated from message doota.portal.v1.CreateCustomerCaseReq

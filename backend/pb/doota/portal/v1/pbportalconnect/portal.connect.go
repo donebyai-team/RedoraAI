@@ -9,6 +9,7 @@ import (
 	context "context"
 	errors "errors"
 	v1 "github.com/shank318/doota/pb/doota/portal/v1"
+	v11 "github.com/shank318/doota/pb/doota/reddit/v1"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	http "net/http"
 	strings "strings"
@@ -104,9 +105,9 @@ type PortalServiceClient interface {
 	CreateKeyword(context.Context, *connect.Request[v1.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error)
 	OauthAuthorize(context.Context, *connect.Request[v1.OauthAuthorizeRequest]) (*connect.Response[v1.OauthAuthorizeResponse], error)
 	OauthCallback(context.Context, *connect.Request[v1.OauthCallbackRequest]) (*connect.Response[v1.OauthCallbackResponse], error)
-	AddSubReddit(context.Context, *connect.Request[v1.AddSubRedditRequest]) (*connect.Response[emptypb.Empty], error)
-	GetSubReddits(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetSubredditsResponse], error)
-	RemoveSubReddit(context.Context, *connect.Request[v1.RemoveSubRedditRequest]) (*connect.Response[emptypb.Empty], error)
+	AddSubReddit(context.Context, *connect.Request[v11.AddSubRedditRequest]) (*connect.Response[emptypb.Empty], error)
+	GetSubReddits(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v11.GetSubredditsResponse], error)
+	RemoveSubReddit(context.Context, *connect.Request[v11.RemoveSubRedditRequest]) (*connect.Response[emptypb.Empty], error)
 }
 
 // NewPortalServiceClient constructs a client for the doota.portal.v1.PortalService service. By
@@ -179,19 +180,19 @@ func NewPortalServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(portalServiceOauthCallbackMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
-		addSubReddit: connect.NewClient[v1.AddSubRedditRequest, emptypb.Empty](
+		addSubReddit: connect.NewClient[v11.AddSubRedditRequest, emptypb.Empty](
 			httpClient,
 			baseURL+PortalServiceAddSubRedditProcedure,
 			connect.WithSchema(portalServiceAddSubRedditMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
-		getSubReddits: connect.NewClient[emptypb.Empty, v1.GetSubredditsResponse](
+		getSubReddits: connect.NewClient[emptypb.Empty, v11.GetSubredditsResponse](
 			httpClient,
 			baseURL+PortalServiceGetSubRedditsProcedure,
 			connect.WithSchema(portalServiceGetSubRedditsMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
-		removeSubReddit: connect.NewClient[v1.RemoveSubRedditRequest, emptypb.Empty](
+		removeSubReddit: connect.NewClient[v11.RemoveSubRedditRequest, emptypb.Empty](
 			httpClient,
 			baseURL+PortalServiceRemoveSubRedditProcedure,
 			connect.WithSchema(portalServiceRemoveSubRedditMethodDescriptor),
@@ -212,9 +213,9 @@ type portalServiceClient struct {
 	createKeyword      *connect.Client[v1.CreateKeywordReq, emptypb.Empty]
 	oauthAuthorize     *connect.Client[v1.OauthAuthorizeRequest, v1.OauthAuthorizeResponse]
 	oauthCallback      *connect.Client[v1.OauthCallbackRequest, v1.OauthCallbackResponse]
-	addSubReddit       *connect.Client[v1.AddSubRedditRequest, emptypb.Empty]
-	getSubReddits      *connect.Client[emptypb.Empty, v1.GetSubredditsResponse]
-	removeSubReddit    *connect.Client[v1.RemoveSubRedditRequest, emptypb.Empty]
+	addSubReddit       *connect.Client[v11.AddSubRedditRequest, emptypb.Empty]
+	getSubReddits      *connect.Client[emptypb.Empty, v11.GetSubredditsResponse]
+	removeSubReddit    *connect.Client[v11.RemoveSubRedditRequest, emptypb.Empty]
 }
 
 // GetConfig calls doota.portal.v1.PortalService.GetConfig.
@@ -268,17 +269,17 @@ func (c *portalServiceClient) OauthCallback(ctx context.Context, req *connect.Re
 }
 
 // AddSubReddit calls doota.portal.v1.PortalService.AddSubReddit.
-func (c *portalServiceClient) AddSubReddit(ctx context.Context, req *connect.Request[v1.AddSubRedditRequest]) (*connect.Response[emptypb.Empty], error) {
+func (c *portalServiceClient) AddSubReddit(ctx context.Context, req *connect.Request[v11.AddSubRedditRequest]) (*connect.Response[emptypb.Empty], error) {
 	return c.addSubReddit.CallUnary(ctx, req)
 }
 
 // GetSubReddits calls doota.portal.v1.PortalService.GetSubReddits.
-func (c *portalServiceClient) GetSubReddits(ctx context.Context, req *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetSubredditsResponse], error) {
+func (c *portalServiceClient) GetSubReddits(ctx context.Context, req *connect.Request[emptypb.Empty]) (*connect.Response[v11.GetSubredditsResponse], error) {
 	return c.getSubReddits.CallUnary(ctx, req)
 }
 
 // RemoveSubReddit calls doota.portal.v1.PortalService.RemoveSubReddit.
-func (c *portalServiceClient) RemoveSubReddit(ctx context.Context, req *connect.Request[v1.RemoveSubRedditRequest]) (*connect.Response[emptypb.Empty], error) {
+func (c *portalServiceClient) RemoveSubReddit(ctx context.Context, req *connect.Request[v11.RemoveSubRedditRequest]) (*connect.Response[emptypb.Empty], error) {
 	return c.removeSubReddit.CallUnary(ctx, req)
 }
 
@@ -296,9 +297,9 @@ type PortalServiceHandler interface {
 	CreateKeyword(context.Context, *connect.Request[v1.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error)
 	OauthAuthorize(context.Context, *connect.Request[v1.OauthAuthorizeRequest]) (*connect.Response[v1.OauthAuthorizeResponse], error)
 	OauthCallback(context.Context, *connect.Request[v1.OauthCallbackRequest]) (*connect.Response[v1.OauthCallbackResponse], error)
-	AddSubReddit(context.Context, *connect.Request[v1.AddSubRedditRequest]) (*connect.Response[emptypb.Empty], error)
-	GetSubReddits(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetSubredditsResponse], error)
-	RemoveSubReddit(context.Context, *connect.Request[v1.RemoveSubRedditRequest]) (*connect.Response[emptypb.Empty], error)
+	AddSubReddit(context.Context, *connect.Request[v11.AddSubRedditRequest]) (*connect.Response[emptypb.Empty], error)
+	GetSubReddits(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v11.GetSubredditsResponse], error)
+	RemoveSubReddit(context.Context, *connect.Request[v11.RemoveSubRedditRequest]) (*connect.Response[emptypb.Empty], error)
 }
 
 // NewPortalServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -462,14 +463,14 @@ func (UnimplementedPortalServiceHandler) OauthCallback(context.Context, *connect
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.OauthCallback is not implemented"))
 }
 
-func (UnimplementedPortalServiceHandler) AddSubReddit(context.Context, *connect.Request[v1.AddSubRedditRequest]) (*connect.Response[emptypb.Empty], error) {
+func (UnimplementedPortalServiceHandler) AddSubReddit(context.Context, *connect.Request[v11.AddSubRedditRequest]) (*connect.Response[emptypb.Empty], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.AddSubReddit is not implemented"))
 }
 
-func (UnimplementedPortalServiceHandler) GetSubReddits(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetSubredditsResponse], error) {
+func (UnimplementedPortalServiceHandler) GetSubReddits(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v11.GetSubredditsResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.GetSubReddits is not implemented"))
 }
 
-func (UnimplementedPortalServiceHandler) RemoveSubReddit(context.Context, *connect.Request[v1.RemoveSubRedditRequest]) (*connect.Response[emptypb.Empty], error) {
+func (UnimplementedPortalServiceHandler) RemoveSubReddit(context.Context, *connect.Request[v11.RemoveSubRedditRequest]) (*connect.Response[emptypb.Empty], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.RemoveSubReddit is not implemented"))
 }

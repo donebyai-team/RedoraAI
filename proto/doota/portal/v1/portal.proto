@@ -21,32 +21,9 @@ service PortalService {
   rpc CreateKeyword(CreateKeywordReq) returns (.google.protobuf.Empty);
   rpc OauthAuthorize(OauthAuthorizeRequest) returns (OauthAuthorizeResponse);
   rpc OauthCallback(OauthCallbackRequest) returns (OauthCallbackResponse);
-  rpc AddSubReddit(AddSubRedditRequest) returns (.google.protobuf.Empty);
-  rpc GetSubReddits(.google.protobuf.Empty) returns (GetSubredditsResponse);
-  rpc RemoveSubReddit(RemoveSubRedditRequest) returns (.google.protobuf.Empty);
-}
-
-message RemoveSubRedditRequest {
-  string id = 1; // eg. r/SAAS
-}
-
-message AddSubRedditRequest {
-  string url = 1; // eg. r/SAAS
-}
-
-message SubReddit {
-  string id = 1;
-  string url = 2;
-  string name = 3;
-  string description = 4;
-  SubRedditMetadata metadata = 5;
-  optional string title = 6;
-}
-
-message SubRedditMetadata {}
-
-message GetSubredditsResponse {
-  repeated SubReddit subreddits = 1;
+  rpc AddSubReddit(doota.reddit.v1.AddSubRedditRequest) returns (.google.protobuf.Empty);
+  rpc GetSubReddits(.google.protobuf.Empty) returns (doota.reddit.v1.GetSubredditsResponse);
+  rpc RemoveSubReddit(doota.reddit.v1.RemoveSubRedditRequest) returns (.google.protobuf.Empty);
 }
 
 message CreateCustomerCaseReq {

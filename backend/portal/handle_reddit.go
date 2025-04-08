@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/shank318/doota/models"
 	pbportal "github.com/shank318/doota/pb/doota/portal/v1"
+	pbreddit "github.com/shank318/doota/pb/doota/reddit/v1"
 	"github.com/shank318/doota/services"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
@@ -28,7 +29,7 @@ func (p *Portal) CreateKeyword(ctx context.Context, c *connect.Request[pbportal.
 	return connect.NewResponse(&emptypb.Empty{}), nil
 }
 
-func (p *Portal) AddSubReddit(ctx context.Context, c *connect.Request[pbportal.AddSubRedditRequest]) (*connect.Response[emptypb.Empty], error) {
+func (p *Portal) AddSubReddit(ctx context.Context, c *connect.Request[pbreddit.AddSubRedditRequest]) (*connect.Response[emptypb.Empty], error) {
 	actor, err := p.gethAuthContext(ctx)
 	if err != nil {
 		return nil, err
@@ -50,7 +51,7 @@ func (p *Portal) AddSubReddit(ctx context.Context, c *connect.Request[pbportal.A
 	return connect.NewResponse(&emptypb.Empty{}), nil
 }
 
-func (p *Portal) GetSubReddits(ctx context.Context, c *connect.Request[emptypb.Empty]) (*connect.Response[pbportal.GetSubredditsResponse], error) {
+func (p *Portal) GetSubReddits(ctx context.Context, c *connect.Request[emptypb.Empty]) (*connect.Response[pbreddit.GetSubredditsResponse], error) {
 	actor, err := p.gethAuthContext(ctx)
 	if err != nil {
 		return nil, err
@@ -65,22 +66,22 @@ func (p *Portal) GetSubReddits(ctx context.Context, c *connect.Request[emptypb.E
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to get subreddits: %w", err))
 	}
-	subRedditProto := make([]*pbportal.SubReddit, 0, len(subReddits))
+	subRedditProto := make([]*pbreddit.SubReddit, 0, len(subReddits))
 	for _, subReddit := range subReddits {
-		subRedditProto = append(subRedditProto, &pbportal.SubReddit{
+		subRedditProto = append(subRedditProto, &pbreddit.SubReddit{
 			Id:          subReddit.ID,
 			Url:         subReddit.URL,
 			Name:        subReddit.Name,
 			Description: subReddit.Description,
-			Metadata:    &pbportal.SubRedditMetadata{},
+			Metadata:    &pbreddit.SubRedditMetadata{},
 			Title:       subReddit.Title,
 		})
 	}
 
-	return connect.NewResponse(&pbportal.GetSubredditsResponse{Subreddits: subRedditProto}), nil
+	return connect.NewResponse(&pbreddit.GetSubredditsResponse{Subreddits: subRedditProto}), nil
 }
 
-func (p *Portal) RemoveSubReddit(ctx context.Context, c *connect.Request[pbportal.RemoveSubRedditRequest]) (*connect.Response[emptypb.Empty], error) {
+func (p *Portal) RemoveSubReddit(ctx context.Context, c *connect.Request[pbreddit.RemoveSubRedditRequest]) (*connect.Response[emptypb.Empty], error) {
 	actor, err := p.gethAuthContext(ctx)
 	if err != nil {
 		return nil, err

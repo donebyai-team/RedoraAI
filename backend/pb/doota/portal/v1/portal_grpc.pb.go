@@ -8,6 +8,7 @@ package pbportal
 
 import (
 	context "context"
+	v1 "github.com/shank318/doota/pb/doota/reddit/v1"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -51,9 +52,9 @@ type PortalServiceClient interface {
 	CreateKeyword(ctx context.Context, in *CreateKeywordReq, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	OauthAuthorize(ctx context.Context, in *OauthAuthorizeRequest, opts ...grpc.CallOption) (*OauthAuthorizeResponse, error)
 	OauthCallback(ctx context.Context, in *OauthCallbackRequest, opts ...grpc.CallOption) (*OauthCallbackResponse, error)
-	AddSubReddit(ctx context.Context, in *AddSubRedditRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	GetSubReddits(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetSubredditsResponse, error)
-	RemoveSubReddit(ctx context.Context, in *RemoveSubRedditRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	AddSubReddit(ctx context.Context, in *v1.AddSubRedditRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	GetSubReddits(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*v1.GetSubredditsResponse, error)
+	RemoveSubReddit(ctx context.Context, in *v1.RemoveSubRedditRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type portalServiceClient struct {
@@ -154,7 +155,7 @@ func (c *portalServiceClient) OauthCallback(ctx context.Context, in *OauthCallba
 	return out, nil
 }
 
-func (c *portalServiceClient) AddSubReddit(ctx context.Context, in *AddSubRedditRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *portalServiceClient) AddSubReddit(ctx context.Context, in *v1.AddSubRedditRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, PortalService_AddSubReddit_FullMethodName, in, out, opts...)
 	if err != nil {
@@ -163,8 +164,8 @@ func (c *portalServiceClient) AddSubReddit(ctx context.Context, in *AddSubReddit
 	return out, nil
 }
 
-func (c *portalServiceClient) GetSubReddits(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetSubredditsResponse, error) {
-	out := new(GetSubredditsResponse)
+func (c *portalServiceClient) GetSubReddits(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*v1.GetSubredditsResponse, error) {
+	out := new(v1.GetSubredditsResponse)
 	err := c.cc.Invoke(ctx, PortalService_GetSubReddits_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -172,7 +173,7 @@ func (c *portalServiceClient) GetSubReddits(ctx context.Context, in *emptypb.Emp
 	return out, nil
 }
 
-func (c *portalServiceClient) RemoveSubReddit(ctx context.Context, in *RemoveSubRedditRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *portalServiceClient) RemoveSubReddit(ctx context.Context, in *v1.RemoveSubRedditRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, PortalService_RemoveSubReddit_FullMethodName, in, out, opts...)
 	if err != nil {
@@ -197,9 +198,9 @@ type PortalServiceServer interface {
 	CreateKeyword(context.Context, *CreateKeywordReq) (*emptypb.Empty, error)
 	OauthAuthorize(context.Context, *OauthAuthorizeRequest) (*OauthAuthorizeResponse, error)
 	OauthCallback(context.Context, *OauthCallbackRequest) (*OauthCallbackResponse, error)
-	AddSubReddit(context.Context, *AddSubRedditRequest) (*emptypb.Empty, error)
-	GetSubReddits(context.Context, *emptypb.Empty) (*GetSubredditsResponse, error)
-	RemoveSubReddit(context.Context, *RemoveSubRedditRequest) (*emptypb.Empty, error)
+	AddSubReddit(context.Context, *v1.AddSubRedditRequest) (*emptypb.Empty, error)
+	GetSubReddits(context.Context, *emptypb.Empty) (*v1.GetSubredditsResponse, error)
+	RemoveSubReddit(context.Context, *v1.RemoveSubRedditRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedPortalServiceServer()
 }
 
@@ -237,13 +238,13 @@ func (UnimplementedPortalServiceServer) OauthAuthorize(context.Context, *OauthAu
 func (UnimplementedPortalServiceServer) OauthCallback(context.Context, *OauthCallbackRequest) (*OauthCallbackResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method OauthCallback not implemented")
 }
-func (UnimplementedPortalServiceServer) AddSubReddit(context.Context, *AddSubRedditRequest) (*emptypb.Empty, error) {
+func (UnimplementedPortalServiceServer) AddSubReddit(context.Context, *v1.AddSubRedditRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddSubReddit not implemented")
 }
-func (UnimplementedPortalServiceServer) GetSubReddits(context.Context, *emptypb.Empty) (*GetSubredditsResponse, error) {
+func (UnimplementedPortalServiceServer) GetSubReddits(context.Context, *emptypb.Empty) (*v1.GetSubredditsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetSubReddits not implemented")
 }
-func (UnimplementedPortalServiceServer) RemoveSubReddit(context.Context, *RemoveSubRedditRequest) (*emptypb.Empty, error) {
+func (UnimplementedPortalServiceServer) RemoveSubReddit(context.Context, *v1.RemoveSubRedditRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveSubReddit not implemented")
 }
 func (UnimplementedPortalServiceServer) mustEmbedUnimplementedPortalServiceServer() {}
@@ -440,7 +441,7 @@ func _PortalService_OauthCallback_Handler(srv interface{}, ctx context.Context, 
 }
 
 func _PortalService_AddSubReddit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AddSubRedditRequest)
+	in := new(v1.AddSubRedditRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -452,7 +453,7 @@ func _PortalService_AddSubReddit_Handler(srv interface{}, ctx context.Context, d
 		FullMethod: PortalService_AddSubReddit_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PortalServiceServer).AddSubReddit(ctx, req.(*AddSubRedditRequest))
+		return srv.(PortalServiceServer).AddSubReddit(ctx, req.(*v1.AddSubRedditRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -476,7 +477,7 @@ func _PortalService_GetSubReddits_Handler(srv interface{}, ctx context.Context, 
 }
 
 func _PortalService_RemoveSubReddit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RemoveSubRedditRequest)
+	in := new(v1.RemoveSubRedditRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -488,7 +489,7 @@ func _PortalService_RemoveSubReddit_Handler(srv interface{}, ctx context.Context
 		FullMethod: PortalService_RemoveSubReddit_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PortalServiceServer).RemoveSubReddit(ctx, req.(*RemoveSubRedditRequest))
+		return srv.(PortalServiceServer).RemoveSubReddit(ctx, req.(*v1.RemoveSubRedditRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
