@@ -20,6 +20,27 @@ service PortalService {
   rpc CreateKeyword(CreateKeywordReq) returns (.google.protobuf.Empty);
   rpc OauthAuthorize(OauthAuthorizeRequest) returns (OauthAuthorizeResponse);
   rpc OauthCallback(OauthCallbackRequest) returns (OauthCallbackResponse);
+  rpc AddSubReddit(AddSubRedditRequest) returns (.google.protobuf.Empty);
+  rpc GetSubReddits(.google.protobuf.Empty) returns (GetSubredditsResponse);
+}
+
+message AddSubRedditRequest {
+  string url = 1; // eg. r/SAAS
+}
+
+message SubReddit {
+  string id = 1;
+  string url = 2;
+  string name = 3;
+  string description = 4;
+  SubRedditMetadata metadata = 5;
+  optional string title = 6;
+}
+
+message SubRedditMetadata {}
+
+message GetSubredditsResponse {
+  repeated SubReddit subreddits = 1;
 }
 
 message CreateCustomerCaseReq {

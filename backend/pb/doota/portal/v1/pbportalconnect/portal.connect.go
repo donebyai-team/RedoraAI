@@ -61,6 +61,12 @@ const (
 	// PortalServiceOauthCallbackProcedure is the fully-qualified name of the PortalService's
 	// OauthCallback RPC.
 	PortalServiceOauthCallbackProcedure = "/doota.portal.v1.PortalService/OauthCallback"
+	// PortalServiceAddSubRedditProcedure is the fully-qualified name of the PortalService's
+	// AddSubReddit RPC.
+	PortalServiceAddSubRedditProcedure = "/doota.portal.v1.PortalService/AddSubReddit"
+	// PortalServiceGetSubRedditsProcedure is the fully-qualified name of the PortalService's
+	// GetSubReddits RPC.
+	PortalServiceGetSubRedditsProcedure = "/doota.portal.v1.PortalService/GetSubReddits"
 )
 
 // These variables are the protoreflect.Descriptor objects for the RPCs defined in this package.
@@ -76,6 +82,8 @@ var (
 	portalServiceCreateKeywordMethodDescriptor      = portalServiceServiceDescriptor.Methods().ByName("CreateKeyword")
 	portalServiceOauthAuthorizeMethodDescriptor     = portalServiceServiceDescriptor.Methods().ByName("OauthAuthorize")
 	portalServiceOauthCallbackMethodDescriptor      = portalServiceServiceDescriptor.Methods().ByName("OauthCallback")
+	portalServiceAddSubRedditMethodDescriptor       = portalServiceServiceDescriptor.Methods().ByName("AddSubReddit")
+	portalServiceGetSubRedditsMethodDescriptor      = portalServiceServiceDescriptor.Methods().ByName("GetSubReddits")
 )
 
 // PortalServiceClient is a client for the doota.portal.v1.PortalService service.
@@ -92,6 +100,8 @@ type PortalServiceClient interface {
 	CreateKeyword(context.Context, *connect.Request[v1.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error)
 	OauthAuthorize(context.Context, *connect.Request[v1.OauthAuthorizeRequest]) (*connect.Response[v1.OauthAuthorizeResponse], error)
 	OauthCallback(context.Context, *connect.Request[v1.OauthCallbackRequest]) (*connect.Response[v1.OauthCallbackResponse], error)
+	AddSubReddit(context.Context, *connect.Request[v1.AddSubRedditRequest]) (*connect.Response[emptypb.Empty], error)
+	GetSubReddits(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetSubredditsResponse], error)
 }
 
 // NewPortalServiceClient constructs a client for the doota.portal.v1.PortalService service. By
@@ -164,6 +174,18 @@ func NewPortalServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(portalServiceOauthCallbackMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
+		addSubReddit: connect.NewClient[v1.AddSubRedditRequest, emptypb.Empty](
+			httpClient,
+			baseURL+PortalServiceAddSubRedditProcedure,
+			connect.WithSchema(portalServiceAddSubRedditMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
+		getSubReddits: connect.NewClient[emptypb.Empty, v1.GetSubredditsResponse](
+			httpClient,
+			baseURL+PortalServiceGetSubRedditsProcedure,
+			connect.WithSchema(portalServiceGetSubRedditsMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -179,6 +201,8 @@ type portalServiceClient struct {
 	createKeyword      *connect.Client[v1.CreateKeywordReq, emptypb.Empty]
 	oauthAuthorize     *connect.Client[v1.OauthAuthorizeRequest, v1.OauthAuthorizeResponse]
 	oauthCallback      *connect.Client[v1.OauthCallbackRequest, v1.OauthCallbackResponse]
+	addSubReddit       *connect.Client[v1.AddSubRedditRequest, emptypb.Empty]
+	getSubReddits      *connect.Client[emptypb.Empty, v1.GetSubredditsResponse]
 }
 
 // GetConfig calls doota.portal.v1.PortalService.GetConfig.
@@ -231,6 +255,16 @@ func (c *portalServiceClient) OauthCallback(ctx context.Context, req *connect.Re
 	return c.oauthCallback.CallUnary(ctx, req)
 }
 
+// AddSubReddit calls doota.portal.v1.PortalService.AddSubReddit.
+func (c *portalServiceClient) AddSubReddit(ctx context.Context, req *connect.Request[v1.AddSubRedditRequest]) (*connect.Response[emptypb.Empty], error) {
+	return c.addSubReddit.CallUnary(ctx, req)
+}
+
+// GetSubReddits calls doota.portal.v1.PortalService.GetSubReddits.
+func (c *portalServiceClient) GetSubReddits(ctx context.Context, req *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetSubredditsResponse], error) {
+	return c.getSubReddits.CallUnary(ctx, req)
+}
+
 // PortalServiceHandler is an implementation of the doota.portal.v1.PortalService service.
 type PortalServiceHandler interface {
 	GetConfig(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.Config], error)
@@ -245,6 +279,8 @@ type PortalServiceHandler interface {
 	CreateKeyword(context.Context, *connect.Request[v1.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error)
 	OauthAuthorize(context.Context, *connect.Request[v1.OauthAuthorizeRequest]) (*connect.Response[v1.OauthAuthorizeResponse], error)
 	OauthCallback(context.Context, *connect.Request[v1.OauthCallbackRequest]) (*connect.Response[v1.OauthCallbackResponse], error)
+	AddSubReddit(context.Context, *connect.Request[v1.AddSubRedditRequest]) (*connect.Response[emptypb.Empty], error)
+	GetSubReddits(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetSubredditsResponse], error)
 }
 
 // NewPortalServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -313,6 +349,18 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(portalServiceOauthCallbackMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
+	portalServiceAddSubRedditHandler := connect.NewUnaryHandler(
+		PortalServiceAddSubRedditProcedure,
+		svc.AddSubReddit,
+		connect.WithSchema(portalServiceAddSubRedditMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	portalServiceGetSubRedditsHandler := connect.NewUnaryHandler(
+		PortalServiceGetSubRedditsProcedure,
+		svc.GetSubReddits,
+		connect.WithSchema(portalServiceGetSubRedditsMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/doota.portal.v1.PortalService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case PortalServiceGetConfigProcedure:
@@ -335,6 +383,10 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 			portalServiceOauthAuthorizeHandler.ServeHTTP(w, r)
 		case PortalServiceOauthCallbackProcedure:
 			portalServiceOauthCallbackHandler.ServeHTTP(w, r)
+		case PortalServiceAddSubRedditProcedure:
+			portalServiceAddSubRedditHandler.ServeHTTP(w, r)
+		case PortalServiceGetSubRedditsProcedure:
+			portalServiceGetSubRedditsHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -382,4 +434,12 @@ func (UnimplementedPortalServiceHandler) OauthAuthorize(context.Context, *connec
 
 func (UnimplementedPortalServiceHandler) OauthCallback(context.Context, *connect.Request[v1.OauthCallbackRequest]) (*connect.Response[v1.OauthCallbackResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.OauthCallback is not implemented"))
+}
+
+func (UnimplementedPortalServiceHandler) AddSubReddit(context.Context, *connect.Request[v1.AddSubRedditRequest]) (*connect.Response[emptypb.Empty], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.AddSubReddit is not implemented"))
+}
+
+func (UnimplementedPortalServiceHandler) GetSubReddits(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetSubredditsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.GetSubReddits is not implemented"))
 }
