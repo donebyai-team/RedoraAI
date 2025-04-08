@@ -59,7 +59,7 @@ func (p *Portal) OauthAuthorize(ctx context.Context, req *connect.Request[pbport
 	authorizeURL := ""
 	switch req.Msg.IntegrationType {
 	case pbportal.IntegrationType_INTEGRATION_TYPE_REDDIT:
-		authorizeURL = p.redditOauthClient.GetAuthURL(state.Hash, req.Msg.RedirectUrl)
+		authorizeURL = p.redditOauthClient.GetAuthURL(state.Hash)
 	default:
 		return nil, fmt.Errorf("unknown integration: %s", req.Msg.IntegrationType)
 	}

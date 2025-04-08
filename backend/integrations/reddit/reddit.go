@@ -14,6 +14,7 @@ import (
 
 const (
 	redditAPIBase  = "https://oauth.reddit.com"
+	redirectURL    = "http://localhost:3000/auth/callback"
 	redditAuthURL  = "https://www.reddit.com/api/v1/authorize"
 	redditTokenURL = "https://www.reddit.com/api/v1/access_token"
 )
@@ -29,6 +30,7 @@ func NewRedditOauthClient(clientID, clientSecret string) *OauthClient {
 	config := &oauth2.Config{
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
+		RedirectURL:  redirectURL,
 		Scopes:       []string{"identity", "read"},
 		Endpoint: oauth2.Endpoint{
 			AuthURL:  redditAuthURL,
@@ -44,8 +46,7 @@ func NewRedditOauthClient(clientID, clientSecret string) *OauthClient {
 }
 
 // GetAuthURL returns the authorization URL
-func (r *OauthClient) GetAuthURL(state string, redirectURI string) string {
-	r.config.RedirectURL = redirectURI
+func (r *OauthClient) GetAuthURL(state string) string {
 	return r.config.AuthCodeURL(state, oauth2.AccessTypeOffline)
 }
 
