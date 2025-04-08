@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package doota.reddit.v1;
+
+option go_package = "github.com/shank318/doota/pb/doota/reddit/v1;pbreddit";
+
+message Integration {
+  string user_name = 1;
+}

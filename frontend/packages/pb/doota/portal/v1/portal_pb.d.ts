@@ -5,6 +5,7 @@
 import type { GenEnum, GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv1";
 import type { Message } from "@bufbuild/protobuf";
 import type { EmptySchema, Timestamp } from "@bufbuild/protobuf/wkt";
+import type { Integration as Integration$1 } from "../../reddit/v1/reddit_pb";
 
 /**
  * Describes the file doota/portal/v1/portal.proto.
@@ -526,6 +527,17 @@ export declare type Integration = Message<"doota.portal.v1.Integration"> & {
    * @generated from field: doota.portal.v1.IntegrationState status = 4;
    */
   status: IntegrationState;
+
+  /**
+   * @generated from oneof doota.portal.v1.Integration.details
+   */
+  details: {
+    /**
+     * @generated from field: doota.reddit.v1.Integration reddit = 6;
+     */
+    value: Integration$1;
+    case: "reddit";
+  } | { case: undefined; value?: undefined };
 };
 
 /**

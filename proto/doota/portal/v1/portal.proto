@@ -6,6 +6,7 @@ option go_package = "github.com/shank318/doota/pb/doota/portal/v1;pbportal";
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
+import "doota/reddit/v1/reddit.proto";
 
 service PortalService {
   rpc GetConfig(.google.protobuf.Empty) returns (Config);
@@ -150,6 +151,9 @@ message Integration {
   string organization_id = 2;
   IntegrationType type = 3;
   IntegrationState status = 4;
+  oneof details {
+    doota.reddit.v1.Inte sgration reddit = 6;
+  }
 }
 
 message GetIntegrationRequest { IntegrationType type = 1; }
