@@ -152,7 +152,7 @@ message Integration {
   IntegrationType type = 3;
   IntegrationState status = 4;
   oneof details {
-    doota.reddit.v1.Inte sgration reddit = 6;
+    doota.reddit.v1.Integration reddit = 6;
   }
 }
 
