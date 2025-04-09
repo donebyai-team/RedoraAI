@@ -171,7 +171,7 @@ type User struct {
 
 var ErrNotFound = errors.New("not found")
 
-func (r *Client) GetUser(ctx context.Context, userId string) (*User, error) {
+func (r *Client) GetUser(ctx context.Context, userID string) (*User, error) {
 	panic("implement me")
 }
 
