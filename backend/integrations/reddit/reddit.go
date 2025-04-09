@@ -195,6 +195,19 @@ type Post struct {
 	// Add other relevant fields from the post API response
 }
 
+// Comment represents a Reddit comment.
+type Comment struct {
+	ID        string `json:"id"`
+	Author    string `json:"author"`
+	Body      string `json:"body"`
+	Permalink string `json:"permalink"`
+	CreatedAt int64  `json:"created_utc"`
+	Score     int    `json:"score"`
+	ParentID  string `json:"parent_id"`
+	Depth     int    `json:"depth"`
+	// Add other relevant comment fields
+}
+
 // User represents a Reddit user.
 type User struct {
 	ID               string `json:"id"`
@@ -372,6 +385,43 @@ func (r *Client) GetPostByID(ctx context.Context, postID string) (*Post, error) 
 	}
 
 	return nil, ErrNotFound // Post not found in the response
+}
+
+func (r *Client) GetPostComments(ctx context.Context, postID string) ([]*Comment, error) {
+	reqURL := fmt.Sprintf("%s/comments/%s.json", r.baseURL, postID)
+	req, err := retryablehttp.NewRequestWithContext(ctx, http.MethodGet, reqURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+	resp, err := r.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
+	var response []struct {
+		Data struct {
+			Children []struct {
+				Data Comment `json:"data"`
+			} `json:"children"`
+		} `json:"data"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	var comments []*Comment
+	if len(response) > 1 { // The first element is the post itself
+		for _, child := range response[1].Data.Children {
+			comments = append(comments, &child.Data)
+		}
+	}
+
+	return comments, nil
 }
 
 func (r *Client) isTokenExpired() bool {
