@@ -257,7 +257,7 @@ func (r *Client) GetUser(ctx context.Context, userID string) (*User, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
-
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", r.config.AccessToken))
 	resp, err := r.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute request: %w", err)
@@ -291,7 +291,7 @@ func (r *Client) GetSubRedditByURL(ctx context.Context, urlPath string) (*SubRed
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
-
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", r.config.AccessToken))
 	resp, err := r.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute request: %w", err)
@@ -327,6 +327,7 @@ func (r *Client) GetPosts(ctx context.Context, subRedditID string, keywords []st
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", r.config.AccessToken))
 	resp, err := r.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute request: %w", err)
@@ -362,7 +363,7 @@ func (r *Client) GetPostByID(ctx context.Context, postID string) (*Post, error) 
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
-
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", r.config.AccessToken))
 	resp, err := r.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute request: %w", err)
@@ -397,6 +398,7 @@ func (r *Client) GetPostComments(ctx context.Context, postID string) ([]*Comment
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", r.config.AccessToken))
 	resp, err := r.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute request: %w", err)
