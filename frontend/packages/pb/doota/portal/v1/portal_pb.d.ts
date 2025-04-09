@@ -442,9 +442,9 @@ export declare type Integration = Message<"doota.portal.v1.Integration"> & {
 export declare const IntegrationSchema: GenMessage<Integration>;
 
 /**
- * @generated from message doota.portal.v1.IntegrationsResponse
+ * @generated from message doota.portal.v1.Integrations
  */
-export declare type IntegrationsResponse = Message<"doota.portal.v1.IntegrationsResponse"> & {
+export declare type Integrations = Message<"doota.portal.v1.Integrations"> & {
   /**
    * @generated from field: repeated doota.portal.v1.Integration integrations = 1;
    */
@@ -452,10 +452,10 @@ export declare type IntegrationsResponse = Message<"doota.portal.v1.Integrations
 };
 
 /**
- * Describes the message doota.portal.v1.IntegrationsResponse.
- * Use `create(IntegrationsResponseSchema)` to create a new message.
+ * Describes the message doota.portal.v1.Integrations.
+ * Use `create(IntegrationsSchema)` to create a new message.
  */
-export declare const IntegrationsResponseSchema: GenMessage<IntegrationsResponse>;
+export declare const IntegrationsSchema: GenMessage<Integrations>;
 
 /**
  * @generated from message doota.portal.v1.GetIntegrationRequest
@@ -799,7 +799,7 @@ export declare const PortalService: GenService<{
   getIntegrations: {
     methodKind: "unary";
     input: typeof EmptySchema;
-    output: typeof IntegrationsResponseSchema;
+    output: typeof IntegrationsSchema;
   },
 }>;
 

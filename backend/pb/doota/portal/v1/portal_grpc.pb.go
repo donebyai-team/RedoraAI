@@ -56,7 +56,7 @@ type PortalServiceClient interface {
 	AddSubReddit(ctx context.Context, in *v1.AddSubRedditRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GetSubReddits(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*v1.GetSubredditsResponse, error)
 	RemoveSubReddit(ctx context.Context, in *v1.RemoveSubRedditRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	GetIntegrations(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*IntegrationsResponse, error)
+	GetIntegrations(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Integrations, error)
 }
 
 type portalServiceClient struct {
@@ -184,8 +184,8 @@ func (c *portalServiceClient) RemoveSubReddit(ctx context.Context, in *v1.Remove
 	return out, nil
 }
 
-func (c *portalServiceClient) GetIntegrations(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*IntegrationsResponse, error) {
-	out := new(IntegrationsResponse)
+func (c *portalServiceClient) GetIntegrations(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Integrations, error) {
+	out := new(Integrations)
 	err := c.cc.Invoke(ctx, PortalService_GetIntegrations_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -212,7 +212,7 @@ type PortalServiceServer interface {
 	AddSubReddit(context.Context, *v1.AddSubRedditRequest) (*emptypb.Empty, error)
 	GetSubReddits(context.Context, *emptypb.Empty) (*v1.GetSubredditsResponse, error)
 	RemoveSubReddit(context.Context, *v1.RemoveSubRedditRequest) (*emptypb.Empty, error)
-	GetIntegrations(context.Context, *emptypb.Empty) (*IntegrationsResponse, error)
+	GetIntegrations(context.Context, *emptypb.Empty) (*Integrations, error)
 	mustEmbedUnimplementedPortalServiceServer()
 }
 
@@ -259,7 +259,7 @@ func (UnimplementedPortalServiceServer) GetSubReddits(context.Context, *emptypb.
 func (UnimplementedPortalServiceServer) RemoveSubReddit(context.Context, *v1.RemoveSubRedditRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveSubReddit not implemented")
 }
-func (UnimplementedPortalServiceServer) GetIntegrations(context.Context, *emptypb.Empty) (*IntegrationsResponse, error) {
+func (UnimplementedPortalServiceServer) GetIntegrations(context.Context, *emptypb.Empty) (*Integrations, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetIntegrations not implemented")
 }
 func (UnimplementedPortalServiceServer) mustEmbedUnimplementedPortalServiceServer() {}

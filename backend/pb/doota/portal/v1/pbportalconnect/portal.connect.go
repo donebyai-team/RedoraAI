@@ -112,7 +112,7 @@ type PortalServiceClient interface {
 	AddSubReddit(context.Context, *connect.Request[v11.AddSubRedditRequest]) (*connect.Response[emptypb.Empty], error)
 	GetSubReddits(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v11.GetSubredditsResponse], error)
 	RemoveSubReddit(context.Context, *connect.Request[v11.RemoveSubRedditRequest]) (*connect.Response[emptypb.Empty], error)
-	GetIntegrations(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.IntegrationsResponse], error)
+	GetIntegrations(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.Integrations], error)
 }
 
 // NewPortalServiceClient constructs a client for the doota.portal.v1.PortalService service. By
@@ -203,7 +203,7 @@ func NewPortalServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(portalServiceRemoveSubRedditMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
-		getIntegrations: connect.NewClient[emptypb.Empty, v1.IntegrationsResponse](
+		getIntegrations: connect.NewClient[emptypb.Empty, v1.Integrations](
 			httpClient,
 			baseURL+PortalServiceGetIntegrationsProcedure,
 			connect.WithSchema(portalServiceGetIntegrationsMethodDescriptor),
@@ -227,7 +227,7 @@ type portalServiceClient struct {
 	addSubReddit       *connect.Client[v11.AddSubRedditRequest, emptypb.Empty]
 	getSubReddits      *connect.Client[emptypb.Empty, v11.GetSubredditsResponse]
 	removeSubReddit    *connect.Client[v11.RemoveSubRedditRequest, emptypb.Empty]
-	getIntegrations    *connect.Client[emptypb.Empty, v1.IntegrationsResponse]
+	getIntegrations    *connect.Client[emptypb.Empty, v1.Integrations]
 }
 
 // GetConfig calls doota.portal.v1.PortalService.GetConfig.
@@ -296,7 +296,7 @@ func (c *portalServiceClient) RemoveSubReddit(ctx context.Context, req *connect.
 }
 
 // GetIntegrations calls doota.portal.v1.PortalService.GetIntegrations.
-func (c *portalServiceClient) GetIntegrations(ctx context.Context, req *connect.Request[emptypb.Empty]) (*connect.Response[v1.IntegrationsResponse], error) {
+func (c *portalServiceClient) GetIntegrations(ctx context.Context, req *connect.Request[emptypb.Empty]) (*connect.Response[v1.Integrations], error) {
 	return c.getIntegrations.CallUnary(ctx, req)
 }
 
@@ -317,7 +317,7 @@ type PortalServiceHandler interface {
 	AddSubReddit(context.Context, *connect.Request[v11.AddSubRedditRequest]) (*connect.Response[emptypb.Empty], error)
 	GetSubReddits(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v11.GetSubredditsResponse], error)
 	RemoveSubReddit(context.Context, *connect.Request[v11.RemoveSubRedditRequest]) (*connect.Response[emptypb.Empty], error)
-	GetIntegrations(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.IntegrationsResponse], error)
+	GetIntegrations(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.Integrations], error)
 }
 
 // NewPortalServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -501,6 +501,6 @@ func (UnimplementedPortalServiceHandler) RemoveSubReddit(context.Context, *conne
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.RemoveSubReddit is not implemented"))
 }
 
-func (UnimplementedPortalServiceHandler) GetIntegrations(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.IntegrationsResponse], error) {
+func (UnimplementedPortalServiceHandler) GetIntegrations(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.Integrations], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.GetIntegrations is not implemented"))
 }

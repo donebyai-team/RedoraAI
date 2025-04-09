@@ -40,7 +40,7 @@ func (p *Portal) protoIntegration(ctx context.Context, integration *models.Integ
 	}
 }
 
-func (p *Portal) GetIntegrations(ctx context.Context, c *connect.Request[emptypb.Empty]) (*connect.Response[pbportal.IntegrationsResponse], error) {
+func (p *Portal) GetIntegrations(ctx context.Context, c *connect.Request[emptypb.Empty]) (*connect.Response[pbportal.Integrations], error) {
 	actor, err := p.gethAuthContext(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("auth context error: %w", err)
@@ -77,7 +77,7 @@ func (p *Portal) GetIntegrations(ctx context.Context, c *connect.Request[emptypb
 		})
 	}
 
-	return connect.NewResponse(&pbportal.IntegrationsResponse{
+	return connect.NewResponse(&pbportal.Integrations{
 		Integrations: result,
 	}), nil
 }
