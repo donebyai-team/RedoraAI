@@ -3,7 +3,6 @@ package portal
 import (
 	"connectrpc.com/connect"
 	"context"
-	"encoding/json"
 	"fmt"
 	"github.com/shank318/doota/models"
 	pbportal "github.com/shank318/doota/pb/doota/portal/v1"
@@ -11,6 +10,7 @@ import (
 	"github.com/streamingfast/logging"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/emptypb"
+	"strings"
 )
 
 func (p *Portal) GetIntegration(ctx context.Context, c *connect.Request[pbportal.GetIntegrationRequest]) (*connect.Response[pbportal.Integration], error) {
@@ -40,34 +40,52 @@ func (p *Portal) protoIntegration(ctx context.Context, integration *models.Integ
 	}
 }
 
-func (p *Portal) GetIntegrationByOrgId(ctx context.Context, c *connect.Request[emptypb.Empty]) (*connect.Response[pbportal.IntegrationByOrgIdResponse], error) {
+func (p *Portal) GetIntegrations(ctx context.Context, c *connect.Request[emptypb.Empty]) (*connect.Response[pbportal.IntegrationsResponse], error) {
 	actor, err := p.gethAuthContext(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("auth context error: %w", err)
 	}
 
-	logging.Logger(ctx, p.logger).Info("get integrations by org ID", zap.String("org_id", actor.OrganizationID))
+	logging.Logger(ctx, p.logger).Info("fetching integrations for organization",
+		zap.String("org_id", actor.OrganizationID),
+	)
 
 	integrations, err := p.db.GetIntegrationsByOrgID(ctx, actor.OrganizationID)
+
 	if err != nil {
+		logging.Logger(ctx, p.logger).Error("failed to fetch integrations",
+			zap.String("org_id", actor.OrganizationID),
+			zap.Error(err),
+		)
 		return nil, fmt.Errorf("fetch integrations: %w", err)
 	}
 
-	var redditIntegrations []*pbreddit.Integration
+	var result []*pbportal.Integration
 
 	for _, i := range integrations {
-		// Parse plain text config to extract username
-		var cfg models.RedditConfig
-		if err := json.Unmarshal([]byte(i.PlainTextConfig), &cfg); err != nil {
-			return nil, fmt.Errorf("parse reddit config: %w", err)
-		}
-
-		redditIntegrations = append(redditIntegrations, &pbreddit.Integration{
-			UserName: cfg.UserName,
+		redditCfg := i.GetRedditConfig()
+		result = append(result, &pbportal.Integration{
+			Id:             i.ID,
+			OrganizationId: i.OrganizationID,
+			Type:           pbportal.IntegrationType_INTEGRATION_TYPE_REDDIT,
+			Status:         mapIntegrationState(i.State),
+			Details: &pbportal.Integration_Reddit{
+				Reddit: &pbreddit.Integration{
+					UserName: redditCfg.UserName,
+				},
+			},
 		})
-
 	}
-	return connect.NewResponse(&pbportal.IntegrationByOrgIdResponse{
-		Reddit: redditIntegrations,
+
+	return connect.NewResponse(&pbportal.IntegrationsResponse{
+		Integrations: result,
 	}), nil
+}
+
+func mapIntegrationState(state models.IntegrationState) pbportal.IntegrationState {
+	enumKey := "INTEGRATION_STATE_" + strings.ToUpper(string(state))
+	if val, ok := pbportal.IntegrationState_value[enumKey]; ok {
+		return pbportal.IntegrationState(val)
+	}
+	return pbportal.IntegrationState_INTEGRATION_STATE_UNSPECIFIED
 }

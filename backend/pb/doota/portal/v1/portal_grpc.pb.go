@@ -21,20 +21,20 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	PortalService_GetConfig_FullMethodName             = "/doota.portal.v1.PortalService/GetConfig"
-	PortalService_Self_FullMethodName                  = "/doota.portal.v1.PortalService/Self"
-	PortalService_GetIntegration_FullMethodName        = "/doota.portal.v1.PortalService/GetIntegration"
-	PortalService_Batch_FullMethodName                 = "/doota.portal.v1.PortalService/Batch"
-	PortalService_CreateCustomerCase_FullMethodName    = "/doota.portal.v1.PortalService/CreateCustomerCase"
-	PortalService_PasswordlessStart_FullMethodName     = "/doota.portal.v1.PortalService/PasswordlessStart"
-	PortalService_PasswordlessVerify_FullMethodName    = "/doota.portal.v1.PortalService/PasswordlessVerify"
-	PortalService_CreateKeyword_FullMethodName         = "/doota.portal.v1.PortalService/CreateKeyword"
-	PortalService_OauthAuthorize_FullMethodName        = "/doota.portal.v1.PortalService/OauthAuthorize"
-	PortalService_OauthCallback_FullMethodName         = "/doota.portal.v1.PortalService/OauthCallback"
-	PortalService_AddSubReddit_FullMethodName          = "/doota.portal.v1.PortalService/AddSubReddit"
-	PortalService_GetSubReddits_FullMethodName         = "/doota.portal.v1.PortalService/GetSubReddits"
-	PortalService_RemoveSubReddit_FullMethodName       = "/doota.portal.v1.PortalService/RemoveSubReddit"
-	PortalService_GetIntegrationByOrgId_FullMethodName = "/doota.portal.v1.PortalService/GetIntegrationByOrgId"
+	PortalService_GetConfig_FullMethodName          = "/doota.portal.v1.PortalService/GetConfig"
+	PortalService_Self_FullMethodName               = "/doota.portal.v1.PortalService/Self"
+	PortalService_GetIntegration_FullMethodName     = "/doota.portal.v1.PortalService/GetIntegration"
+	PortalService_Batch_FullMethodName              = "/doota.portal.v1.PortalService/Batch"
+	PortalService_CreateCustomerCase_FullMethodName = "/doota.portal.v1.PortalService/CreateCustomerCase"
+	PortalService_PasswordlessStart_FullMethodName  = "/doota.portal.v1.PortalService/PasswordlessStart"
+	PortalService_PasswordlessVerify_FullMethodName = "/doota.portal.v1.PortalService/PasswordlessVerify"
+	PortalService_CreateKeyword_FullMethodName      = "/doota.portal.v1.PortalService/CreateKeyword"
+	PortalService_OauthAuthorize_FullMethodName     = "/doota.portal.v1.PortalService/OauthAuthorize"
+	PortalService_OauthCallback_FullMethodName      = "/doota.portal.v1.PortalService/OauthCallback"
+	PortalService_AddSubReddit_FullMethodName       = "/doota.portal.v1.PortalService/AddSubReddit"
+	PortalService_GetSubReddits_FullMethodName      = "/doota.portal.v1.PortalService/GetSubReddits"
+	PortalService_RemoveSubReddit_FullMethodName    = "/doota.portal.v1.PortalService/RemoveSubReddit"
+	PortalService_GetIntegrations_FullMethodName    = "/doota.portal.v1.PortalService/GetIntegrations"
 )
 
 // PortalServiceClient is the client API for PortalService service.
@@ -56,7 +56,7 @@ type PortalServiceClient interface {
 	AddSubReddit(ctx context.Context, in *v1.AddSubRedditRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GetSubReddits(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*v1.GetSubredditsResponse, error)
 	RemoveSubReddit(ctx context.Context, in *v1.RemoveSubRedditRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	GetIntegrationByOrgId(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*IntegrationByOrgIdResponse, error)
+	GetIntegrations(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*IntegrationsResponse, error)
 }
 
 type portalServiceClient struct {
@@ -184,9 +184,9 @@ func (c *portalServiceClient) RemoveSubReddit(ctx context.Context, in *v1.Remove
 	return out, nil
 }
 
-func (c *portalServiceClient) GetIntegrationByOrgId(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*IntegrationByOrgIdResponse, error) {
-	out := new(IntegrationByOrgIdResponse)
-	err := c.cc.Invoke(ctx, PortalService_GetIntegrationByOrgId_FullMethodName, in, out, opts...)
+func (c *portalServiceClient) GetIntegrations(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*IntegrationsResponse, error) {
+	out := new(IntegrationsResponse)
+	err := c.cc.Invoke(ctx, PortalService_GetIntegrations_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -212,7 +212,7 @@ type PortalServiceServer interface {
 	AddSubReddit(context.Context, *v1.AddSubRedditRequest) (*emptypb.Empty, error)
 	GetSubReddits(context.Context, *emptypb.Empty) (*v1.GetSubredditsResponse, error)
 	RemoveSubReddit(context.Context, *v1.RemoveSubRedditRequest) (*emptypb.Empty, error)
-	GetIntegrationByOrgId(context.Context, *emptypb.Empty) (*IntegrationByOrgIdResponse, error)
+	GetIntegrations(context.Context, *emptypb.Empty) (*IntegrationsResponse, error)
 	mustEmbedUnimplementedPortalServiceServer()
 }
 
@@ -259,8 +259,8 @@ func (UnimplementedPortalServiceServer) GetSubReddits(context.Context, *emptypb.
 func (UnimplementedPortalServiceServer) RemoveSubReddit(context.Context, *v1.RemoveSubRedditRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveSubReddit not implemented")
 }
-func (UnimplementedPortalServiceServer) GetIntegrationByOrgId(context.Context, *emptypb.Empty) (*IntegrationByOrgIdResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetIntegrationByOrgId not implemented")
+func (UnimplementedPortalServiceServer) GetIntegrations(context.Context, *emptypb.Empty) (*IntegrationsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetIntegrations not implemented")
 }
 func (UnimplementedPortalServiceServer) mustEmbedUnimplementedPortalServiceServer() {}
 
@@ -509,20 +509,20 @@ func _PortalService_RemoveSubReddit_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
-func _PortalService_GetIntegrationByOrgId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _PortalService_GetIntegrations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(PortalServiceServer).GetIntegrationByOrgId(ctx, in)
+		return srv.(PortalServiceServer).GetIntegrations(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: PortalService_GetIntegrationByOrgId_FullMethodName,
+		FullMethod: PortalService_GetIntegrations_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PortalServiceServer).GetIntegrationByOrgId(ctx, req.(*emptypb.Empty))
+		return srv.(PortalServiceServer).GetIntegrations(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -587,8 +587,8 @@ var PortalService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _PortalService_RemoveSubReddit_Handler,
 		},
 		{
-			MethodName: "GetIntegrationByOrgId",
-			Handler:    _PortalService_GetIntegrationByOrgId_Handler,
+			MethodName: "GetIntegrations",
+			Handler:    _PortalService_GetIntegrations_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

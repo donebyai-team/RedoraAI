@@ -3,8 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { useAuthUser } from '@doota/ui-core/hooks/useAuth'
 import { Box } from '@mui/system'
-import {  IntegrationType } from '@doota/pb/doota/portal/v1/portal_pb'
-import {  Integration } from '@doota/pb/doota/reddit/v1/reddit_pb'
+import {  IntegrationType, Integration } from '@doota/pb/doota/portal/v1/portal_pb'
 import { FallbackSpinner } from '../../../../../atoms/FallbackSpinner'
 import { Button } from '../../../../../atoms/Button'
 import { portalClient } from '../../../../../services/grpc'
@@ -49,9 +48,9 @@ export default function Page() {
   }
 
   useEffect(() => {
-    portalClient.getIntegrationByOrgId({})
+    portalClient.getIntegrations({})
         .then((res) => {
-          setIntegrations(res.reddit);
+          setIntegrations(res.integrations);
         })
         .catch((err) => {
           console.error("Error fetching integrations:", err);
@@ -60,7 +59,6 @@ export default function Page() {
           setLoading(false);
         });
   }, []);
-
 
   return (
     <>
@@ -100,7 +98,7 @@ export default function Page() {
                 {integrations.map((row, index) => (
                     <TableRow key={index}>
                       <TableCell className='!p-1'>Reddit</TableCell>
-                      <TableCell className='!p-1'>{row.userName}</TableCell>
+                      <TableCell className='!p-1'>{row.details.value?.userName}</TableCell>
                       <TableCell align='right' className='!p-1'>
                         {/* Action buttons like Edit/Delete can go here */}
                       </TableCell>

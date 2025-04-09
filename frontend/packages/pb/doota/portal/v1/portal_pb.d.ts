@@ -442,20 +442,20 @@ export declare type Integration = Message<"doota.portal.v1.Integration"> & {
 export declare const IntegrationSchema: GenMessage<Integration>;
 
 /**
- * @generated from message doota.portal.v1.IntegrationByOrgIdResponse
+ * @generated from message doota.portal.v1.IntegrationsResponse
  */
-export declare type IntegrationByOrgIdResponse = Message<"doota.portal.v1.IntegrationByOrgIdResponse"> & {
+export declare type IntegrationsResponse = Message<"doota.portal.v1.IntegrationsResponse"> & {
   /**
-   * @generated from field: repeated doota.reddit.v1.Integration reddit = 1;
+   * @generated from field: repeated doota.portal.v1.Integration integrations = 1;
    */
-  reddit: Integration$1[];
+  integrations: Integration[];
 };
 
 /**
- * Describes the message doota.portal.v1.IntegrationByOrgIdResponse.
- * Use `create(IntegrationByOrgIdResponseSchema)` to create a new message.
+ * Describes the message doota.portal.v1.IntegrationsResponse.
+ * Use `create(IntegrationsResponseSchema)` to create a new message.
  */
-export declare const IntegrationByOrgIdResponseSchema: GenMessage<IntegrationByOrgIdResponse>;
+export declare const IntegrationsResponseSchema: GenMessage<IntegrationsResponse>;
 
 /**
  * @generated from message doota.portal.v1.GetIntegrationRequest
@@ -794,12 +794,12 @@ export declare const PortalService: GenService<{
     output: typeof EmptySchema;
   },
   /**
-   * @generated from rpc doota.portal.v1.PortalService.GetIntegrationByOrgId
+   * @generated from rpc doota.portal.v1.PortalService.GetIntegrations
    */
-  getIntegrationByOrgId: {
+  getIntegrations: {
     methodKind: "unary";
     input: typeof EmptySchema;
-    output: typeof IntegrationByOrgIdResponseSchema;
+    output: typeof IntegrationsResponseSchema;
   },
 }>;
 
