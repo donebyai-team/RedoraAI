@@ -19,10 +19,10 @@ var integrations = map[pbportal.IntegrationType]IntegrationHandler{
 }
 
 func (p *Portal) OauthCallback(ctx context.Context, c *connect.Request[pbportal.OauthCallbackRequest]) (*connect.Response[pbportal.OauthCallbackResponse], error) {
-	//actor, err := p.gethAuthContext(ctx)
-	//if err != nil {
-	//	return nil, err
-	//}
+	actor, err := p.gethAuthContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 	authState, err := p.validateState(c.Msg.State)
 	if err != nil {
 		return nil, fmt.Errorf("error validating state: %w", err)
@@ -32,7 +32,7 @@ func (p *Portal) OauthCallback(ctx context.Context, c *connect.Request[pbportal.
 	if !ok {
 		return nil, fmt.Errorf("unknown %s handler: %w", authState.IntegrationType.String(), err)
 	}
-	if err = handler(ctx, p, c.Msg.GetExternalCode(), "e250ced8-7441-4805-b9dd-2686d9492c4f", authState); err != nil {
+	if err = handler(ctx, p, c.Msg.GetExternalCode(), actor.OrganizationID, authState); err != nil {
 		return nil, fmt.Errorf("error handling %s: %w", authState.IntegrationType.String(), err)
 	}
 

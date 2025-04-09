@@ -442,6 +442,22 @@ export declare type Integration = Message<"doota.portal.v1.Integration"> & {
 export declare const IntegrationSchema: GenMessage<Integration>;
 
 /**
+ * @generated from message doota.portal.v1.Integrations
+ */
+export declare type Integrations = Message<"doota.portal.v1.Integrations"> & {
+  /**
+   * @generated from field: repeated doota.portal.v1.Integration integrations = 1;
+   */
+  integrations: Integration[];
+};
+
+/**
+ * Describes the message doota.portal.v1.Integrations.
+ * Use `create(IntegrationsSchema)` to create a new message.
+ */
+export declare const IntegrationsSchema: GenMessage<Integrations>;
+
+/**
  * @generated from message doota.portal.v1.GetIntegrationRequest
  */
 export declare type GetIntegrationRequest = Message<"doota.portal.v1.GetIntegrationRequest"> & {
@@ -776,6 +792,14 @@ export declare const PortalService: GenService<{
     methodKind: "unary";
     input: typeof RemoveSubRedditRequestSchema;
     output: typeof EmptySchema;
+  },
+  /**
+   * @generated from rpc doota.portal.v1.PortalService.GetIntegrations
+   */
+  getIntegrations: {
+    methodKind: "unary";
+    input: typeof EmptySchema;
+    output: typeof IntegrationsSchema;
   },
 }>;
 
