@@ -5,12 +5,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/models"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 	"io"
+	"net"
 	"net/http"
+	"net/url"
+	"strings"
 	"time"
 )
 
@@ -105,7 +109,11 @@ func (r *OauthClient) NewRedditClient(ctx context.Context, orgID string) (*Clien
 		return nil, err
 	}
 
-	client := &Client{logger: r.logger, config: integration.GetRedditConfig()}
+	client := &Client{logger: r.logger,
+		config:     integration.GetRedditConfig(),
+		httpClient: newHTTPClient(),
+		baseURL:    "https://www.reddit.com",
+	}
 	if client.isTokenExpired() {
 		err := client.refreshToken(ctx)
 		if err != nil {
@@ -127,6 +135,8 @@ type Client struct {
 	config      *models.RedditConfig
 	db          datastore.Repository
 	oauthConfig *oauth2.Config
+	httpClient  *retryablehttp.Client
+	baseURL     string
 }
 
 func (r *Client) refreshToken(ctx context.Context) error {
@@ -157,36 +167,211 @@ func (r *Client) refreshToken(ctx context.Context) error {
 	return nil
 }
 
+// SubReddit represents information about a subreddit.
 type SubReddit struct {
-	// Add fields that subreddit api will returns
+	ID          string `json:"id"`
+	DisplayName string `json:"display_name"`
+	URL         string `json:"url"`
+	Description string `json:"description"`
+	Subscribers int    `json:"subscribers"`
+	CreatedAt   int64  `json:"created"`
+	Over18      bool   `json:"over_18"`
+	// Add other relevant fields from the subreddit API response
 }
 
+// Post represents a Reddit post.
 type Post struct {
-	// Add fields that subreddit posts api will returns
+	ID          string `json:"id"`
+	Title       string `json:"title"`
+	Author      string `json:"author"`
+	Score       int    `json:"score"`
+	URL         string `json:"url"`
+	Permalink   string `json:"permalink"`
+	CreatedAt   int64  `json:"created_utc"`
+	NumComments int    `json:"num_comments"`
+	Selftext    string `json:"selftext"`
+	IsSelf      bool   `json:"is_self"`
+	Subreddit   string `json:"subreddit"`
+	// Add other relevant fields from the post API response
 }
 
+// User represents a Reddit user.
 type User struct {
-	// add user related data eg. Karma points, name, joined at etc
+	ID               string `json:"id"`
+	Name             string `json:"name"`
+	Karma            int    `json:"total_karma"`
+	CreatedAt        int64  `json:"created_utc"`
+	IsGold           bool   `json:"is_gold"`
+	HasVerifiedEmail bool   `json:"has_verified_email"`
+	// Add other relevant user-related fields
+}
+
+func newHTTPClient() *retryablehttp.Client {
+	cli := retryablehttp.NewClient()
+	cli.Logger = nil
+	cli.RetryMax = 1
+	cli.HTTPClient.Transport = &http.Transport{
+		Proxy:              http.ProxyFromEnvironment,
+		DisableKeepAlives:  false,
+		DisableCompression: false,
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 300 * time.Second,
+		}).DialContext,
+		ForceAttemptHTTP2:     true,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   5 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	}
+
+	cli.ErrorHandler = func(resp *http.Response, err error, numTries int) (*http.Response, error) {
+		return resp, err
+	}
+
+	return cli
 }
 
 var ErrNotFound = errors.New("not found")
 
 func (r *Client) GetUser(ctx context.Context, userID string) (*User, error) {
-	panic("implement me")
+	reqURL := fmt.Sprintf("%s/user/%s/about.json", r.baseURL, userID)
+	req, err := retryablehttp.NewRequestWithContext(ctx, http.MethodGet, reqURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	resp, err := r.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, ErrNotFound
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
+	var response struct {
+		Data User `json:"data"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	return &response.Data, nil
 }
 
-func (r *Client) GetSubRedditByURL(ctx context.Context, url string) (*SubReddit, error) {
-	panic("implement me")
-	// TODO:
-	// If the given url eg. /r/saas not found then return ErrNotFound
+func (r *Client) GetSubRedditByURL(ctx context.Context, urlPath string) (*SubReddit, error) {
+	if !strings.HasPrefix(urlPath, "/r/") {
+		return nil, fmt.Errorf("invalid subreddit URL path: %s", urlPath)
+	}
+	reqURL := fmt.Sprintf("%s%sabout.json", r.baseURL, urlPath)
+	req, err := retryablehttp.NewRequestWithContext(ctx, http.MethodGet, reqURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	resp, err := r.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, ErrNotFound
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
+	var response struct {
+		Data SubReddit `json:"data"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	return &response.Data, nil
 }
 
 func (r *Client) GetPosts(ctx context.Context, subRedditID string, keywords []string) ([]Post, error) {
-	panic("implement me")
+	v := url.Values{}
+	if len(keywords) > 0 {
+		v.Set("q", strings.Join(keywords, " "))
+	}
+
+	reqURL := fmt.Sprintf("%s/r/%s/search.json?%s", r.baseURL, subRedditID, v.Encode())
+	req, err := retryablehttp.NewRequestWithContext(ctx, http.MethodGet, reqURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+	resp, err := r.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
+	var response struct {
+		Data struct {
+			Children []struct {
+				Data Post `json:"data"`
+			} `json:"children"`
+		} `json:"data"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	var posts []Post
+	for _, child := range response.Data.Children {
+		posts = append(posts, child.Data)
+	}
+
+	return posts, nil
 }
 
 func (r *Client) GetPostByID(ctx context.Context, postID string) (*Post, error) {
-	panic("implement me")
+	reqURL := fmt.Sprintf("%s/comments/%s.json", r.baseURL, postID)
+	req, err := retryablehttp.NewRequestWithContext(ctx, http.MethodGet, reqURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	resp, err := r.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
+	var response []struct {
+		Data struct {
+			Children []struct {
+				Data Post `json:"data"`
+			} `json:"children"`
+		} `json:"data"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	if len(response) > 0 && len(response[0].Data.Children) > 0 {
+		return &response[0].Data.Children[0].Data, nil
+	}
+
+	return nil, ErrNotFound // Post not found in the response
 }
 
 func (r *Client) isTokenExpired() bool {
