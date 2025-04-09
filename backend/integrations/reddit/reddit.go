@@ -3,6 +3,7 @@ package reddit
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/models"
@@ -168,12 +169,16 @@ type User struct {
 	// add user related data eg. Karma points, name, joined at etc
 }
 
+var ErrNotFound = errors.New("not found")
+
 func (r *Client) GetUser(ctx context.Context, userId string) (*User, error) {
 	panic("implement me")
 }
 
 func (r *Client) GetSubRedditByURL(ctx context.Context, url string) (*SubReddit, error) {
 	panic("implement me")
+	// TODO:
+	// If the given url eg. /r/saas not found then return ErrNotFound
 }
 
 func (r *Client) GetPosts(ctx context.Context, subRedditID string, keywords []string) ([]Post, error) {
