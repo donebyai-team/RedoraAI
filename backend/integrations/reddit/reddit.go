@@ -185,6 +185,8 @@ type Post struct {
 	Title       string `json:"title"`
 	Author      string `json:"author"`
 	Score       int    `json:"score"`
+	Ups         int    `json:"ups"`   // Number of upvotes
+	Downs       int    `json:"downs"` // Number of downvotes (usually not directly exposed in v1 API)
 	URL         string `json:"url"`
 	Permalink   string `json:"permalink"`
 	CreatedAt   int64  `json:"created_utc"`
@@ -203,6 +205,8 @@ type Comment struct {
 	Permalink string `json:"permalink"`
 	CreatedAt int64  `json:"created_utc"`
 	Score     int    `json:"score"`
+	Ups       int    `json:"ups"`   // Number of upvotes
+	Downs     int    `json:"downs"` // Number of downvotes (usually not directly exposed in v1 API)
 	ParentID  string `json:"parent_id"`
 	Depth     int    `json:"depth"`
 	// Add other relevant comment fields
