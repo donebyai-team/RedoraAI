@@ -18,7 +18,9 @@ func (p *Portal) GetIntegration(ctx context.Context, c *connect.Request[pbportal
 	if err != nil {
 		return nil, err
 	}
-
+	if !actor.IsAdmin() {
+		return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("only admins can get integrations"))
+	}
 	logging.Logger(ctx, p.logger).Info("get integration",
 		zap.Stringer("integration_type", c.Msg.Type),
 	)
@@ -43,7 +45,7 @@ func (p *Portal) protoIntegration(ctx context.Context, integration *models.Integ
 func (p *Portal) GetIntegrations(ctx context.Context, c *connect.Request[emptypb.Empty]) (*connect.Response[pbportal.Integrations], error) {
 	actor, err := p.gethAuthContext(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("auth context error: %w", err)
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("auth context error: %w", err))
 	}
 
 	logging.Logger(ctx, p.logger).Info("fetching integrations for organization",
@@ -57,7 +59,7 @@ func (p *Portal) GetIntegrations(ctx context.Context, c *connect.Request[emptypb
 			zap.String("org_id", actor.OrganizationID),
 			zap.Error(err),
 		)
-		return nil, fmt.Errorf("fetch integrations: %w", err)
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("fetch integrations: %w", err))
 	}
 
 	var result []*pbportal.Integration
