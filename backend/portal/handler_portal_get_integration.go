@@ -28,13 +28,25 @@ func (p *Portal) GetIntegration(ctx context.Context, c *connect.Request[pbportal
 	if err != nil {
 		return nil, fmt.Errorf("get integration: %w", err)
 	}
-	return p.protoIntegration(ctx, integration)
+
+	return connect.NewResponse(p.protoIntegration(integration)), nil
 }
 
-func (p *Portal) protoIntegration(ctx context.Context, integration *models.Integration) (*connect.Response[pbportal.Integration], error) {
+func (p *Portal) protoIntegration(integration *models.Integration) *pbportal.Integration {
 	switch integration.Type {
-	//case models.IntegrationTypeMICROSOFT:
-	//	return p.resolveMicrosoftIntegration(ctx, integration)
+	case models.IntegrationTypeREDDIT:
+		redditConfig := integration.GetRedditConfig()
+		return &pbportal.Integration{
+			Id:             integration.ID,
+			OrganizationId: integration.OrganizationID,
+			Type:           pbportal.IntegrationType_INTEGRATION_TYPE_REDDIT,
+			Status:         mapIntegrationState(integration.State),
+			Details: &pbportal.Integration_Reddit{
+				Reddit: &pbreddit.Integration{
+					UserName: redditConfig.UserName,
+				},
+			},
+		}
 	//case models.IntegrationTypeGOOGLE:
 	//	return p.resolveGoogleIntegration(ctx, integration)
 	default:
@@ -42,7 +54,7 @@ func (p *Portal) protoIntegration(ctx context.Context, integration *models.Integ
 	}
 }
 
-func (p *Portal) GetIntegrations(ctx context.Context, c *connect.Request[emptypb.Empty]) (*connect.Response[pbportal.Integrations], error) {
+func (p *Portal) GetIntegrations(ctx context.Context, _ *connect.Request[emptypb.Empty]) (*connect.Response[pbportal.Integrations], error) {
 	actor, err := p.gethAuthContext(ctx)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("auth context error: %w", err))
@@ -53,7 +65,6 @@ func (p *Portal) GetIntegrations(ctx context.Context, c *connect.Request[emptypb
 	)
 
 	integrations, err := p.db.GetIntegrationsByOrgID(ctx, actor.OrganizationID)
-
 	if err != nil {
 		logging.Logger(ctx, p.logger).Error("failed to fetch integrations",
 			zap.String("org_id", actor.OrganizationID),
@@ -65,18 +76,7 @@ func (p *Portal) GetIntegrations(ctx context.Context, c *connect.Request[emptypb
 	var result []*pbportal.Integration
 
 	for _, i := range integrations {
-		redditCfg := i.GetRedditConfig()
-		result = append(result, &pbportal.Integration{
-			Id:             i.ID,
-			OrganizationId: i.OrganizationID,
-			Type:           pbportal.IntegrationType_INTEGRATION_TYPE_REDDIT,
-			Status:         mapIntegrationState(i.State),
-			Details: &pbportal.Integration_Reddit{
-				Reddit: &pbreddit.Integration{
-					UserName: redditCfg.UserName,
-				},
-			},
-		})
+		result = append(result, p.protoIntegration(i))
 	}
 
 	return connect.NewResponse(&pbportal.Integrations{
