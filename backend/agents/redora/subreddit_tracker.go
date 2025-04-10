@@ -2,6 +2,7 @@ package redora
 
 import (
 	"context"
+	"fmt"
 	"github.com/shank318/doota/agents/state"
 	"github.com/shank318/doota/ai"
 	"github.com/shank318/doota/datastore"
@@ -37,15 +38,23 @@ func NewSubRedditTracker(
 }
 
 func (s *SubRedditTracker) TrackSubreddit(ctx context.Context, subReddit *models.AugmentedSubReddit) error {
-	//redditClient, err := s.redditOauthClient.NewRedditClient(ctx, subReddit.SubReddit.OrganizationID)
-	//if err != nil {
-	//	return fmt.Errorf("redditOauthClient.NewRedditClient: %w", err)
-	//}
+	redditClient, err := s.redditOauthClient.NewRedditClient(ctx, subReddit.SubReddit.OrganizationID)
+	if err != nil {
+		return fmt.Errorf("redditOauthClient.NewRedditClient: %w", err)
+	}
 
 	// Call GetPosts of a subreddit created on and after subReddit LastPostCreatedAt
 	// Filter them via a criteria - https://www.notion.so/Criteria-for-filtering-the-relevant-post-1c70029aaf8f80ec8ba6fd4e29342d6a
 	// After filtering, ask AI to filter again
 	// Save it into the table sub_reddits_leads (models.RedditLead)
-
-	panic("implement me")
+	keywords := []string{}
+	for _, keyword := range subReddit.Keywords {
+		keywords = append(keywords, keyword.Keyword)
+	}
+	_, err = redditClient.GetPosts(ctx, subReddit.SubReddit.SubRedditID, keywords)
+	if err != nil {
+		s.logger.Error("unable to fetch posts while tracking subreddit", zap.String("subreddit", subReddit.SubReddit.URL), zap.Error(err))
+		return fmt.Errorf("unable to fetch posts: %w", err)
+	}
+	return nil
 }
