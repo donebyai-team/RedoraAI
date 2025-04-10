@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/shank318/doota/models"
-	"time"
 )
 
 func init() {
@@ -12,6 +11,8 @@ func init() {
 		"keyword/create_keyword.sql",
 		"keyword/query_keyword_by_org.sql",
 		"sub_reddit/query_sub_reddit_by_filter.sql",
+		"sub_reddit/create_sub_reddit.sql",
+		"sub_reddit/query_sub_reddit_by_url.sql",
 	})
 }
 
@@ -49,11 +50,8 @@ func (r *Database) AddSubReddit(ctx context.Context, subreddit *models.SubReddit
 		"description":          subreddit.Description,
 		"organization_id":      subreddit.OrganizationID,
 		"subreddit_created_at": subreddit.SubredditCreatedAt,
-		"last_tracked_at":      subreddit.LastTrackedAt,
 		"subscribers":          subreddit.Subscribers,
 		"title":                subreddit.Title,
-		"last_post_created_at": subreddit.LastPostCreatedAt,
-		"updated_at":           time.Now(),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to insert subreddit: %w", err)
@@ -83,4 +81,11 @@ func (r *Database) GetSubReddits(ctx context.Context) ([]*models.AugmentedSubRed
 	}
 
 	return results, nil
+}
+
+func (r *Database) GetSubRedditByUrl(ctx context.Context, url, orgId string) (*models.SubReddit, error) {
+	return getOne[models.SubReddit](ctx, r, "sub_reddit/query_sub_reddit_by_url.sql", map[string]any{
+		"url":             url,
+		"organization_id": orgId,
+	})
 }

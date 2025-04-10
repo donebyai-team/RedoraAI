@@ -169,12 +169,13 @@ func (r *Client) refreshToken(ctx context.Context) error {
 
 // SubReddit represents information about a subreddit.
 type SubReddit struct {
-	ID          string  `json:"id"`
-	DisplayName string  `json:"display_name"`
+	ID          string  `json:"id"` // subreddit id
 	URL         string  `json:"url"`
+	DisplayName string  `json:"display_name_prefixed"` // subreddit name
 	Description string  `json:"description"`
-	Subscribers int     `json:"subscribers"`
-	CreatedRaw  float64 `json:"created"`
+	CreatedAt   float64 `json:"created"`
+	Subscribers int64   `json:"subscribers"`
+	Title       string  `json:"title"`
 	Over18      bool    `json:"over_18"`
 	// Add other relevant fields from the subreddit API response
 }

@@ -6,7 +6,7 @@ CREATE TABLE sub_reddits
     subreddit_id varchar(255) NOT NULL,
     url varchar(255) NOT NULL,
     name varchar(255) NOT NULL,
-    description varchar(255) NOT NULL,
+    description varchar(5000) NOT NULL,
     organization_id uuid NOT NULL,
     subreddit_created_at timestamp NOT NULL,
     last_tracked_at timestamp,

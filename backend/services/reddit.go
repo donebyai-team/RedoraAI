@@ -27,31 +27,36 @@ func NewRedditService(logger *zap.Logger, db datastore.Repository, redditClient 
 }
 
 func (r redditService) CreateSubReddit(ctx context.Context, subReddit *models.SubReddit) error {
-	// Fetch the subreddit details by URL
+	// Check if the subreddit already exists in the DB
+	existingSubreddit, err := r.db.GetSubRedditByUrl(ctx, subReddit.URL, subReddit.OrganizationID)
+	if err != nil {
+		return fmt.Errorf("failed to check if subreddit exists: %w", err)
+	}
+
+	if existingSubreddit != nil {
+		return fmt.Errorf("subreddit already exists: %s", subReddit.URL)
+	}
+
+	// Fetch the subreddit details by URL from Reddit API
 	subRedditDetails, err := r.redditClient.GetSubRedditByURL(ctx, subReddit.URL)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to fetch subreddit details from Reddit: %w", err)
 	}
-	fmt.Println("data is", subRedditDetails)
 
-	// Check if the subreddit already exists in the DB
-	//existingSubReddit, err := r.db.GetSubRedditByID(ctx, subReddit.SubRedditID)
-	//if err != nil && !errors.Is(err, datastore.NotFound) {
-	//	return fmt.Errorf("failed to get subreddit by ID: %w", err)
-	//}
-	//
-	//// If subreddit already exists in DB, return an error
-	//if existingSubReddit != nil {
-	//	return fmt.Errorf("subreddit already exists in the database: %s", subReddit.SubRedditID)
-	//}
+	if subRedditDetails.ID == "" {
+		return fmt.Errorf("subreddit ID is missing or invalid subreddit URL: %s", subReddit.URL)
+	}
 
-	// Fill the fields in models.SubReddit using fetched details
+	// Fill in the fields in models.SubReddit using fetched details
+	subReddit.SubRedditID = subRedditDetails.ID
+	subReddit.URL = subRedditDetails.URL
 	subReddit.Name = subRedditDetails.DisplayName
 	subReddit.Description = subRedditDetails.Description
-	//*subReddit.Subscribers = int64(subRedditDetails.Subscribers)
-	subReddit.SubredditCreatedAt = time.Unix(int64(subRedditDetails.CreatedRaw), 0)
-	//subReddit.LastTrackedAt = subRedditDetails.l
-	//subReddit.LastPostCreatedAt = subRedditDetails.LastPostCreatedAt
+	subReddit.SubredditCreatedAt = time.Unix(int64(subRedditDetails.CreatedAt), 0)
+	subscribers := subRedditDetails.Subscribers
+	subReddit.Subscribers = &subscribers
+	title := subRedditDetails.Title
+	subReddit.Title = &title
 
 	// Insert the subreddit into the DB
 	_, err = r.db.AddSubReddit(ctx, subReddit)
