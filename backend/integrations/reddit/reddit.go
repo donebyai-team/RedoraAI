@@ -112,7 +112,7 @@ func (r *OauthClient) NewRedditClient(ctx context.Context, orgID string) (*Clien
 	client := &Client{logger: r.logger,
 		config:     integration.GetRedditConfig(),
 		httpClient: newHTTPClient(),
-		baseURL:    "https://www.reddit.com",
+		baseURL:    "https://oauth.reddit.com",
 	}
 	if client.isTokenExpired() {
 		err := client.refreshToken(ctx)
@@ -169,13 +169,13 @@ func (r *Client) refreshToken(ctx context.Context) error {
 
 // SubReddit represents information about a subreddit.
 type SubReddit struct {
-	ID          string `json:"id"`
-	DisplayName string `json:"display_name"`
-	URL         string `json:"url"`
-	Description string `json:"description"`
-	Subscribers int    `json:"subscribers"`
-	CreatedAt   int64  `json:"created"`
-	Over18      bool   `json:"over_18"`
+	ID          string  `json:"id"`
+	DisplayName string  `json:"display_name"`
+	URL         string  `json:"url"`
+	Description string  `json:"description"`
+	Subscribers int     `json:"subscribers"`
+	CreatedRaw  float64 `json:"created"`
+	Over18      bool    `json:"over_18"`
 	// Add other relevant fields from the subreddit API response
 }
 

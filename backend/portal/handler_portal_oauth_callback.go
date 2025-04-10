@@ -57,6 +57,7 @@ func handleRedditOauth(ctx context.Context, p *Portal, code string, organization
 		return fmt.Errorf("upsert integration: %w", err)
 	}
 
+	fmt.Println("token after insertion ", integration.GetRedditConfig().AccessToken)
 	logging.Logger(ctx, p.logger).Info("reddit integration created",
 		zap.String("organization_id", integration.OrganizationID),
 		zap.String("integration_id", integration.ID),

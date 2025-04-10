@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/shank318/doota/models"
+	"time"
 )
 
 func init() {
@@ -38,7 +39,28 @@ func (r *Database) GetKeywords(ctx context.Context, orgID string) ([]*models.Key
 }
 
 func (r *Database) AddSubReddit(ctx context.Context, subreddit *models.SubReddit) (*models.SubReddit, error) {
-	panic(fmt.Errorf("not implemented"))
+	stmt := r.mustGetStmt("sub_reddit/create_sub_reddit.sql")
+
+	var id string
+	err := stmt.GetContext(ctx, &id, map[string]interface{}{
+		"subreddit_id":         subreddit.SubRedditID,
+		"url":                  subreddit.URL,
+		"name":                 subreddit.Name,
+		"description":          subreddit.Description,
+		"organization_id":      subreddit.OrganizationID,
+		"subreddit_created_at": subreddit.SubredditCreatedAt,
+		"last_tracked_at":      subreddit.LastTrackedAt,
+		"subscribers":          subreddit.Subscribers,
+		"title":                subreddit.Title,
+		"last_post_created_at": subreddit.LastPostCreatedAt,
+		"updated_at":           time.Now(),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to insert subreddit: %w", err)
+	}
+
+	subreddit.ID = id
+	return subreddit, nil
 }
 
 func (r *Database) GetSubReddits(ctx context.Context) ([]*models.AugmentedSubReddit, error) {
