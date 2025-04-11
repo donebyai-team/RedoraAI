@@ -63,7 +63,8 @@ type RedditRepository interface {
 	AddSubReddit(ctx context.Context, subreddit *models.SubReddit) (*models.SubReddit, error)
 	GetSubRedditByUrl(ctx context.Context, url, orgID string) (*models.SubReddit, error)
 	DeleteSubRedditById(ctx context.Context, id string) (*models.SubReddit, error)
-	GetSubRedditByFilters(ctx context.Context, filters map[string]interface{}) ([]models.SubReddit, error)
+	GetSubRedditById(ctx context.Context, id string) (*models.SubReddit, error)
+	GetSubRedditsByOrg(ctx context.Context, orgID string) ([]*models.SubReddit, error)
 }
 
 type ConversationRepository interface {

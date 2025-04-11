@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/shank318/doota/models"
-	"strings"
 )
 
 func init() {
@@ -15,6 +14,8 @@ func init() {
 		"sub_reddit/create_sub_reddit.sql",
 		"sub_reddit/query_sub_reddit_by_url.sql",
 		"sub_reddit/delete_sub_reddit_by_id.sql",
+		"sub_reddit/query_sub_reddit_by_id.sql",
+		"sub_reddit/query_sub_reddit_by_org.sql",
 	})
 }
 
@@ -85,10 +86,27 @@ func (r *Database) GetSubReddits(ctx context.Context) ([]*models.AugmentedSubRed
 	return results, nil
 }
 
+func (r *Database) GetSubRedditsByOrg(ctx context.Context, orgID string) ([]*models.SubReddit, error) {
+	subReddits, err := getMany[models.SubReddit](ctx, r, "sub_reddit/query_sub_reddit_by_org.sql", map[string]any{
+		"organization_id": orgID,
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get subreddit with ID: %w", err)
+	}
+	return subReddits, nil
+}
+
 func (r *Database) GetSubRedditByUrl(ctx context.Context, url, orgID string) (*models.SubReddit, error) {
 	return getOne[models.SubReddit](ctx, r, "sub_reddit/query_sub_reddit_by_url.sql", map[string]any{
 		"url":             url,
 		"organization_id": orgID,
+	})
+}
+
+func (r *Database) GetSubRedditById(ctx context.Context, id string) (*models.SubReddit, error) {
+	return getOne[models.SubReddit](ctx, r, "sub_reddit/query_sub_reddit_by_id.sql", map[string]any{
+		"id": id,
 	})
 }
 
@@ -104,33 +122,4 @@ func (r *Database) DeleteSubRedditById(ctx context.Context, id string) (*models.
 	}
 
 	return &subreddit, nil
-}
-
-func (r *Database) GetSubRedditByFilters(ctx context.Context, filters map[string]interface{}) ([]models.SubReddit, error) {
-	baseQuery := "SELECT * FROM sub_reddits"
-	whereClauses := []string{}
-	args := map[string]interface{}{}
-
-	for key, value := range filters {
-		whereClauses = append(whereClauses, fmt.Sprintf("%s = :%s", key, key))
-		args[key] = value
-	}
-
-	if len(whereClauses) > 0 {
-		baseQuery += " WHERE " + strings.Join(whereClauses, " AND ")
-	}
-
-	nstmt, err := r.PrepareNamedContext(ctx, baseQuery)
-	if err != nil {
-		return nil, fmt.Errorf("prepare query failed: %w", err)
-	}
-	defer nstmt.Close()
-
-	var results []models.SubReddit
-
-	if err := nstmt.SelectContext(ctx, &results, args); err != nil {
-		return nil, fmt.Errorf("query execution failed: %w", err)
-	}
-
-	return results, nil
 }
