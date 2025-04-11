@@ -75,7 +75,7 @@ func (r redditService) GetSubReddits(ctx context.Context, orgID string) ([]*mode
 
 func (r redditService) RemoveSubReddit(ctx context.Context, id string) error {
 	// Step 1: Try to get the subreddit to check if it exists
-	subreddit, err := r.db.GetSubRedditById(ctx, id)
+	subreddit, err := r.db.GetSubRedditByID(ctx, id)
 
 	if err != nil {
 		return fmt.Errorf("failed to fetch subreddit with ID %s: %w", id, err)
@@ -85,7 +85,7 @@ func (r redditService) RemoveSubReddit(ctx context.Context, id string) error {
 	}
 
 	// Step 2: Delete the subreddit
-	_, err = r.db.DeleteSubRedditById(ctx, id)
+	_, err = r.db.DeleteSubRedditByID(ctx, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete subreddit with ID %s: %w", id, err)
 	}

@@ -104,21 +104,21 @@ func (r *Database) GetSubRedditByUrl(ctx context.Context, url, orgID string) (*m
 	})
 }
 
-func (r *Database) GetSubRedditById(ctx context.Context, id string) (*models.SubReddit, error) {
+func (r *Database) GetSubRedditByID(ctx context.Context, ID string) (*models.SubReddit, error) {
 	return getOne[models.SubReddit](ctx, r, "sub_reddit/query_sub_reddit_by_id.sql", map[string]any{
-		"id": id,
+		"id": ID,
 	})
 }
 
-func (r *Database) DeleteSubRedditById(ctx context.Context, id string) (*models.SubReddit, error) {
+func (r *Database) DeleteSubRedditByID(ctx context.Context, ID string) (*models.SubReddit, error) {
 	stmt := r.mustGetStmt("sub_reddit/delete_sub_reddit_by_id.sql")
 
 	var subreddit models.SubReddit
 	err := stmt.QueryRowxContext(ctx, map[string]interface{}{
-		"id": id,
+		"id": ID,
 	}).StructScan(&subreddit)
 	if err != nil {
-		return nil, fmt.Errorf("failed to delete subreddit with ID %s: %w", id, err)
+		return nil, fmt.Errorf("failed to delete subreddit with ID %s: %w", ID, err)
 	}
 
 	return &subreddit, nil
