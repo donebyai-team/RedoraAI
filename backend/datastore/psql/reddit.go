@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/shank318/doota/models"
+	"strings"
 )
 
 func init() {
@@ -13,6 +14,7 @@ func init() {
 		"sub_reddit/query_sub_reddit_by_filter.sql",
 		"sub_reddit/create_sub_reddit.sql",
 		"sub_reddit/query_sub_reddit_by_url.sql",
+		"sub_reddit/delete_sub_reddit_by_id.sql",
 	})
 }
 
@@ -83,9 +85,52 @@ func (r *Database) GetSubReddits(ctx context.Context) ([]*models.AugmentedSubRed
 	return results, nil
 }
 
-func (r *Database) GetSubRedditByUrl(ctx context.Context, url, orgId string) (*models.SubReddit, error) {
+func (r *Database) GetSubRedditByUrl(ctx context.Context, url, orgID string) (*models.SubReddit, error) {
 	return getOne[models.SubReddit](ctx, r, "sub_reddit/query_sub_reddit_by_url.sql", map[string]any{
 		"url":             url,
-		"organization_id": orgId,
+		"organization_id": orgID,
 	})
+}
+
+func (r *Database) DeleteSubRedditById(ctx context.Context, id string) (*models.SubReddit, error) {
+	stmt := r.mustGetStmt("sub_reddit/delete_sub_reddit_by_id.sql")
+
+	var subreddit models.SubReddit
+	err := stmt.QueryRowxContext(ctx, map[string]interface{}{
+		"id": id,
+	}).StructScan(&subreddit)
+	if err != nil {
+		return nil, fmt.Errorf("failed to delete subreddit with ID %s: %w", id, err)
+	}
+
+	return &subreddit, nil
+}
+
+func (r *Database) GetSubRedditByFilters(ctx context.Context, filters map[string]interface{}) ([]models.SubReddit, error) {
+	baseQuery := "SELECT * FROM sub_reddits"
+	whereClauses := []string{}
+	args := map[string]interface{}{}
+
+	for key, value := range filters {
+		whereClauses = append(whereClauses, fmt.Sprintf("%s = :%s", key, key))
+		args[key] = value
+	}
+
+	if len(whereClauses) > 0 {
+		baseQuery += " WHERE " + strings.Join(whereClauses, " AND ")
+	}
+
+	nstmt, err := r.PrepareNamedContext(ctx, baseQuery)
+	if err != nil {
+		return nil, fmt.Errorf("prepare query failed: %w", err)
+	}
+	defer nstmt.Close()
+
+	var results []models.SubReddit
+
+	if err := nstmt.SelectContext(ctx, &results, args); err != nil {
+		return nil, fmt.Errorf("query execution failed: %w", err)
+	}
+
+	return results, nil
 }

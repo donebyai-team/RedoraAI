@@ -65,13 +65,39 @@ func (r redditService) CreateSubReddit(ctx context.Context, subReddit *models.Su
 }
 
 func (r redditService) GetSubReddits(ctx context.Context, orgID string) ([]*models.SubReddit, error) {
-	//TODO implement me
-	panic("implement me")
-	// Query the subreddits from Db and return
+	augmentedSubs, err := r.db.GetSubReddits(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get subreddits: %w", err)
+	}
+
+	var filtered []*models.SubReddit
+	for _, aug := range augmentedSubs {
+		if aug.SubReddit.OrganizationID == orgID {
+			filtered = append(filtered, aug.SubReddit)
+		}
+	}
+
+	return filtered, nil
 }
 
 func (r redditService) RemoveSubReddit(ctx context.Context, id string) error {
-	panic("implement me")
-	// Query if the subreddit exists
-	// if yes, delete it
+	// Step 1: Try to get the subreddit to check if it exists
+	subreddit, err := r.db.GetSubRedditByFilters(ctx, map[string]interface{}{
+		"organization_id": id,
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to fetch subreddit with ID %s: %w", id, err)
+	}
+	if len(subreddit) == 0 {
+		return fmt.Errorf("no subreddit found for organization ID %s", id)
+	}
+
+	// Step 2: Delete the subreddit
+	_, err = r.db.DeleteSubRedditById(ctx, id)
+	if err != nil {
+		return fmt.Errorf("failed to delete subreddit with ID %s: %w", id, err)
+	}
+
+	return nil
 }
