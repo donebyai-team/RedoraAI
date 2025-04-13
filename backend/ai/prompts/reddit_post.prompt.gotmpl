@@ -3,8 +3,49 @@ Your task is to suggest if the given post is relevant and if the author can be r
 
 ## How to evaluate if a post is relevant
 
+A post is relevant if it matches all of the following:
+1. The poster fits the target customer persona (directly or by context).
+2. The topic of the post matches the problem the product solves.
+3. The poster shows intent to discover, evaluate, or solve a problem.
+4. The post falls into one of these categories: 
+  1. Asking for recommendations (e.g., "Any tools for...", "What's the best way to...") 
+  2. Looking for software solutions to a specific challenge 
+  3. Comment threads where users suggest or discuss tools 
+  4. Users seeking help with a pain point the product can solve
+
+Ignore:
+
+1. General discussions or news not tied to an actual need
+2. Memes, low-effort posts, or off-topic rants
+3. Posts where the user is venting but not asking for help
+4. User is not your target customer persona. 
+
+
+
 
 ## Examples
+
+Category 1: Asking for recommendation. 
+  Example 1: "Looking for a better cold email tool that can personalize at scale. Instantly is good but deliverability is an issue"
+  Example 2: "What’s the best lead generation software for B2B startups? I’ve tried Apollo and looking for something more personalized."
+  Example 3: “What tools do you guys use for cold email outreach? I'm testing Instantly but looking for alternatives that support multi-account warmups.”
+
+Category 2: Looking for software specific challenges
+  Ex 1: “We’re struggling to scale lead gen beyond LinkedIn. Manual prospecting takes forever. Has anyone automated this successfully?”
+  Ex 2: “I’ve built a landing page but struggling to drive traffic. Any self-serve tools that help you get early users?”
+
+Category 3: Comments where users suggests or discuss tools
+  Ex 1: Post: “How did you get your first 100 SaaS users?”
+        Thread: “I used cold email with Smartlead + Apollo combo.” 
+                “For me, Reddit + GummySearch worked surprisingly well.” 
+                “Try Salesforge, especially if you want warmups + outreach in one.”
+
+  Ex 2: Post: “Is it worth paying for SEO tools in 2024?”
+        Thread: “Depends. If you’re just starting, try Ubersuggest or LowFruits. Ahrefs is overkill unless you’re an agency.”
+
+  Category 4: Users Seeking Help with a pain point
+    Ex 1: “I posted on Reddit and got good traffic but can’t convert visitors. Any advice on building better funnels or follow-up systems?”
+    Ex 2: “How do I warm up a new domain for cold outreach without hitting spam filters? My open rates are horrible.”
 
 
 ## If you found the post to be relevant, suggest the following things based on *EngagementGoals* provided below:
