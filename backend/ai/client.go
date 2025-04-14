@@ -64,10 +64,10 @@ func NewOpenAI(apiKey, openAIOrganization string, config LangsmithConfig, debugF
 	return newClient(model, config, debugFileStore)
 }
 
-func (c *Client) IsRedditPostRelevant(ctx context.Context, org *models.Organization, subReddit *models.SubReddit, gptModel GPTModel, logger *zap.Logger) (*models.RedditPostRelevanceResponse, error) {
-	vars := gptModel.GetRedditPostRelevancyVars(org, subReddit)
+func (c *Client) IsRedditPostRelevant(ctx context.Context, project *models.Project, post *models.RedditLead, gptModel GPTModel, logger *zap.Logger) (*models.RedditPostRelevanceResponse, error) {
+	vars := gptModel.GetRedditPostRelevancyVars(project, post)
 
-	runID := subReddit.ID
+	runID := fmt.Sprintf("%s-%s", project.ID, post.PostID)
 	prompts, responseSchemaTemplate, debugTemplates := gptModel.getPromptTemplates(redditPostRelevancyTemplates)
 	c.debugTemplates(ctx, runID, vars, debugTemplates, logger)
 

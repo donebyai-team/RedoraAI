@@ -1,0 +1,6 @@
+BEGIN;
+
+DROP TABLE IF EXISTS projects;
+DROP INDEX IF EXISTS fk_projects;
+
+COMMIT;

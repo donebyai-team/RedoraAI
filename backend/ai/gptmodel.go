@@ -43,10 +43,10 @@ func (g GPTModel) GetCaseDecisionVars(customerCase *models.Conversation) Variabl
 	return out
 }
 
-func (g GPTModel) GetRedditPostRelevancyVars(org *models.Organization, subReddit *models.SubReddit) Variable {
+func (g GPTModel) GetRedditPostRelevancyVars(project *models.Project, post *models.RedditLead) Variable {
 	out := make(Variable).
-		WithCompanyDetails(org).
-		WithSubReddit(subReddit)
+		WithProjectDetails(project).
+		WithRedditPost(post)
 	return out
 }
 

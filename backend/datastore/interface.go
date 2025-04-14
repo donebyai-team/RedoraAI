@@ -20,6 +20,7 @@ type Repository interface {
 	CustomerRepository
 	CustomerCaseRepository
 	RedditRepository
+	ProjectRepository
 }
 
 type OrganizationRepository interface {
@@ -55,6 +56,12 @@ type CustomerCaseRepository interface {
 	UpdateCustomerCase(ctx context.Context, customer *models.CustomerCase) error
 	GetCustomerCases(ctx context.Context, filter CustomerCaseFilter) ([]*models.AugmentedCustomerCase, error)
 	GetCustomerCaseByID(ctx context.Context, id string) (*models.CustomerCase, error)
+}
+
+type ProjectRepository interface {
+	CreateProject(ctx context.Context, project *models.Project) (*models.Project, error)
+	GetProjects(ctx context.Context, orgID string) ([]*models.Project, error)
+	GetProject(ctx context.Context, id string) (*models.Project, error)
 }
 
 type RedditRepository interface {

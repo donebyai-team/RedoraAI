@@ -1,3 +1,3 @@
 SELECT *
-FROM keywords
+FROM projects
 WHERE organization_id = :organization_id;

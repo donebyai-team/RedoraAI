@@ -7,7 +7,7 @@ import (
 
 type Keyword struct {
 	ID        string    `db:"id"`
-	OrgID     string    `db:"organization_id"`
+	ProjectID string    `db:"project_id"`
 	Keyword   string    `db:"keyword"`
 	CreatedAt time.Time `db:"created_at"`
 	UpdatedAt time.Time `db:"updated_at"`
@@ -16,7 +16,7 @@ type Keyword struct {
 // Reference - https://developers.reddit.com/docs/api/redditapi/classes/models.Subreddit
 type SubReddit struct {
 	ID                 string            `db:"id"`
-	OrganizationID     string            `db:"organization_id"`
+	ProjectID          string            `db:"project_id"`
 	SubRedditID        string            `db:"subreddit_id"`
 	Name               string            `db:"name"`
 	Description        string            `db:"description"`
@@ -49,6 +49,7 @@ func (b *SubRedditMetadata) Scan(value interface{}) error {
 type AugmentedSubReddit struct {
 	SubReddit *SubReddit
 	Keywords  []*Keyword
+	Project   *Project
 }
 
 //go:generate go-enum -f=$GOFILE
@@ -58,16 +59,16 @@ type RedditLeadType string
 
 type RedditLead struct {
 	ID                 string             `db:"id"`
-	OrganizationID     string             `db:"organization_id"`
+	ProjectID          string             `db:"project_id"`
 	SubRedditID        string             `db:"subreddit_id"`
-	User               string             `db:"user"`
+	Author             string             `db:"author"`
 	PostID             string             `db:"post_id"`
 	Type               RedditLeadType     `db:"type"`
 	RelevancyScore     float64            `db:"relevancy_score"`
 	PostCreatedAt      time.Time          `db:"post_created_at"`
 	CommentID          *string            `db:"comment_id"`
 	Title              *string            `db:"title"` // Optional in case of comment
-	Description        *string            `db:"description"`
+	Description        string             `db:"description"`
 	RedditLeadMetadata RedditLeadMetadata `db:"metadata"`
 
 	CreatedAt time.Time  `db:"created_at"`

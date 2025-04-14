@@ -19,8 +19,8 @@ func (r *Database) CreateKeyword(ctx context.Context, keywords *models.Keyword) 
 	var id string
 
 	err := stmt.GetContext(ctx, &id, map[string]interface{}{
-		"keyword":         keywords.Keyword,
-		"organization_id": keywords.OrgID,
+		"keyword":    keywords.Keyword,
+		"project_id": keywords.ProjectID,
 	})
 
 	if err != nil {
@@ -33,7 +33,7 @@ func (r *Database) CreateKeyword(ctx context.Context, keywords *models.Keyword) 
 
 func (r *Database) GetKeywords(ctx context.Context, orgID string) ([]*models.Keyword, error) {
 	return getMany[models.Keyword](ctx, r, "keyword/query_keyword_by_org.sql", map[string]any{
-		"organization_id": orgID,
+		"project_id": orgID,
 	})
 }
 
@@ -49,14 +49,20 @@ func (r *Database) GetSubReddits(ctx context.Context) ([]*models.AugmentedSubRed
 	}
 	var results []*models.AugmentedSubReddit
 	for _, subreddit := range subReddits {
-		keywords, err := r.GetKeywords(ctx, subreddit.OrganizationID)
+		keywords, err := r.GetKeywords(ctx, subreddit.ProjectID)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get keywords for orgID %q: %w", subreddit.OrganizationID, err)
+			return nil, fmt.Errorf("failed to get keywords for project %q: %w", subreddit.ProjectID, err)
+		}
+
+		project, err := r.GetProject(ctx, subreddit.ProjectID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get project %q: %w", subreddit.ProjectID, err)
 		}
 
 		results = append(results, &models.AugmentedSubReddit{
 			SubReddit: subreddit,
 			Keywords:  keywords,
+			Project:   project,
 		})
 	}
 

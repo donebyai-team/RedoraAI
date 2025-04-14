@@ -194,6 +194,7 @@ type Post struct {
 	Selftext    string `json:"selftext"`
 	IsSelf      bool   `json:"is_self"`
 	Subreddit   string `json:"subreddit"`
+	AuthorInfo  *User  `json:"author_info"`
 	// Add other relevant fields from the post API response
 }
 
@@ -316,10 +317,32 @@ func (r *Client) GetSubRedditByURL(ctx context.Context, urlPath string) (*SubRed
 	return &response.Data, nil
 }
 
-func (r *Client) GetPosts(ctx context.Context, subRedditID string, keywords []string) ([]Post, error) {
+//go:generate go-enum -f=$GOFILE
+
+// ENUM(TOP, HOT, RELEVANCE, NEW, COMMENT_COUNT)
+type SortBy string
+
+// ENUM(ALL, YEAR, WEEK, MONTH, TODAY, HOUR)
+type TimeRange string
+
+type PostFilters struct {
+	Keywords []string
+	SortBy   *SortBy
+	TimeRage *TimeRange
+}
+
+func (r *Client) GetPosts(ctx context.Context, subRedditID string, filters PostFilters) ([]*Post, error) {
 	v := url.Values{}
-	if len(keywords) > 0 {
-		v.Set("q", strings.Join(keywords, " "))
+	if len(filters.Keywords) > 0 {
+		v.Set("q", strings.Join(filters.Keywords, " "))
+	}
+
+	if filters.SortBy != nil {
+		v.Set("sort", string(*filters.SortBy))
+	}
+
+	if filters.TimeRage != nil {
+		v.Set("t", string(*filters.TimeRage))
 	}
 
 	reqURL := fmt.Sprintf("%s/r/%s/search.json?%s", r.baseURL, subRedditID, v.Encode())
@@ -341,7 +364,7 @@ func (r *Client) GetPosts(ctx context.Context, subRedditID string, keywords []st
 	var response struct {
 		Data struct {
 			Children []struct {
-				Data Post `json:"data"`
+				Data *Post `json:"data"`
 			} `json:"children"`
 		} `json:"data"`
 	}
@@ -349,7 +372,7 @@ func (r *Client) GetPosts(ctx context.Context, subRedditID string, keywords []st
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
 
-	var posts []Post
+	var posts []*Post
 	for _, child := range response.Data.Children {
 		posts = append(posts, child.Data)
 	}
