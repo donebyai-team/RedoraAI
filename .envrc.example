@@ -34,6 +34,9 @@ export DOOTA_DOC_TEST_LANGSMITH_API_KEY="$LANGSMITH_API_KEY_DEV"
 export DOOTA_DOC_TEST_LANGSMITH_PROJECT="$LANGSMITH_PROJECT"
 
 
+# Test
+export TEST_REDDIT_TOKEN=""
+
 # Frontend Next.JS Configuration
 export NEXT_PUBLIC_API_URL=http://localhost:8787
 export NEXT_PUBLIC_APP_URL="http://localhost:3000"

@@ -49,6 +49,17 @@ func (s *SubRedditTracker) TrackSubreddit(ctx context.Context, subReddit *models
 	// Filter them via a criteria - https://www.notion.so/Criteria-for-filtering-the-relevant-post-1c70029aaf8f80ec8ba6fd4e29342d6a
 	// After filtering, ask AI to filter again
 	// Save it into the table sub_reddits_leads (models.RedditLead)
+	_, err = s.searchLeadsFromPosts(ctx, subReddit, redditClient)
+	if err != nil {
+		return fmt.Errorf("searchLeadsFromPosts: %w", err)
+	}
+
+	// Save in DB
+
+	return nil
+}
+
+func (s *SubRedditTracker) searchLeadsFromPosts(ctx context.Context, subReddit *models.AugmentedSubReddit, redditClient *reddit.Client) ([]*models.RedditLead, error) {
 	keywords := []string{}
 	for _, keyword := range subReddit.Keywords {
 		keywords = append(keywords, keyword.Keyword)
@@ -60,13 +71,15 @@ func (s *SubRedditTracker) TrackSubreddit(ctx context.Context, subReddit *models
 	})
 	if err != nil {
 		s.logger.Error("unable to fetch posts while tracking subreddit", zap.String("subreddit", subReddit.SubReddit.URL), zap.Error(err))
-		return fmt.Errorf("unable to fetch posts: %w", err)
+		return nil, fmt.Errorf("unable to fetch posts: %w", err)
 	}
 	// Hard filters
 	filteredPosts, err := s.filterAndEnrichPosts(ctx, redditClient, posts)
 	if err != nil {
-		return fmt.Errorf("filterAndEnrichPosts: %w", err)
+		return nil, fmt.Errorf("filterAndEnrichPosts: %w", err)
 	}
+
+	leads := make([]*models.RedditLead, 0)
 
 	// Filter by AI
 	for _, post := range filteredPosts {
@@ -97,11 +110,9 @@ func (s *SubRedditTracker) TrackSubreddit(ctx context.Context, subReddit *models
 			NoOfComments:                     post.NumComments,
 			NoOfLikes:                        post.Ups,
 		}
-
-		// Save
+		leads = append(leads, redditLead)
 	}
-
-	return nil
+	return leads, nil
 }
 
 func (s *SubRedditTracker) filterAndEnrichPosts(ctx context.Context, redditClient *reddit.Client, posts []*reddit.Post) ([]*reddit.Post, error) {

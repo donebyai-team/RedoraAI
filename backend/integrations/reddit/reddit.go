@@ -109,10 +109,12 @@ func (r *OauthClient) NewRedditClient(ctx context.Context, orgID string) (*Clien
 		return nil, err
 	}
 
-	client := &Client{logger: r.logger,
-		config:     integration.GetRedditConfig(),
-		httpClient: newHTTPClient(),
-		baseURL:    "https://oauth.reddit.com",
+	client := &Client{
+		logger:      r.logger,
+		config:      integration.GetRedditConfig(),
+		httpClient:  newHTTPClient(),
+		oauthConfig: r.config,
+		baseURL:     "https://oauth.reddit.com",
 	}
 	if client.isTokenExpired() {
 		err := client.refreshToken(ctx)
@@ -133,10 +135,17 @@ func (r *OauthClient) NewRedditClient(ctx context.Context, orgID string) (*Clien
 type Client struct {
 	logger      *zap.Logger
 	config      *models.RedditConfig
-	db          datastore.Repository
 	oauthConfig *oauth2.Config
 	httpClient  *retryablehttp.Client
 	baseURL     string
+}
+
+func NewClientWithConfig(config *models.RedditConfig, logger *zap.Logger) *Client {
+	return &Client{
+		config:     config,
+		logger:     logger,
+		httpClient: newHTTPClient(),
+	}
 }
 
 func (r *Client) refreshToken(ctx context.Context) error {
