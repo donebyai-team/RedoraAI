@@ -17,8 +17,8 @@ func (p *Portal) CreateKeyword(ctx context.Context, c *connect.Request[pbportal.
 		return nil, err
 	}
 	req := services.CreateKeyword{
-		Keyword: c.Msg.Keyword,
-		OrgID:   actor.OrganizationID,
+		Keyword:   c.Msg.Keyword,
+		ProjectID: actor.ProjectID,
 	}
 
 	_, err = p.keywordService.CreateKeyword(ctx, &req)

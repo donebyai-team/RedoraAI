@@ -9,7 +9,7 @@ import (
 func init() {
 	registerFiles([]string{
 		"keyword/create_keyword.sql",
-		"keyword/query_keyword_by_org.sql",
+		"keyword/query_keyword_by_project.sql",
 		"sub_reddit/query_sub_reddit_by_filter.sql",
 		"sub_reddit/create_sub_reddit.sql",
 		"sub_reddit/query_sub_reddit_by_url.sql",
@@ -37,7 +37,7 @@ func (r *Database) CreateKeyword(ctx context.Context, keywords *models.Keyword) 
 }
 
 func (r *Database) GetKeywords(ctx context.Context, orgID string) ([]*models.Keyword, error) {
-	return getMany[models.Keyword](ctx, r, "keyword/query_keyword_by_org.sql", map[string]any{
+	return getMany[models.Keyword](ctx, r, "keyword/query_keyword_by_project.sql", map[string]any{
 		"project_id": orgID,
 	})
 }

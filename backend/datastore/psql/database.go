@@ -4,8 +4,6 @@ import (
 	"context"
 	"crypto/aes"
 	"fmt"
-	"github.com/shank318/doota/models"
-
 	"github.com/jmoiron/sqlx"
 	"github.com/shank318/doota/datastore"
 	"github.com/streamingfast/logging"
