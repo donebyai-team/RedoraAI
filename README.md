@@ -113,7 +113,25 @@ The database needs to be populated with some information if you want to use the 
 
 ```SQL
 INSERT INTO organizations (name) VALUES ('DootaAI'');
-INSERT INTO users (auth0_id, email, email_verified, organization_id, role, state) VALUES ('', 'shank@dootaai.com', true, 'fe7cce88-fbe4-4e47-8f9a-a7dd40c10f8d', 'PLATFORM_ADMIN', 'ACTIVE');
+INSERT INTO users (auth0_id, email, email_verified, organization_id, role, state) VALUES ('', 'shank@dootaai.com', true, 'YOUR ORG ID', 'PLATFORM_ADMIN', 'ACTIVE');
+INSERT INTO projects (
+    name, 
+    organization_id, 
+    description, 
+    customer_persona, 
+    goals, 
+    website
+)
+VALUES (
+    'MiraAI',
+    'YOUR ORG ID',
+    'MiraAI is an intelligent assistant platform for analyzing and summarizing pitch decks.', 
+    'Venture capital analysts and associates at VC firms screening startup deals.', 
+    'Streamline deal screening by summarizing PDFs and extracting key insights automatically.', 
+    'https://miraai.com'
+)
+RETURNING id;
+
 ```
 
 ### Tracing
