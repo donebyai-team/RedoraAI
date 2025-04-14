@@ -1,2 +1,2 @@
-INSERT INTO keywords (keyword, organization_id)
-VALUES (:keyword, :organization_id) RETURNING id;
+INSERT INTO keywords (keyword, project_id)
+VALUES (:keyword, :project_id) RETURNING id;

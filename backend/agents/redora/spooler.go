@@ -93,7 +93,8 @@ func (s *Spooler) runLoop(ctx context.Context) {
 func (s *Spooler) processKeywordsTracking(ctx context.Context, subReddit *models.AugmentedSubReddit) error {
 	logger := s.logger.With(
 		zap.String("subreddit_id", subReddit.SubReddit.SubRedditID),
-		zap.String("organization_id", subReddit.SubReddit.OrganizationID),
+		zap.String("organization_id", subReddit.Project.OrganizationID),
+		zap.String("project_id", subReddit.Project.ID),
 		zap.String("creator", "redora"),
 	)
 	logger.Debug("processing customer cases", zap.Int("queue_size", len(s.queue)))

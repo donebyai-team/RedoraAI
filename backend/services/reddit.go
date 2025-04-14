@@ -6,6 +6,7 @@ import (
 	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/integrations/reddit"
 	"github.com/shank318/doota/models"
+	"github.com/shank318/doota/utils"
 	"go.uber.org/zap"
 	"time"
 )
@@ -28,7 +29,7 @@ func NewRedditService(logger *zap.Logger, db datastore.Repository, redditClient 
 
 func (r redditService) CreateSubReddit(ctx context.Context, subReddit *models.SubReddit) error {
 	// Check if the subreddit already exists in the DB
-	existingSubreddit, err := r.db.GetSubRedditByUrl(ctx, subReddit.URL, subReddit.OrganizationID)
+	existingSubreddit, err := r.db.GetSubRedditByUrl(ctx, subReddit.URL, subReddit.ProjectID)
 
 	if existingSubreddit != nil {
 		return fmt.Errorf("subreddit already exists: %s", subReddit.URL)
@@ -50,10 +51,8 @@ func (r redditService) CreateSubReddit(ctx context.Context, subReddit *models.Su
 	subReddit.Name = subRedditDetails.DisplayName
 	subReddit.Description = subRedditDetails.Description
 	subReddit.SubredditCreatedAt = time.Unix(int64(subRedditDetails.CreatedAt), 0)
-	subscribers := subRedditDetails.Subscribers
-	subReddit.Subscribers = &subscribers
-	title := subRedditDetails.Title
-	subReddit.Title = &title
+	subReddit.Subscribers = utils.Ptr(subRedditDetails.Subscribers)
+	subReddit.Title = utils.Ptr(subRedditDetails.Title)
 
 	// Insert the subreddit into the DB
 	_, err = r.db.AddSubReddit(ctx, subReddit)
@@ -64,13 +63,8 @@ func (r redditService) CreateSubReddit(ctx context.Context, subReddit *models.Su
 	return nil
 }
 
-func (r redditService) GetSubReddits(ctx context.Context, orgID string) ([]*models.SubReddit, error) {
-	subReddits, err := r.db.GetSubRedditsByOrg(ctx, orgID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get subreddits: %w", err)
-	}
-
-	return subReddits, nil
+func (r redditService) GetSubReddits(ctx context.Context, projectID string) ([]*models.SubReddit, error) {
+	return r.db.GetSubRedditsByProject(ctx, projectID)
 }
 
 func (r redditService) RemoveSubReddit(ctx context.Context, id string) error {

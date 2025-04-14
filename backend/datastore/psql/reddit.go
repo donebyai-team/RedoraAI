@@ -15,7 +15,7 @@ func init() {
 		"sub_reddit/query_sub_reddit_by_url.sql",
 		"sub_reddit/delete_sub_reddit_by_id.sql",
 		"sub_reddit/query_sub_reddit_by_id.sql",
-		"sub_reddit/query_sub_reddit_by_org.sql",
+		"sub_reddit/query_sub_reddit_by_project.sql",
 	})
 }
 
@@ -24,8 +24,8 @@ func (r *Database) CreateKeyword(ctx context.Context, keywords *models.Keyword) 
 	var id string
 
 	err := stmt.GetContext(ctx, &id, map[string]interface{}{
-		"keyword":         keywords.Keyword,
-		"organization_id": keywords.OrgID,
+		"keyword":    keywords.Keyword,
+		"project_id": keywords.ProjectID,
 	})
 
 	if err != nil {
@@ -38,7 +38,7 @@ func (r *Database) CreateKeyword(ctx context.Context, keywords *models.Keyword) 
 
 func (r *Database) GetKeywords(ctx context.Context, orgID string) ([]*models.Keyword, error) {
 	return getMany[models.Keyword](ctx, r, "keyword/query_keyword_by_org.sql", map[string]any{
-		"organization_id": orgID,
+		"project_id": orgID,
 	})
 }
 
@@ -51,7 +51,7 @@ func (r *Database) AddSubReddit(ctx context.Context, subreddit *models.SubReddit
 		"url":                  subreddit.URL,
 		"name":                 subreddit.Name,
 		"description":          subreddit.Description,
-		"organization_id":      subreddit.OrganizationID,
+		"project_id":           subreddit.ProjectID,
 		"subreddit_created_at": subreddit.SubredditCreatedAt,
 		"subscribers":          subreddit.Subscribers,
 		"title":                subreddit.Title,
@@ -72,35 +72,36 @@ func (r *Database) GetSubReddits(ctx context.Context) ([]*models.AugmentedSubRed
 	}
 	var results []*models.AugmentedSubReddit
 	for _, subreddit := range subReddits {
-		keywords, err := r.GetKeywords(ctx, subreddit.OrganizationID)
+		keywords, err := r.GetKeywords(ctx, subreddit.ProjectID)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get keywords for orgID %q: %w", subreddit.OrganizationID, err)
+			return nil, fmt.Errorf("failed to get keywords for project %q: %w", subreddit.ProjectID, err)
+		}
+
+		project, err := r.GetProject(ctx, subreddit.ProjectID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get project %q: %w", subreddit.ProjectID, err)
 		}
 
 		results = append(results, &models.AugmentedSubReddit{
 			SubReddit: subreddit,
 			Keywords:  keywords,
+			Project:   project,
 		})
 	}
 
 	return results, nil
 }
 
-func (r *Database) GetSubRedditsByOrg(ctx context.Context, orgID string) ([]*models.SubReddit, error) {
-	subReddits, err := getMany[models.SubReddit](ctx, r, "sub_reddit/query_sub_reddit_by_org.sql", map[string]any{
-		"organization_id": orgID,
+func (r *Database) GetSubRedditsByProject(ctx context.Context, projectID string) ([]*models.SubReddit, error) {
+	return getMany[models.SubReddit](ctx, r, "sub_reddit/query_sub_reddit_by_project.sql", map[string]any{
+		"project_id": projectID,
 	})
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to get subreddit with ID: %w", err)
-	}
-	return subReddits, nil
 }
 
-func (r *Database) GetSubRedditByUrl(ctx context.Context, url, orgID string) (*models.SubReddit, error) {
+func (r *Database) GetSubRedditByUrl(ctx context.Context, url, projectID string) (*models.SubReddit, error) {
 	return getOne[models.SubReddit](ctx, r, "sub_reddit/query_sub_reddit_by_url.sql", map[string]any{
-		"url":             url,
-		"organization_id": orgID,
+		"url":        url,
+		"project_id": projectID,
 	})
 }
 

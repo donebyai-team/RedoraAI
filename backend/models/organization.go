@@ -22,13 +22,7 @@ func (o *Organization) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
 }
 
 // TODO: Move it to a better place
-type OrganizationFeatureFlags struct {
-	Industry           string   `json:"industry"`
-	CompanyDescription string   `json:"company_description"`
-	ProductDescription string   `json:"product_description"`
-	CustomerPersona    string   `json:"customer_persona"`
-	EngagementGoals    []string `json:"engagement_goals"`
-}
+type OrganizationFeatureFlags struct{}
 
 func (b OrganizationFeatureFlags) Value() (driver.Value, error) {
 	return valueAsJSON(b, "organization feature flags")

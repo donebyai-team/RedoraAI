@@ -1,7 +1,0 @@
-BEGIN;
-
-ALTER TABLE sub_reddits
-ALTER COLUMN description TYPE TEXT,
-ALTER COLUMN title TYPE TEXT;
-
-COMMIT;

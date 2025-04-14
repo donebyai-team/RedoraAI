@@ -20,6 +20,7 @@ type Repository interface {
 	CustomerRepository
 	CustomerCaseRepository
 	RedditRepository
+	ProjectRepository
 }
 
 type OrganizationRepository interface {
@@ -57,6 +58,12 @@ type CustomerCaseRepository interface {
 	GetCustomerCaseByID(ctx context.Context, id string) (*models.CustomerCase, error)
 }
 
+type ProjectRepository interface {
+	CreateProject(ctx context.Context, project *models.Project) (*models.Project, error)
+	GetProjects(ctx context.Context, orgID string) ([]*models.Project, error)
+	GetProject(ctx context.Context, id string) (*models.Project, error)
+}
+
 type RedditRepository interface {
 	CreateKeyword(ctx context.Context, keyword *models.Keyword) (*models.Keyword, error)
 	GetSubReddits(ctx context.Context) ([]*models.AugmentedSubReddit, error)
@@ -64,7 +71,7 @@ type RedditRepository interface {
 	GetSubRedditByUrl(ctx context.Context, url, orgID string) (*models.SubReddit, error)
 	DeleteSubRedditByID(ctx context.Context, ID string) (*models.SubReddit, error)
 	GetSubRedditByID(ctx context.Context, ID string) (*models.SubReddit, error)
-	GetSubRedditsByOrg(ctx context.Context, orgID string) ([]*models.SubReddit, error)
+	GetSubRedditsByProject(ctx context.Context, projectID string) ([]*models.SubReddit, error)
 }
 
 type ConversationRepository interface {
