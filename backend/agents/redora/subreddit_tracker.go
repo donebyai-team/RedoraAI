@@ -73,14 +73,20 @@ func (s *SubRedditTracker) searchLeadsFromPosts(ctx context.Context, subReddit *
 		s.logger.Error("unable to fetch posts while tracking subreddit", zap.String("subreddit", subReddit.SubReddit.URL), zap.Error(err))
 		return nil, fmt.Errorf("unable to fetch posts: %w", err)
 	}
+
+	s.logger.Info("got posts from reddit sorted by TOP and time range WEEK", zap.Int("total_posts", len(posts)))
 	// Hard filters
 	filteredPosts, err := s.filterAndEnrichPosts(ctx, redditClient, posts)
 	if err != nil {
 		return nil, fmt.Errorf("filterAndEnrichPosts: %w", err)
 	}
 
-	leads := make([]*models.RedditLead, 0)
+	s.logger.Info("posts after filtering",
+		zap.Int("filtered_posts", len(filteredPosts)),
+		zap.Int("total_posts", len(posts)))
 
+	leads := make([]*models.RedditLead, 0)
+	countPostsWithHighRelevancy := 0
 	// Filter by AI
 	for _, post := range filteredPosts {
 		redditLead := &models.RedditLead{
@@ -101,6 +107,10 @@ func (s *SubRedditTracker) searchLeadsFromPosts(ctx context.Context, subReddit *
 		}
 
 		redditLead.RelevancyScore = relevanceResponse.IsRelevantConfidenceScore
+		if redditLead.RelevancyScore >= 90 {
+			countPostsWithHighRelevancy++
+		}
+
 		redditLead.RedditLeadMetadata = models.RedditLeadMetadata{
 			ChainOfThought:                   relevanceResponse.ChainOfThoughtIsRelevant,
 			SuggestedComment:                 relevanceResponse.SuggestedComment,
@@ -112,6 +122,11 @@ func (s *SubRedditTracker) searchLeadsFromPosts(ctx context.Context, subReddit *
 		}
 		leads = append(leads, redditLead)
 	}
+
+	s.logger.Info("ai suggested posts",
+		zap.Int("high_relevancy_posts", countPostsWithHighRelevancy),
+		zap.Int("total_filtered_posts", len(filteredPosts)))
+
 	return leads, nil
 }
 
