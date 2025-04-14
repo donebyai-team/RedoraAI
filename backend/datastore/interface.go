@@ -61,6 +61,10 @@ type RedditRepository interface {
 	CreateKeyword(ctx context.Context, keyword *models.Keyword) (*models.Keyword, error)
 	GetSubReddits(ctx context.Context) ([]*models.AugmentedSubReddit, error)
 	AddSubReddit(ctx context.Context, subreddit *models.SubReddit) (*models.SubReddit, error)
+	GetSubRedditByUrl(ctx context.Context, url, orgID string) (*models.SubReddit, error)
+	DeleteSubRedditByID(ctx context.Context, ID string) (*models.SubReddit, error)
+	GetSubRedditByID(ctx context.Context, ID string) (*models.SubReddit, error)
+	GetSubRedditsByOrg(ctx context.Context, orgID string) ([]*models.SubReddit, error)
 }
 
 type ConversationRepository interface {
