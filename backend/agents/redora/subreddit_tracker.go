@@ -40,7 +40,7 @@ func NewSubRedditTracker(
 }
 
 func (s *SubRedditTracker) TrackSubreddit(ctx context.Context, subReddit *models.AugmentedSubReddit) error {
-	redditClient, err := s.redditOauthClient.NewRedditClient(ctx, subReddit.Project.ID)
+	redditClient, err := s.redditOauthClient.NewRedditClient(ctx, subReddit.Project.OrganizationID)
 	if err != nil {
 		return fmt.Errorf("redditOauthClient.NewRedditClient: %w", err)
 	}
