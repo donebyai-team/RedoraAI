@@ -2,7 +2,6 @@ BEGIN;
 
 ALTER TABLE sub_reddits
 ALTER COLUMN description TYPE TEXT,
-ALTER COLUMN description SET NOT NULL,
 ALTER COLUMN title TYPE TEXT;
 
 COMMIT;
