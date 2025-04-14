@@ -17,8 +17,8 @@ func (p *Portal) CreateKeyword(ctx context.Context, c *connect.Request[pbportal.
 		return nil, err
 	}
 	req := services.CreateKeyword{
-		Keyword: c.Msg.Keyword,
-		OrgID:   actor.OrganizationID,
+		Keyword:   c.Msg.Keyword,
+		ProjectID: actor.ProjectID,
 	}
 
 	_, err = p.keywordService.CreateKeyword(ctx, &req)
@@ -41,8 +41,8 @@ func (p *Portal) AddSubReddit(ctx context.Context, c *connect.Request[pbreddit.A
 	}
 	redditService := services.NewRedditService(p.logger, p.db, redditClient)
 	err = redditService.CreateSubReddit(ctx, &models.SubReddit{
-		OrganizationID: actor.OrganizationID,
-		URL:            c.Msg.Url,
+		ProjectID: actor.ProjectID,
+		URL:       c.Msg.Url,
 	})
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to add subreddit: %w", err))
@@ -62,7 +62,7 @@ func (p *Portal) GetSubReddits(ctx context.Context, c *connect.Request[emptypb.E
 		return nil, err
 	}
 	redditService := services.NewRedditService(p.logger, p.db, redditClient)
-	subReddits, err := redditService.GetSubReddits(ctx, actor.OrganizationID)
+	subReddits, err := redditService.GetSubReddits(ctx, actor.ProjectID)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to get subreddits: %w", err))
 	}

@@ -8,8 +8,8 @@ import (
 )
 
 type CreateKeyword struct {
-	Keyword string
-	OrgID   string
+	Keyword   string
+	ProjectID string
 }
 
 type KeywordService interface {
@@ -26,8 +26,8 @@ func NewKeywordServiceImpl(db datastore.Repository) *KeywordServiceImpl {
 
 func (c *KeywordServiceImpl) CreateKeyword(ctx context.Context, session *CreateKeyword) (*models.Keyword, error) {
 	keyword, err := c.db.CreateKeyword(context.Background(), &models.Keyword{
-		Keyword: session.Keyword,
-		OrgID:   session.OrgID,
+		Keyword:   session.Keyword,
+		ProjectID: session.ProjectID,
 	})
 
 	if err != nil {

@@ -20,11 +20,11 @@ func (r *Database) CreateProject(ctx context.Context, project *models.Project) (
 
 	err := stmt.GetContext(ctx, &id, map[string]interface{}{
 		"name":             project.Name,
-		"industry":         project.Industry,
 		"description":      project.ProductDescription,
 		"organization_id":  project.OrganizationID,
 		"customer_persona": project.CustomerPersona,
-		"engagement_goals": project.EngagementGoals,
+		"goals":            project.EngagementGoals,
+		"website":          project.WebsiteURL,
 	})
 
 	if err != nil {
