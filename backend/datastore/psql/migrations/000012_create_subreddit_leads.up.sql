@@ -12,7 +12,7 @@ CREATE TABLE sub_reddits_leads
     post_created_at timestamp NOT NULL, -- when the post was created on Reddit in UTC
     comment_id varchar(255),
     last_post_created_at timestamp,
-    metadata jsonb DEFAULT '{}'::jsonb
+    metadata jsonb DEFAULT '{}'::jsonb,
     title TEXT, -- Comment won't have title
     description TEXT,
     metadata jsonb DEFAULT '{}'::jsonb, -- Store any metadata eg. no of comments, likes etc
