@@ -45,20 +45,20 @@ func (s *SubRedditTracker) TrackSubreddit(ctx context.Context, subReddit *models
 		return fmt.Errorf("redditOauthClient.NewRedditClient: %w", err)
 	}
 
-	// Call GetPosts of a subreddit created on and after subReddit LastPostCreatedAt
-	// Filter them via a criteria - https://www.notion.so/Criteria-for-filtering-the-relevant-post-1c70029aaf8f80ec8ba6fd4e29342d6a
-	// After filtering, ask AI to filter again
-	// Save it into the table sub_reddits_leads (models.RedditLead)
 	_, err = s.searchLeadsFromPosts(ctx, subReddit, redditClient)
 	if err != nil {
 		return fmt.Errorf("searchLeadsFromPosts: %w", err)
 	}
 
-	// Save in DB
+	// TODO: Save in DB
 
 	return nil
 }
 
+// Call GetPosts of a subreddit created on and after subReddit LastPostCreatedAt
+// Filter them via a criteria - https://www.notion.so/Criteria-for-filtering-the-relevant-post-1c70029aaf8f80ec8ba6fd4e29342d6a
+// After filtering, ask AI to filter again
+// Save it into the table sub_reddits_leads (models.RedditLead)
 func (s *SubRedditTracker) searchLeadsFromPosts(ctx context.Context, subReddit *models.AugmentedSubReddit, redditClient *reddit.Client) ([]*models.RedditLead, error) {
 	keywords := []string{}
 	for _, keyword := range subReddit.Keywords {
