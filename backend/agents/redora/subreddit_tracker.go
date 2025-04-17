@@ -2,6 +2,7 @@ package redora
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/shank318/doota/agents/state"
 	"github.com/shank318/doota/ai"
@@ -39,33 +40,65 @@ func NewSubRedditTracker(
 	}
 }
 
+type checkIfLeadExists func(ctx context.Context, projectID, ID string) (*models.RedditLead, error)
+
 func (s *SubRedditTracker) TrackSubreddit(ctx context.Context, subReddit *models.AugmentedSubReddit) error {
 	redditClient, err := s.redditOauthClient.NewRedditClient(ctx, subReddit.Project.OrganizationID)
 	if err != nil {
 		return fmt.Errorf("redditOauthClient.NewRedditClient: %w", err)
 	}
 
-	_, err = s.searchLeadsFromPosts(ctx, subReddit, redditClient)
-	if err != nil {
-		return fmt.Errorf("searchLeadsFromPosts: %w", err)
+	allLeads := make([]*models.RedditLead, 0)
+	for _, keyword := range subReddit.Keywords {
+		leads, err := s.searchLeadsFromPosts(ctx, keyword.Keyword, subReddit, redditClient, s.db.GetRedditLeadByPostID)
+		if err != nil {
+			return fmt.Errorf("searchLeadsFromPosts: %w", err)
+		}
+
+		err = s.db.CreateRedditLeads(ctx, leads)
+		if err != nil {
+			return fmt.Errorf("unable to create reddit leads: %w", err)
+		}
+
+		allLeads = append(allLeads, leads...)
 	}
 
-	// TODO: Save in DB
+	// Process comments of all leads
+	//for _, lead := range allLeads {
+	//
+	//}
 
 	return nil
 }
+
+//func (s *SubRedditTracker) searchLeadsFromComments(ctx context.Context, lead *models.RedditLead, redditClient *reddit.Client, leadExists checkIfLeadExists) ([]*models.RedditLead, error) {
+//	post, err := redditClient.GetPostWithAllComments(ctx, lead.PostID)
+//	if err != nil {
+//		return nil, fmt.Errorf("redditClient.GetPostWithAllComments: %w", err)
+//	}
+//
+//	for _, comment := range post.Comments {
+//		lead, err := leadExists(ctx, lead.SubRedditID, post.ID)
+//		if err == nil && lead != nil {
+//			continue
+//		}
+//		if err != nil && !errors.As(err, &datastore.NotFound) {
+//			// Unexpected error, log and skip
+//			s.logger.Error("error while checking if lead exists by post id", zap.Error(err))
+//			continue
+//		}
+//
+//	}
+//
+//}
 
 // Call GetPosts of a subreddit created on and after subReddit LastPostCreatedAt
 // Filter them via a criteria - https://www.notion.so/Criteria-for-filtering-the-relevant-post-1c70029aaf8f80ec8ba6fd4e29342d6a
 // After filtering, ask AI to filter again
 // Save it into the table sub_reddits_leads (models.RedditLead)
-func (s *SubRedditTracker) searchLeadsFromPosts(ctx context.Context, subReddit *models.AugmentedSubReddit, redditClient *reddit.Client) ([]*models.RedditLead, error) {
-	keywords := []string{}
-	for _, keyword := range subReddit.Keywords {
-		keywords = append(keywords, keyword.Keyword)
-	}
+func (s *SubRedditTracker) searchLeadsFromPosts(ctx context.Context, keyword string, subReddit *models.AugmentedSubReddit, redditClient *reddit.Client, leadExists checkIfLeadExists) ([]*models.RedditLead, error) {
 	posts, err := redditClient.GetPosts(ctx, subReddit.SubReddit.SubRedditID, reddit.PostFilters{
-		Keywords: keywords,
+		Keywords: []string{keyword},
 		SortBy:   utils.Ptr(reddit.SortByTOP),
 		TimeRage: utils.Ptr(reddit.TimeRangeWEEK),
 	})
@@ -75,15 +108,33 @@ func (s *SubRedditTracker) searchLeadsFromPosts(ctx context.Context, subReddit *
 	}
 
 	s.logger.Info("got posts from reddit sorted by TOP and time range WEEK", zap.Int("total_posts", len(posts)))
+
+	newPosts := []*reddit.Post{}
+	for _, post := range posts {
+		lead, err := leadExists(ctx, subReddit.SubReddit.SubRedditID, post.ID)
+		if err == nil && lead != nil {
+			continue
+		}
+		if err != nil && !errors.Is(err, datastore.NotFound) {
+			// Unexpected error, log and skip
+			s.logger.Error("error while checking if lead exists by post id", zap.Error(err))
+			continue
+		}
+		// Post doesn't exist, keep it
+		newPosts = append(newPosts, post)
+	}
+
+	s.logger.Info("posts after check if already exists", zap.Int("total_posts", len(newPosts)))
+
 	// Hard filters
-	filteredPosts, err := s.filterAndEnrichPosts(ctx, redditClient, posts)
+	filteredPosts, err := s.filterAndEnrichPosts(ctx, redditClient, newPosts)
 	if err != nil {
 		return nil, fmt.Errorf("filterAndEnrichPosts: %w", err)
 	}
 
-	s.logger.Info("posts after filtering",
+	s.logger.Info("posts after hard filters",
 		zap.Int("filtered_posts", len(filteredPosts)),
-		zap.Int("total_posts", len(posts)))
+		zap.Int("total_posts", len(newPosts)))
 
 	leads := make([]*models.RedditLead, 0)
 	countPostsWithHighRelevancy := 0

@@ -50,7 +50,8 @@ func (p *Portal) protoIntegration(integration *models.Integration) *pbportal.Int
 	//case models.IntegrationTypeGOOGLE:
 	//	return p.resolveGoogleIntegration(ctx, integration)
 	default:
-		panic(fmt.Errorf("unsupported integration type: %s", integration.Type))
+		p.logger.Error("unsupported integration type", zap.String("integration", integration.Type.String()))
+		return nil
 	}
 }
 
@@ -76,7 +77,10 @@ func (p *Portal) GetIntegrations(ctx context.Context, _ *connect.Request[emptypb
 	var result []*pbportal.Integration
 
 	for _, i := range integrations {
-		result = append(result, p.protoIntegration(i))
+		protoInt := p.protoIntegration(i)
+		if protoInt != nil {
+			result = append(result, protoInt)
+		}
 	}
 
 	return connect.NewResponse(&pbportal.Integrations{

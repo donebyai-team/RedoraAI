@@ -142,6 +142,7 @@ type Client struct {
 
 func NewClientWithConfig(config *models.RedditConfig, logger *zap.Logger) *Client {
 	return &Client{
+		baseURL:    redditAPIBase,
 		config:     config,
 		logger:     logger,
 		httpClient: newHTTPClient(),
@@ -174,64 +175,6 @@ func (r *Client) refreshToken(ctx context.Context) error {
 	}
 
 	return nil
-}
-
-// SubReddit represents information about a subreddit.
-type SubReddit struct {
-	ID          string  `json:"id"` // subreddit id
-	URL         string  `json:"url"`
-	DisplayName string  `json:"display_name_prefixed"` // subreddit name
-	Description string  `json:"description"`
-	CreatedAt   float64 `json:"created"`
-	Subscribers int64   `json:"subscribers"`
-	Title       string  `json:"title"`
-	Over18      bool    `json:"over_18"`
-	// Add other relevant fields from the subreddit API response
-}
-
-// Post represents a Reddit post.
-type Post struct {
-	ID          string `json:"id"`
-	Title       string `json:"title"`
-	Author      string `json:"author"`
-	Score       int    `json:"score"`
-	Ups         int    `json:"ups"`   // Number of upvotes
-	Downs       int    `json:"downs"` // Number of downvotes (usually not directly exposed in v1 API)
-	URL         string `json:"url"`
-	Permalink   string `json:"permalink"`
-	CreatedAt   int64  `json:"created_utc"`
-	NumComments int    `json:"num_comments"`
-	Selftext    string `json:"selftext"`
-	IsSelf      bool   `json:"is_self"`
-	Subreddit   string `json:"subreddit"`
-	AuthorInfo  *User  `json:"author_info"`
-	// Add other relevant fields from the post API response
-}
-
-// Comment represents a Reddit comment.
-type Comment struct {
-	ID        string `json:"id"`
-	Author    string `json:"author"`
-	Body      string `json:"body"`
-	Permalink string `json:"permalink"`
-	CreatedAt int64  `json:"created_utc"`
-	Score     int    `json:"score"`
-	Ups       int    `json:"ups"`   // Number of upvotes
-	Downs     int    `json:"downs"` // Number of downvotes (usually not directly exposed in v1 API)
-	ParentID  string `json:"parent_id"`
-	Depth     int    `json:"depth"`
-	// Add other relevant comment fields
-}
-
-// User represents a Reddit user.
-type User struct {
-	ID               string `json:"id"`
-	Name             string `json:"name"`
-	Karma            int    `json:"total_karma"`
-	CreatedAt        int64  `json:"created_utc"`
-	IsGold           bool   `json:"is_gold"`
-	HasVerifiedEmail bool   `json:"has_verified_email"`
-	// Add other relevant user-related fields
 }
 
 func newHTTPClient() *retryablehttp.Client {
@@ -355,6 +298,7 @@ func (r *Client) GetPosts(ctx context.Context, subRedditID string, filters PostF
 		v.Set("t", string(*filters.TimeRage))
 	}
 
+	v.Set("restrict_sr", "1")
 	reqURL := fmt.Sprintf("%s/r/%s/search.json?%s", r.baseURL, subRedditID, v.Encode())
 	req, err := retryablehttp.NewRequestWithContext(ctx, http.MethodGet, reqURL, nil)
 	if err != nil {
@@ -425,13 +369,14 @@ func (r *Client) GetPostByID(ctx context.Context, postID string) (*Post, error) 
 	return nil, ErrNotFound // Post not found in the response
 }
 
-func (r *Client) GetPostComments(ctx context.Context, postID string) ([]*Comment, error) {
-	reqURL := fmt.Sprintf("%s/comments/%s.json", r.baseURL, postID)
+func (r *Client) GetPostWithAllComments(ctx context.Context, postID string) (*Post, error) {
+	reqURL := fmt.Sprintf("%s/comments/%s.json?raw_json=1&sort=new", r.baseURL, postID)
 	req, err := retryablehttp.NewRequestWithContext(ctx, http.MethodGet, reqURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", r.config.AccessToken))
+
 	resp, err := r.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute request: %w", err)
@@ -442,25 +387,12 @@ func (r *Client) GetPostComments(ctx context.Context, postID string) ([]*Comment
 		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
-	var response []struct {
-		Data struct {
-			Children []struct {
-				Data Comment `json:"data"`
-			} `json:"children"`
-		} `json:"data"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+	var rawResp []json.RawMessage
+	if err := json.NewDecoder(resp.Body).Decode(&rawResp); err != nil {
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
 
-	var comments []*Comment
-	if len(response) > 1 { // The first element is the post itself
-		for _, child := range response[1].Data.Children {
-			comments = append(comments, &child.Data)
-		}
-	}
-
-	return comments, nil
+	return r.parsePostWithComments(ctx, rawResp)
 }
 
 func (r *Client) isTokenExpired() bool {

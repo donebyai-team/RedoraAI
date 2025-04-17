@@ -72,6 +72,10 @@ type RedditRepository interface {
 	DeleteSubRedditByID(ctx context.Context, ID string) (*models.SubReddit, error)
 	GetSubRedditByID(ctx context.Context, ID string) (*models.SubReddit, error)
 	GetSubRedditsByProject(ctx context.Context, projectID string) ([]*models.SubReddit, error)
+
+	GetRedditLeadByPostID(ctx context.Context, projectID, postID string) (*models.RedditLead, error)
+	GetRedditLeadByCommentID(ctx context.Context, projectID, commentID string) (*models.RedditLead, error)
+	CreateRedditLeads(ctx context.Context, reddit []*models.RedditLead) error
 }
 
 type ConversationRepository interface {

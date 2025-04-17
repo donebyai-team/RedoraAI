@@ -37,7 +37,7 @@ func (r *Database) CreateProject(ctx context.Context, project *models.Project) (
 
 func (r *Database) GetProjects(ctx context.Context, orgID string) ([]*models.Project, error) {
 	return getMany[models.Project](ctx, r, "project/query_project_by_org.sql", map[string]any{
-		"project_id": orgID,
+		"organization_id": orgID,
 	})
 }
 

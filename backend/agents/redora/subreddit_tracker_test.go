@@ -65,7 +65,7 @@ func TestSubRedditTracker(t *testing.T) {
 	subRedditToTrack := &models.AugmentedSubReddit{
 		SubReddit: &models.SubReddit{
 			ID:          "internal-subreddit",
-			SubRedditID: "subreddit to track",
+			SubRedditID: "sales",
 		},
 		Keywords: []*models.Keyword{{
 			Keyword: "AI",
@@ -82,7 +82,9 @@ func TestSubRedditTracker(t *testing.T) {
 		},
 	}
 
-	posts, err := tracker.searchLeadsFromPosts(context.Background(), subRedditToTrack, testRedditClient(t))
+	posts, err := tracker.searchLeadsFromPosts(context.Background(), "s", subRedditToTrack, testRedditClient(t), func(ctx context.Context, projectID, postID string) (*models.RedditLead, error) {
+		return nil, nil
+	})
 	assert.NoError(t, err)
 	assert.Len(t, posts, 1)
 }

@@ -124,3 +124,16 @@ func (r *Database) DeleteSubRedditByID(ctx context.Context, ID string) (*models.
 
 	return &subreddit, nil
 }
+
+func (r *Database) GetRedditLeadByPostID(ctx context.Context, projectID, postID string) (*models.RedditLead, error) {
+	panic("implement me")
+}
+
+func (r *Database) GetRedditLeadByCommentID(ctx context.Context, projectID, commentID string) (*models.RedditLead, error) {
+	panic("implement me")
+}
+
+func (r *Database) CreateRedditLeads(ctx context.Context, reddit []*models.RedditLead) error {
+	//TODO implement me
+	panic("implement me")
+}
