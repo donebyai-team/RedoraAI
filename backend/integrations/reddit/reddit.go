@@ -31,6 +31,7 @@ type OauthClient struct {
 	clientSecret string
 	config       *oauth2.Config
 	db           datastore.Repository
+	httpClient   *retryablehttp.Client
 }
 
 func NewRedditOauthClient(logger *zap.Logger, db datastore.Repository, clientID, clientSecret string) *OauthClient {
@@ -51,17 +52,29 @@ func NewRedditOauthClient(logger *zap.Logger, db datastore.Repository, clientID,
 		config:       config,
 		logger:       logger,
 		db:           db,
+		httpClient:   newHTTPClient(),
 	}
 }
 
 // GetAuthURL returns the authorization URL
 func (r *OauthClient) GetAuthURL(state string) string {
-	return r.config.AuthCodeURL(state, oauth2.AccessTypeOffline)
+	base := r.config.AuthCodeURL(state, oauth2.AccessTypeOffline)
+	return base + "&duration=permanent&approval_prompt=force"
+}
+
+type userAgentTransport struct {
+	base http.RoundTripper
+}
+
+func (u *userAgentTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	req.Header.Set("User-Agent", "linux:com.reddit.scraper:v0.1 (by /u/Ashamed-Lime-6816)")
+	return u.base.RoundTrip(req)
 }
 
 // Authorize exchanges the auth code for access + refresh tokens
 func (r *OauthClient) Authorize(ctx context.Context, code string) (*models.RedditConfig, error) {
-	token, err := r.config.Exchange(ctx, code)
+	ctx = context.WithValue(ctx, oauth2.HTTPClient, r.httpClient.HTTPClient)
+	token, err := r.config.Exchange(ctx, code, oauth2.AccessTypeOffline)
 	if err != nil {
 		return nil, fmt.Errorf("failed to exchange token: %w", err)
 	}
@@ -112,9 +125,9 @@ func (r *OauthClient) NewRedditClient(ctx context.Context, orgID string) (*Clien
 	client := &Client{
 		logger:      r.logger,
 		config:      integration.GetRedditConfig(),
-		httpClient:  newHTTPClient(),
+		httpClient:  r.httpClient,
 		oauthConfig: r.config,
-		baseURL:     "https://oauth.reddit.com",
+		baseURL:     redditAPIBase,
 	}
 	if client.isTokenExpired() {
 		err := client.refreshToken(ctx)
@@ -137,6 +150,7 @@ type Client struct {
 	config      *models.RedditConfig
 	oauthConfig *oauth2.Config
 	httpClient  *retryablehttp.Client
+	userAgent   string
 	baseURL     string
 }
 
@@ -181,7 +195,9 @@ func newHTTPClient() *retryablehttp.Client {
 	cli := retryablehttp.NewClient()
 	cli.Logger = nil
 	cli.RetryMax = 1
-	cli.HTTPClient.Transport = &http.Transport{
+
+	// Your existing transport
+	baseTransport := &http.Transport{
 		Proxy:              http.ProxyFromEnvironment,
 		DisableKeepAlives:  false,
 		DisableCompression: false,
@@ -196,10 +212,12 @@ func newHTTPClient() *retryablehttp.Client {
 		ExpectContinueTimeout: 1 * time.Second,
 	}
 
+	// Wrap with user-agent injection
+	cli.HTTPClient.Transport = &userAgentTransport{base: baseTransport}
+
 	cli.ErrorHandler = func(resp *http.Response, err error, numTries int) (*http.Response, error) {
 		return resp, err
 	}
-
 	return cli
 }
 

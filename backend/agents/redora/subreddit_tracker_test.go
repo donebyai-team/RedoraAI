@@ -2,6 +2,7 @@ package redora
 
 import (
 	"context"
+	"fmt"
 	"github.com/shank318/doota/ai"
 	"github.com/shank318/doota/integrations/reddit"
 	"github.com/shank318/doota/models"
@@ -81,6 +82,13 @@ func TestSubRedditTracker(t *testing.T) {
 			EngagementGoals:    "",
 		},
 	}
+
+	comments, err := testRedditClient(t).GetPostWithAllComments(context.Background(), "1jvzz1u")
+	if err != nil {
+		return
+	}
+
+	fmt.Println(comments)
 
 	posts, err := tracker.searchLeadsFromPosts(context.Background(), "s", subRedditToTrack, testRedditClient(t), func(ctx context.Context, projectID, postID string) (*models.RedditLead, error) {
 		return nil, nil

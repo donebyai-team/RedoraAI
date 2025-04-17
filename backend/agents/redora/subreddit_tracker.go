@@ -148,7 +148,7 @@ func (s *SubRedditTracker) searchLeadsFromPosts(ctx context.Context, keyword str
 			Type:          models.RedditLeadTypePOST,
 			Title:         utils.Ptr(post.Title),
 			Description:   post.Selftext,
-			PostCreatedAt: time.Unix(post.CreatedAt, 0),
+			PostCreatedAt: time.Unix(int64(post.CreatedAt), 0),
 		}
 
 		relevanceResponse, err := s.aiClient.IsRedditPostRelevant(ctx, subReddit.Project, redditLead, s.gptModel, s.logger)
@@ -200,7 +200,7 @@ func (s *SubRedditTracker) filterAndEnrichPosts(ctx context.Context, redditClien
 		}
 
 		// By Account age,ignore if < 30days
-		if time.Since(time.Unix(user.CreatedAt, 0)) < 30*24*time.Hour {
+		if time.Since(time.Unix(int64(user.CreatedAt), 0)) < 30*24*time.Hour {
 			continue
 		}
 		post.AuthorInfo = user
