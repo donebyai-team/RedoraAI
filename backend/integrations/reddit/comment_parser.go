@@ -120,7 +120,7 @@ func (r *Client) fetchMoreComments(ctx context.Context, children []string, paren
 
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", r.config.AccessToken))
 
-	resp, err := r.httpClient.Do(req)
+	resp, err := r.DoWithRateLimit(req)
 	if err != nil {
 		return nil, err
 	}

@@ -10,10 +10,13 @@ import (
 	"github.com/shank318/doota/models"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
+	"golang.org/x/time/rate"
 	"io"
+	"math/rand"
 	"net"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -214,14 +217,48 @@ func newHTTPClient() *retryablehttp.Client {
 
 	// Wrap with user-agent injection
 	cli.HTTPClient.Transport = &userAgentTransport{base: baseTransport}
+	cli.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
+		if err != nil {
+			return true, err
+		}
+
+		// Retry on 429 or 5xx
+		if resp.StatusCode == http.StatusTooManyRequests || (resp.StatusCode >= 500 && resp.StatusCode != 501) {
+			return true, nil
+		}
+		return false, nil
+	}
 
 	cli.ErrorHandler = func(resp *http.Response, err error, numTries int) (*http.Response, error) {
+		if resp != nil && resp.StatusCode == http.StatusTooManyRequests {
+			wait := 5 * time.Second // default wait
+			if retryAfter := resp.Header.Get("Retry-After"); retryAfter != "" {
+				if seconds, err := strconv.Atoi(retryAfter); err == nil {
+					wait = time.Duration(seconds) * time.Second
+				}
+			}
+
+			jitter := time.Duration(rand.Intn(1000)) * time.Millisecond
+			time.Sleep(wait + jitter) // Add random jitter to reduce sync retries
+			return nil, fmt.Errorf("rate limited (429), waited %s", wait+jitter)
+		}
+
 		return resp, err
 	}
 	return cli
 }
 
 var ErrNotFound = errors.New("not found")
+
+var redditLimiter = rate.NewLimiter(rate.Every(500*time.Millisecond), 1) // 2 req/sec
+
+func (r *Client) DoWithRateLimit(req *retryablehttp.Request) (*http.Response, error) {
+	err := redditLimiter.Wait(req.Context())
+	if err != nil {
+		return nil, err
+	}
+	return r.httpClient.Do(req)
+}
 
 func (r *Client) GetUser(ctx context.Context, userID string) (*User, error) {
 	reqURL := fmt.Sprintf("%s/user/%s/about.json", r.baseURL, userID)
@@ -230,7 +267,7 @@ func (r *Client) GetUser(ctx context.Context, userID string) (*User, error) {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", r.config.AccessToken))
-	resp, err := r.httpClient.Do(req)
+	resp, err := r.DoWithRateLimit(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute request: %w", err)
 	}
@@ -264,7 +301,7 @@ func (r *Client) GetSubRedditByURL(ctx context.Context, urlPath string) (*SubRed
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", r.config.AccessToken))
-	resp, err := r.httpClient.Do(req)
+	resp, err := r.DoWithRateLimit(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute request: %w", err)
 	}
@@ -323,7 +360,7 @@ func (r *Client) GetPosts(ctx context.Context, subRedditID string, filters PostF
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", r.config.AccessToken))
-	resp, err := r.httpClient.Do(req)
+	resp, err := r.DoWithRateLimit(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute request: %w", err)
 	}
@@ -359,7 +396,7 @@ func (r *Client) GetPostByID(ctx context.Context, postID string) (*Post, error) 
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", r.config.AccessToken))
-	resp, err := r.httpClient.Do(req)
+	resp, err := r.DoWithRateLimit(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute request: %w", err)
 	}
@@ -395,7 +432,7 @@ func (r *Client) GetPostWithAllComments(ctx context.Context, postID string) (*Po
 	}
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", r.config.AccessToken))
 
-	resp, err := r.httpClient.Do(req)
+	resp, err := r.DoWithRateLimit(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute request: %w", err)
 	}
