@@ -10,6 +10,7 @@ CREATE TABLE sub_reddits
     project_id uuid NOT NULL,
     subreddit_created_at timestamp NOT NULL,
     last_tracked_at timestamp,
+    last_tracked_post timestamp,
     subscribers integer,
     title TEXT,
     created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,

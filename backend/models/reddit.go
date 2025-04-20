@@ -28,7 +28,7 @@ type SubReddit struct {
 	Subscribers       *int64     `db:"subscribers"`
 	Title             *string    `db:"title"`
 	LastTrackedAt     *time.Time `db:"last_tracked_at"`
-	LastPostCreatedAt *time.Time `db:"last_post_created_at"`
+	LastPostCreatedAt *time.Time `db:"last_tracked_post"`
 	CreatedAt         time.Time  `db:"created_at"`
 	UpdatedAt         *time.Time `db:"updated_at"`
 }

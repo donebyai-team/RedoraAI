@@ -11,7 +11,6 @@ CREATE TABLE sub_reddits_leads
     relevancy_score FLOAT NOT NULL,
     post_created_at timestamp NOT NULL, -- when the post was created on Reddit in UTC
     comment_id varchar(255),
-    last_post_created_at timestamp,
     metadata jsonb DEFAULT '{}'::jsonb,
     title TEXT, -- Comment won't have title
     description TEXT,
