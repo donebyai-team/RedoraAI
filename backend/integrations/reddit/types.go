@@ -2,11 +2,11 @@ package reddit
 
 // SubReddit represents information about a subreddit.
 type SubReddit struct {
-	ID          string  `json:"id"` // subreddit id
-	URL         string  `json:"url"`
-	DisplayName string  `json:"display_name_prefixed"` // subreddit name
-	Description string  `json:"description"`
-	CreatedAt   float64 `json:"created"`
+	ID          string  `json:"id"`           // subreddit id eg. 2qib3
+	URL         string  `json:"url"`          // eg. r/sales
+	DisplayName string  `json:"display_name"` // subreddit name eg. sales
+	Description string  `json:"public_description"`
+	CreatedAt   float64 `json:"created_utc"`
 	Subscribers int64   `json:"subscribers"`
 	Title       string  `json:"title"`
 	Over18      bool    `json:"over_18"`
@@ -35,17 +35,18 @@ type Post struct {
 
 // Comment represents a Reddit comment.
 type Comment struct {
-	ID        string  `json:"id"`
-	Author    string  `json:"author"`
-	Body      string  `json:"body"`
-	Permalink string  `json:"permalink"`
-	CreatedAt float64 `json:"created_utc"`
-	Score     int     `json:"score"`
-	Ups       int     `json:"ups"`   // Number of upvotes
-	Downs     int     `json:"downs"` // Number of downvotes (usually not directly exposed in v1 API)
-	ParentID  string  `json:"parent_id"`
-	Depth     int     `json:"depth"`
-	Comments  []*Comment
+	ID         string  `json:"id"`
+	Author     string  `json:"author"`
+	Body       string  `json:"body"`
+	Permalink  string  `json:"permalink"`
+	CreatedAt  float64 `json:"created_utc"`
+	Score      int     `json:"score"`
+	Ups        int     `json:"ups"`   // Number of upvotes
+	Downs      int     `json:"downs"` // Number of downvotes (usually not directly exposed in v1 API)
+	ParentID   string  `json:"parent_id"`
+	Depth      int     `json:"depth"`
+	Comments   []*Comment
+	AuthorInfo *User
 	// Add other relevant comment fields
 }
 

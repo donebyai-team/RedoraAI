@@ -83,13 +83,15 @@ func (i *Integration) GetRedditConfig() *RedditConfig {
 	}
 
 	encryptedData := struct {
-		APIKey string `json:"access_token"`
+		AccessToken  string `json:"access_token"`
+		RefreshToken string `json:"refresh_token"`
 	}{}
 
 	if err := json.Unmarshal([]byte(i.EncryptedConfig), &encryptedData); err != nil {
 		panic(fmt.Errorf("unable to unmarshal reddit config: %w", err))
 	}
-	out.AccessToken = encryptedData.APIKey
+	out.AccessToken = encryptedData.AccessToken
+	out.RefreshToken = encryptedData.RefreshToken
 	return &out
 }
 

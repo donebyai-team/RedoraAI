@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/integrations/reddit"
@@ -30,6 +31,9 @@ func NewRedditService(logger *zap.Logger, db datastore.Repository, redditClient 
 func (r redditService) CreateSubReddit(ctx context.Context, subReddit *models.SubReddit) error {
 	// Check if the subreddit already exists in the DB
 	existingSubreddit, err := r.db.GetSubRedditByUrl(ctx, subReddit.URL, subReddit.ProjectID)
+	if !errors.Is(err, datastore.NotFound) {
+		return fmt.Errorf("get existing subreddit: %w", err)
+	}
 
 	if existingSubreddit != nil {
 		return fmt.Errorf("subreddit already exists: %s", subReddit.URL)
@@ -75,7 +79,7 @@ func (r redditService) RemoveSubReddit(ctx context.Context, id string) error {
 		return fmt.Errorf("failed to fetch subreddit with ID %s: %w", id, err)
 	}
 	if subreddit == nil {
-		return fmt.Errorf("no subreddit found for organization ID %s", id)
+		return fmt.Errorf("no subreddit found under the project")
 	}
 
 	// Step 2: Delete the subreddit
