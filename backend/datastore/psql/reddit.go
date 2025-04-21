@@ -160,18 +160,18 @@ func (r *Database) UpdateRedditLeadStatus(ctx context.Context, lead *models.Redd
 	return nil
 }
 
-func (r *Database) GetRedditLeadsByStatus(ctx context.Context, projectID, status string) ([]*models.RedditLead, error) {
+func (r *Database) GetRedditLeadsByStatus(ctx context.Context, projectID string, status models.LeadStatus) ([]*models.RedditLead, error) {
 	return getMany[models.RedditLead](ctx, r, "reddit_leads/query_reddit_lead_by_status.sql", map[string]any{
 		"status":     status,
 		"project_id": projectID,
 	})
 }
 
-func (r *Database) GetRedditLeadsByRelevancy(ctx context.Context, projectID, relevancy float64, subReddits []string) ([]*models.RedditLead, error) {
+func (r *Database) GetRedditLeadsByRelevancy(ctx context.Context, projectID string, relevancy float32, subReddits []string) ([]*models.RedditLead, error) {
 	return getMany[models.RedditLead](ctx, r, "reddit_leads/query_reddit_lead_by_filter.sql", map[string]any{
 		"subreddit_id":    pq.Array(subReddits),
 		"relevancy_score": relevancy,
-		"status":          models.RedditLeadStatusNEW,
+		"status":          models.LeadStatusNEW,
 		"project_id":      projectID,
 	})
 }
@@ -193,7 +193,7 @@ func (r *Database) CreateRedditLeads(ctx context.Context, redditLeads []*models.
 			"type":            reddit.Type,
 			"relevancy_score": reddit.RelevancyScore,
 			"post_created_at": reddit.PostCreatedAt,
-			"metadata":        reddit.RedditLeadMetadata,
+			"metadata":        reddit.LeadMetadata,
 			"description":     reddit.Description,
 			"title":           reddit.Title,
 		})

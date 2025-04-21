@@ -139,7 +139,7 @@ func (s *SubRedditTracker) searchLeadsFromPosts(ctx context.Context, keyword str
 			SubRedditID:   subReddit.SubReddit.ID,
 			Author:        post.Author,
 			PostID:        post.ID,
-			Type:          models.RedditLeadTypePOST,
+			Type:          models.LeadTypePOST,
 			Title:         utils.Ptr(post.Title),
 			Description:   post.Selftext,
 			PostCreatedAt: time.Unix(int64(post.CreatedAt), 0),
@@ -156,7 +156,7 @@ func (s *SubRedditTracker) searchLeadsFromPosts(ctx context.Context, keyword str
 			countPostsWithHighRelevancy++
 		}
 
-		redditLead.RedditLeadMetadata = models.RedditLeadMetadata{
+		redditLead.LeadMetadata = models.LeadMetadata{
 			ChainOfThought:                   relevanceResponse.ChainOfThoughtIsRelevant,
 			SuggestedComment:                 relevanceResponse.SuggestedComment,
 			SuggestedDM:                      relevanceResponse.SuggestedDM,

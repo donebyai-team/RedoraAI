@@ -5,7 +5,7 @@
 import type { GenEnum, GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv1";
 import type { Message } from "@bufbuild/protobuf";
 import type { EmptySchema, Timestamp } from "@bufbuild/protobuf/wkt";
-import type { AddSubRedditRequestSchema, GetSubredditsResponseSchema, Integration as Integration$1, RemoveSubRedditRequestSchema } from "../../reddit/v1/reddit_pb";
+import type { AddSubRedditRequestSchema, GetLeadsByStatusRequestSchema, GetLeadsResponseSchema, GetRelevantLeadsRequestSchema, GetSubredditsResponseSchema, Integration as Integration$1, RemoveSubRedditRequestSchema, UpdateLeadStatusRequestSchema } from "../../reddit/v1/reddit_pb";
 
 /**
  * Describes the file doota/portal/v1/portal.proto.
@@ -746,14 +746,6 @@ export declare const PortalService: GenService<{
     output: typeof JWTSchema;
   },
   /**
-   * @generated from rpc doota.portal.v1.PortalService.CreateKeyword
-   */
-  createKeyword: {
-    methodKind: "unary";
-    input: typeof CreateKeywordReqSchema;
-    output: typeof EmptySchema;
-  },
-  /**
    * @generated from rpc doota.portal.v1.PortalService.OauthAuthorize
    */
   oauthAuthorize: {
@@ -768,6 +760,24 @@ export declare const PortalService: GenService<{
     methodKind: "unary";
     input: typeof OauthCallbackRequestSchema;
     output: typeof OauthCallbackResponseSchema;
+  },
+  /**
+   * @generated from rpc doota.portal.v1.PortalService.GetIntegrations
+   */
+  getIntegrations: {
+    methodKind: "unary";
+    input: typeof EmptySchema;
+    output: typeof IntegrationsSchema;
+  },
+  /**
+   * Reddit
+   *
+   * @generated from rpc doota.portal.v1.PortalService.CreateKeyword
+   */
+  createKeyword: {
+    methodKind: "unary";
+    input: typeof CreateKeywordReqSchema;
+    output: typeof EmptySchema;
   },
   /**
    * @generated from rpc doota.portal.v1.PortalService.AddSubReddit
@@ -794,12 +804,28 @@ export declare const PortalService: GenService<{
     output: typeof EmptySchema;
   },
   /**
-   * @generated from rpc doota.portal.v1.PortalService.GetIntegrations
+   * @generated from rpc doota.portal.v1.PortalService.GetRelevantLeads
    */
-  getIntegrations: {
+  getRelevantLeads: {
     methodKind: "unary";
-    input: typeof EmptySchema;
-    output: typeof IntegrationsSchema;
+    input: typeof GetRelevantLeadsRequestSchema;
+    output: typeof GetLeadsResponseSchema;
+  },
+  /**
+   * @generated from rpc doota.portal.v1.PortalService.GetLeadsByStatus
+   */
+  getLeadsByStatus: {
+    methodKind: "unary";
+    input: typeof GetLeadsByStatusRequestSchema;
+    output: typeof GetLeadsResponseSchema;
+  },
+  /**
+   * @generated from rpc doota.portal.v1.PortalService.UpdateLeadStatus
+   */
+  updateLeadStatus: {
+    methodKind: "unary";
+    input: typeof UpdateLeadStatusRequestSchema;
+    output: typeof EmptySchema;
   },
 }>;
 

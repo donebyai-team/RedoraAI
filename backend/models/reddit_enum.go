@@ -12,72 +12,72 @@ import (
 )
 
 const (
-	// RedditLeadStatusNEW is a RedditLeadStatus of type NEW.
-	RedditLeadStatusNEW RedditLeadStatus = "NEW"
-	// RedditLeadStatusCOMPLETED is a RedditLeadStatus of type COMPLETED.
-	RedditLeadStatusCOMPLETED RedditLeadStatus = "COMPLETED"
-	// RedditLeadStatusNOTRELEVANT is a RedditLeadStatus of type NOT_RELEVANT.
-	RedditLeadStatusNOTRELEVANT RedditLeadStatus = "NOT_RELEVANT"
+	// LeadStatusNEW is a LeadStatus of type NEW.
+	LeadStatusNEW LeadStatus = "NEW"
+	// LeadStatusCOMPLETED is a LeadStatus of type COMPLETED.
+	LeadStatusCOMPLETED LeadStatus = "COMPLETED"
+	// LeadStatusNOTRELEVANT is a LeadStatus of type NOT_RELEVANT.
+	LeadStatusNOTRELEVANT LeadStatus = "NOT_RELEVANT"
 )
 
-var ErrInvalidRedditLeadStatus = errors.New("not a valid RedditLeadStatus")
+var ErrInvalidLeadStatus = errors.New("not a valid LeadStatus")
 
 // String implements the Stringer interface.
-func (x RedditLeadStatus) String() string {
+func (x LeadStatus) String() string {
 	return string(x)
 }
 
 // IsValid provides a quick way to determine if the typed value is
 // part of the allowed enumerated values
-func (x RedditLeadStatus) IsValid() bool {
-	_, err := ParseRedditLeadStatus(string(x))
+func (x LeadStatus) IsValid() bool {
+	_, err := ParseLeadStatus(string(x))
 	return err == nil
 }
 
-var _RedditLeadStatusValue = map[string]RedditLeadStatus{
-	"NEW":          RedditLeadStatusNEW,
-	"COMPLETED":    RedditLeadStatusCOMPLETED,
-	"NOT_RELEVANT": RedditLeadStatusNOTRELEVANT,
+var _LeadStatusValue = map[string]LeadStatus{
+	"NEW":          LeadStatusNEW,
+	"COMPLETED":    LeadStatusCOMPLETED,
+	"NOT_RELEVANT": LeadStatusNOTRELEVANT,
 }
 
-// ParseRedditLeadStatus attempts to convert a string to a RedditLeadStatus.
-func ParseRedditLeadStatus(name string) (RedditLeadStatus, error) {
-	if x, ok := _RedditLeadStatusValue[name]; ok {
+// ParseLeadStatus attempts to convert a string to a LeadStatus.
+func ParseLeadStatus(name string) (LeadStatus, error) {
+	if x, ok := _LeadStatusValue[name]; ok {
 		return x, nil
 	}
-	return RedditLeadStatus(""), fmt.Errorf("%s is %w", name, ErrInvalidRedditLeadStatus)
+	return LeadStatus(""), fmt.Errorf("%s is %w", name, ErrInvalidLeadStatus)
 }
 
 const (
-	// RedditLeadTypeCOMMENT is a RedditLeadType of type COMMENT.
-	RedditLeadTypeCOMMENT RedditLeadType = "COMMENT"
-	// RedditLeadTypePOST is a RedditLeadType of type POST.
-	RedditLeadTypePOST RedditLeadType = "POST"
+	// LeadTypeCOMMENT is a LeadType of type COMMENT.
+	LeadTypeCOMMENT LeadType = "COMMENT"
+	// LeadTypePOST is a LeadType of type POST.
+	LeadTypePOST LeadType = "POST"
 )
 
-var ErrInvalidRedditLeadType = errors.New("not a valid RedditLeadType")
+var ErrInvalidLeadType = errors.New("not a valid LeadType")
 
 // String implements the Stringer interface.
-func (x RedditLeadType) String() string {
+func (x LeadType) String() string {
 	return string(x)
 }
 
 // IsValid provides a quick way to determine if the typed value is
 // part of the allowed enumerated values
-func (x RedditLeadType) IsValid() bool {
-	_, err := ParseRedditLeadType(string(x))
+func (x LeadType) IsValid() bool {
+	_, err := ParseLeadType(string(x))
 	return err == nil
 }
 
-var _RedditLeadTypeValue = map[string]RedditLeadType{
-	"COMMENT": RedditLeadTypeCOMMENT,
-	"POST":    RedditLeadTypePOST,
+var _LeadTypeValue = map[string]LeadType{
+	"COMMENT": LeadTypeCOMMENT,
+	"POST":    LeadTypePOST,
 }
 
-// ParseRedditLeadType attempts to convert a string to a RedditLeadType.
-func ParseRedditLeadType(name string) (RedditLeadType, error) {
-	if x, ok := _RedditLeadTypeValue[name]; ok {
+// ParseLeadType attempts to convert a string to a LeadType.
+func ParseLeadType(name string) (LeadType, error) {
+	if x, ok := _LeadTypeValue[name]; ok {
 		return x, nil
 	}
-	return RedditLeadType(""), fmt.Errorf("%s is %w", name, ErrInvalidRedditLeadType)
+	return LeadType(""), fmt.Errorf("%s is %w", name, ErrInvalidLeadType)
 }

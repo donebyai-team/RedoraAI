@@ -18,13 +18,18 @@ service PortalService {
   rpc CreateCustomerCase(CreateCustomerCaseReq) returns (.google.protobuf.Empty);
   rpc PasswordlessStart(PasswordlessStartRequest) returns (.google.protobuf.Empty);
   rpc PasswordlessVerify(PasswordlessStartVerify) returns (JWT);
-  rpc CreateKeyword(CreateKeywordReq) returns (.google.protobuf.Empty);
   rpc OauthAuthorize(OauthAuthorizeRequest) returns (OauthAuthorizeResponse);
   rpc OauthCallback(OauthCallbackRequest) returns (OauthCallbackResponse);
+  rpc GetIntegrations(.google.protobuf.Empty) returns (Integrations);
+
+  // Reddit
+  rpc CreateKeyword(CreateKeywordReq) returns (.google.protobuf.Empty);
   rpc AddSubReddit(doota.reddit.v1.AddSubRedditRequest) returns (.google.protobuf.Empty);
   rpc GetSubReddits(.google.protobuf.Empty) returns (doota.reddit.v1.GetSubredditsResponse);
   rpc RemoveSubReddit(doota.reddit.v1.RemoveSubRedditRequest) returns (.google.protobuf.Empty);
-  rpc GetIntegrations(.google.protobuf.Empty) returns (Integrations);
+  rpc GetRelevantLeads(doota.reddit.v1.GetRelevantLeadsRequest) returns (doota.reddit.v1.GetLeadsResponse);
+  rpc GetLeadsByStatus(doota.reddit.v1.GetLeadsByStatusRequest) returns (doota.reddit.v1.GetLeadsResponse);
+  rpc UpdateLeadStatus(doota.reddit.v1.UpdateLeadStatusRequest) returns (.google.protobuf.Empty);
 }
 
 message CreateCustomerCaseReq {
