@@ -12,6 +12,43 @@ import (
 )
 
 const (
+	// RedditLeadStatusNEW is a RedditLeadStatus of type NEW.
+	RedditLeadStatusNEW RedditLeadStatus = "NEW"
+	// RedditLeadStatusCOMPLETED is a RedditLeadStatus of type COMPLETED.
+	RedditLeadStatusCOMPLETED RedditLeadStatus = "COMPLETED"
+	// RedditLeadStatusNOTRELEVANT is a RedditLeadStatus of type NOT_RELEVANT.
+	RedditLeadStatusNOTRELEVANT RedditLeadStatus = "NOT_RELEVANT"
+)
+
+var ErrInvalidRedditLeadStatus = errors.New("not a valid RedditLeadStatus")
+
+// String implements the Stringer interface.
+func (x RedditLeadStatus) String() string {
+	return string(x)
+}
+
+// IsValid provides a quick way to determine if the typed value is
+// part of the allowed enumerated values
+func (x RedditLeadStatus) IsValid() bool {
+	_, err := ParseRedditLeadStatus(string(x))
+	return err == nil
+}
+
+var _RedditLeadStatusValue = map[string]RedditLeadStatus{
+	"NEW":          RedditLeadStatusNEW,
+	"COMPLETED":    RedditLeadStatusCOMPLETED,
+	"NOT_RELEVANT": RedditLeadStatusNOTRELEVANT,
+}
+
+// ParseRedditLeadStatus attempts to convert a string to a RedditLeadStatus.
+func ParseRedditLeadStatus(name string) (RedditLeadStatus, error) {
+	if x, ok := _RedditLeadStatusValue[name]; ok {
+		return x, nil
+	}
+	return RedditLeadStatus(""), fmt.Errorf("%s is %w", name, ErrInvalidRedditLeadStatus)
+}
+
+const (
 	// RedditLeadTypeCOMMENT is a RedditLeadType of type COMMENT.
 	RedditLeadTypeCOMMENT RedditLeadType = "COMMENT"
 	// RedditLeadTypePOST is a RedditLeadType of type POST.

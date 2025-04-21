@@ -57,6 +57,9 @@ type AugmentedSubReddit struct {
 // ENUM(COMMENT, POST)
 type RedditLeadType string
 
+// ENUM(NEW, COMPLETED, NOT_RELEVANT)
+type RedditLeadStatus string
+
 type RedditLead struct {
 	ID                 string             `db:"id"`
 	ProjectID          string             `db:"project_id"`
@@ -64,6 +67,7 @@ type RedditLead struct {
 	Author             string             `db:"author"`
 	PostID             string             `db:"post_id"`
 	Type               RedditLeadType     `db:"type"`
+	Status             RedditLeadStatus   `db:"status"`
 	RelevancyScore     float64            `db:"relevancy_score"`
 	PostCreatedAt      time.Time          `db:"post_created_at"`
 	CommentID          *string            `db:"comment_id"`
@@ -81,8 +85,8 @@ type RedditLeadMetadata struct {
 	SuggestedDM                      string `json:"suggested_dm"`
 	ChainOfThoughtSuggestedComment   string `json:"chain_of_thought_suggested_comment"`
 	ChainOfThoughtCommentSuggestedDM string `json:"chain_of_thought_comment"`
-	NoOfComments                     int    `json:"no_of_comments"`
-	NoOfLikes                        int    `json:"no_of_likes"`
+	PostURL                          string `json:"post_url"`
+	UserURL                          string `json:"user_url"`
 }
 
 func (b RedditLeadMetadata) Value() (driver.Value, error) {

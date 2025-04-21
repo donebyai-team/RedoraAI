@@ -73,6 +73,8 @@ type RedditRepository interface {
 	GetSubRedditByID(ctx context.Context, ID string) (*models.SubReddit, error)
 	GetSubRedditsByProject(ctx context.Context, projectID string) ([]*models.SubReddit, error)
 
+	GetRedditLeadsByStatus(ctx context.Context, projectID, status string) ([]*models.RedditLead, error)
+	GetRedditLeadsByRelevancy(ctx context.Context, projectID, relevancy float64, subReddits []string) ([]*models.RedditLead, error)
 	GetRedditLeadByPostID(ctx context.Context, projectID, postID string) (*models.RedditLead, error)
 	GetRedditLeadByCommentID(ctx context.Context, projectID, commentID string) (*models.RedditLead, error)
 	CreateRedditLeads(ctx context.Context, reddit []*models.RedditLead) error
