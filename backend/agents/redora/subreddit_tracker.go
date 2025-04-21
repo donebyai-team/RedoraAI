@@ -63,11 +63,6 @@ func (s *SubRedditTracker) TrackSubreddit(ctx context.Context, subReddit *models
 		allLeads = append(allLeads, leads...)
 	}
 
-	// Process comments of all leads
-	//for _, lead := range allLeads {
-	//
-	//}
-
 	return nil
 }
 
@@ -99,8 +94,7 @@ func (s *SubRedditTracker) TrackSubreddit(ctx context.Context, subReddit *models
 func (s *SubRedditTracker) searchLeadsFromPosts(ctx context.Context, keyword string, subReddit *models.AugmentedSubReddit, redditClient *reddit.Client, leadExists checkIfLeadExists) ([]*models.RedditLead, error) {
 	posts, err := redditClient.GetPosts(ctx, subReddit.SubReddit.SubRedditID, reddit.PostFilters{
 		Keywords: []string{keyword},
-		SortBy:   utils.Ptr(reddit.SortByTOP),
-		TimeRage: utils.Ptr(reddit.TimeRangeWEEK),
+		SortBy:   utils.Ptr(reddit.SortByNEW),
 	})
 	if err != nil {
 		s.logger.Error("unable to fetch posts while tracking subreddit", zap.String("subreddit", subReddit.SubReddit.URL), zap.Error(err))
@@ -168,8 +162,8 @@ func (s *SubRedditTracker) searchLeadsFromPosts(ctx context.Context, keyword str
 			SuggestedDM:                      relevanceResponse.SuggestedDM,
 			ChainOfThoughtSuggestedComment:   relevanceResponse.ChainOfThoughtSuggestedComment,
 			ChainOfThoughtCommentSuggestedDM: relevanceResponse.ChainOfThoughtSuggestedDM,
-			NoOfComments:                     post.NumComments,
-			NoOfLikes:                        post.Ups,
+			PostURL:                          post.URL,
+			AuthorInfo:                       post.AuthorInfo,
 		}
 		leads = append(leads, redditLead)
 	}
@@ -185,25 +179,29 @@ func (s *SubRedditTracker) filterAndEnrichPosts(ctx context.Context, redditClien
 	filteredPosts := []*reddit.Post{}
 	for _, post := range posts {
 		// By Comments
-		if post.NumComments < 2 {
+		//if post.NumComments < 2 {
+		//	continue
+		//}
+
+		if post.Author == "[deleted]" || post.Author == "AutoModerator" {
+			s.logger.Info("ignoring reddit post as author is deleted", zap.String("post_id", post.ID), zap.String("author", post.Author))
 			continue
 		}
 
 		// By Karma
-		user, err := redditClient.GetUser(ctx, post.Author)
-		if err != nil {
-			s.logger.Error("unable to fetch user, skipped post", zap.String("post_id", post.ID), zap.String("user", post.Author), zap.Error(err))
-			continue
-		}
-		if user.Karma < 20 {
-			continue
-		}
+		//user, err := redditClient.GetUser(ctx, post.Author)
+		//if err != nil {
+		//	s.logger.Error("unable to fetch user, skipped post", zap.String("post_id", post.ID), zap.String("user", post.Author), zap.Error(err))
+		//	continue
+		//}
+		//if user.Karma < 20 {
+		//	continue
+		//}
 
 		// By Account age,ignore if < 30days
-		if time.Since(time.Unix(int64(user.CreatedAt), 0)) < 30*24*time.Hour {
-			continue
-		}
-		post.AuthorInfo = user
+		//if time.Since(time.Unix(int64(user.CreatedAt), 0)) < 30*24*time.Hour {
+		//	continue
+		//}
 		filteredPosts = append(filteredPosts, post)
 	}
 
