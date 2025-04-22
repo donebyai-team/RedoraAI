@@ -1,1 +1,1 @@
-DELETE FROM sub_reddits WHERE id = :id RETURNING *;
+UPDATE sub_reddits set deleted_at = CURRENT_TIMESTAMP WHERE id = :id RETURNING *;

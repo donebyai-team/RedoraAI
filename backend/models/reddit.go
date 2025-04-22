@@ -13,6 +13,16 @@ type Keyword struct {
 	UpdatedAt time.Time `db:"updated_at"`
 }
 
+type SubRedditTracker struct {
+	ID                string     `db:"id"`
+	ProjectID         string     `db:"project_id"`
+	SubRedditID       string     `db:"subreddit_id"`
+	KeywordID         string     `db:"keyword_id"`
+	LastTrackedAt     *time.Time `db:"last_tracked_at"`
+	NewestTrackedPost *string    `db:"newest_tracked_post"`
+	OldestTrackedPost *string    `db:"oldest_tracked_post"`
+}
+
 // Reference - https://developers.reddit.com/docs/api/redditapi/classes/models.Subreddit
 type SubReddit struct {
 	ID                 string            `db:"id"`
@@ -20,17 +30,13 @@ type SubReddit struct {
 	SubRedditID        string            `db:"subreddit_id"`
 	Name               string            `db:"name"`
 	Description        string            `db:"description"`
-	URL                string            `db:"url"`
 	SubredditCreatedAt time.Time         `db:"subreddit_created_at"`
 	SubRedditMetadata  SubRedditMetadata `db:"metadata"`
 
 	// Optional
-	Subscribers       *int64     `db:"subscribers"`
-	Title             *string    `db:"title"`
-	LastTrackedAt     *time.Time `db:"last_tracked_at"`
-	LastPostCreatedAt *time.Time `db:"last_tracked_post"`
-	CreatedAt         time.Time  `db:"created_at"`
-	UpdatedAt         *time.Time `db:"updated_at"`
+	Title     *string    `db:"title"`
+	CreatedAt time.Time  `db:"created_at"`
+	UpdatedAt *time.Time `db:"updated_at"`
 }
 
 // Store fields required to show in UI
@@ -46,9 +52,10 @@ func (b *SubRedditMetadata) Scan(value interface{}) error {
 	return scanFromJSON(value, b, "subreddit metadata")
 }
 
-type AugmentedSubReddit struct {
+type AugmentedSubRedditTracker struct {
+	Tracker   *SubRedditTracker
 	SubReddit *SubReddit
-	Keywords  []*Keyword
+	Keyword   *Keyword
 	Project   *Project
 }
 

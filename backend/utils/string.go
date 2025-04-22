@@ -53,3 +53,10 @@ func RemoveDuplicateStrings(items []string) []string {
 	}
 	return uniqueItems
 }
+
+func CleanSubredditName(input string) string {
+	input = strings.ToLower(input)
+	input = strings.TrimPrefix(input, "/r/")
+	input = strings.TrimPrefix(input, "r/")
+	return input
+}

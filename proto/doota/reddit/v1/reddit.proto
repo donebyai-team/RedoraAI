@@ -13,7 +13,7 @@ message RemoveSubRedditRequest {
 }
 
 message AddSubRedditRequest {
-  string url = 1; // eg. r/SAAS
+  string name = 1; // eg. r/SAAS
 }
 
 message SubReddit {
