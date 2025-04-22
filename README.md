@@ -42,6 +42,7 @@ Ensure that your version of Golang is correct using `go version`. You should be 
 ```bash
 cd backend
 go test ./...
+go build -o doota && ./doota start
 ```
 
 ##### PostgreSQL
