@@ -1,29 +1,31 @@
 'use client'
 
-import React, { FC, ReactNode, useState } from 'react'
+import React, { FC, ReactNode } from 'react'
 import { Grid } from '@mui/material'
 import NavBar from './NavBar'
-import { Sidebar } from './Sidebar'
-import { usePathname } from 'next/navigation'
-import { isActivePath } from '../utils/url'
+// import { Sidebar } from './Sidebar'
+// import { usePathname } from 'next/navigation'
+// import { isActivePath } from '../utils/url'
+import InboxComponent from './Leads/Inbox'
+import LeadsPostDetails from './Leads/LeadsDetails'
 
 export const DashboardLayout: FC<{ children: ReactNode }> = ({ children }) => {
-  const [hoverActive, setHoverActive] = useState(false)
-  const pathname = usePathname()
-  const isSetting = isActivePath('/dashboard/settings', pathname)
+  // const [hoverActive, setHoverActive] = useState(false)
+  // const pathname = usePathname()
+  // const isSetting = isActivePath('/dashboard/settings', pathname)
 
-  const handleMouseEnter = () => {
-    setHoverActive(true)
-  }
+  // const handleMouseEnter = () => {
+  //   setHoverActive(true)
+  // }
 
-  const handleMouseLeave = () => {
-    setHoverActive(false)
-  }
+  // const handleMouseLeave = () => {
+  //   setHoverActive(false)
+  // }
 
   return (
     <>
-      <Grid container sx={{display: {xs: 'inline-block', sm: 'flex'}}}>
-        <Grid
+      <Grid container sx={{ display: { xs: 'inline-block', sm: 'flex' } }}>
+        {/* <Grid
             item
             xs={12}
             sm='auto'
@@ -34,16 +36,23 @@ export const DashboardLayout: FC<{ children: ReactNode }> = ({ children }) => {
             }`}
         >
           <NavBar hoverActive={hoverActive}/>
-        </Grid>
+        </Grid> */}
 
-        <div className={isSetting ? 'flex flex-col flex-1' : 'contents'}>
+        <NavBar />
+
+        <div className={'flex flex-1'}>
+          <InboxComponent />
+          <LeadsPostDetails />
+        </div>
+
+        {/* <div className={isSetting ? 'flex flex-col flex-1' : 'contents'}>
           <Sidebar/>
 
           <Grid item className={!isSetting ? 'sm:h-dvh flex-1 w-0' : 'flex-1 bg-neutral-50 h-full p-2'}>            
             {children}
           </Grid>            
 
-        </div>
+        </div> */}
 
       </Grid>
     </>
