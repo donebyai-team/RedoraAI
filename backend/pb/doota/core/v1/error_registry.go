@@ -35,13 +35,8 @@ func (r *errorRegistry) Unpack(msg *anypb.Any) (out proto.Message, err error) {
 	return
 }
 
-var QuoteFormErrorDetailsType = new(QuoteFormErrorDetails).ProtoReflect().Type()
-var PricingOptionErrorDetailsType = new(PricingOptionErrorDetail).ProtoReflect().Type()
-
 func newPopulatedErrorRegistry() *errorRegistry {
-	return newErrorRegistry().
-		Register(QuoteFormErrorDetailsType).
-		Register(PricingOptionErrorDetailsType)
+	return newErrorRegistry()
 }
 
 var registry *errorRegistry

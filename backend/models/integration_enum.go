@@ -14,6 +14,8 @@ import (
 const (
 	// IntegrationStateACTIVE is a IntegrationState of type ACTIVE.
 	IntegrationStateACTIVE IntegrationState = "ACTIVE"
+	// IntegrationStateAUTHREVOKED is a IntegrationState of type AUTH_REVOKED.
+	IntegrationStateAUTHREVOKED IntegrationState = "AUTH_REVOKED"
 )
 
 var ErrInvalidIntegrationState = errors.New("not a valid IntegrationState")
@@ -31,7 +33,8 @@ func (x IntegrationState) IsValid() bool {
 }
 
 var _IntegrationStateValue = map[string]IntegrationState{
-	"ACTIVE": IntegrationStateACTIVE,
+	"ACTIVE":       IntegrationStateACTIVE,
+	"AUTH_REVOKED": IntegrationStateAUTHREVOKED,
 }
 
 // ParseIntegrationState attempts to convert a string to a IntegrationState.
