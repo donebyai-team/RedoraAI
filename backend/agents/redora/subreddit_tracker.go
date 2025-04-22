@@ -51,16 +51,17 @@ func (s *SubRedditTracker) TrackSubreddit(ctx context.Context, subReddit *models
 		}
 	}()
 
-	// Lock the subreddit tracking
-	err := s.state.KeepAlive(ctx, subReddit.Project.OrganizationID, subReddit.SubReddit.SubRedditID)
-	if err != nil {
-		return fmt.Errorf("unable to lock subReddit: %w", err)
-	}
-
 	redditClient, err := s.redditOauthClient.NewRedditClient(ctx, subReddit.Project.OrganizationID)
 	if err != nil {
 		return fmt.Errorf("failed to create reddit client: %w", err)
 	}
+
+	// Lock the subreddit tracking
+	err = s.state.KeepAlive(ctx, subReddit.Project.OrganizationID, subReddit.SubReddit.SubRedditID)
+	if err != nil {
+		return fmt.Errorf("unable to lock subReddit: %w", err)
+	}
+
 	for _, keyword := range subReddit.Keywords {
 		err = s.searchLeadsFromPosts(ctx, keyword, subReddit.Project, subReddit.SubReddit, redditClient)
 		if err != nil {

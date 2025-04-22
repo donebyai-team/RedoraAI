@@ -11,7 +11,7 @@ import (
 // ENUM(VOICE_MILLIS, VOICE_VAPI, REDDIT)
 type IntegrationType string
 
-// ENUM(ACTIVE)
+// ENUM(ACTIVE, AUTH_REVOKED)
 type IntegrationState string
 
 type Integration struct {

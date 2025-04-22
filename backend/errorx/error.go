@@ -30,11 +30,3 @@ func (b BaseError) Error() string {
 func NewErrMessageAlreadyExists() BaseError {
 	return BaseError{id: pbcore.PlatformError_PLATFORM_ERROR_MESSAGE_ALREADY_EXISTS}
 }
-
-func NewErrInvalidQuote(details *pbcore.QuoteFormErrorDetails) BaseError {
-	return BaseError{id: pbcore.PlatformError_PLATFORM_ERROR_INVALID_QUOTE, details: details, hasDetails: true}
-}
-
-func NewErrInvalidArgumentPricingOption(details *pbcore.PricingOptionErrorDetail) BaseError {
-	return BaseError{id: pbcore.PlatformError_PLATFORM_ERROR_PRICING_OPTION_INVALID_ARG, details: details, hasDetails: true}
-}
