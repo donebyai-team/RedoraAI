@@ -53,15 +53,18 @@ const (
 	// PortalServicePasswordlessVerifyProcedure is the fully-qualified name of the PortalService's
 	// PasswordlessVerify RPC.
 	PortalServicePasswordlessVerifyProcedure = "/doota.portal.v1.PortalService/PasswordlessVerify"
-	// PortalServiceCreateKeywordProcedure is the fully-qualified name of the PortalService's
-	// CreateKeyword RPC.
-	PortalServiceCreateKeywordProcedure = "/doota.portal.v1.PortalService/CreateKeyword"
 	// PortalServiceOauthAuthorizeProcedure is the fully-qualified name of the PortalService's
 	// OauthAuthorize RPC.
 	PortalServiceOauthAuthorizeProcedure = "/doota.portal.v1.PortalService/OauthAuthorize"
 	// PortalServiceOauthCallbackProcedure is the fully-qualified name of the PortalService's
 	// OauthCallback RPC.
 	PortalServiceOauthCallbackProcedure = "/doota.portal.v1.PortalService/OauthCallback"
+	// PortalServiceGetIntegrationsProcedure is the fully-qualified name of the PortalService's
+	// GetIntegrations RPC.
+	PortalServiceGetIntegrationsProcedure = "/doota.portal.v1.PortalService/GetIntegrations"
+	// PortalServiceCreateKeywordProcedure is the fully-qualified name of the PortalService's
+	// CreateKeyword RPC.
+	PortalServiceCreateKeywordProcedure = "/doota.portal.v1.PortalService/CreateKeyword"
 	// PortalServiceAddSubRedditProcedure is the fully-qualified name of the PortalService's
 	// AddSubReddit RPC.
 	PortalServiceAddSubRedditProcedure = "/doota.portal.v1.PortalService/AddSubReddit"
@@ -71,9 +74,15 @@ const (
 	// PortalServiceRemoveSubRedditProcedure is the fully-qualified name of the PortalService's
 	// RemoveSubReddit RPC.
 	PortalServiceRemoveSubRedditProcedure = "/doota.portal.v1.PortalService/RemoveSubReddit"
-	// PortalServiceGetIntegrationsProcedure is the fully-qualified name of the PortalService's
-	// GetIntegrations RPC.
-	PortalServiceGetIntegrationsProcedure = "/doota.portal.v1.PortalService/GetIntegrations"
+	// PortalServiceGetRelevantLeadsProcedure is the fully-qualified name of the PortalService's
+	// GetRelevantLeads RPC.
+	PortalServiceGetRelevantLeadsProcedure = "/doota.portal.v1.PortalService/GetRelevantLeads"
+	// PortalServiceGetLeadsByStatusProcedure is the fully-qualified name of the PortalService's
+	// GetLeadsByStatus RPC.
+	PortalServiceGetLeadsByStatusProcedure = "/doota.portal.v1.PortalService/GetLeadsByStatus"
+	// PortalServiceUpdateLeadStatusProcedure is the fully-qualified name of the PortalService's
+	// UpdateLeadStatus RPC.
+	PortalServiceUpdateLeadStatusProcedure = "/doota.portal.v1.PortalService/UpdateLeadStatus"
 )
 
 // These variables are the protoreflect.Descriptor objects for the RPCs defined in this package.
@@ -86,13 +95,16 @@ var (
 	portalServiceCreateCustomerCaseMethodDescriptor = portalServiceServiceDescriptor.Methods().ByName("CreateCustomerCase")
 	portalServicePasswordlessStartMethodDescriptor  = portalServiceServiceDescriptor.Methods().ByName("PasswordlessStart")
 	portalServicePasswordlessVerifyMethodDescriptor = portalServiceServiceDescriptor.Methods().ByName("PasswordlessVerify")
-	portalServiceCreateKeywordMethodDescriptor      = portalServiceServiceDescriptor.Methods().ByName("CreateKeyword")
 	portalServiceOauthAuthorizeMethodDescriptor     = portalServiceServiceDescriptor.Methods().ByName("OauthAuthorize")
 	portalServiceOauthCallbackMethodDescriptor      = portalServiceServiceDescriptor.Methods().ByName("OauthCallback")
+	portalServiceGetIntegrationsMethodDescriptor    = portalServiceServiceDescriptor.Methods().ByName("GetIntegrations")
+	portalServiceCreateKeywordMethodDescriptor      = portalServiceServiceDescriptor.Methods().ByName("CreateKeyword")
 	portalServiceAddSubRedditMethodDescriptor       = portalServiceServiceDescriptor.Methods().ByName("AddSubReddit")
 	portalServiceGetSubRedditsMethodDescriptor      = portalServiceServiceDescriptor.Methods().ByName("GetSubReddits")
 	portalServiceRemoveSubRedditMethodDescriptor    = portalServiceServiceDescriptor.Methods().ByName("RemoveSubReddit")
-	portalServiceGetIntegrationsMethodDescriptor    = portalServiceServiceDescriptor.Methods().ByName("GetIntegrations")
+	portalServiceGetRelevantLeadsMethodDescriptor   = portalServiceServiceDescriptor.Methods().ByName("GetRelevantLeads")
+	portalServiceGetLeadsByStatusMethodDescriptor   = portalServiceServiceDescriptor.Methods().ByName("GetLeadsByStatus")
+	portalServiceUpdateLeadStatusMethodDescriptor   = portalServiceServiceDescriptor.Methods().ByName("UpdateLeadStatus")
 )
 
 // PortalServiceClient is a client for the doota.portal.v1.PortalService service.
@@ -106,13 +118,17 @@ type PortalServiceClient interface {
 	CreateCustomerCase(context.Context, *connect.Request[v1.CreateCustomerCaseReq]) (*connect.Response[emptypb.Empty], error)
 	PasswordlessStart(context.Context, *connect.Request[v1.PasswordlessStartRequest]) (*connect.Response[emptypb.Empty], error)
 	PasswordlessVerify(context.Context, *connect.Request[v1.PasswordlessStartVerify]) (*connect.Response[v1.JWT], error)
-	CreateKeyword(context.Context, *connect.Request[v1.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error)
 	OauthAuthorize(context.Context, *connect.Request[v1.OauthAuthorizeRequest]) (*connect.Response[v1.OauthAuthorizeResponse], error)
 	OauthCallback(context.Context, *connect.Request[v1.OauthCallbackRequest]) (*connect.Response[v1.OauthCallbackResponse], error)
+	GetIntegrations(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.Integrations], error)
+	// Reddit
+	CreateKeyword(context.Context, *connect.Request[v1.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error)
 	AddSubReddit(context.Context, *connect.Request[v11.AddSubRedditRequest]) (*connect.Response[emptypb.Empty], error)
 	GetSubReddits(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v11.GetSubredditsResponse], error)
 	RemoveSubReddit(context.Context, *connect.Request[v11.RemoveSubRedditRequest]) (*connect.Response[emptypb.Empty], error)
-	GetIntegrations(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.Integrations], error)
+	GetRelevantLeads(context.Context, *connect.Request[v11.GetRelevantLeadsRequest]) (*connect.Response[v11.GetLeadsResponse], error)
+	GetLeadsByStatus(context.Context, *connect.Request[v11.GetLeadsByStatusRequest]) (*connect.Response[v11.GetLeadsResponse], error)
+	UpdateLeadStatus(context.Context, *connect.Request[v11.UpdateLeadStatusRequest]) (*connect.Response[emptypb.Empty], error)
 }
 
 // NewPortalServiceClient constructs a client for the doota.portal.v1.PortalService service. By
@@ -167,12 +183,6 @@ func NewPortalServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(portalServicePasswordlessVerifyMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
-		createKeyword: connect.NewClient[v1.CreateKeywordReq, emptypb.Empty](
-			httpClient,
-			baseURL+PortalServiceCreateKeywordProcedure,
-			connect.WithSchema(portalServiceCreateKeywordMethodDescriptor),
-			connect.WithClientOptions(opts...),
-		),
 		oauthAuthorize: connect.NewClient[v1.OauthAuthorizeRequest, v1.OauthAuthorizeResponse](
 			httpClient,
 			baseURL+PortalServiceOauthAuthorizeProcedure,
@@ -183,6 +193,18 @@ func NewPortalServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			httpClient,
 			baseURL+PortalServiceOauthCallbackProcedure,
 			connect.WithSchema(portalServiceOauthCallbackMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
+		getIntegrations: connect.NewClient[emptypb.Empty, v1.Integrations](
+			httpClient,
+			baseURL+PortalServiceGetIntegrationsProcedure,
+			connect.WithSchema(portalServiceGetIntegrationsMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
+		createKeyword: connect.NewClient[v1.CreateKeywordReq, emptypb.Empty](
+			httpClient,
+			baseURL+PortalServiceCreateKeywordProcedure,
+			connect.WithSchema(portalServiceCreateKeywordMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
 		addSubReddit: connect.NewClient[v11.AddSubRedditRequest, emptypb.Empty](
@@ -203,10 +225,22 @@ func NewPortalServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(portalServiceRemoveSubRedditMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
-		getIntegrations: connect.NewClient[emptypb.Empty, v1.Integrations](
+		getRelevantLeads: connect.NewClient[v11.GetRelevantLeadsRequest, v11.GetLeadsResponse](
 			httpClient,
-			baseURL+PortalServiceGetIntegrationsProcedure,
-			connect.WithSchema(portalServiceGetIntegrationsMethodDescriptor),
+			baseURL+PortalServiceGetRelevantLeadsProcedure,
+			connect.WithSchema(portalServiceGetRelevantLeadsMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
+		getLeadsByStatus: connect.NewClient[v11.GetLeadsByStatusRequest, v11.GetLeadsResponse](
+			httpClient,
+			baseURL+PortalServiceGetLeadsByStatusProcedure,
+			connect.WithSchema(portalServiceGetLeadsByStatusMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
+		updateLeadStatus: connect.NewClient[v11.UpdateLeadStatusRequest, emptypb.Empty](
+			httpClient,
+			baseURL+PortalServiceUpdateLeadStatusProcedure,
+			connect.WithSchema(portalServiceUpdateLeadStatusMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
 	}
@@ -221,13 +255,16 @@ type portalServiceClient struct {
 	createCustomerCase *connect.Client[v1.CreateCustomerCaseReq, emptypb.Empty]
 	passwordlessStart  *connect.Client[v1.PasswordlessStartRequest, emptypb.Empty]
 	passwordlessVerify *connect.Client[v1.PasswordlessStartVerify, v1.JWT]
-	createKeyword      *connect.Client[v1.CreateKeywordReq, emptypb.Empty]
 	oauthAuthorize     *connect.Client[v1.OauthAuthorizeRequest, v1.OauthAuthorizeResponse]
 	oauthCallback      *connect.Client[v1.OauthCallbackRequest, v1.OauthCallbackResponse]
+	getIntegrations    *connect.Client[emptypb.Empty, v1.Integrations]
+	createKeyword      *connect.Client[v1.CreateKeywordReq, emptypb.Empty]
 	addSubReddit       *connect.Client[v11.AddSubRedditRequest, emptypb.Empty]
 	getSubReddits      *connect.Client[emptypb.Empty, v11.GetSubredditsResponse]
 	removeSubReddit    *connect.Client[v11.RemoveSubRedditRequest, emptypb.Empty]
-	getIntegrations    *connect.Client[emptypb.Empty, v1.Integrations]
+	getRelevantLeads   *connect.Client[v11.GetRelevantLeadsRequest, v11.GetLeadsResponse]
+	getLeadsByStatus   *connect.Client[v11.GetLeadsByStatusRequest, v11.GetLeadsResponse]
+	updateLeadStatus   *connect.Client[v11.UpdateLeadStatusRequest, emptypb.Empty]
 }
 
 // GetConfig calls doota.portal.v1.PortalService.GetConfig.
@@ -265,11 +302,6 @@ func (c *portalServiceClient) PasswordlessVerify(ctx context.Context, req *conne
 	return c.passwordlessVerify.CallUnary(ctx, req)
 }
 
-// CreateKeyword calls doota.portal.v1.PortalService.CreateKeyword.
-func (c *portalServiceClient) CreateKeyword(ctx context.Context, req *connect.Request[v1.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error) {
-	return c.createKeyword.CallUnary(ctx, req)
-}
-
 // OauthAuthorize calls doota.portal.v1.PortalService.OauthAuthorize.
 func (c *portalServiceClient) OauthAuthorize(ctx context.Context, req *connect.Request[v1.OauthAuthorizeRequest]) (*connect.Response[v1.OauthAuthorizeResponse], error) {
 	return c.oauthAuthorize.CallUnary(ctx, req)
@@ -278,6 +310,16 @@ func (c *portalServiceClient) OauthAuthorize(ctx context.Context, req *connect.R
 // OauthCallback calls doota.portal.v1.PortalService.OauthCallback.
 func (c *portalServiceClient) OauthCallback(ctx context.Context, req *connect.Request[v1.OauthCallbackRequest]) (*connect.Response[v1.OauthCallbackResponse], error) {
 	return c.oauthCallback.CallUnary(ctx, req)
+}
+
+// GetIntegrations calls doota.portal.v1.PortalService.GetIntegrations.
+func (c *portalServiceClient) GetIntegrations(ctx context.Context, req *connect.Request[emptypb.Empty]) (*connect.Response[v1.Integrations], error) {
+	return c.getIntegrations.CallUnary(ctx, req)
+}
+
+// CreateKeyword calls doota.portal.v1.PortalService.CreateKeyword.
+func (c *portalServiceClient) CreateKeyword(ctx context.Context, req *connect.Request[v1.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error) {
+	return c.createKeyword.CallUnary(ctx, req)
 }
 
 // AddSubReddit calls doota.portal.v1.PortalService.AddSubReddit.
@@ -295,9 +337,19 @@ func (c *portalServiceClient) RemoveSubReddit(ctx context.Context, req *connect.
 	return c.removeSubReddit.CallUnary(ctx, req)
 }
 
-// GetIntegrations calls doota.portal.v1.PortalService.GetIntegrations.
-func (c *portalServiceClient) GetIntegrations(ctx context.Context, req *connect.Request[emptypb.Empty]) (*connect.Response[v1.Integrations], error) {
-	return c.getIntegrations.CallUnary(ctx, req)
+// GetRelevantLeads calls doota.portal.v1.PortalService.GetRelevantLeads.
+func (c *portalServiceClient) GetRelevantLeads(ctx context.Context, req *connect.Request[v11.GetRelevantLeadsRequest]) (*connect.Response[v11.GetLeadsResponse], error) {
+	return c.getRelevantLeads.CallUnary(ctx, req)
+}
+
+// GetLeadsByStatus calls doota.portal.v1.PortalService.GetLeadsByStatus.
+func (c *portalServiceClient) GetLeadsByStatus(ctx context.Context, req *connect.Request[v11.GetLeadsByStatusRequest]) (*connect.Response[v11.GetLeadsResponse], error) {
+	return c.getLeadsByStatus.CallUnary(ctx, req)
+}
+
+// UpdateLeadStatus calls doota.portal.v1.PortalService.UpdateLeadStatus.
+func (c *portalServiceClient) UpdateLeadStatus(ctx context.Context, req *connect.Request[v11.UpdateLeadStatusRequest]) (*connect.Response[emptypb.Empty], error) {
+	return c.updateLeadStatus.CallUnary(ctx, req)
 }
 
 // PortalServiceHandler is an implementation of the doota.portal.v1.PortalService service.
@@ -311,13 +363,17 @@ type PortalServiceHandler interface {
 	CreateCustomerCase(context.Context, *connect.Request[v1.CreateCustomerCaseReq]) (*connect.Response[emptypb.Empty], error)
 	PasswordlessStart(context.Context, *connect.Request[v1.PasswordlessStartRequest]) (*connect.Response[emptypb.Empty], error)
 	PasswordlessVerify(context.Context, *connect.Request[v1.PasswordlessStartVerify]) (*connect.Response[v1.JWT], error)
-	CreateKeyword(context.Context, *connect.Request[v1.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error)
 	OauthAuthorize(context.Context, *connect.Request[v1.OauthAuthorizeRequest]) (*connect.Response[v1.OauthAuthorizeResponse], error)
 	OauthCallback(context.Context, *connect.Request[v1.OauthCallbackRequest]) (*connect.Response[v1.OauthCallbackResponse], error)
+	GetIntegrations(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.Integrations], error)
+	// Reddit
+	CreateKeyword(context.Context, *connect.Request[v1.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error)
 	AddSubReddit(context.Context, *connect.Request[v11.AddSubRedditRequest]) (*connect.Response[emptypb.Empty], error)
 	GetSubReddits(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v11.GetSubredditsResponse], error)
 	RemoveSubReddit(context.Context, *connect.Request[v11.RemoveSubRedditRequest]) (*connect.Response[emptypb.Empty], error)
-	GetIntegrations(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.Integrations], error)
+	GetRelevantLeads(context.Context, *connect.Request[v11.GetRelevantLeadsRequest]) (*connect.Response[v11.GetLeadsResponse], error)
+	GetLeadsByStatus(context.Context, *connect.Request[v11.GetLeadsByStatusRequest]) (*connect.Response[v11.GetLeadsResponse], error)
+	UpdateLeadStatus(context.Context, *connect.Request[v11.UpdateLeadStatusRequest]) (*connect.Response[emptypb.Empty], error)
 }
 
 // NewPortalServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -368,12 +424,6 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(portalServicePasswordlessVerifyMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
-	portalServiceCreateKeywordHandler := connect.NewUnaryHandler(
-		PortalServiceCreateKeywordProcedure,
-		svc.CreateKeyword,
-		connect.WithSchema(portalServiceCreateKeywordMethodDescriptor),
-		connect.WithHandlerOptions(opts...),
-	)
 	portalServiceOauthAuthorizeHandler := connect.NewUnaryHandler(
 		PortalServiceOauthAuthorizeProcedure,
 		svc.OauthAuthorize,
@@ -384,6 +434,18 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 		PortalServiceOauthCallbackProcedure,
 		svc.OauthCallback,
 		connect.WithSchema(portalServiceOauthCallbackMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	portalServiceGetIntegrationsHandler := connect.NewUnaryHandler(
+		PortalServiceGetIntegrationsProcedure,
+		svc.GetIntegrations,
+		connect.WithSchema(portalServiceGetIntegrationsMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	portalServiceCreateKeywordHandler := connect.NewUnaryHandler(
+		PortalServiceCreateKeywordProcedure,
+		svc.CreateKeyword,
+		connect.WithSchema(portalServiceCreateKeywordMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
 	portalServiceAddSubRedditHandler := connect.NewUnaryHandler(
@@ -404,10 +466,22 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(portalServiceRemoveSubRedditMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
-	portalServiceGetIntegrationsHandler := connect.NewUnaryHandler(
-		PortalServiceGetIntegrationsProcedure,
-		svc.GetIntegrations,
-		connect.WithSchema(portalServiceGetIntegrationsMethodDescriptor),
+	portalServiceGetRelevantLeadsHandler := connect.NewUnaryHandler(
+		PortalServiceGetRelevantLeadsProcedure,
+		svc.GetRelevantLeads,
+		connect.WithSchema(portalServiceGetRelevantLeadsMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	portalServiceGetLeadsByStatusHandler := connect.NewUnaryHandler(
+		PortalServiceGetLeadsByStatusProcedure,
+		svc.GetLeadsByStatus,
+		connect.WithSchema(portalServiceGetLeadsByStatusMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	portalServiceUpdateLeadStatusHandler := connect.NewUnaryHandler(
+		PortalServiceUpdateLeadStatusProcedure,
+		svc.UpdateLeadStatus,
+		connect.WithSchema(portalServiceUpdateLeadStatusMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
 	return "/doota.portal.v1.PortalService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -426,20 +500,26 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 			portalServicePasswordlessStartHandler.ServeHTTP(w, r)
 		case PortalServicePasswordlessVerifyProcedure:
 			portalServicePasswordlessVerifyHandler.ServeHTTP(w, r)
-		case PortalServiceCreateKeywordProcedure:
-			portalServiceCreateKeywordHandler.ServeHTTP(w, r)
 		case PortalServiceOauthAuthorizeProcedure:
 			portalServiceOauthAuthorizeHandler.ServeHTTP(w, r)
 		case PortalServiceOauthCallbackProcedure:
 			portalServiceOauthCallbackHandler.ServeHTTP(w, r)
+		case PortalServiceGetIntegrationsProcedure:
+			portalServiceGetIntegrationsHandler.ServeHTTP(w, r)
+		case PortalServiceCreateKeywordProcedure:
+			portalServiceCreateKeywordHandler.ServeHTTP(w, r)
 		case PortalServiceAddSubRedditProcedure:
 			portalServiceAddSubRedditHandler.ServeHTTP(w, r)
 		case PortalServiceGetSubRedditsProcedure:
 			portalServiceGetSubRedditsHandler.ServeHTTP(w, r)
 		case PortalServiceRemoveSubRedditProcedure:
 			portalServiceRemoveSubRedditHandler.ServeHTTP(w, r)
-		case PortalServiceGetIntegrationsProcedure:
-			portalServiceGetIntegrationsHandler.ServeHTTP(w, r)
+		case PortalServiceGetRelevantLeadsProcedure:
+			portalServiceGetRelevantLeadsHandler.ServeHTTP(w, r)
+		case PortalServiceGetLeadsByStatusProcedure:
+			portalServiceGetLeadsByStatusHandler.ServeHTTP(w, r)
+		case PortalServiceUpdateLeadStatusProcedure:
+			portalServiceUpdateLeadStatusHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -477,16 +557,20 @@ func (UnimplementedPortalServiceHandler) PasswordlessVerify(context.Context, *co
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.PasswordlessVerify is not implemented"))
 }
 
-func (UnimplementedPortalServiceHandler) CreateKeyword(context.Context, *connect.Request[v1.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.CreateKeyword is not implemented"))
-}
-
 func (UnimplementedPortalServiceHandler) OauthAuthorize(context.Context, *connect.Request[v1.OauthAuthorizeRequest]) (*connect.Response[v1.OauthAuthorizeResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.OauthAuthorize is not implemented"))
 }
 
 func (UnimplementedPortalServiceHandler) OauthCallback(context.Context, *connect.Request[v1.OauthCallbackRequest]) (*connect.Response[v1.OauthCallbackResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.OauthCallback is not implemented"))
+}
+
+func (UnimplementedPortalServiceHandler) GetIntegrations(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.Integrations], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.GetIntegrations is not implemented"))
+}
+
+func (UnimplementedPortalServiceHandler) CreateKeyword(context.Context, *connect.Request[v1.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.CreateKeyword is not implemented"))
 }
 
 func (UnimplementedPortalServiceHandler) AddSubReddit(context.Context, *connect.Request[v11.AddSubRedditRequest]) (*connect.Response[emptypb.Empty], error) {
@@ -501,6 +585,14 @@ func (UnimplementedPortalServiceHandler) RemoveSubReddit(context.Context, *conne
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.RemoveSubReddit is not implemented"))
 }
 
-func (UnimplementedPortalServiceHandler) GetIntegrations(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.Integrations], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.GetIntegrations is not implemented"))
+func (UnimplementedPortalServiceHandler) GetRelevantLeads(context.Context, *connect.Request[v11.GetRelevantLeadsRequest]) (*connect.Response[v11.GetLeadsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.GetRelevantLeads is not implemented"))
+}
+
+func (UnimplementedPortalServiceHandler) GetLeadsByStatus(context.Context, *connect.Request[v11.GetLeadsByStatusRequest]) (*connect.Response[v11.GetLeadsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.GetLeadsByStatus is not implemented"))
+}
+
+func (UnimplementedPortalServiceHandler) UpdateLeadStatus(context.Context, *connect.Request[v11.UpdateLeadStatusRequest]) (*connect.Response[emptypb.Empty], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.UpdateLeadStatus is not implemented"))
 }

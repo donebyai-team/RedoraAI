@@ -2,8 +2,9 @@
 // @generated from file doota/reddit/v1/reddit.proto (package doota.reddit.v1, syntax proto3)
 /* eslint-disable */
 
-import type { GenFile, GenMessage } from "@bufbuild/protobuf/codegenv1";
+import type { GenEnum, GenFile, GenMessage } from "@bufbuild/protobuf/codegenv1";
 import type { Message } from "@bufbuild/protobuf";
+import type { Timestamp } from "@bufbuild/protobuf/wkt";
 
 /**
  * Describes the file doota/reddit/v1/reddit.proto.
@@ -130,4 +131,240 @@ export declare type GetSubredditsResponse = Message<"doota.reddit.v1.GetSubreddi
  * Use `create(GetSubredditsResponseSchema)` to create a new message.
  */
 export declare const GetSubredditsResponseSchema: GenMessage<GetSubredditsResponse>;
+
+/**
+ * @generated from message doota.reddit.v1.UpdateLeadStatusRequest
+ */
+export declare type UpdateLeadStatusRequest = Message<"doota.reddit.v1.UpdateLeadStatusRequest"> & {
+  /**
+   * @generated from field: doota.reddit.v1.LeadStatus status = 1;
+   */
+  status: LeadStatus;
+
+  /**
+   * @generated from field: string lead_id = 2;
+   */
+  leadId: string;
+};
+
+/**
+ * Describes the message doota.reddit.v1.UpdateLeadStatusRequest.
+ * Use `create(UpdateLeadStatusRequestSchema)` to create a new message.
+ */
+export declare const UpdateLeadStatusRequestSchema: GenMessage<UpdateLeadStatusRequest>;
+
+/**
+ * @generated from message doota.reddit.v1.GetLeadsByStatusRequest
+ */
+export declare type GetLeadsByStatusRequest = Message<"doota.reddit.v1.GetLeadsByStatusRequest"> & {
+  /**
+   * @generated from field: doota.reddit.v1.LeadStatus status = 1;
+   */
+  status: LeadStatus;
+};
+
+/**
+ * Describes the message doota.reddit.v1.GetLeadsByStatusRequest.
+ * Use `create(GetLeadsByStatusRequestSchema)` to create a new message.
+ */
+export declare const GetLeadsByStatusRequestSchema: GenMessage<GetLeadsByStatusRequest>;
+
+/**
+ * @generated from message doota.reddit.v1.GetRelevantLeadsRequest
+ */
+export declare type GetRelevantLeadsRequest = Message<"doota.reddit.v1.GetRelevantLeadsRequest"> & {
+  /**
+   * @generated from field: optional string sub_reddit = 1;
+   */
+  subReddit?: string;
+
+  /**
+   * @generated from field: float relevancy_score = 2;
+   */
+  relevancyScore: number;
+};
+
+/**
+ * Describes the message doota.reddit.v1.GetRelevantLeadsRequest.
+ * Use `create(GetRelevantLeadsRequestSchema)` to create a new message.
+ */
+export declare const GetRelevantLeadsRequestSchema: GenMessage<GetRelevantLeadsRequest>;
+
+/**
+ * @generated from message doota.reddit.v1.GetLeadsResponse
+ */
+export declare type GetLeadsResponse = Message<"doota.reddit.v1.GetLeadsResponse"> & {
+  /**
+   * @generated from field: repeated doota.reddit.v1.RedditLead leads = 1;
+   */
+  leads: RedditLead[];
+};
+
+/**
+ * Describes the message doota.reddit.v1.GetLeadsResponse.
+ * Use `create(GetLeadsResponseSchema)` to create a new message.
+ */
+export declare const GetLeadsResponseSchema: GenMessage<GetLeadsResponse>;
+
+/**
+ * @generated from message doota.reddit.v1.LeadMetadata
+ */
+export declare type LeadMetadata = Message<"doota.reddit.v1.LeadMetadata"> & {
+  /**
+   * @generated from field: string chain_of_thought = 1;
+   */
+  chainOfThought: string;
+
+  /**
+   * @generated from field: string suggested_comment = 2;
+   */
+  suggestedComment: string;
+
+  /**
+   * @generated from field: string suggested_dm = 3;
+   */
+  suggestedDm: string;
+
+  /**
+   * @generated from field: string chain_of_thought_suggested_comment = 4;
+   */
+  chainOfThoughtSuggestedComment: string;
+
+  /**
+   * @generated from field: string chain_of_thought_comment_suggested_dm = 5;
+   */
+  chainOfThoughtCommentSuggestedDm: string;
+
+  /**
+   * @generated from field: string post_url = 6;
+   */
+  postUrl: string;
+};
+
+/**
+ * Describes the message doota.reddit.v1.LeadMetadata.
+ * Use `create(LeadMetadataSchema)` to create a new message.
+ */
+export declare const LeadMetadataSchema: GenMessage<LeadMetadata>;
+
+/**
+ * @generated from message doota.reddit.v1.RedditLead
+ */
+export declare type RedditLead = Message<"doota.reddit.v1.RedditLead"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: string project_id = 2;
+   */
+  projectId: string;
+
+  /**
+   * @generated from field: string subreddit_id = 3;
+   */
+  subredditId: string;
+
+  /**
+   * @generated from field: string author = 4;
+   */
+  author: string;
+
+  /**
+   * @generated from field: string post_id = 5;
+   */
+  postId: string;
+
+  /**
+   * @generated from field: doota.reddit.v1.LeadType type = 6;
+   */
+  type: LeadType;
+
+  /**
+   * @generated from field: doota.reddit.v1.LeadStatus status = 7;
+   */
+  status: LeadStatus;
+
+  /**
+   * @generated from field: double relevancy_score = 8;
+   */
+  relevancyScore: number;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp post_created_at = 9;
+   */
+  postCreatedAt?: Timestamp;
+
+  /**
+   * @generated from field: optional string title = 10;
+   */
+  title?: string;
+
+  /**
+   * @generated from field: string description = 11;
+   */
+  description: string;
+
+  /**
+   * @generated from field: doota.reddit.v1.LeadMetadata metadata = 12;
+   */
+  metadata?: LeadMetadata;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp created_at = 13;
+   */
+  createdAt?: Timestamp;
+};
+
+/**
+ * Describes the message doota.reddit.v1.RedditLead.
+ * Use `create(RedditLeadSchema)` to create a new message.
+ */
+export declare const RedditLeadSchema: GenMessage<RedditLead>;
+
+/**
+ * @generated from enum doota.reddit.v1.LeadStatus
+ */
+export enum LeadStatus {
+  /**
+   * @generated from enum value: NEW = 0;
+   */
+  NEW = 0,
+
+  /**
+   * @generated from enum value: NOT_RELEVANT = 1;
+   */
+  NOT_RELEVANT = 1,
+
+  /**
+   * @generated from enum value: COMPLETED = 3;
+   */
+  COMPLETED = 3,
+}
+
+/**
+ * Describes the enum doota.reddit.v1.LeadStatus.
+ */
+export declare const LeadStatusSchema: GenEnum<LeadStatus>;
+
+/**
+ * @generated from enum doota.reddit.v1.LeadType
+ */
+export enum LeadType {
+  /**
+   * @generated from enum value: POST = 0;
+   */
+  POST = 0,
+
+  /**
+   * @generated from enum value: COMMENT = 1;
+   */
+  COMMENT = 1,
+}
+
+/**
+ * Describes the enum doota.reddit.v1.LeadType.
+ */
+export declare const LeadTypeSchema: GenEnum<LeadType>;
 

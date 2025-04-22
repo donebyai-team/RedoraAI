@@ -28,7 +28,7 @@ type SubReddit struct {
 	Subscribers       *int64     `db:"subscribers"`
 	Title             *string    `db:"title"`
 	LastTrackedAt     *time.Time `db:"last_tracked_at"`
-	LastPostCreatedAt *time.Time `db:"last_post_created_at"`
+	LastPostCreatedAt *time.Time `db:"last_tracked_post"`
 	CreatedAt         time.Time  `db:"created_at"`
 	UpdatedAt         *time.Time `db:"updated_at"`
 }
@@ -55,40 +55,44 @@ type AugmentedSubReddit struct {
 //go:generate go-enum -f=$GOFILE
 
 // ENUM(COMMENT, POST)
-type RedditLeadType string
+type LeadType string
+
+// ENUM(NEW, COMPLETED, NOT_RELEVANT)
+type LeadStatus string
 
 type RedditLead struct {
-	ID                 string             `db:"id"`
-	ProjectID          string             `db:"project_id"`
-	SubRedditID        string             `db:"subreddit_id"`
-	Author             string             `db:"author"`
-	PostID             string             `db:"post_id"`
-	Type               RedditLeadType     `db:"type"`
-	RelevancyScore     float64            `db:"relevancy_score"`
-	PostCreatedAt      time.Time          `db:"post_created_at"`
-	CommentID          *string            `db:"comment_id"`
-	Title              *string            `db:"title"` // Optional in case of comment
-	Description        string             `db:"description"`
-	RedditLeadMetadata RedditLeadMetadata `db:"metadata"`
+	ID             string       `db:"id"`
+	ProjectID      string       `db:"project_id"`
+	SubRedditID    string       `db:"subreddit_id"`
+	Author         string       `db:"author"`
+	PostID         string       `db:"post_id"`
+	Type           LeadType     `db:"type"`
+	Status         LeadStatus   `db:"status"`
+	RelevancyScore float64      `db:"relevancy_score"`
+	PostCreatedAt  time.Time    `db:"post_created_at"`
+	CommentID      *string      `db:"comment_id"`
+	Title          *string      `db:"title"` // Optional in case of comment
+	Description    string       `db:"description"`
+	LeadMetadata   LeadMetadata `db:"metadata"`
 
 	CreatedAt time.Time  `db:"created_at"`
 	UpdatedAt *time.Time `db:"updated_at"`
 }
 
-type RedditLeadMetadata struct {
-	ChainOfThought                   string `json:"chain_of_thought"`
-	SuggestedComment                 string `json:"suggested_comment"`
-	SuggestedDM                      string `json:"suggested_dm"`
-	ChainOfThoughtSuggestedComment   string `json:"chain_of_thought_suggested_comment"`
-	ChainOfThoughtCommentSuggestedDM string `json:"chain_of_thought_comment"`
-	NoOfComments                     int    `json:"no_of_comments"`
-	NoOfLikes                        int    `json:"no_of_likes"`
+type LeadMetadata struct {
+	ChainOfThought                   string      `json:"chain_of_thought"`
+	SuggestedComment                 string      `json:"suggested_comment"`
+	SuggestedDM                      string      `json:"suggested_dm"`
+	ChainOfThoughtSuggestedComment   string      `json:"chain_of_thought_suggested_comment"`
+	ChainOfThoughtCommentSuggestedDM string      `json:"chain_of_thought_comment"`
+	PostURL                          string      `json:"post_url"`
+	AuthorInfo                       interface{} `json:"author_info"`
 }
 
-func (b RedditLeadMetadata) Value() (driver.Value, error) {
+func (b LeadMetadata) Value() (driver.Value, error) {
 	return valueAsJSON(b, "reddit_lead metadata")
 }
 
-func (b *RedditLeadMetadata) Scan(value interface{}) error {
+func (b *LeadMetadata) Scan(value interface{}) error {
 	return scanFromJSON(value, b, "reddit_lead metadata")
 }

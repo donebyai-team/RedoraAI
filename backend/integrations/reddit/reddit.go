@@ -295,7 +295,7 @@ func (r *Client) GetSubRedditByURL(ctx context.Context, urlPath string) (*SubRed
 	if !strings.HasPrefix(urlPath, "/r/") {
 		return nil, fmt.Errorf("invalid subreddit URL path: %s", urlPath)
 	}
-	reqURL := fmt.Sprintf("%s%sabout.json", r.baseURL, urlPath)
+	reqURL := fmt.Sprintf("%s%s/about.json", r.baseURL, urlPath)
 	req, err := retryablehttp.NewRequestWithContext(ctx, http.MethodGet, reqURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)

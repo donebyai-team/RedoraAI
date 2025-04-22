@@ -28,13 +28,16 @@ const (
 	PortalService_CreateCustomerCase_FullMethodName = "/doota.portal.v1.PortalService/CreateCustomerCase"
 	PortalService_PasswordlessStart_FullMethodName  = "/doota.portal.v1.PortalService/PasswordlessStart"
 	PortalService_PasswordlessVerify_FullMethodName = "/doota.portal.v1.PortalService/PasswordlessVerify"
-	PortalService_CreateKeyword_FullMethodName      = "/doota.portal.v1.PortalService/CreateKeyword"
 	PortalService_OauthAuthorize_FullMethodName     = "/doota.portal.v1.PortalService/OauthAuthorize"
 	PortalService_OauthCallback_FullMethodName      = "/doota.portal.v1.PortalService/OauthCallback"
+	PortalService_GetIntegrations_FullMethodName    = "/doota.portal.v1.PortalService/GetIntegrations"
+	PortalService_CreateKeyword_FullMethodName      = "/doota.portal.v1.PortalService/CreateKeyword"
 	PortalService_AddSubReddit_FullMethodName       = "/doota.portal.v1.PortalService/AddSubReddit"
 	PortalService_GetSubReddits_FullMethodName      = "/doota.portal.v1.PortalService/GetSubReddits"
 	PortalService_RemoveSubReddit_FullMethodName    = "/doota.portal.v1.PortalService/RemoveSubReddit"
-	PortalService_GetIntegrations_FullMethodName    = "/doota.portal.v1.PortalService/GetIntegrations"
+	PortalService_GetRelevantLeads_FullMethodName   = "/doota.portal.v1.PortalService/GetRelevantLeads"
+	PortalService_GetLeadsByStatus_FullMethodName   = "/doota.portal.v1.PortalService/GetLeadsByStatus"
+	PortalService_UpdateLeadStatus_FullMethodName   = "/doota.portal.v1.PortalService/UpdateLeadStatus"
 )
 
 // PortalServiceClient is the client API for PortalService service.
@@ -50,13 +53,17 @@ type PortalServiceClient interface {
 	CreateCustomerCase(ctx context.Context, in *CreateCustomerCaseReq, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	PasswordlessStart(ctx context.Context, in *PasswordlessStartRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	PasswordlessVerify(ctx context.Context, in *PasswordlessStartVerify, opts ...grpc.CallOption) (*JWT, error)
-	CreateKeyword(ctx context.Context, in *CreateKeywordReq, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	OauthAuthorize(ctx context.Context, in *OauthAuthorizeRequest, opts ...grpc.CallOption) (*OauthAuthorizeResponse, error)
 	OauthCallback(ctx context.Context, in *OauthCallbackRequest, opts ...grpc.CallOption) (*OauthCallbackResponse, error)
+	GetIntegrations(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Integrations, error)
+	// Reddit
+	CreateKeyword(ctx context.Context, in *CreateKeywordReq, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	AddSubReddit(ctx context.Context, in *v1.AddSubRedditRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GetSubReddits(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*v1.GetSubredditsResponse, error)
 	RemoveSubReddit(ctx context.Context, in *v1.RemoveSubRedditRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	GetIntegrations(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Integrations, error)
+	GetRelevantLeads(ctx context.Context, in *v1.GetRelevantLeadsRequest, opts ...grpc.CallOption) (*v1.GetLeadsResponse, error)
+	GetLeadsByStatus(ctx context.Context, in *v1.GetLeadsByStatusRequest, opts ...grpc.CallOption) (*v1.GetLeadsResponse, error)
+	UpdateLeadStatus(ctx context.Context, in *v1.UpdateLeadStatusRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type portalServiceClient struct {
@@ -130,15 +137,6 @@ func (c *portalServiceClient) PasswordlessVerify(ctx context.Context, in *Passwo
 	return out, nil
 }
 
-func (c *portalServiceClient) CreateKeyword(ctx context.Context, in *CreateKeywordReq, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, PortalService_CreateKeyword_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *portalServiceClient) OauthAuthorize(ctx context.Context, in *OauthAuthorizeRequest, opts ...grpc.CallOption) (*OauthAuthorizeResponse, error) {
 	out := new(OauthAuthorizeResponse)
 	err := c.cc.Invoke(ctx, PortalService_OauthAuthorize_FullMethodName, in, out, opts...)
@@ -151,6 +149,24 @@ func (c *portalServiceClient) OauthAuthorize(ctx context.Context, in *OauthAutho
 func (c *portalServiceClient) OauthCallback(ctx context.Context, in *OauthCallbackRequest, opts ...grpc.CallOption) (*OauthCallbackResponse, error) {
 	out := new(OauthCallbackResponse)
 	err := c.cc.Invoke(ctx, PortalService_OauthCallback_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *portalServiceClient) GetIntegrations(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Integrations, error) {
+	out := new(Integrations)
+	err := c.cc.Invoke(ctx, PortalService_GetIntegrations_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *portalServiceClient) CreateKeyword(ctx context.Context, in *CreateKeywordReq, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, PortalService_CreateKeyword_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -184,9 +200,27 @@ func (c *portalServiceClient) RemoveSubReddit(ctx context.Context, in *v1.Remove
 	return out, nil
 }
 
-func (c *portalServiceClient) GetIntegrations(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Integrations, error) {
-	out := new(Integrations)
-	err := c.cc.Invoke(ctx, PortalService_GetIntegrations_FullMethodName, in, out, opts...)
+func (c *portalServiceClient) GetRelevantLeads(ctx context.Context, in *v1.GetRelevantLeadsRequest, opts ...grpc.CallOption) (*v1.GetLeadsResponse, error) {
+	out := new(v1.GetLeadsResponse)
+	err := c.cc.Invoke(ctx, PortalService_GetRelevantLeads_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *portalServiceClient) GetLeadsByStatus(ctx context.Context, in *v1.GetLeadsByStatusRequest, opts ...grpc.CallOption) (*v1.GetLeadsResponse, error) {
+	out := new(v1.GetLeadsResponse)
+	err := c.cc.Invoke(ctx, PortalService_GetLeadsByStatus_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *portalServiceClient) UpdateLeadStatus(ctx context.Context, in *v1.UpdateLeadStatusRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, PortalService_UpdateLeadStatus_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -206,13 +240,17 @@ type PortalServiceServer interface {
 	CreateCustomerCase(context.Context, *CreateCustomerCaseReq) (*emptypb.Empty, error)
 	PasswordlessStart(context.Context, *PasswordlessStartRequest) (*emptypb.Empty, error)
 	PasswordlessVerify(context.Context, *PasswordlessStartVerify) (*JWT, error)
-	CreateKeyword(context.Context, *CreateKeywordReq) (*emptypb.Empty, error)
 	OauthAuthorize(context.Context, *OauthAuthorizeRequest) (*OauthAuthorizeResponse, error)
 	OauthCallback(context.Context, *OauthCallbackRequest) (*OauthCallbackResponse, error)
+	GetIntegrations(context.Context, *emptypb.Empty) (*Integrations, error)
+	// Reddit
+	CreateKeyword(context.Context, *CreateKeywordReq) (*emptypb.Empty, error)
 	AddSubReddit(context.Context, *v1.AddSubRedditRequest) (*emptypb.Empty, error)
 	GetSubReddits(context.Context, *emptypb.Empty) (*v1.GetSubredditsResponse, error)
 	RemoveSubReddit(context.Context, *v1.RemoveSubRedditRequest) (*emptypb.Empty, error)
-	GetIntegrations(context.Context, *emptypb.Empty) (*Integrations, error)
+	GetRelevantLeads(context.Context, *v1.GetRelevantLeadsRequest) (*v1.GetLeadsResponse, error)
+	GetLeadsByStatus(context.Context, *v1.GetLeadsByStatusRequest) (*v1.GetLeadsResponse, error)
+	UpdateLeadStatus(context.Context, *v1.UpdateLeadStatusRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedPortalServiceServer()
 }
 
@@ -241,14 +279,17 @@ func (UnimplementedPortalServiceServer) PasswordlessStart(context.Context, *Pass
 func (UnimplementedPortalServiceServer) PasswordlessVerify(context.Context, *PasswordlessStartVerify) (*JWT, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PasswordlessVerify not implemented")
 }
-func (UnimplementedPortalServiceServer) CreateKeyword(context.Context, *CreateKeywordReq) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateKeyword not implemented")
-}
 func (UnimplementedPortalServiceServer) OauthAuthorize(context.Context, *OauthAuthorizeRequest) (*OauthAuthorizeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method OauthAuthorize not implemented")
 }
 func (UnimplementedPortalServiceServer) OauthCallback(context.Context, *OauthCallbackRequest) (*OauthCallbackResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method OauthCallback not implemented")
+}
+func (UnimplementedPortalServiceServer) GetIntegrations(context.Context, *emptypb.Empty) (*Integrations, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetIntegrations not implemented")
+}
+func (UnimplementedPortalServiceServer) CreateKeyword(context.Context, *CreateKeywordReq) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateKeyword not implemented")
 }
 func (UnimplementedPortalServiceServer) AddSubReddit(context.Context, *v1.AddSubRedditRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddSubReddit not implemented")
@@ -259,8 +300,14 @@ func (UnimplementedPortalServiceServer) GetSubReddits(context.Context, *emptypb.
 func (UnimplementedPortalServiceServer) RemoveSubReddit(context.Context, *v1.RemoveSubRedditRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveSubReddit not implemented")
 }
-func (UnimplementedPortalServiceServer) GetIntegrations(context.Context, *emptypb.Empty) (*Integrations, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetIntegrations not implemented")
+func (UnimplementedPortalServiceServer) GetRelevantLeads(context.Context, *v1.GetRelevantLeadsRequest) (*v1.GetLeadsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetRelevantLeads not implemented")
+}
+func (UnimplementedPortalServiceServer) GetLeadsByStatus(context.Context, *v1.GetLeadsByStatusRequest) (*v1.GetLeadsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetLeadsByStatus not implemented")
+}
+func (UnimplementedPortalServiceServer) UpdateLeadStatus(context.Context, *v1.UpdateLeadStatusRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateLeadStatus not implemented")
 }
 func (UnimplementedPortalServiceServer) mustEmbedUnimplementedPortalServiceServer() {}
 
@@ -401,24 +448,6 @@ func _PortalService_PasswordlessVerify_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
-func _PortalService_CreateKeyword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateKeywordReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(PortalServiceServer).CreateKeyword(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: PortalService_CreateKeyword_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PortalServiceServer).CreateKeyword(ctx, req.(*CreateKeywordReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _PortalService_OauthAuthorize_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(OauthAuthorizeRequest)
 	if err := dec(in); err != nil {
@@ -451,6 +480,42 @@ func _PortalService_OauthCallback_Handler(srv interface{}, ctx context.Context, 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(PortalServiceServer).OauthCallback(ctx, req.(*OauthCallbackRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PortalService_GetIntegrations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortalServiceServer).GetIntegrations(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortalService_GetIntegrations_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortalServiceServer).GetIntegrations(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PortalService_CreateKeyword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateKeywordReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortalServiceServer).CreateKeyword(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortalService_CreateKeyword_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortalServiceServer).CreateKeyword(ctx, req.(*CreateKeywordReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -509,20 +574,56 @@ func _PortalService_RemoveSubReddit_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
-func _PortalService_GetIntegrations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(emptypb.Empty)
+func _PortalService_GetRelevantLeads_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(v1.GetRelevantLeadsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(PortalServiceServer).GetIntegrations(ctx, in)
+		return srv.(PortalServiceServer).GetRelevantLeads(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: PortalService_GetIntegrations_FullMethodName,
+		FullMethod: PortalService_GetRelevantLeads_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PortalServiceServer).GetIntegrations(ctx, req.(*emptypb.Empty))
+		return srv.(PortalServiceServer).GetRelevantLeads(ctx, req.(*v1.GetRelevantLeadsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PortalService_GetLeadsByStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(v1.GetLeadsByStatusRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortalServiceServer).GetLeadsByStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortalService_GetLeadsByStatus_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortalServiceServer).GetLeadsByStatus(ctx, req.(*v1.GetLeadsByStatusRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PortalService_UpdateLeadStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(v1.UpdateLeadStatusRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortalServiceServer).UpdateLeadStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortalService_UpdateLeadStatus_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortalServiceServer).UpdateLeadStatus(ctx, req.(*v1.UpdateLeadStatusRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -563,16 +664,20 @@ var PortalService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _PortalService_PasswordlessVerify_Handler,
 		},
 		{
-			MethodName: "CreateKeyword",
-			Handler:    _PortalService_CreateKeyword_Handler,
-		},
-		{
 			MethodName: "OauthAuthorize",
 			Handler:    _PortalService_OauthAuthorize_Handler,
 		},
 		{
 			MethodName: "OauthCallback",
 			Handler:    _PortalService_OauthCallback_Handler,
+		},
+		{
+			MethodName: "GetIntegrations",
+			Handler:    _PortalService_GetIntegrations_Handler,
+		},
+		{
+			MethodName: "CreateKeyword",
+			Handler:    _PortalService_CreateKeyword_Handler,
 		},
 		{
 			MethodName: "AddSubReddit",
@@ -587,8 +692,16 @@ var PortalService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _PortalService_RemoveSubReddit_Handler,
 		},
 		{
-			MethodName: "GetIntegrations",
-			Handler:    _PortalService_GetIntegrations_Handler,
+			MethodName: "GetRelevantLeads",
+			Handler:    _PortalService_GetRelevantLeads_Handler,
+		},
+		{
+			MethodName: "GetLeadsByStatus",
+			Handler:    _PortalService_GetLeadsByStatus_Handler,
+		},
+		{
+			MethodName: "UpdateLeadStatus",
+			Handler:    _PortalService_UpdateLeadStatus_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

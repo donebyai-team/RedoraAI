@@ -3,6 +3,7 @@ package psql
 import (
 	"context"
 	"fmt"
+	"github.com/lib/pq"
 	"github.com/shank318/doota/models"
 )
 
@@ -16,6 +17,13 @@ func init() {
 		"sub_reddit/delete_sub_reddit_by_id.sql",
 		"sub_reddit/query_sub_reddit_by_id.sql",
 		"sub_reddit/query_sub_reddit_by_project.sql",
+
+		"reddit_leads/create_reddit_lead.sql",
+		"reddit_leads/query_reddit_lead_by_filter.sql",
+		"reddit_leads/query_reddit_lead_by_post_id.sql",
+		"reddit_leads/query_reddit_lead_by_status.sql",
+		"reddit_leads/update_reddit_lead_status.sql",
+		"reddit_leads/query_reddit_lead_by_id.sql",
 	})
 }
 
@@ -126,14 +134,72 @@ func (r *Database) DeleteSubRedditByID(ctx context.Context, ID string) (*models.
 }
 
 func (r *Database) GetRedditLeadByPostID(ctx context.Context, projectID, postID string) (*models.RedditLead, error) {
-	panic("implement me")
+	return getOne[models.RedditLead](ctx, r, "reddit_leads/query_reddit_lead_by_post_id.sql", map[string]any{
+		"post_id":    postID,
+		"project_id": projectID,
+	})
+}
+
+func (r *Database) GetRedditLeadByID(ctx context.Context, projectID, id string) (*models.RedditLead, error) {
+	return getOne[models.RedditLead](ctx, r, "reddit_leads/query_reddit_lead_by_id.sql", map[string]any{
+		"id":         id,
+		"project_id": projectID,
+	})
+}
+
+func (r *Database) UpdateRedditLeadStatus(ctx context.Context, lead *models.RedditLead) error {
+	stmt := r.mustGetStmt("reddit_leads/update_reddit_lead_status.sql")
+	_, err := stmt.ExecContext(ctx, map[string]interface{}{
+		"status":     lead.Status,
+		"project_id": lead.ProjectID,
+		"id":         lead.ID,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to update lead status %q: %w", lead.ID, err)
+	}
+	return nil
+}
+
+func (r *Database) GetRedditLeadsByStatus(ctx context.Context, projectID string, status models.LeadStatus) ([]*models.RedditLead, error) {
+	return getMany[models.RedditLead](ctx, r, "reddit_leads/query_reddit_lead_by_status.sql", map[string]any{
+		"status":     status,
+		"project_id": projectID,
+	})
+}
+
+func (r *Database) GetRedditLeadsByRelevancy(ctx context.Context, projectID string, relevancy float32, subReddits []string) ([]*models.RedditLead, error) {
+	return getMany[models.RedditLead](ctx, r, "reddit_leads/query_reddit_lead_by_filter.sql", map[string]any{
+		"subreddit_id":    pq.Array(subReddits),
+		"relevancy_score": relevancy,
+		"status":          models.LeadStatusNEW,
+		"project_id":      projectID,
+	})
 }
 
 func (r *Database) GetRedditLeadByCommentID(ctx context.Context, projectID, commentID string) (*models.RedditLead, error) {
 	panic("implement me")
 }
 
-func (r *Database) CreateRedditLeads(ctx context.Context, reddit []*models.RedditLead) error {
-	//TODO implement me
-	panic("implement me")
+// TODO: Move it under a transaction
+func (r *Database) CreateRedditLeads(ctx context.Context, redditLeads []*models.RedditLead) error {
+	for _, reddit := range redditLeads {
+		stmt := r.mustGetStmt("reddit_leads/create_reddit_lead.sql")
+		var id string
+		err := stmt.GetContext(ctx, &id, map[string]interface{}{
+			"project_id":      reddit.ProjectID,
+			"subreddit_id":    reddit.SubRedditID,
+			"author":          reddit.Author,
+			"post_id":         reddit.PostID,
+			"type":            reddit.Type,
+			"relevancy_score": reddit.RelevancyScore,
+			"post_created_at": reddit.PostCreatedAt,
+			"metadata":        reddit.LeadMetadata,
+			"description":     reddit.Description,
+			"title":           reddit.Title,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to insert reddit_lead post_id [%s]: %w", reddit.PostID, err)
+		}
+	}
+	return nil
 }

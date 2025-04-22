@@ -12,35 +12,72 @@ import (
 )
 
 const (
-	// RedditLeadTypeCOMMENT is a RedditLeadType of type COMMENT.
-	RedditLeadTypeCOMMENT RedditLeadType = "COMMENT"
-	// RedditLeadTypePOST is a RedditLeadType of type POST.
-	RedditLeadTypePOST RedditLeadType = "POST"
+	// LeadStatusNEW is a LeadStatus of type NEW.
+	LeadStatusNEW LeadStatus = "NEW"
+	// LeadStatusCOMPLETED is a LeadStatus of type COMPLETED.
+	LeadStatusCOMPLETED LeadStatus = "COMPLETED"
+	// LeadStatusNOTRELEVANT is a LeadStatus of type NOT_RELEVANT.
+	LeadStatusNOTRELEVANT LeadStatus = "NOT_RELEVANT"
 )
 
-var ErrInvalidRedditLeadType = errors.New("not a valid RedditLeadType")
+var ErrInvalidLeadStatus = errors.New("not a valid LeadStatus")
 
 // String implements the Stringer interface.
-func (x RedditLeadType) String() string {
+func (x LeadStatus) String() string {
 	return string(x)
 }
 
 // IsValid provides a quick way to determine if the typed value is
 // part of the allowed enumerated values
-func (x RedditLeadType) IsValid() bool {
-	_, err := ParseRedditLeadType(string(x))
+func (x LeadStatus) IsValid() bool {
+	_, err := ParseLeadStatus(string(x))
 	return err == nil
 }
 
-var _RedditLeadTypeValue = map[string]RedditLeadType{
-	"COMMENT": RedditLeadTypeCOMMENT,
-	"POST":    RedditLeadTypePOST,
+var _LeadStatusValue = map[string]LeadStatus{
+	"NEW":          LeadStatusNEW,
+	"COMPLETED":    LeadStatusCOMPLETED,
+	"NOT_RELEVANT": LeadStatusNOTRELEVANT,
 }
 
-// ParseRedditLeadType attempts to convert a string to a RedditLeadType.
-func ParseRedditLeadType(name string) (RedditLeadType, error) {
-	if x, ok := _RedditLeadTypeValue[name]; ok {
+// ParseLeadStatus attempts to convert a string to a LeadStatus.
+func ParseLeadStatus(name string) (LeadStatus, error) {
+	if x, ok := _LeadStatusValue[name]; ok {
 		return x, nil
 	}
-	return RedditLeadType(""), fmt.Errorf("%s is %w", name, ErrInvalidRedditLeadType)
+	return LeadStatus(""), fmt.Errorf("%s is %w", name, ErrInvalidLeadStatus)
+}
+
+const (
+	// LeadTypeCOMMENT is a LeadType of type COMMENT.
+	LeadTypeCOMMENT LeadType = "COMMENT"
+	// LeadTypePOST is a LeadType of type POST.
+	LeadTypePOST LeadType = "POST"
+)
+
+var ErrInvalidLeadType = errors.New("not a valid LeadType")
+
+// String implements the Stringer interface.
+func (x LeadType) String() string {
+	return string(x)
+}
+
+// IsValid provides a quick way to determine if the typed value is
+// part of the allowed enumerated values
+func (x LeadType) IsValid() bool {
+	_, err := ParseLeadType(string(x))
+	return err == nil
+}
+
+var _LeadTypeValue = map[string]LeadType{
+	"COMMENT": LeadTypeCOMMENT,
+	"POST":    LeadTypePOST,
+}
+
+// ParseLeadType attempts to convert a string to a LeadType.
+func ParseLeadType(name string) (LeadType, error) {
+	if x, ok := _LeadTypeValue[name]; ok {
+		return x, nil
+	}
+	return LeadType(""), fmt.Errorf("%s is %w", name, ErrInvalidLeadType)
 }

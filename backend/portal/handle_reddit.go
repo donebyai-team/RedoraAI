@@ -3,7 +3,9 @@ package portal
 import (
 	"connectrpc.com/connect"
 	"context"
+	"errors"
 	"fmt"
+	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/models"
 	pbportal "github.com/shank318/doota/pb/doota/portal/v1"
 	pbreddit "github.com/shank318/doota/pb/doota/reddit/v1"
@@ -95,6 +97,82 @@ func (p *Portal) RemoveSubReddit(ctx context.Context, c *connect.Request[pbreddi
 	err = redditService.RemoveSubReddit(ctx, c.Msg.Id)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to add subreddit: %w", err))
+	}
+
+	return connect.NewResponse(&emptypb.Empty{}), nil
+}
+
+func (p *Portal) GetRelevantLeads(ctx context.Context, c *connect.Request[pbreddit.GetRelevantLeadsRequest]) (*connect.Response[pbreddit.GetLeadsResponse], error) {
+	actor, err := p.gethAuthContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	subReddits := []string{}
+	if c.Msg.SubReddit != nil {
+		subReddits = append(subReddits, *c.Msg.SubReddit)
+	}
+
+	leads, err := p.db.GetRedditLeadsByRelevancy(ctx, actor.ProjectID, c.Msg.RelevancyScore, subReddits)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to fetch leads: %w", err))
+	}
+
+	leadsProto := make([]*pbreddit.RedditLead, 0, len(leads))
+	for _, lead := range leads {
+		leadsProto = append(leadsProto, new(pbreddit.RedditLead).FromModel(lead))
+	}
+
+	return connect.NewResponse(&pbreddit.GetLeadsResponse{Leads: leadsProto}), nil
+}
+
+func (p *Portal) GetLeadsByStatus(ctx context.Context, c *connect.Request[pbreddit.GetLeadsByStatusRequest]) (*connect.Response[pbreddit.GetLeadsResponse], error) {
+	actor, err := p.gethAuthContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	status, err := models.ParseLeadStatus(c.Msg.Status.String())
+	if err != nil {
+		return nil, err
+	}
+
+	leads, err := p.db.GetRedditLeadsByStatus(ctx, actor.ProjectID, status)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to fetch leads: %w", err))
+	}
+
+	leadsProto := make([]*pbreddit.RedditLead, 0, len(leads))
+	for _, lead := range leads {
+		leadsProto = append(leadsProto, new(pbreddit.RedditLead).FromModel(lead))
+	}
+
+	return connect.NewResponse(&pbreddit.GetLeadsResponse{Leads: leadsProto}), nil
+}
+
+func (p *Portal) UpdateLeadStatus(ctx context.Context, c *connect.Request[pbreddit.UpdateLeadStatusRequest]) (*connect.Response[emptypb.Empty], error) {
+	actor, err := p.gethAuthContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	lead, err := p.db.GetRedditLeadByID(ctx, actor.ProjectID, c.Msg.LeadId)
+	if !errors.Is(err, datastore.NotFound) {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to fetch lead: %w", err))
+	}
+
+	if lead == nil {
+		return connect.NewResponse(&emptypb.Empty{}), nil
+	}
+
+	status, err := models.ParseLeadStatus(c.Msg.Status.String())
+	if err != nil {
+		return nil, err
+	}
+
+	lead.Status = status
+	err = p.db.UpdateRedditLeadStatus(ctx, lead)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to update lead status: %w", err))
 	}
 
 	return connect.NewResponse(&emptypb.Empty{}), nil
