@@ -112,7 +112,7 @@ The database needs to be populated with some information if you want to use the 
 > You will need to insert organization, then user, then message sources because you need organization and user ids which will be available only after first `INSERT`
 
 ```SQL
-INSERT INTO organizations (name) VALUES ('DootaAI'');
+INSERT INTO organizations (name) VALUES ('DootaAI');
 INSERT INTO users (auth0_id, email, email_verified, organization_id, role, state) VALUES ('', 'shank@dootaai.com', true, 'YOUR ORG ID', 'PLATFORM_ADMIN', 'ACTIVE');
 INSERT INTO projects (
     name, 
