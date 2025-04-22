@@ -42,17 +42,17 @@ func NewSubRedditTracker(
 
 type checkIfLeadExists func(ctx context.Context, projectID, ID string) (*models.RedditLead, error)
 
-func (s *SubRedditTracker) TrackSubreddit(ctx context.Context, tracker *models.AugmentedSubRedditTracker) error {
-	redditClient, err := s.redditOauthClient.NewRedditClient(ctx, tracker.Project.OrganizationID)
+func (s *SubRedditTracker) TrackSubreddit(ctx context.Context, subReddit *models.AugmentedSubReddit) error {
+	redditClient, err := s.redditOauthClient.NewRedditClient(ctx, subReddit.Project.OrganizationID)
 	if err != nil {
 		return fmt.Errorf("redditOauthClient.NewRedditClient: %w", err)
 	}
-
-	err = s.searchLeadsFromPosts(ctx, tracker.Keyword.Keyword, tracker, redditClient, s.db.GetRedditLeadByPostID)
-	if err != nil {
-		return fmt.Errorf("searchLeadsFromPosts: %w", err)
+	for _, keyword := range subReddit.Keywords {
+		err = s.searchLeadsFromPosts(ctx, keyword, subReddit.Project, subReddit.SubReddit, redditClient, s.db.GetRedditLeadByPostID)
+		if err != nil {
+			return fmt.Errorf("searchLeadsFromPosts: %w", err)
+		}
 	}
-
 	return nil
 }
 
@@ -81,10 +81,23 @@ func (s *SubRedditTracker) TrackSubreddit(ctx context.Context, tracker *models.A
 // Filter them via a criteria - https://www.notion.so/Criteria-for-filtering-the-relevant-post-1c70029aaf8f80ec8ba6fd4e29342d6a
 // After filtering, ask AI to filter again
 // Save it into the table sub_reddits_leads (models.RedditLead)
-func (s *SubRedditTracker) searchLeadsFromPosts(ctx context.Context, keyword string, subReddit *models.AugmentedSubRedditTracker, redditClient *reddit.Client, leadExists checkIfLeadExists) error {
-	posts, err := redditClient.GetPosts(ctx, subReddit.SubReddit.SubRedditID, reddit.PostFilters{
-		Keywords: []string{keyword},
+func (s *SubRedditTracker) searchLeadsFromPosts(
+	ctx context.Context,
+	keyword *models.Keyword,
+	project *models.Project,
+	subReddit *models.SubReddit,
+	redditClient *reddit.Client,
+	leadExists checkIfLeadExists) error {
+
+	tracker, err := s.db.GetOrCreateSubRedditTracker(ctx, subReddit.ID, keyword.ID)
+	if !errors.Is(err, datastore.NotFound) {
+		return err
+	}
+
+	posts, err := redditClient.GetPosts(ctx, subReddit.SubRedditID, reddit.PostFilters{
+		Keywords: []string{keyword.Keyword},
 		SortBy:   utils.Ptr(reddit.SortByNEW),
+		After:    tracker.NewestTrackedPost,
 	})
 	if err != nil {
 		s.logger.Error("unable to fetch posts while tracking subreddit", zap.String("subreddit", subReddit.SubReddit.Name), zap.Error(err))
@@ -95,7 +108,7 @@ func (s *SubRedditTracker) searchLeadsFromPosts(ctx context.Context, keyword str
 
 	newPosts := []*reddit.Post{}
 	for _, post := range posts {
-		lead, err := leadExists(ctx, subReddit.SubReddit.SubRedditID, post.ID)
+		lead, err := leadExists(ctx, subReddit.SubRedditID, post.ID)
 		if err == nil && lead != nil {
 			continue
 		}
@@ -124,8 +137,8 @@ func (s *SubRedditTracker) searchLeadsFromPosts(ctx context.Context, keyword str
 	// Filter by AI
 	for _, post := range filteredPosts {
 		redditLead := &models.RedditLead{
-			ProjectID:     subReddit.Project.ID,
-			SubRedditID:   subReddit.SubReddit.ID,
+			ProjectID:     project.ID,
+			SubRedditID:   subReddit.ID,
 			Author:        post.Author,
 			PostID:        post.ID,
 			Type:          models.LeadTypePOST,
@@ -134,7 +147,7 @@ func (s *SubRedditTracker) searchLeadsFromPosts(ctx context.Context, keyword str
 			PostCreatedAt: time.Unix(int64(post.CreatedAt), 0),
 		}
 
-		relevanceResponse, err := s.aiClient.IsRedditPostRelevant(ctx, subReddit.Project, redditLead, s.gptModel, s.logger)
+		relevanceResponse, err := s.aiClient.IsRedditPostRelevant(ctx, project, redditLead, s.gptModel, s.logger)
 		if err != nil {
 			s.logger.Error("failed to get relevance response", zap.Error(err))
 			continue
@@ -163,7 +176,7 @@ func (s *SubRedditTracker) searchLeadsFromPosts(ctx context.Context, keyword str
 	s.logger.Info("ai suggested posts",
 		zap.Int("high_relevancy_posts", countPostsWithHighRelevancy),
 		zap.Int("total_filtered_posts", len(filteredPosts)))
-	
+
 	return nil
 }
 

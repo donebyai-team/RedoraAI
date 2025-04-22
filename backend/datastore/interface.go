@@ -66,7 +66,10 @@ type ProjectRepository interface {
 
 type RedditRepository interface {
 	CreateKeyword(ctx context.Context, keyword *models.Keyword) (*models.Keyword, error)
-	GetSubRedditTrackers(ctx context.Context) ([]*models.AugmentedSubRedditTracker, error)
+	//GetSubRedditTrackers(ctx context.Context) ([]*models.AugmentedSubRedditTracker, error)
+	GetOrCreateSubRedditTracker(ctx context.Context, subredditID, keywordID string) (*models.SubRedditTracker, error)
+	GetSubReddits(ctx context.Context) ([]*models.AugmentedSubReddit, error)
+	UpdateSubRedditTracker(ctx context.Context, subreddit *models.SubRedditTracker) (*models.SubRedditTracker, error)
 	AddSubReddit(ctx context.Context, subreddit *models.SubReddit) (*models.SubReddit, error)
 	GetSubRedditByName(ctx context.Context, url, orgID string) (*models.SubReddit, error)
 	DeleteSubRedditByID(ctx context.Context, id string) error

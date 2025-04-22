@@ -19,7 +19,7 @@ type Spooler struct {
 	gptModel          ai.GPTModel
 	db                datastore.Repository
 	aiClient          *ai.Client
-	queue             chan *models.AugmentedSubRedditTracker
+	queue             chan *models.AugmentedSubReddit
 	queued            *agents.QueuedMap[string, bool]
 	state             state.ConversationState
 	appIsReady        func() bool
@@ -49,7 +49,7 @@ func New(
 		aiClient:          aiClient,
 		dbPollingInterval: dbPollingInterval,
 		appIsReady:        isShuttingDown,
-		queue:             make(chan *models.AugmentedSubRedditTracker, bufferSize),
+		queue:             make(chan *models.AugmentedSubReddit, bufferSize),
 		queued:            agents.NewQueuedMap[string, bool](bufferSize),
 		logger:            logger,
 		subRedditTracker:  subRedditTracker,
@@ -90,10 +90,10 @@ func (s *Spooler) runLoop(ctx context.Context) {
 	}
 }
 
-func (s *Spooler) processKeywordsTracking(ctx context.Context, subReddit *models.AugmentedSubRedditTracker) error {
+func (s *Spooler) processKeywordsTracking(ctx context.Context, subReddit *models.AugmentedSubReddit) error {
 	logger := s.logger.With(
 		zap.String("organization_id", subReddit.Project.OrganizationID),
-		zap.String("tracker_id", subReddit.Tracker.ID),
+		zap.String("subreddit_id", subReddit.SubReddit.ID),
 		zap.String("project_id", subReddit.Project.ID),
 		zap.String("creator", "redora"),
 	)
@@ -149,7 +149,7 @@ func (s *Spooler) loadSubRedditsToTrack(ctx context.Context) error {
 	return nil
 }
 
-func (s *Spooler) pushSubRedditToTack(subReddit *models.AugmentedSubRedditTracker) {
+func (s *Spooler) pushSubRedditToTack(subReddit *models.AugmentedSubReddit) {
 	if s.queued.Has(subReddit.SubReddit.ID) {
 		return
 	}

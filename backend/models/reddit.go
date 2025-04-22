@@ -15,7 +15,6 @@ type Keyword struct {
 
 type SubRedditTracker struct {
 	ID                string     `db:"id"`
-	ProjectID         string     `db:"project_id"`
 	SubRedditID       string     `db:"subreddit_id"`
 	KeywordID         string     `db:"keyword_id"`
 	LastTrackedAt     *time.Time `db:"last_tracked_at"`
@@ -32,6 +31,7 @@ type SubReddit struct {
 	Description        string            `db:"description"`
 	SubredditCreatedAt time.Time         `db:"subreddit_created_at"`
 	SubRedditMetadata  SubRedditMetadata `db:"metadata"`
+	LastTrackedAt      *time.Time        `db:"last_tracked_at"`
 
 	// Optional
 	Title     *string    `db:"title"`
@@ -52,10 +52,16 @@ func (b *SubRedditMetadata) Scan(value interface{}) error {
 	return scanFromJSON(value, b, "subreddit metadata")
 }
 
-type AugmentedSubRedditTracker struct {
-	Tracker   *SubRedditTracker
+//type AugmentedSubRedditTracker struct {
+//	Tracker   *SubRedditTracker
+//	SubReddit *SubReddit
+//	Keyword   *Keyword
+//	Project   *Project
+//}
+
+type AugmentedSubReddit struct {
 	SubReddit *SubReddit
-	Keyword   *Keyword
+	Keywords  []*Keyword
 	Project   *Project
 }
 
