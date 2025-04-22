@@ -6,7 +6,8 @@ CREATE TABLE keywords
     keyword varchar(255) NOT NULL,
     project_id uuid NOT NULL,
     created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at  timestamp
+    updated_at  timestamp,
+    deleted_at timestamp
 );
 
 ALTER TABLE keywords ADD CONSTRAINT fk_keywords FOREIGN KEY (project_id) REFERENCES projects (id);

@@ -19,7 +19,7 @@ type Spooler struct {
 	gptModel          ai.GPTModel
 	db                datastore.Repository
 	aiClient          *ai.Client
-	queue             chan *models.AugmentedSubReddit
+	queue             chan *models.AugmentedSubRedditTracker
 	queued            *agents.QueuedMap[string, bool]
 	state             state.ConversationState
 	appIsReady        func() bool
@@ -49,7 +49,7 @@ func New(
 		aiClient:          aiClient,
 		dbPollingInterval: dbPollingInterval,
 		appIsReady:        isShuttingDown,
-		queue:             make(chan *models.AugmentedSubReddit, bufferSize),
+		queue:             make(chan *models.AugmentedSubRedditTracker, bufferSize),
 		queued:            agents.NewQueuedMap[string, bool](bufferSize),
 		logger:            logger,
 		subRedditTracker:  subRedditTracker,
@@ -90,10 +90,10 @@ func (s *Spooler) runLoop(ctx context.Context) {
 	}
 }
 
-func (s *Spooler) processKeywordsTracking(ctx context.Context, subReddit *models.AugmentedSubReddit) error {
+func (s *Spooler) processKeywordsTracking(ctx context.Context, subReddit *models.AugmentedSubRedditTracker) error {
 	logger := s.logger.With(
-		zap.String("subreddit_id", subReddit.SubReddit.SubRedditID),
 		zap.String("organization_id", subReddit.Project.OrganizationID),
+		zap.String("tracker_id", subReddit.Tracker.ID),
 		zap.String("project_id", subReddit.Project.ID),
 		zap.String("creator", "redora"),
 	)
@@ -136,7 +136,7 @@ func (s *Spooler) loadSubRedditsToTrack(ctx context.Context) error {
 	t0 := time.Now()
 	// Query all subreddits per org based on lastTrackedAt, should be > 24hours
 	// For each subreddit start the process
-	subReddits, err := s.db.GetSubReddits(ctx)
+	subReddits, err := s.db.GetSubRedditTrackers(ctx)
 	if err != nil {
 		return fmt.Errorf("processing subreddits: %w", err)
 	}
@@ -149,7 +149,7 @@ func (s *Spooler) loadSubRedditsToTrack(ctx context.Context) error {
 	return nil
 }
 
-func (s *Spooler) pushSubRedditToTack(subReddit *models.AugmentedSubReddit) {
+func (s *Spooler) pushSubRedditToTack(subReddit *models.AugmentedSubRedditTracker) {
 	if s.queued.Has(subReddit.SubReddit.ID) {
 		return
 	}

@@ -9,11 +9,11 @@ import (
 
 func init() {
 	registerFiles([]string{
+		"keyword/query_keyword_by_id.sql",
 		"keyword/create_keyword.sql",
 		"keyword/query_keyword_by_project.sql",
-		"sub_reddit/query_sub_reddit_by_filter.sql",
 		"sub_reddit/create_sub_reddit.sql",
-		"sub_reddit/query_sub_reddit_by_url.sql",
+		"sub_reddit/query_sub_reddit_by_name.sql",
 		"sub_reddit/delete_sub_reddit_by_id.sql",
 		"sub_reddit/query_sub_reddit_by_id.sql",
 		"sub_reddit/query_sub_reddit_by_project.sql",
@@ -24,6 +24,9 @@ func init() {
 		"reddit_leads/query_reddit_lead_by_status.sql",
 		"reddit_leads/update_reddit_lead_status.sql",
 		"reddit_leads/query_reddit_lead_by_id.sql",
+
+		"subreddit_tracker/query_sub_reddit_tracker_by_filter.sql",
+		"subreddit_tracker/create_sub_reddit_tracker.sql",
 	})
 }
 
@@ -45,8 +48,14 @@ func (r *Database) CreateKeyword(ctx context.Context, keywords *models.Keyword) 
 }
 
 func (r *Database) GetKeywords(ctx context.Context, orgID string) ([]*models.Keyword, error) {
-	return getMany[models.Keyword](ctx, r, "keyword/query_keyword_by_project.sql", map[string]any{
+	return getMany[models.Keyword](ctx, r, "keyword/query_keyword_by_id.sql", map[string]any{
 		"project_id": orgID,
+	})
+}
+
+func (r *Database) GetKeywordByID(ctx context.Context, id string) (*models.Keyword, error) {
+	return getOne[models.Keyword](ctx, r, "keyword/query_keyword_by_id.sql", map[string]any{
+		"id": id,
 	})
 }
 
@@ -56,12 +65,10 @@ func (r *Database) AddSubReddit(ctx context.Context, subreddit *models.SubReddit
 	var id string
 	err := stmt.GetContext(ctx, &id, map[string]interface{}{
 		"subreddit_id":         subreddit.SubRedditID,
-		"url":                  subreddit.URL,
 		"name":                 subreddit.Name,
 		"description":          subreddit.Description,
 		"project_id":           subreddit.ProjectID,
 		"subreddit_created_at": subreddit.SubredditCreatedAt,
-		"subscribers":          subreddit.Subscribers,
 		"title":                subreddit.Title,
 	})
 	if err != nil {
@@ -72,27 +79,33 @@ func (r *Database) AddSubReddit(ctx context.Context, subreddit *models.SubReddit
 	return subreddit, nil
 }
 
-func (r *Database) GetSubReddits(ctx context.Context) ([]*models.AugmentedSubReddit, error) {
-	subReddits, err := getMany[models.SubReddit](ctx, r, "sub_reddit/query_sub_reddit_by_filter.sql", map[string]any{})
+func (r *Database) GetSubRedditTrackers(ctx context.Context) ([]*models.AugmentedSubRedditTracker, error) {
+	subRedditTrackers, err := getMany[models.SubRedditTracker](ctx, r, "subreddit_tracker/query_sub_reddit_tracker_by_filter.sql", map[string]any{})
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to get customer cases: %w", err)
 	}
-	var results []*models.AugmentedSubReddit
-	for _, subreddit := range subReddits {
-		keywords, err := r.GetKeywords(ctx, subreddit.ProjectID)
+	var results []*models.AugmentedSubRedditTracker
+	for _, tracker := range subRedditTrackers {
+		subReddit, err := r.GetSubRedditByID(ctx, tracker.SubRedditID)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get keywords for project %q: %w", subreddit.ProjectID, err)
+			return nil, fmt.Errorf("failed to get keywords for project %q: %w", tracker.SubRedditID, err)
 		}
 
-		project, err := r.GetProject(ctx, subreddit.ProjectID)
+		keyword, err := r.GetKeywordByID(ctx, tracker.KeywordID)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get project %q: %w", subreddit.ProjectID, err)
+			return nil, fmt.Errorf("failed to get keywords for project %q: %w", tracker.KeywordID, err)
 		}
 
-		results = append(results, &models.AugmentedSubReddit{
-			SubReddit: subreddit,
-			Keywords:  keywords,
+		project, err := r.GetProject(ctx, tracker.ProjectID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get project %q: %w", tracker.ProjectID, err)
+		}
+
+		results = append(results, &models.AugmentedSubRedditTracker{
+			Tracker:   tracker,
+			SubReddit: subReddit,
+			Keyword:   keyword,
 			Project:   project,
 		})
 	}
@@ -106,9 +119,9 @@ func (r *Database) GetSubRedditsByProject(ctx context.Context, projectID string)
 	})
 }
 
-func (r *Database) GetSubRedditByUrl(ctx context.Context, url, projectID string) (*models.SubReddit, error) {
-	return getOne[models.SubReddit](ctx, r, "sub_reddit/query_sub_reddit_by_url.sql", map[string]any{
-		"url":        url,
+func (r *Database) GetSubRedditByName(ctx context.Context, name, projectID string) (*models.SubReddit, error) {
+	return getOne[models.SubReddit](ctx, r, "sub_reddit/query_sub_reddit_by_name.sql", map[string]any{
+		"name":       name,
 		"project_id": projectID,
 	})
 }
@@ -119,18 +132,12 @@ func (r *Database) GetSubRedditByID(ctx context.Context, ID string) (*models.Sub
 	})
 }
 
-func (r *Database) DeleteSubRedditByID(ctx context.Context, ID string) (*models.SubReddit, error) {
+func (r *Database) DeleteSubRedditByID(ctx context.Context, id string) error {
 	stmt := r.mustGetStmt("sub_reddit/delete_sub_reddit_by_id.sql")
-
-	var subreddit models.SubReddit
-	err := stmt.QueryRowxContext(ctx, map[string]interface{}{
-		"id": ID,
-	}).StructScan(&subreddit)
-	if err != nil {
-		return nil, fmt.Errorf("failed to delete subreddit with ID %s: %w", ID, err)
-	}
-
-	return &subreddit, nil
+	_, err := stmt.ExecContext(ctx, map[string]interface{}{
+		"id": id,
+	})
+	return err
 }
 
 func (r *Database) GetRedditLeadByPostID(ctx context.Context, projectID, postID string) (*models.RedditLead, error) {
@@ -181,25 +188,23 @@ func (r *Database) GetRedditLeadByCommentID(ctx context.Context, projectID, comm
 }
 
 // TODO: Move it under a transaction
-func (r *Database) CreateRedditLeads(ctx context.Context, redditLeads []*models.RedditLead) error {
-	for _, reddit := range redditLeads {
-		stmt := r.mustGetStmt("reddit_leads/create_reddit_lead.sql")
-		var id string
-		err := stmt.GetContext(ctx, &id, map[string]interface{}{
-			"project_id":      reddit.ProjectID,
-			"subreddit_id":    reddit.SubRedditID,
-			"author":          reddit.Author,
-			"post_id":         reddit.PostID,
-			"type":            reddit.Type,
-			"relevancy_score": reddit.RelevancyScore,
-			"post_created_at": reddit.PostCreatedAt,
-			"metadata":        reddit.LeadMetadata,
-			"description":     reddit.Description,
-			"title":           reddit.Title,
-		})
-		if err != nil {
-			return fmt.Errorf("failed to insert reddit_lead post_id [%s]: %w", reddit.PostID, err)
-		}
+func (r *Database) CreateRedditLead(ctx context.Context, reddit *models.RedditLead) error {
+	stmt := r.mustGetStmt("reddit_leads/create_reddit_lead.sql")
+	var id string
+	err := stmt.GetContext(ctx, &id, map[string]interface{}{
+		"project_id":      reddit.ProjectID,
+		"subreddit_id":    reddit.SubRedditID,
+		"author":          reddit.Author,
+		"post_id":         reddit.PostID,
+		"type":            reddit.Type,
+		"relevancy_score": reddit.RelevancyScore,
+		"post_created_at": reddit.PostCreatedAt,
+		"metadata":        reddit.LeadMetadata,
+		"description":     reddit.Description,
+		"title":           reddit.Title,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to insert reddit_lead post_id [%s]: %w", reddit.PostID, err)
 	}
 	return nil
 }

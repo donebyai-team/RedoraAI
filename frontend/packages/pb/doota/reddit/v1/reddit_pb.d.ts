@@ -52,9 +52,9 @@ export declare type AddSubRedditRequest = Message<"doota.reddit.v1.AddSubRedditR
   /**
    * eg. r/SAAS
    *
-   * @generated from field: string url = 1;
+   * @generated from field: string name = 1;
    */
-  url: string;
+  name: string;
 };
 
 /**

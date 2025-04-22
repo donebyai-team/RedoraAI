@@ -10,6 +10,7 @@ import (
 	pbportal "github.com/shank318/doota/pb/doota/portal/v1"
 	pbreddit "github.com/shank318/doota/pb/doota/reddit/v1"
 	"github.com/shank318/doota/services"
+	"github.com/shank318/doota/utils"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -44,7 +45,7 @@ func (p *Portal) AddSubReddit(ctx context.Context, c *connect.Request[pbreddit.A
 	redditService := services.NewRedditService(p.logger, p.db, redditClient)
 	err = redditService.CreateSubReddit(ctx, &models.SubReddit{
 		ProjectID: actor.ProjectID,
-		URL:       c.Msg.Url,
+		Name:      utils.CleanSubredditName(c.Msg.Name),
 	})
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to add subreddit: %w", err))
@@ -72,8 +73,7 @@ func (p *Portal) GetSubReddits(ctx context.Context, c *connect.Request[emptypb.E
 	for _, subReddit := range subReddits {
 		subRedditProto = append(subRedditProto, &pbreddit.SubReddit{
 			Id:          subReddit.ID,
-			Url:         subReddit.URL,
-			Name:        subReddit.Name,
+			Name:        fmt.Sprintf("r/%s", subReddit.Name),
 			Description: subReddit.Description,
 			Metadata:    &pbreddit.SubRedditMetadata{},
 			Title:       subReddit.Title,

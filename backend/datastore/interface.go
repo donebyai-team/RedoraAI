@@ -66,10 +66,10 @@ type ProjectRepository interface {
 
 type RedditRepository interface {
 	CreateKeyword(ctx context.Context, keyword *models.Keyword) (*models.Keyword, error)
-	GetSubReddits(ctx context.Context) ([]*models.AugmentedSubReddit, error)
+	GetSubRedditTrackers(ctx context.Context) ([]*models.AugmentedSubRedditTracker, error)
 	AddSubReddit(ctx context.Context, subreddit *models.SubReddit) (*models.SubReddit, error)
-	GetSubRedditByUrl(ctx context.Context, url, orgID string) (*models.SubReddit, error)
-	DeleteSubRedditByID(ctx context.Context, ID string) (*models.SubReddit, error)
+	GetSubRedditByName(ctx context.Context, url, orgID string) (*models.SubReddit, error)
+	DeleteSubRedditByID(ctx context.Context, id string) error
 	GetSubRedditByID(ctx context.Context, ID string) (*models.SubReddit, error)
 	GetSubRedditsByProject(ctx context.Context, projectID string) ([]*models.SubReddit, error)
 
@@ -77,7 +77,7 @@ type RedditRepository interface {
 	GetRedditLeadsByRelevancy(ctx context.Context, projectID string, relevancy float32, subReddits []string) ([]*models.RedditLead, error)
 	GetRedditLeadByPostID(ctx context.Context, projectID, postID string) (*models.RedditLead, error)
 	GetRedditLeadByCommentID(ctx context.Context, projectID, commentID string) (*models.RedditLead, error)
-	CreateRedditLeads(ctx context.Context, reddit []*models.RedditLead) error
+	CreateRedditLead(ctx context.Context, reddit *models.RedditLead) error
 	UpdateRedditLeadStatus(ctx context.Context, lead *models.RedditLead) error
 	GetRedditLeadByID(ctx context.Context, projectID, id string) (*models.RedditLead, error)
 }

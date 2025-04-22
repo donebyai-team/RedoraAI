@@ -30,32 +30,30 @@ func NewRedditService(logger *zap.Logger, db datastore.Repository, redditClient 
 
 func (r redditService) CreateSubReddit(ctx context.Context, subReddit *models.SubReddit) error {
 	// Check if the subreddit already exists in the DB
-	existingSubreddit, err := r.db.GetSubRedditByUrl(ctx, subReddit.URL, subReddit.ProjectID)
+	existingSubreddit, err := r.db.GetSubRedditByName(ctx, subReddit.Name, subReddit.ProjectID)
 	if !errors.Is(err, datastore.NotFound) {
 		return fmt.Errorf("get existing subreddit: %w", err)
 	}
 
 	if existingSubreddit != nil {
-		return fmt.Errorf("subreddit already exists: %s", subReddit.URL)
+		return fmt.Errorf("subreddit already exists: %s", subReddit.Name)
 	}
 
 	// Fetch the subreddit details by URL from Reddit API
-	subRedditDetails, err := r.redditClient.GetSubRedditByURL(ctx, subReddit.URL)
+	subRedditDetails, err := r.redditClient.GetSubRedditByName(ctx, subReddit.Name)
 	if err != nil {
 		return fmt.Errorf("failed to fetch subreddit details from Reddit: %w", err)
 	}
 
 	if subRedditDetails.ID == "" {
-		return fmt.Errorf("subreddit ID is missing or invalid subreddit URL: %s", subReddit.URL)
+		return fmt.Errorf("subreddit ID is missing or invalid subreddit URL: %s", subReddit.Name)
 	}
 
 	// Fill in the fields in models.SubReddit using fetched details
 	subReddit.SubRedditID = subRedditDetails.ID
-	subReddit.URL = subRedditDetails.URL
 	subReddit.Name = subRedditDetails.DisplayName
 	subReddit.Description = subRedditDetails.Description
 	subReddit.SubredditCreatedAt = time.Unix(int64(subRedditDetails.CreatedAt), 0)
-	subReddit.Subscribers = utils.Ptr(subRedditDetails.Subscribers)
 	subReddit.Title = utils.Ptr(subRedditDetails.Title)
 
 	// Insert the subreddit into the DB
@@ -83,7 +81,7 @@ func (r redditService) RemoveSubReddit(ctx context.Context, id string) error {
 	}
 
 	// Step 2: Delete the subreddit
-	_, err = r.db.DeleteSubRedditByID(ctx, id)
+	err = r.db.DeleteSubRedditByID(ctx, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete subreddit with ID %s: %w", id, err)
 	}

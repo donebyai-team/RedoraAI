@@ -42,25 +42,15 @@ func NewSubRedditTracker(
 
 type checkIfLeadExists func(ctx context.Context, projectID, ID string) (*models.RedditLead, error)
 
-func (s *SubRedditTracker) TrackSubreddit(ctx context.Context, subReddit *models.AugmentedSubReddit) error {
-	redditClient, err := s.redditOauthClient.NewRedditClient(ctx, subReddit.Project.OrganizationID)
+func (s *SubRedditTracker) TrackSubreddit(ctx context.Context, tracker *models.AugmentedSubRedditTracker) error {
+	redditClient, err := s.redditOauthClient.NewRedditClient(ctx, tracker.Project.OrganizationID)
 	if err != nil {
 		return fmt.Errorf("redditOauthClient.NewRedditClient: %w", err)
 	}
 
-	allLeads := make([]*models.RedditLead, 0)
-	for _, keyword := range subReddit.Keywords {
-		leads, err := s.searchLeadsFromPosts(ctx, keyword.Keyword, subReddit, redditClient, s.db.GetRedditLeadByPostID)
-		if err != nil {
-			return fmt.Errorf("searchLeadsFromPosts: %w", err)
-		}
-
-		err = s.db.CreateRedditLeads(ctx, leads)
-		if err != nil {
-			return fmt.Errorf("unable to create reddit leads: %w", err)
-		}
-
-		allLeads = append(allLeads, leads...)
+	err = s.searchLeadsFromPosts(ctx, tracker.Keyword.Keyword, tracker, redditClient, s.db.GetRedditLeadByPostID)
+	if err != nil {
+		return fmt.Errorf("searchLeadsFromPosts: %w", err)
 	}
 
 	return nil
@@ -91,14 +81,14 @@ func (s *SubRedditTracker) TrackSubreddit(ctx context.Context, subReddit *models
 // Filter them via a criteria - https://www.notion.so/Criteria-for-filtering-the-relevant-post-1c70029aaf8f80ec8ba6fd4e29342d6a
 // After filtering, ask AI to filter again
 // Save it into the table sub_reddits_leads (models.RedditLead)
-func (s *SubRedditTracker) searchLeadsFromPosts(ctx context.Context, keyword string, subReddit *models.AugmentedSubReddit, redditClient *reddit.Client, leadExists checkIfLeadExists) ([]*models.RedditLead, error) {
+func (s *SubRedditTracker) searchLeadsFromPosts(ctx context.Context, keyword string, subReddit *models.AugmentedSubRedditTracker, redditClient *reddit.Client, leadExists checkIfLeadExists) error {
 	posts, err := redditClient.GetPosts(ctx, subReddit.SubReddit.SubRedditID, reddit.PostFilters{
 		Keywords: []string{keyword},
 		SortBy:   utils.Ptr(reddit.SortByNEW),
 	})
 	if err != nil {
-		s.logger.Error("unable to fetch posts while tracking subreddit", zap.String("subreddit", subReddit.SubReddit.URL), zap.Error(err))
-		return nil, fmt.Errorf("unable to fetch posts: %w", err)
+		s.logger.Error("unable to fetch posts while tracking subreddit", zap.String("subreddit", subReddit.SubReddit.Name), zap.Error(err))
+		return fmt.Errorf("unable to fetch posts: %w", err)
 	}
 
 	s.logger.Info("got posts from reddit sorted by TOP and time range WEEK", zap.Int("total_posts", len(posts)))
@@ -123,14 +113,13 @@ func (s *SubRedditTracker) searchLeadsFromPosts(ctx context.Context, keyword str
 	// Hard filters
 	filteredPosts, err := s.filterAndEnrichPosts(ctx, redditClient, newPosts)
 	if err != nil {
-		return nil, fmt.Errorf("filterAndEnrichPosts: %w", err)
+		return fmt.Errorf("filterAndEnrichPosts: %w", err)
 	}
 
 	s.logger.Info("posts after hard filters",
 		zap.Int("filtered_posts", len(filteredPosts)),
 		zap.Int("total_posts", len(newPosts)))
 
-	leads := make([]*models.RedditLead, 0)
 	countPostsWithHighRelevancy := 0
 	// Filter by AI
 	for _, post := range filteredPosts {
@@ -165,14 +154,17 @@ func (s *SubRedditTracker) searchLeadsFromPosts(ctx context.Context, keyword str
 			PostURL:                          post.URL,
 			AuthorInfo:                       post.AuthorInfo,
 		}
-		leads = append(leads, redditLead)
+		err = s.db.CreateRedditLead(ctx, redditLead)
+		if err != nil {
+			s.logger.Error("unable to create reddit lead", zap.Error(err))
+		}
 	}
 
 	s.logger.Info("ai suggested posts",
 		zap.Int("high_relevancy_posts", countPostsWithHighRelevancy),
 		zap.Int("total_filtered_posts", len(filteredPosts)))
-
-	return leads, nil
+	
+	return nil
 }
 
 func (s *SubRedditTracker) filterAndEnrichPosts(ctx context.Context, redditClient *reddit.Client, posts []*reddit.Post) ([]*reddit.Post, error) {
