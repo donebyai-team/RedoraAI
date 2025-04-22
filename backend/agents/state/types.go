@@ -5,24 +5,23 @@ import (
 	"time"
 )
 
-const namespace = "spool"
-const phonePrefix = "phone"
-const organizationPrefix = "org"
+//const namespace = "spool"
+//const phonePrefix = "phone"
+//const organizationPrefix = "org"
 
-func callRunningKey(phone string) string {
-	return strings.Join([]string{namespace, phonePrefix, phone}, ":")
+func callRunningKey(namespace, prefix, id string) string {
+	return strings.Join([]string{namespace, prefix, id}, ":")
 }
 
-func orgRunningKey(orgID, phone string) string {
-	return strings.Join([]string{namespace, organizationPrefix, phonePrefix, orgID, phone}, ":")
-}
-
-func orgKeyPattern(organizationID string) string {
-	return strings.Join([]string{namespace, organizationPrefix, phonePrefix, organizationID}, ":")
-}
-
-func allCallKeyPattern() string {
-	return strings.Join([]string{namespace, phonePrefix}, ":")
+//	func orgRunningKey(orgID, phone string) string {
+//		return strings.Join([]string{namespace, organizationPrefix, phonePrefix, orgID, phone}, ":")
+//	}
+//
+//	func orgKeyPattern(organizationID string) string {
+//		return strings.Join([]string{namespace, organizationPrefix, phonePrefix, organizationID}, ":")
+//	}
+func allCallKeyPattern(namespace, prefix string) string {
+	return strings.Join([]string{namespace, prefix}, ":")
 }
 
 type CustomerCaseState struct {

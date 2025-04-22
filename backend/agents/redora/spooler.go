@@ -83,7 +83,7 @@ func (s *Spooler) runLoop(ctx context.Context) {
 			// Indeed, we don't want to stop the spooler if the investigator is broken or
 			// something.
 			if err := s.processKeywordsTracking(ctx, subReddit); err != nil {
-				s.Shutdown(fmt.Errorf("process investigation: %w", err))
+				s.Shutdown(fmt.Errorf("process subreddits: %w", err))
 				return
 			}
 		}
@@ -110,7 +110,12 @@ func (s *Spooler) processKeywordsTracking(ctx context.Context, subReddit *models
 		return nil
 	}
 
-	return s.subRedditTracker.TrackSubreddit(ctx, subReddit)
+	err = s.subRedditTracker.TrackSubreddit(ctx, subReddit)
+	if err != nil {
+		logger.Error("failed to track subreddit", zap.Error(err))
+	}
+
+	return nil
 }
 
 func (s *Spooler) pollSubReddits(ctx context.Context) {
@@ -136,7 +141,7 @@ func (s *Spooler) loadSubRedditsToTrack(ctx context.Context) error {
 	t0 := time.Now()
 	// Query all subreddits per org based on lastTrackedAt, should be > 24hours
 	// For each subreddit start the process
-	subReddits, err := s.db.GetSubRedditTrackers(ctx)
+	subReddits, err := s.db.GetSubReddits(ctx)
 	if err != nil {
 		return fmt.Errorf("processing subreddits: %w", err)
 	}

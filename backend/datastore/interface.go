@@ -66,16 +66,17 @@ type ProjectRepository interface {
 
 type RedditRepository interface {
 	CreateKeyword(ctx context.Context, keyword *models.Keyword) (*models.Keyword, error)
-	//GetSubRedditTrackers(ctx context.Context) ([]*models.AugmentedSubRedditTracker, error)
-	GetOrCreateSubRedditTracker(ctx context.Context, subredditID, keywordID string) (*models.SubRedditTracker, error)
 	GetSubReddits(ctx context.Context) ([]*models.AugmentedSubReddit, error)
-	UpdateSubRedditTracker(ctx context.Context, subreddit *models.SubRedditTracker) (*models.SubRedditTracker, error)
+
+	// Subreddit
 	AddSubReddit(ctx context.Context, subreddit *models.SubReddit) (*models.SubReddit, error)
 	GetSubRedditByName(ctx context.Context, url, orgID string) (*models.SubReddit, error)
 	DeleteSubRedditByID(ctx context.Context, id string) error
 	GetSubRedditByID(ctx context.Context, ID string) (*models.SubReddit, error)
 	GetSubRedditsByProject(ctx context.Context, projectID string) ([]*models.SubReddit, error)
+	UpdateSubRedditLastTrackedAt(ctx context.Context, id string) error
 
+	// Subreddit leads
 	GetRedditLeadsByStatus(ctx context.Context, projectID string, status models.LeadStatus) ([]*models.RedditLead, error)
 	GetRedditLeadsByRelevancy(ctx context.Context, projectID string, relevancy float32, subReddits []string) ([]*models.RedditLead, error)
 	GetRedditLeadByPostID(ctx context.Context, projectID, postID string) (*models.RedditLead, error)
@@ -83,6 +84,10 @@ type RedditRepository interface {
 	CreateRedditLead(ctx context.Context, reddit *models.RedditLead) error
 	UpdateRedditLeadStatus(ctx context.Context, lead *models.RedditLead) error
 	GetRedditLeadByID(ctx context.Context, projectID, id string) (*models.RedditLead, error)
+
+	// Subreddit tracker
+	GetOrCreateSubRedditTracker(ctx context.Context, subredditID, keywordID string) (*models.SubRedditTracker, error)
+	UpdateSubRedditTracker(ctx context.Context, subreddit *models.SubRedditTracker) (*models.SubRedditTracker, error)
 }
 
 type ConversationRepository interface {

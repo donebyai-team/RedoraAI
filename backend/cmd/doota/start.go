@@ -151,8 +151,10 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 			langsmithProject,
 		).
 		WithConversationState(
-			sflags.MustGetString(cmd, "redis-addr"),
 			sflags.MustGetDuration(cmd, "common-phone-call-ttl"),
+			sflags.MustGetString(cmd, "redis-addr"),
+			"redora",
+			"tracker",
 		).
 		Build(cmd.Context(), zlog, tracer)
 	if err != nil {
@@ -195,8 +197,10 @@ func vanaSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 			langsmithProject,
 		).
 		WithConversationState(
-			sflags.MustGetString(cmd, "redis-addr"),
 			sflags.MustGetDuration(cmd, "common-phone-call-ttl"),
+			sflags.MustGetString(cmd, "redis-addr"),
+			"spooler",
+			"phone",
 		).
 		Build(cmd.Context(), zlog, tracer)
 	if err != nil {
@@ -235,8 +239,10 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		WithKMSKeyPath(sflags.MustGetString(cmd, "jwt-kms-keypath")).
 		WithCORSURLRegexAllow(sflags.MustGetString(cmd, "portal-cors-url-regex-allow")).
 		WithConversationState(
-			sflags.MustGetString(cmd, "redis-addr"),
 			sflags.MustGetDuration(cmd, "common-phone-call-ttl"),
+			sflags.MustGetString(cmd, "redis-addr"),
+			"redora",
+			"tracker",
 		).
 		WithAI(
 			openaiApiKey,
