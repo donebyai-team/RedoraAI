@@ -9,6 +9,7 @@ CREATE TABLE sub_reddits
     project_id uuid NOT NULL,
     subreddit_created_at timestamp NOT NULL,
     title TEXT,
+    last_tracked_at timestamp,
     created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at  timestamp,
     deleted_at timestamp

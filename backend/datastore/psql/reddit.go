@@ -2,8 +2,10 @@ package psql
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/lib/pq"
+	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/models"
 )
 
@@ -17,6 +19,7 @@ func init() {
 		"sub_reddit/delete_sub_reddit_by_id.sql",
 		"sub_reddit/query_sub_reddit_by_id.sql",
 		"sub_reddit/query_sub_reddit_by_project.sql",
+		"sub_reddit/update_sub_reddit_last_tracked_at.sql",
 
 		"reddit_leads/create_reddit_lead.sql",
 		"reddit_leads/query_reddit_lead_by_filter.sql",
@@ -25,7 +28,7 @@ func init() {
 		"reddit_leads/update_reddit_lead_status.sql",
 		"reddit_leads/query_reddit_lead_by_id.sql",
 
-		"subreddit_tracker/query_sub_reddit_tracker_by_filter.sql",
+		"subreddit_tracker/query_sub_reddit_tracker.sql",
 		"subreddit_tracker/create_sub_reddit_tracker.sql",
 	})
 }
@@ -79,39 +82,133 @@ func (r *Database) AddSubReddit(ctx context.Context, subreddit *models.SubReddit
 	return subreddit, nil
 }
 
-func (r *Database) GetSubRedditTrackers(ctx context.Context) ([]*models.AugmentedSubRedditTracker, error) {
-	subRedditTrackers, err := getMany[models.SubRedditTracker](ctx, r, "subreddit_tracker/query_sub_reddit_tracker_by_filter.sql", map[string]any{})
+func (r *Database) UpdateSubRedditTracker(ctx context.Context, subreddit *models.SubRedditTracker) (*models.SubRedditTracker, error) {
+	tx, err := r.BeginTxx(ctx, nil)
+	if err != nil {
+		return nil, fmt.Errorf("begin transaction: %w", err)
+	}
+	defer func() {
+		err = executePotentialRollback(tx, err)
+	}()
+
+	stmt := r.mustGetTxStmt(ctx, "subreddit_tracker/create_sub_reddit_tracker.sql", tx)
+	var id string
+	err = stmt.GetContext(ctx, &id, map[string]interface{}{
+		"subreddit_id":        subreddit.SubRedditID,
+		"keyword_id":          subreddit.KeywordID,
+		"last_tracked_at":     subreddit.LastTrackedAt,
+		"newest_tracked_post": subreddit.NewestTrackedPost,
+		"oldest_tracked_post": subreddit.OldestTrackedPost,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to insert subreddit tracker: %w", err)
+	}
+	subreddit.ID = id
+
+	if subreddit.LastTrackedAt != nil {
+		stmt := r.mustGetTxStmt(ctx, "sub_reddit/update_sub_reddit_last_tracked_at.sql", tx)
+		_, err = stmt.ExecContext(ctx, map[string]interface{}{
+			"id":              id,
+			"last_tracked_at": subreddit.LastTrackedAt,
+		})
+
+		if err != nil {
+			return nil, fmt.Errorf("failed to delete subreddit tracker: %w", err)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("commit transaction: %w", err)
+	}
+
+	return subreddit, nil
+}
+
+func (r *Database) GetOrCreateSubRedditTracker(ctx context.Context, subredditID, keywordID string) (*models.SubRedditTracker, error) {
+	tracker, err := getOne[models.SubRedditTracker](ctx, r, "subreddit_tracker/query_sub_reddit_tracker.sql", map[string]any{
+		"subreddit_id": subredditID,
+		"keyword_id":   keywordID,
+	})
+	if !errors.Is(err, datastore.NotFound) {
+		return nil, err
+	}
+
+	if tracker == nil {
+		obj := &models.SubRedditTracker{
+			SubRedditID: subredditID,
+			KeywordID:   keywordID,
+		}
+		redditTracker, err := r.UpdateSubRedditTracker(ctx, obj)
+		if err != nil {
+			return redditTracker, err
+		}
+	}
+
+	return tracker, nil
+
+}
+
+func (r *Database) GetSubReddits(ctx context.Context) ([]*models.AugmentedSubReddit, error) {
+	subReddits, err := getMany[models.SubReddit](ctx, r, "sub_reddit/query_sub_reddit_by_filter.sql", map[string]any{})
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to get customer cases: %w", err)
 	}
-	var results []*models.AugmentedSubRedditTracker
-	for _, tracker := range subRedditTrackers {
-		subReddit, err := r.GetSubRedditByID(ctx, tracker.SubRedditID)
+	var results []*models.AugmentedSubReddit
+	for _, subreddit := range subReddits {
+		keywords, err := r.GetKeywords(ctx, subreddit.ProjectID)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get keywords for project %q: %w", tracker.SubRedditID, err)
+			return nil, fmt.Errorf("failed to get keywords for project %q: %w", subreddit.ProjectID, err)
 		}
 
-		keyword, err := r.GetKeywordByID(ctx, tracker.KeywordID)
+		project, err := r.GetProject(ctx, subreddit.ProjectID)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get keywords for project %q: %w", tracker.KeywordID, err)
+			return nil, fmt.Errorf("failed to get project %q: %w", subreddit.ProjectID, err)
 		}
 
-		project, err := r.GetProject(ctx, tracker.ProjectID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get project %q: %w", tracker.ProjectID, err)
-		}
-
-		results = append(results, &models.AugmentedSubRedditTracker{
-			Tracker:   tracker,
-			SubReddit: subReddit,
-			Keyword:   keyword,
+		results = append(results, &models.AugmentedSubReddit{
+			SubReddit: subreddit,
+			Keywords:  keywords,
 			Project:   project,
 		})
 	}
 
 	return results, nil
 }
+
+//func (r *Database) GetSubRedditTrackers(ctx context.Context) ([]*models.AugmentedSubRedditTracker, error) {
+//	subRedditTrackers, err := getMany[models.SubRedditTracker](ctx, r, "subreddit_tracker/query_sub_reddit_tracker_by_filter.sql", map[string]any{})
+//
+//	if err != nil {
+//		return nil, fmt.Errorf("failed to get customer cases: %w", err)
+//	}
+//	var results []*models.AugmentedSubRedditTracker
+//	for _, tracker := range subRedditTrackers {
+//		subReddit, err := r.GetSubRedditByID(ctx, tracker.SubRedditID)
+//		if err != nil {
+//			return nil, fmt.Errorf("failed to get keywords for project %q: %w", tracker.SubRedditID, err)
+//		}
+//
+//		keyword, err := r.GetKeywordByID(ctx, tracker.KeywordID)
+//		if err != nil {
+//			return nil, fmt.Errorf("failed to get keywords for project %q: %w", tracker.KeywordID, err)
+//		}
+//
+//		project, err := r.GetProject(ctx, tracker.ProjectID)
+//		if err != nil {
+//			return nil, fmt.Errorf("failed to get project %q: %w", tracker.ProjectID, err)
+//		}
+//
+//		results = append(results, &models.AugmentedSubRedditTracker{
+//			Tracker:   tracker,
+//			SubReddit: subReddit,
+//			Keyword:   keyword,
+//			Project:   project,
+//		})
+//	}
+//
+//	return results, nil
+//}
 
 func (r *Database) GetSubRedditsByProject(ctx context.Context, projectID string) ([]*models.SubReddit, error) {
 	return getMany[models.SubReddit](ctx, r, "sub_reddit/query_sub_reddit_by_project.sql", map[string]any{

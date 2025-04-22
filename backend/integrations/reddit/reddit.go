@@ -334,6 +334,8 @@ type PostFilters struct {
 	Keywords []string
 	SortBy   *SortBy
 	TimeRage *TimeRange
+	After    *string
+	Before   *string
 }
 
 func (r *Client) GetPosts(ctx context.Context, subRedditID string, filters PostFilters) ([]*Post, error) {
