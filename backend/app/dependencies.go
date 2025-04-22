@@ -39,6 +39,7 @@ func NewDependenciesBuilder() *DependenciesBuilder {
 type conversationState struct {
 	redisAddr         string
 	phoneCallStateTTL time.Duration
+	namespace, prefix string
 }
 
 type AIConfig struct {
@@ -61,8 +62,12 @@ func (b *DependenciesBuilder) WithDataStore(pgDSN string) *DependenciesBuilder {
 	return b
 }
 
-func (b *DependenciesBuilder) WithConversationState(redisAddr string, phoneCallStateTTL time.Duration) *DependenciesBuilder {
-	b.ConversationState = &conversationState{redisAddr, phoneCallStateTTL}
+func (b *DependenciesBuilder) WithConversationState(phoneCallStateTTL time.Duration, redisAddr, namespace, prefix string) *DependenciesBuilder {
+	b.ConversationState = &conversationState{
+		redisAddr,
+		phoneCallStateTTL,
+		namespace, prefix,
+	}
 	return b
 }
 
@@ -148,7 +153,7 @@ func (b *DependenciesBuilder) Build(ctx context.Context, logger *zap.Logger, tra
 	}
 
 	if b.ConversationState != nil {
-		out.ConversationState = state.NewCustomerCaseState(b.ConversationState.redisAddr, b.ConversationState.phoneCallStateTTL, logger)
+		out.ConversationState = state.NewCustomerCaseState(b.ConversationState.redisAddr, b.ConversationState.phoneCallStateTTL, logger, b.ConversationState.namespace, b.ConversationState.prefix)
 	}
 
 	return out, nil

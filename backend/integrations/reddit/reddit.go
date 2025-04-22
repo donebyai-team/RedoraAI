@@ -336,6 +336,7 @@ type PostFilters struct {
 	TimeRage *TimeRange
 	After    *string
 	Before   *string
+	Limit    int
 }
 
 func (r *Client) GetPosts(ctx context.Context, subRedditID string, filters PostFilters) ([]*Post, error) {
@@ -350,6 +351,14 @@ func (r *Client) GetPosts(ctx context.Context, subRedditID string, filters PostF
 
 	if filters.TimeRage != nil {
 		v.Set("t", string(*filters.TimeRage))
+	}
+
+	if filters.Limit != 0 {
+		v.Set("limit", strconv.Itoa(filters.Limit))
+	}
+
+	if filters.After != nil {
+		v.Set("after", *filters.After)
 	}
 
 	v.Set("restrict_sr", "1")

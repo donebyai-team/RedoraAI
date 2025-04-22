@@ -6,11 +6,12 @@ import (
 )
 
 type Keyword struct {
-	ID        string    `db:"id"`
-	ProjectID string    `db:"project_id"`
-	Keyword   string    `db:"keyword"`
-	CreatedAt time.Time `db:"created_at"`
-	UpdatedAt time.Time `db:"updated_at"`
+	ID        string     `db:"id"`
+	ProjectID string     `db:"project_id"`
+	Keyword   string     `db:"keyword"`
+	CreatedAt time.Time  `db:"created_at"`
+	UpdatedAt time.Time  `db:"updated_at"`
+	DeletedAt *time.Time `db:"deleted_at"`
 }
 
 type SubRedditTracker struct {
@@ -32,6 +33,7 @@ type SubReddit struct {
 	SubredditCreatedAt time.Time         `db:"subreddit_created_at"`
 	SubRedditMetadata  SubRedditMetadata `db:"metadata"`
 	LastTrackedAt      *time.Time        `db:"last_tracked_at"`
+	DeletedAt          *time.Time        `db:"deleted_at"`
 
 	// Optional
 	Title     *string    `db:"title"`
