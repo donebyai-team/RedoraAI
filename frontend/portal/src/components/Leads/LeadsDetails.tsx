@@ -13,9 +13,8 @@ import {
   Card,
   CardContent,
   Stack,
-  Tooltip,
 } from "@mui/material"
-import { ThumbDown, ThumbUp, Close, Lightbulb, Star, Refresh, Edit, Send } from "@mui/icons-material"
+import { ThumbDown, ThumbUp, Close, Lightbulb, Star, Send } from "@mui/icons-material"
 
 // Create a custom theme with Reddit-like colors
 const theme = createTheme({
@@ -138,19 +137,7 @@ export default function LeadsPostDetails() {
             <Typography variant="body1" sx={{ mb: 2 }}>
               Sales gurus are sus. Managers should learn from real work.
             </Typography>
-            <Stack direction="row" justifyContent="space-between">
-              <Box>
-                <Tooltip title="Rewrite">
-                  <IconButton>
-                    <Refresh fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Edit prompt">
-                  <IconButton>
-                    <Edit fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              </Box>
+            <Stack direction="row" justifyContent="end">
               <Button
                 variant="contained"
                 color="primary"
@@ -183,19 +170,7 @@ export default function LeadsPostDetails() {
               you could really use Acme to automate your team's sales tasks. Acme is an AI agent that can automate any
               task. You can try it for free at acme.com
             </Typography>
-            <Stack direction="row" justifyContent="space-between">
-              <Box>
-                <Tooltip title="Rewrite">
-                  <IconButton>
-                    <Refresh fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Edit prompt">
-                  <IconButton>
-                    <Edit fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              </Box>
+            <Stack direction="row" justifyContent="end">
               <Button
                 variant="contained"
                 color="primary"

@@ -253,7 +253,7 @@ const NavBar: React.FC<{ hoverActive?: boolean }> = ({ hoverActive }) => {
             }}
             onClick={() => handleMenuClick('inbox')}
           >
-            <ListItemIcon>
+            <ListItemIcon sx={{ minWidth: "auto", mr: 1.5 }}>
               <MailIcon color="action" />
             </ListItemIcon>
             <ListItemText

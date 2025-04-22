@@ -2,8 +2,7 @@
 
 import type React from "react";
 import { useState } from "react";
-import { Box, Typography, Button, Tabs, Tab, List, ListItem, Paper, Divider, Stack } from "@mui/material";
-import { Edit } from "lucide-react";
+import { Box, Typography, Tabs, Tab, List, ListItem, Paper, Divider, Stack } from "@mui/material";
 
 const InboxComponent = () => {
   const [tabValue, setTabValue] = useState(0);
@@ -14,24 +13,10 @@ const InboxComponent = () => {
 
   return (<>
     <Box sx={{ width: "100%", px: 3, py: 2, maxWidth: "25vw", borderRight: "1px solid #e0e0e0", }}>
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-        <Typography variant="h5" component="h1" sx={{ fontWeight: "bold" }}>
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", my: 2 }}>
+        <Typography variant="h4" component="h3" sx={{ fontWeight: "bold" }}>
           Inbox
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<Edit size={18} />}
-          sx={{
-            bgcolor: "black",
-            color: "white",
-            borderRadius: "6px",
-            "&:hover": {
-              bgcolor: "#333",
-            },
-          }}
-        >
-          Edit prompt
-        </Button>
       </Box>
 
       <Tabs
@@ -56,7 +41,7 @@ const InboxComponent = () => {
         }}
       >
         <Tab label="All" />
-        <Tab label="Unread" sx={{ color: "text.secondary" }} />
+        <Tab label="New" sx={{ color: "text.secondary" }} />
         <Tab label="Completed" sx={{ color: "text.secondary" }} />
         <Tab label="Discarded" sx={{ color: "text.secondary" }} />
       </Tabs>
