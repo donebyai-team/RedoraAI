@@ -137,10 +137,16 @@ func (s *SubRedditTracker) searchLeadsFromPosts(
 	// Hard filters
 	countPostsWithHighRelevancy := 0
 	countSkippedPosts := 0
+	countTestPosts := 0
 
 	s.logger.Info("posts to be evaluated on relevancy via ai", zap.Int("total_posts", len(newPosts)))
 	// Filter by AI
 	for _, post := range newPosts {
+		// TODO: Remove it later
+		if countTestPosts >= 5 {
+			break
+		}
+
 		redditLead := &models.RedditLead{
 			ProjectID:     project.ID,
 			SubRedditID:   subReddit.ID,
@@ -190,6 +196,8 @@ func (s *SubRedditTracker) searchLeadsFromPosts(
 		if err != nil {
 			return fmt.Errorf("unable to create reddit lead: %w", err)
 		}
+
+		countTestPosts++
 	}
 
 	s.logger.Info("reddit_leads_summary",

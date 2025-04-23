@@ -45,7 +45,7 @@ func (u *LeadMetadata) FromModel(metadata models.LeadMetadata) *LeadMetadata {
 	u.SuggestedComment = metadata.SuggestedComment
 	u.SuggestedDm = metadata.SuggestedDM
 	u.ChainOfThoughtSuggestedComment = metadata.ChainOfThoughtSuggestedComment
-	u.ChainOfThoughtCommentSuggestedDm = metadata.ChainOfThoughtCommentSuggestedDM
+	u.ChainOfThoughtSuggestedDm = metadata.ChainOfThoughtSuggestedDM
 	u.PostUrl = metadata.PostURL
 	return u
 }
