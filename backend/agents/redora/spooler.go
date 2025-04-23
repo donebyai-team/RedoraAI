@@ -97,7 +97,7 @@ func (s *Spooler) processKeywordsTracking(ctx context.Context, subReddit *models
 		zap.String("project_id", subReddit.Project.ID),
 		zap.String("creator", "redora"),
 	)
-	logger.Debug("processing customer cases", zap.Int("queue_size", len(s.queue)))
+	logger.Debug("processing subreddit", zap.Int("queue_size", len(s.queue)))
 
 	// Check if a call is already running across organizations
 	isRunning, err := s.state.IsRunning(ctx, subReddit.SubReddit.ID)
@@ -110,7 +110,7 @@ func (s *Spooler) processKeywordsTracking(ctx context.Context, subReddit *models
 		return nil
 	}
 
-	err = s.subRedditTracker.TrackSubreddit(ctx, subReddit)
+	err = s.subRedditTracker.WithLogger(logger).TrackSubreddit(ctx, subReddit)
 	if err != nil {
 		logger.Error("failed to track subreddit", zap.Error(err))
 	}
