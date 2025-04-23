@@ -89,11 +89,12 @@ func (s *SubRedditTracker) searchLeadsFromPosts(
 	subReddit *models.SubReddit,
 	redditClient *reddit.Client) error {
 
-	posts, err := redditClient.GetPosts(ctx, subReddit.Name, reddit.PostFilters{
+	redditQuery := reddit.PostFilters{
 		Keywords: []string{keyword.Keyword},
 		SortBy:   utils.Ptr(reddit.SortByNEW),
 		Limit:    100,
-	})
+	}
+	posts, err := redditClient.GetPosts(ctx, subReddit.Name, redditQuery)
 
 	if err != nil {
 		return fmt.Errorf("unable to fetch posts: %w", err)
@@ -104,7 +105,9 @@ func (s *SubRedditTracker) searchLeadsFromPosts(
 		return posts[i].CreatedAt > posts[j].CreatedAt
 	})
 
-	s.logger.Info("got posts from reddit sorted by TOP and time range WEEK", zap.Int("total_posts", len(posts)))
+	s.logger.Info("got posts from reddit",
+		zap.Any("query", redditQuery),
+		zap.Int("total_posts", len(posts)))
 
 	newPosts := []*reddit.Post{}
 	for _, post := range posts {
