@@ -72,6 +72,7 @@ func (r *Client) GetPosts(ctx context.Context, subRedditName string, filters Pos
 		v.Set("q", strings.Join(filters.Keywords, " "))
 	}
 
+	// IMP: make sure the sort by is in lower case else it won't work
 	if filters.SortBy != nil {
 		v.Set("sort", strings.ToLower(filters.SortBy.String()))
 	}
