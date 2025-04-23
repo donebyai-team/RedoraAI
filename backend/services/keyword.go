@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/models"
+	"github.com/shank318/doota/utils"
 	"golang.org/x/net/context"
 )
 
@@ -25,7 +26,12 @@ func NewKeywordServiceImpl(db datastore.Repository) *KeywordServiceImpl {
 }
 
 func (c *KeywordServiceImpl) CreateKeyword(ctx context.Context, session *CreateKeyword) (*models.Keyword, error) {
-	keyword, err := c.db.CreateKeyword(context.Background(), &models.Keyword{
+	sanitizeKeyword := utils.SanitizeKeyword(session.Keyword)
+	if sanitizeKeyword == "" {
+		return nil, fmt.Errorf("invalid keyword [%s]", session.Keyword)
+	}
+
+	keyword, err := c.db.CreateKeyword(ctx, &models.Keyword{
 		Keyword:   session.Keyword,
 		ProjectID: session.ProjectID,
 	})

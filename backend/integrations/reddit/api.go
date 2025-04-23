@@ -73,11 +73,11 @@ func (r *Client) GetPosts(ctx context.Context, subRedditName string, filters Pos
 	}
 
 	if filters.SortBy != nil {
-		v.Set("sort", string(*filters.SortBy))
+		v.Set("sort", strings.ToLower(filters.SortBy.String()))
 	}
 
 	if filters.TimeRage != nil {
-		v.Set("t", string(*filters.TimeRage))
+		v.Set("t", strings.ToLower(filters.TimeRage.String()))
 	}
 
 	if filters.Limit != 0 {
