@@ -162,7 +162,6 @@ func (s *SubRedditTracker) searchLeadsFromPosts(
 			ChainOfThoughtCommentSuggestedDM: relevanceResponse.ChainOfThoughtSuggestedDM,
 			PostURL:                          post.URL,
 			AuthorInfo:                       post.AuthorInfo,
-			IsRelevant:                       relevanceResponse.IsRelevant,
 		}
 		err = s.db.CreateRedditLead(ctx, redditLead)
 		if err != nil {

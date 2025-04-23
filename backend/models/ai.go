@@ -6,9 +6,8 @@ import (
 )
 
 type RedditPostRelevanceResponse struct {
-	ChainOfThoughtIsRelevant       string  `json:"chain_of_thought_is_relevant"`
-	IsRelevant                     bool    `json:"is_relevant"`
-	IsRelevantConfidenceScore      float64 `json:"is_relevant_confidence_score"`
+	ChainOfThoughtIsRelevant       string  `json:"chain_of_thought"`
+	IsRelevantConfidenceScore      float64 `json:"relevant_confidence_score"`
 	SuggestedDM                    string  `json:"suggested_dm"`
 	ChainOfThoughtSuggestedDM      string  `json:"chain_of_thought_suggested_dm"`
 	SuggestedComment               string  `json:"suggested_comment"`
