@@ -117,10 +117,9 @@ const InboxComponent = () => {
           },
         }}
       >
-        <Tab label="All" />
-        <Tab label="New" sx={{ color: "text.secondary" }} />
-        <Tab label="Completed" sx={{ color: "text.secondary" }} />
-        <Tab label="Discarded" sx={{ color: "text.secondary" }} />
+        <Tab label="NEW" sx={{ color: "text.secondary" }} />
+        <Tab label="COMPLETED" sx={{ color: "text.secondary" }} />
+        <Tab label="DISCARDED" sx={{ color: "text.secondary" }} />
       </Tabs>
 
       {mockPosts.length === 0 ? (

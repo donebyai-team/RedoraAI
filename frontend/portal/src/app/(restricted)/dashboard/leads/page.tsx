@@ -1,23 +1,12 @@
-import { Box, Typography } from '@mui/material'
+import { Box } from '@mui/material'
+import InboxComponent from '../../../../components/Leads/Inbox'
+import LeadsPostDetails from '../../../../components/Leads/LeadsDetails'
 
 export default function Page() {
   return (
-      <Box
-        sx={{
-          paddingTop: '200px'
-        }}
-      >
-        <Typography
-          sx={{
-            fontSize: '14px',
-            fontWeight: '600',
-            lineHeight: '19px',
-            letterSpacing: '0em',
-            textAlign: 'center'
-          }}
-        >
-          Choose a conversation
-        </Typography>
-      </Box>
+    <Box className={'flex flex-1 h-full'}>
+      <InboxComponent />
+      <LeadsPostDetails />
+    </Box>
   )
 }

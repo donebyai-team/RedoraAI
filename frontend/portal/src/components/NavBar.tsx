@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react'
-// import { Button, Menu, MenuItem, Tooltip } from '@mui/material'
-// import { ChevronDown, LogOut, Settings } from 'lucide-react'
-// import { useAuth } from '@doota/ui-core/hooks/useAuth'
-// import { isPlatformAdmin, isAdmin } from '@doota/ui-core/helper/role'
-// import { useOrganization } from '@doota/ui-core/hooks/useOrganization'
-// import { routes } from '@doota/ui-core/routing'
-// import toast from 'react-hot-toast'
-// import { errorToMessage } from '@doota/pb/utils/errors'
+import { Button, Menu, MenuItem, Tooltip } from '@mui/material'
+import { ChevronDown, LogOut, Settings } from 'lucide-react'
+import { useAuth } from '@doota/ui-core/hooks/useAuth'
+import { isPlatformAdmin, isAdmin } from '@doota/ui-core/helper/role'
+import { useOrganization } from '@doota/ui-core/hooks/useOrganization'
+import { routes } from '@doota/ui-core/routing'
+import toast from 'react-hot-toast'
+import { errorToMessage } from '@doota/pb/utils/errors'
 import {
   Box,
   Typography,
@@ -21,8 +21,8 @@ import {
   IconButton,
   Badge,
   Paper,
-  Menu,
-  MenuItem,
+  // Menu,
+  // MenuItem,
 } from "@mui/material"
 import {
   Mail as MailIcon,
@@ -33,6 +33,8 @@ import {
 } from "@mui/icons-material"
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import AddSubredditDialog from './AddSubredditDialog';
+import Link from 'next/link'
+import { useClientsContext } from '@doota/ui-core/context/ClientContext'
 
 const SUBREDDIT_LIST = [
   {
@@ -62,66 +64,99 @@ const SIDEBAR_MENU_LIST = [
   },
 ];
 
-const NavBar: React.FC<{ hoverActive?: boolean }> = ({ hoverActive }) => {
-  // const { user, logout } = useAuth()
-  // const [currentOrg, setCurrentOrganization] = useOrganization()
-  // const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
-  // const open = Boolean(anchorEl)
+type subreddit = {
+  id: string;
+  name: string;
+};
 
-  // const getInitials = (name: string | undefined) => {
-  //   const matches = name?.match(/[A-Z]/g)
-  //   const numUpperCase = matches ? matches.length : 0
-  //   const className = numUpperCase >= 3 ? 'text-base ml-[-4px]' : 'text-xl'
-  //   return { initials: matches ? matches.join('') : '', className }
-  // }
+const NavBar: React.FC<{ hoverActive?: boolean }> = ({ hoverActive = true }) => {
+  const { user, logout } = useAuth()
+  const { portalClient } = useClientsContext()
+  const [currentOrg, setCurrentOrganization] = useOrganization()
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
+  const open = Boolean(anchorEl)
 
-  // const handleOpenOrg = (event: React.MouseEvent<HTMLDivElement>) => {
-  //   if (user && isPlatformAdmin(user) && user.organizations.length > 1) {
-  //     setAnchorEl(event.currentTarget)
-  //   }
-  // }
-  // const handleClose = () => {
-  //   setAnchorEl(null)
-  // }
+  const getInitials = (name: string | undefined) => {
+    const matches = name?.match(/[A-Z]/g)
+    const numUpperCase = matches ? matches.length : 0
+    const className = numUpperCase >= 3 ? 'text-base ml-[-4px]' : 'text-xl'
+    return { initials: matches ? matches.join('') : '', className }
+  }
 
-  // const handleLogout = () => {
-  //   logout()
-  // }
+  const handleOpenOrg = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (user && isPlatformAdmin(user) && user.organizations.length > 1) {
+      setAnchorEl(event.currentTarget)
+    }
+  }
 
-  // const canChangeOrg = user && isPlatformAdmin(user) && user.organizations.length > 1;
+  const handleClose1 = () => {
+    setAnchorEl(null)
+  }
 
-  const [relevancy, setRelevancy] = useState<number>(40);
+  const handleLogout = () => {
+    logout()
+  }
+
+  const canChangeOrg = user && isPlatformAdmin(user) && user.organizations.length > 1;
+
+  const [relevancy_score, setRelevancy_Score] = useState<number>(0);
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState(searchParams.get('active_sidebar_menu') || SIDEBAR_MENU_LIST[0].active_menu);
   const [openSubredditDialog, setOpenSubredditDialog] = useState(false);
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const open = Boolean(anchorEl);
+  const [anchorEl1, setAnchorEl1] = useState<null | HTMLElement>(null);
+  const [subredditList, setSubredditList] = useState<subreddit[]>([]);
+  const [currentActiveSubRedditId, setcurrentActiveSubRedditId] = useState<string>("");
+  const [subRedditText, setSubRedditText] = useState<string>("");
+  const open1 = Boolean(anchorEl1);
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
+    setAnchorEl1(event.currentTarget);
   };
 
   const handleClose = () => {
-    setAnchorEl(null);
+    setAnchorEl1(null);
   };
 
-  console.log("###_debug_hoverActive ", hoverActive);
-
   const handleRelevancyChange = (_event: Event, newValue: number | number[]) => {
-    setRelevancy(newValue as number)
+    setRelevancy_Score(newValue as number)
   }
 
-  useEffect(() => {
-    const params = new URLSearchParams(searchParams);
-    params.set('active_sidebar_menu', activeTab);
-    router.push(`${pathname}?${params.toString()}`, { scroll: false });
-  }, [activeTab, pathname, router, searchParams]);
+  let debounceTimer: NodeJS.Timeout;
 
-  const handleMenuClick = (menu: string) => {
-    const value = SIDEBAR_MENU_LIST.find(item => item?.name === menu)?.active_menu ?? SIDEBAR_MENU_LIST[0].active_menu;
-    setActiveTab(value);
+  useEffect(() => {
+    clearTimeout(debounceTimer);
+
+    debounceTimer = setTimeout(() => {
+      const params = new URLSearchParams(searchParams);
+
+      if (activeTab) {
+        params.set('active_sidebar_menu', activeTab);
+      }
+      if (relevancy_score) {
+        params.set('relevancy_score', `${relevancy_score}`);
+      }
+      if (currentActiveSubRedditId) {
+        params.set('currentActiveSubRedditId', currentActiveSubRedditId);
+      }
+
+      router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    }, 300);
+    
+    return () => clearTimeout(debounceTimer);
+
+  }, [activeTab, pathname, router, searchParams, currentActiveSubRedditId, relevancy_score]);
+
+
+  const handleSubRedditsClick = (data: subreddit) => {
+    // const value = SIDEBAR_MENU_LIST.find(item => item?.name === menu)?.active_menu ?? SIDEBAR_MENU_LIST[0].active_menu;
+    console.log(data);
+    setcurrentActiveSubRedditId(data.id);
+  };
+
+  const handleMenuClick = () => {
+    router.push('/dashboard/leads');
   };
 
   const isMenuActive = (currentMenu: string) => {
@@ -139,87 +174,102 @@ const NavBar: React.FC<{ hoverActive?: boolean }> = ({ hoverActive }) => {
   }
 
   const handleAdd = (subreddit: string) => {
-    console.log(subreddit);
+    setSubRedditText(subreddit);
   }
+
+  useEffect(() => {
+
+    portalClient.getSubReddits({})
+      .then((resp: any) => {
+        console.log(`###_resp `, resp);
+        setSubredditList(resp?.subreddits ?? []);
+      })
+      .catch((err: unknown) => {
+        console.log(`###_err `, err);
+      }).finally(() => {
+        setSubRedditText("");
+      });
+
+  }, [subRedditText]);
+
+  console.log({ currentActiveSubRedditId, relevancy_score });
 
   return (
     <>
       {/* <div className='text-white flex font-extrabold px-2 h-14 border-b border-neutral-800 items-center'>
-          <div className={`${hoverActive ? 'hidden' : ''} ${getInitials(currentOrg?.name).className}`}>
-            {getInitials(currentOrg?.name).initials}
-          </div>
-          <div
-              role='presentation'
-              className={`${
-                  hoverActive ? 'flex' : 'hidden'
-              } justify-between w-full relative text-xl truncate h-full items-center`}
-              onClick={canChangeOrg ? handleOpenOrg : undefined}
+        <div className={`${hoverActive ? 'hidden' : ''} ${getInitials(currentOrg?.name).className}`}>
+          {getInitials(currentOrg?.name).initials}
+        </div>
+        <div
+          role='presentation'
+          className={`${hoverActive ? 'flex' : 'hidden'
+            } justify-between w-full relative text-xl truncate h-full items-center`}
+          onClick={canChangeOrg ? handleOpenOrg : undefined}
+        >
+          <Tooltip
+            title='Select your organization'
+            placement='right'
+            arrow
+            disableInteractive
+            disableHoverListener={canChangeOrg ? false : true}
           >
-            <Tooltip
-                title='Select your organization'
-                placement='right'
-                arrow
-                disableInteractive
-                disableHoverListener={canChangeOrg ? false : true}
-            >
-              <div className='flex items-center gap-[4px] text-white/60 hover:text-white'>
-                <div className='text-white'>{currentOrg?.name}</div>
-                {canChangeOrg && (
-                    <div className={`${hoverActive ? 'inline-block' : 'hidden'}`}>
-                      <ChevronDown size={18}/>
-                    </div>
-                )}
-              </div>
-            </Tooltip>
-            <Tooltip title='Log Out' placement='right' arrow disableInteractive>
-              <LogOut className='text-white/80 hover:text-white cursor-pointer' size={14} onClick={handleLogout}/>
-            </Tooltip>
-          </div>
-          {user && isPlatformAdmin(user) && (
-              <Menu
-                  id='basic-menu'
-                  anchorEl={anchorEl}
-                  open={open}
-                  onClose={handleClose}
-                  MenuListProps={{
-                    'aria-labelledby': 'basic-button'
-                  }}
+            <div className='flex items-center gap-[4px] text-white/60 hover:text-white'>
+              <div className='text-white'>{currentOrg?.name}</div>
+              {canChangeOrg && (
+                <div className={`${hoverActive ? 'inline-block' : 'hidden'}`}>
+                  <ChevronDown size={18} />
+                </div>
+              )}
+            </div>
+          </Tooltip>
+          <Tooltip title='Log Out' placement='right' arrow disableInteractive>
+            <LogOut className='text-white/80 hover:text-white cursor-pointer' size={14} onClick={handleLogout} />
+          </Tooltip>
+        </div>
+        {user && isPlatformAdmin(user) && (
+          <Menu
+            id='basic-menu'
+            anchorEl={anchorEl}
+            open={open}
+            onClose={handleClose}
+            MenuListProps={{
+              'aria-labelledby': 'basic-button'
+            }}
+          >
+            {user.organizations.map((organization, index) => (
+              <MenuItem
+                key={index}
+                onClick={() => {
+                  setCurrentOrganization(organization)
+                    .then(() => {
+                      window.location.reload()
+                    })
+                    .catch(error => toast.error(errorToMessage(error)))
+                }}
               >
-                {user.organizations.map((organization, index) => (
-                    <MenuItem
-                        key={index}
-                        onClick={() => {
-                          setCurrentOrganization(organization)
-                              .then(() => {
-                                window.location.reload()
-                              })
-                              .catch(error => toast.error(errorToMessage(error)))
-                        }}
-                    >
-                      {organization.name}
-                    </MenuItem>
-                ))}
-              </Menu>
-          )}
-        </div> */}
+                {organization.name}
+              </MenuItem>
+            ))}
+          </Menu>
+        )}
+      </div> */}
 
       {/* Navigation */}
       {/* <div className='flex flex-col justify-top h-[calc(100%_-_56px)] gap-1 p-1'>
-          {user && isAdmin(user) && (
-              <Button
-                  startIcon={<Settings className='w-2 text-neutral-500'/>}
-                  variant='contained'
-                  className={`!bg-transparent !shadow-none relative hover:!bg-neutral-900 !min-w-full w-full h-[40px] !justify-start items-center !normal-case ${
-                      hoverActive ? 'flex' : 'hidden'
-                  }`}
-                  href={routes.app.settings.account}
-              >
-                <div className={`${hoverActive ? 'flex' : 'hidden'} text-neutral-200 hover:text-neutral-50 font-bold`}>
-                  Settings
-                </div>
-              </Button>
-          )}
-        </div> */}
+        {user && isAdmin(user) && (
+          <Button
+            startIcon={<Settings className='w-2 text-neutral-500' />}
+            variant='contained'
+            className={`!bg-transparent !shadow-none relative hover:!bg-neutral-900 !min-w-full w-full h-[40px] !justify-start items-center !normal-case ${hoverActive ? 'flex' : 'hidden'
+              }`}
+            href={routes.app.settings.account}
+          >
+            <div className={`${hoverActive ? 'flex' : 'hidden'} text-neutral-200 hover:text-neutral-50 font-bold`}>
+              Settings
+            </div>
+          </Button>
+        )}
+      </div> */}
 
       <Paper
         elevation={0}
@@ -233,9 +283,66 @@ const NavBar: React.FC<{ hoverActive?: boolean }> = ({ hoverActive }) => {
         }}
       >
         <Box sx={{ p: 2, display: "flex", flexDirection: "column", height: "100%" }}>
+
           {/* Avatar */}
           <Box sx={{ display: "flex", justifyContent: "flex-start", my: 5 }}>
-            <Avatar sx={{ width: 48, height: 48, bgcolor: "#f3f4f6", color: "#111827" }}>A</Avatar>
+            <div className='text-black flex font-extrabold px-2 h-14 border-b border-neutral-800 items-center w-full'>
+              <div className={`${hoverActive ? 'hidden' : ''} ${getInitials(currentOrg?.name).className}`}>
+                {getInitials(currentOrg?.name).initials}
+              </div>
+              <div
+                role='presentation'
+                className={`${hoverActive ? 'flex' : 'hidden'} justify-between w-full relative text-xl truncate h-full items-center`}
+                onClick={canChangeOrg ? handleOpenOrg : undefined}
+              >
+                <Tooltip
+                  title='Select your organization'
+                  placement='right'
+                  arrow
+                  disableInteractive
+                  disableHoverListener={canChangeOrg ? false : true}
+                >
+                  <div className='flex items-center gap-[4px] text-black/60 hover:text-black'>
+                    <div className='text-black'>{currentOrg?.name}</div>
+                    {canChangeOrg && (
+                      <div className={`${hoverActive ? 'inline-block' : 'hidden'}`}>
+                        <ChevronDown size={18} />
+                      </div>
+                    )}
+                  </div>
+                </Tooltip>
+                <Tooltip title='Log Out' placement='right' arrow disableInteractive>
+                  <LogOut className='text-black/80 hover:text-black cursor-pointer' size={14} onClick={handleLogout} />
+                </Tooltip>
+              </div>
+              {user && isPlatformAdmin(user) && (
+                <Menu
+                  id='basic-menu'
+                  anchorEl={anchorEl}
+                  open={open}
+                  onClose={handleClose}
+                  MenuListProps={{
+                    'aria-labelledby': 'basic-button'
+                  }}
+                >
+                  {user.organizations.map((organization, index) => (
+                    <MenuItem
+                      key={index}
+                      onClick={() => {
+                        setCurrentOrganization(organization)
+                          .then(() => {
+                            window.location.reload()
+                          })
+                          .catch(error => toast.error(errorToMessage(error)))
+                      }}
+                    >
+                      {organization.name}
+                    </MenuItem>
+                  ))}
+                </Menu>
+              )}
+            </div>
+            {/* <Avatar sx={{ width: 48, height: 48, bgcolor: "#f3f4f6", color: "#111827" }}>A</Avatar> */}
           </Box>
 
           {/* Inbox */}
@@ -251,7 +358,7 @@ const NavBar: React.FC<{ hoverActive?: boolean }> = ({ hoverActive }) => {
                 backgroundColor: "#F0F5FF"
               },
             }}
-            onClick={() => handleMenuClick('inbox')}
+            onClick={() => handleMenuClick()}
           >
             <ListItemIcon sx={{ minWidth: "auto", mr: 1.5 }}>
               <MailIcon color="action" />
@@ -264,7 +371,7 @@ const NavBar: React.FC<{ hoverActive?: boolean }> = ({ hoverActive }) => {
               }
             />
             <Badge
-              badgeContent={2}
+              badgeContent={0}
               color="warning"
               sx={{
                 "& .MuiBadge-badge": {
@@ -285,11 +392,11 @@ const NavBar: React.FC<{ hoverActive?: boolean }> = ({ hoverActive }) => {
             <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
               <Typography variant="body2">Relevancy</Typography>
               <Typography variant="body2" color="text.secondary">
-                {relevancy}%
+                {relevancy_score}%
               </Typography>
             </Box>
             <Slider
-              value={relevancy}
+              value={relevancy_score}
               onChange={handleRelevancyChange}
               sx={{
                 color: "#FF9800",
@@ -307,7 +414,7 @@ const NavBar: React.FC<{ hoverActive?: boolean }> = ({ hoverActive }) => {
           </Typography>
 
           <List sx={{ p: 0, mb: "auto", display: "flex", flexDirection: "column", alignItems: "center", gap: 1.5 }}>
-            {SUBREDDIT_LIST.map((ele, index) => (
+            {subredditList.map((ele: subreddit, index) => (
               <ListItem
                 key={index}
                 disablePadding
@@ -326,7 +433,7 @@ const NavBar: React.FC<{ hoverActive?: boolean }> = ({ hoverActive }) => {
                     opacity: 1,
                   },
                 }}
-                onClick={() => handleMenuClick(ele.name)}
+                onClick={() => handleSubRedditsClick(ele)}
               >
                 <ListItemButton
                   sx={{
@@ -336,12 +443,12 @@ const NavBar: React.FC<{ hoverActive?: boolean }> = ({ hoverActive }) => {
                     },
                   }}
                 >
-                  <ListItemText primary={`${ele.prefix}${ele.name}`} />
+                  <ListItemText primary={`${ele.name}`} />
                 </ListItemButton>
 
                 <Box sx={{ display: "flex", alignItems: "center", gap: 5 }}>
                   <Badge
-                    badgeContent={ele.badge_count}
+                    badgeContent={0}
                     color="warning"
                     sx={{
                       "& .MuiBadge-badge": {
@@ -361,18 +468,18 @@ const NavBar: React.FC<{ hoverActive?: boolean }> = ({ hoverActive }) => {
                     }}
                     onClick={handleClick}
                     size="small"
-                    aria-controls={open ? 'account-menu' : undefined}
+                    aria-controls={open1 ? 'account-menu' : undefined}
                     aria-haspopup="true"
-                    aria-expanded={open ? 'true' : undefined}
+                    aria-expanded={open1 ? 'true' : undefined}
                   >
                     <MoreVertIcon fontSize="small" />
                   </IconButton>
                   <Menu
                     anchorEl={anchorEl}
                     id="account-menu"
-                    open={open}
-                    onClose={handleClose}
-                    onClick={handleClose}
+                    open={open1}
+                    onClose={handleClose1}
+                    onClick={handleClose1}
                     slotProps={{
                       paper: {
                         elevation: 0,
@@ -404,7 +511,7 @@ const NavBar: React.FC<{ hoverActive?: boolean }> = ({ hoverActive }) => {
                     transformOrigin={{ horizontal: 'right', vertical: 'top' }}
                     anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
                   >
-                    <MenuItem onClick={handleClose}>
+                    <MenuItem onClick={handleClose1}>
                       <DeleteOutline /> {`Remove`}
                     </MenuItem>
                   </Menu>
@@ -432,20 +539,23 @@ const NavBar: React.FC<{ hoverActive?: boolean }> = ({ hoverActive }) => {
                 </ListItemButton>
               </ListItem>
 
-              <ListItem disablePadding sx={{ "&:hover": { backgroundColor: "#F0F5FF" } }}>
-                <ListItemButton sx={{ borderRadius: 1.5 }}>
-                  <ListItemIcon sx={{ minWidth: 40 }}>
-                    <SettingsIcon />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={
-                      <Typography variant="body2" fontWeight={500}>
-                        Settings
-                      </Typography>
-                    }
-                  />
-                </ListItemButton>
-              </ListItem>
+              {/* Navigation */}
+              {user && isAdmin(user) && (
+                <ListItem component={Link} href={routes.app.settings.account} disablePadding sx={{ "&:hover": { backgroundColor: "#F0F5FF" } }}>
+                  <ListItemButton sx={{ borderRadius: 1.5 }}>
+                    <ListItemIcon sx={{ minWidth: 40 }}>
+                      <SettingsIcon />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={
+                        <Typography variant="body2" fontWeight={500}>
+                          Settings
+                        </Typography>
+                      }
+                    />
+                  </ListItemButton>
+                </ListItem>
+              )}
             </List>
           </Box>
 

@@ -1,0 +1,45 @@
+{
+  "type": "json_schema",
+  "json_schema": {
+    "name": "relevant_post_schema",
+    "strict": true,
+    "schema": {
+      "type": "object",
+      "properties": {
+        "chain_of_thought": {
+          "type": "string",
+          "description": "Explanation of the chain of thought leading to the relevant_confidence_score"
+        },
+        "relevant_confidence_score": {
+          "type": "number",
+          "description": "give a score between 1-100 about how confidant are you to suggest this post. less confidence means low score, more means high score"
+        },
+        "suggested_dm": {
+          "type": "string",
+          "description": "suggest a DM message to send to the author if it is relevant or return empty"
+        },
+        "chain_of_thought_suggested_dm": {
+          "type": "string",
+          "description": "Explanation of the chain of thought leading to the suggested_dm if it is relevant or return empty"
+        },
+        "suggested_comment": {
+          "type": "string",
+          "description": "suggest a comment I should post on the reddit post if it is relevant or return empty"
+        },
+        "chain_of_thought_suggested_comment": {
+          "type": "string",
+          "description": "Explanation of the chain of thought leading to the suggested_comment if it is relevant or return empty"
+        }
+      },
+      "required": [
+        "chain_of_thought",
+        "relevant_confidence_score",
+        "suggested_dm",
+        "chain_of_thought_suggested_dm",
+        "suggested_comment",
+        "chain_of_thought_suggested_comment"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

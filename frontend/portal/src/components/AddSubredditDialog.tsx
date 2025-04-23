@@ -13,6 +13,8 @@ import {
     Box,
 } from "@mui/material"
 import CloseIcon from "@mui/icons-material/Close"
+import { useClientsContext } from "@doota/ui-core/context/ClientContext"
+import toast from "react-hot-toast"
 
 interface AddSubredditDialogProps {
     open: boolean
@@ -21,20 +23,51 @@ interface AddSubredditDialogProps {
 }
 
 export default function AddSubredditDialog({ open, onClose, onAdd }: AddSubredditDialogProps) {
-    const [subreddit, setSubreddit] = useState("");
+    const [subreddit, setSubreddit] = useState("")
+    const { portalClient } = useClientsContext()
 
-    const handleAdd = () => {
-        if (subreddit.trim()) {
-            onAdd(subreddit)
+    const validateSubreddit = (name: string) => {
+        const trimmed = name.trim()
+        const subredditRegex = /^(r\/[a-zA-Z0-9_]+|https?:\/\/(www\.)?reddit\.com\/r\/[a-zA-Z0-9_]+)/i
+        return subredditRegex.test(trimmed)
+    }
+
+    const handleAdd = async () => {
+        const trimmedSubreddit = subreddit.trim()
+
+        if (!trimmedSubreddit) {
+            toast.error("Please enter a subreddit name.")
+            return;
+        }
+
+        if (!validateSubreddit(trimmedSubreddit)) {
+            toast.error("Enter a valid subreddit (e.g., r/marketing or full Reddit URL).")
+            return;
+        }
+
+        const loadingToast = toast.loading("Adding subreddit...")
+
+        try {
+            await portalClient.addSubReddit({ name: trimmedSubreddit })
+            toast.success("Subreddit added successfully.", { id: loadingToast })
+            onAdd(trimmedSubreddit)
             setSubreddit("")
             onClose()
+        } catch (error) {
+            console.error("###_err", error)
+            toast.error("Something went wrong. Please try again.", { id: loadingToast })
         }
+    }
+
+    const handleDialogClose = () => {
+        setSubreddit("")
+        onClose()
     };
 
     return (
         <Dialog
             open={open}
-            onClose={onClose}
+            onClose={handleDialogClose}
             fullWidth
             maxWidth="xs"
             PaperProps={{
@@ -54,7 +87,7 @@ export default function AddSubredditDialog({ open, onClose, onAdd }: AddSubreddi
 
             <DialogContent sx={{ p: 0 }}>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
-                    Add URL or name of the subreddit you want to track.
+                    Add the URL or name of the subreddit you want to track.
                 </Typography>
                 <TextField
                     fullWidth
