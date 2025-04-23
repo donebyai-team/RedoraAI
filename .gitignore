@@ -16,3 +16,4 @@ data/debugstore
 
 frontend/extension/chrome/loadlogic-chrome-extension.zip
 frontend/extension/chrome/loadlogic-chrome-extension.*.zip
+backend/cmd/doota/doota

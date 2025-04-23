@@ -1,19 +1,96 @@
 "use client"
 
-import type React from "react";
-import { useState } from "react";
-import { Box, Typography, Tabs, Tab, List, ListItem, Paper, Divider, Stack } from "@mui/material";
+import React, { useState } from "react";
+import {
+  Box,
+  Typography,
+  Tabs,
+  Tab,
+  List,
+  ListItem,
+  Divider,
+  Stack,
+} from "@mui/material";
+
+interface Post {
+  progress: string;
+  progressColor: string;
+  subreddit: string;
+  timeAgo: string;
+  title: string;
+}
+
+const mockPosts: Post[] = [
+  {
+    progress: "100%",
+    progressColor: "green",
+    subreddit: "r/sales",
+    timeAgo: "about 4 hours ago",
+    title: "Sales to developing markets",
+  },
+  {
+    progress: "100%",
+    progressColor: "green",
+    subreddit: "r/sales",
+    timeAgo: "about 4 hours ago",
+    title: "28 years as an Individual contributor, looking to move to become a sales manager",
+  },
+  {
+    progress: "100%",
+    progressColor: "green",
+    subreddit: "r/marketing",
+    timeAgo: "about 7 hours ago",
+    title: "When you gain a new client, do you draw up the contract/agreement or them?",
+  },
+  {
+    progress: "100%",
+    progressColor: "green",
+    subreddit: "r/marketing",
+    timeAgo: "about 8 hours ago",
+    title: "Where's the best place to get rack cards, business cards, etc printed?",
+  },
+  {
+    progress: "80%",
+    progressColor: "#9ACD32",
+    subreddit: "r/marketing",
+    timeAgo: "about 11 hours ago",
+    title: "Need career path help",
+  },
+  {
+    progress: "100%",
+    progressColor: "green",
+    subreddit: "r/sales",
+    timeAgo: "about 11 hours ago",
+    title: "On a 9 month plan to become a sales manager with a new team from being an AE after 10...",
+  },
+];
 
 const InboxComponent = () => {
   const [tabValue, setTabValue] = useState(0);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue)
-  }
+    console.log("###_debug_event ", event);
+    setTabValue(newValue);
+  };
 
-  return (<>
-    <Box sx={{ width: "100%", px: 3, py: 2, maxWidth: "25vw", borderRight: "1px solid #e0e0e0", }}>
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", my: 2 }}>
+  return (
+    <Box
+      sx={{
+        width: "100%",
+        px: 3,
+        py: 2,
+        maxWidth: "25vw",
+        borderRight: "1px solid #e0e0e0",
+      }}
+    >
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          my: 2,
+        }}
+      >
         <Typography variant="h4" component="h3" sx={{ fontWeight: "bold" }}>
           Inbox
         </Typography>
@@ -46,281 +123,93 @@ const InboxComponent = () => {
         <Tab label="Discarded" sx={{ color: "text.secondary" }} />
       </Tabs>
 
-      <List sx={{ p: 0 }}>
-        <Paper
-          elevation={0}
+      {mockPosts.length === 0 ? (
+        <Box
           sx={{
-            border: "1px solid #e0e0e0",
-            borderRadius: 2,
-            mb: 2,
-            overflow: "hidden",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            height: "60vh",
+            textAlign: "center",
+            px: 2,
           }}
         >
-          <ListItem sx={{ py: 2, px: 3, bgcolor: "#f8f8f8" }}>
-            <Stack direction="column" spacing={1} width="100%">
-              <Stack direction="row" spacing={1} alignItems="center">
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    color: "green",
-                    fontSize: "0.875rem",
-                  }}
-                >
-                  <Box
-                    component="span"
-                    sx={{
-                      display: "inline-block",
-                      width: 10,
-                      height: 10,
-                      borderRadius: "50%",
-                      bgcolor: "green",
-                      mr: 0.5,
-                    }}
-                  />
-                  100%
-                </Box>
-                <Typography component="span" sx={{ fontSize: "0.875rem", mx: 1 }}>
-                  •
-                </Typography>
-                <Typography component="span" sx={{ fontSize: "0.875rem", color: "text.secondary" }}>
-                  r/sales
-                </Typography>
-                <Typography component="span" sx={{ fontSize: "0.875rem", mx: 1 }}>
-                  •
-                </Typography>
-                <Typography component="span" sx={{ fontSize: "0.875rem", color: "text.secondary" }}>
-                  about 4 hours ago
-                </Typography>
-              </Stack>
-              <Typography variant="body1" sx={{ fontWeight: "medium" }}>
-                Sales to developing markets
-              </Typography>
-            </Stack>
-          </ListItem>
-        </Paper>
-
-        <ListItem sx={{ py: 2, px: 3 }}>
-          <Stack direction="column" spacing={1} width="100%">
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  color: "green",
-                  fontSize: "0.875rem",
-                }}
-              >
-                <Box
-                  component="span"
-                  sx={{
-                    display: "inline-block",
-                    width: 10,
-                    height: 10,
-                    borderRadius: "50%",
-                    bgcolor: "green",
-                    mr: 0.5,
-                  }}
-                />
-                100%
-              </Box>
-              <Typography component="span" sx={{ fontSize: "0.875rem", mx: 1 }}>
-                •
-              </Typography>
-              <Typography component="span" sx={{ fontSize: "0.875rem", color: "text.secondary" }}>
-                r/sales
-              </Typography>
-              <Typography component="span" sx={{ fontSize: "0.875rem", mx: 1 }}>
-                •
-              </Typography>
-              <Typography component="span" sx={{ fontSize: "0.875rem", color: "text.secondary" }}>
-                about 4 hours ago
-              </Typography>
-            </Stack>
-            <Typography variant="body1" sx={{ fontWeight: "medium" }}>
-              28 years as an Individual contributor, looking to move to become a sales manager
-            </Typography>
-          </Stack>
-        </ListItem>
-        <Divider />
-
-        <ListItem sx={{ py: 2, px: 3 }}>
-          <Stack direction="column" spacing={1} width="100%">
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  color: "green",
-                  fontSize: "0.875rem",
-                }}
-              >
-                <Box
-                  component="span"
-                  sx={{
-                    display: "inline-block",
-                    width: 10,
-                    height: 10,
-                    borderRadius: "50%",
-                    bgcolor: "green",
-                    mr: 0.5,
-                  }}
-                />
-                100%
-              </Box>
-              <Typography component="span" sx={{ fontSize: "0.875rem", mx: 1 }}>
-                •
-              </Typography>
-              <Typography component="span" sx={{ fontSize: "0.875rem", color: "text.secondary" }}>
-                r/marketing
-              </Typography>
-              <Typography component="span" sx={{ fontSize: "0.875rem", mx: 1 }}>
-                •
-              </Typography>
-              <Typography component="span" sx={{ fontSize: "0.875rem", color: "text.secondary" }}>
-                about 7 hours ago
-              </Typography>
-            </Stack>
-            <Typography variant="body1" sx={{ fontWeight: "medium" }}>
-              When you gain a new client, do you draw up the contract/agreement or them?
-            </Typography>
-          </Stack>
-        </ListItem>
-        <Divider />
-
-        <ListItem sx={{ py: 2, px: 3 }}>
-          <Stack direction="column" spacing={1} width="100%">
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  color: "green",
-                  fontSize: "0.875rem",
-                }}
-              >
-                <Box
-                  component="span"
-                  sx={{
-                    display: "inline-block",
-                    width: 10,
-                    height: 10,
-                    borderRadius: "50%",
-                    bgcolor: "green",
-                    mr: 0.5,
-                  }}
-                />
-                100%
-              </Box>
-              <Typography component="span" sx={{ fontSize: "0.875rem", mx: 1 }}>
-                •
-              </Typography>
-              <Typography component="span" sx={{ fontSize: "0.875rem", color: "text.secondary" }}>
-                r/marketing
-              </Typography>
-              <Typography component="span" sx={{ fontSize: "0.875rem", mx: 1 }}>
-                •
-              </Typography>
-              <Typography component="span" sx={{ fontSize: "0.875rem", color: "text.secondary" }}>
-                about 8 hours ago
-              </Typography>
-            </Stack>
-            <Typography variant="body1" sx={{ fontWeight: "medium" }}>
-              Where's the best place to get rack cards, business cards, etc printed?
-            </Typography>
-          </Stack>
-        </ListItem>
-        <Divider />
-
-        <ListItem sx={{ py: 2, px: 3 }}>
-          <Stack direction="column" spacing={1} width="100%">
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  color: "#9ACD32",
-                  fontSize: "0.875rem",
-                }}
-              >
-                <Box
-                  component="span"
-                  sx={{
-                    display: "inline-block",
-                    width: 10,
-                    height: 10,
-                    borderRadius: "50%",
-                    bgcolor: "#9ACD32",
-                    mr: 0.5,
-                  }}
-                />
-                80%
-              </Box>
-              <Typography component="span" sx={{ fontSize: "0.875rem", mx: 1 }}>
-                •
-              </Typography>
-              <Typography component="span" sx={{ fontSize: "0.875rem", color: "text.secondary" }}>
-                r/marketing
-              </Typography>
-              <Typography component="span" sx={{ fontSize: "0.875rem", mx: 1 }}>
-                •
-              </Typography>
-              <Typography component="span" sx={{ fontSize: "0.875rem", color: "text.secondary" }}>
-                about 11 hours ago
-              </Typography>
-            </Stack>
-            <Typography variant="body1" sx={{ fontWeight: "medium" }}>
-              Need career path help
-            </Typography>
-          </Stack>
-        </ListItem>
-        <Divider />
-
-        <ListItem sx={{ py: 2, px: 3 }}>
-          <Stack direction="column" spacing={1} width="100%">
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  color: "green",
-                  fontSize: "0.875rem",
-                }}
-              >
-                <Box
-                  component="span"
-                  sx={{
-                    display: "inline-block",
-                    width: 10,
-                    height: 10,
-                    borderRadius: "50%",
-                    bgcolor: "green",
-                    mr: 0.5,
-                  }}
-                />
-                100%
-              </Box>
-              <Typography component="span" sx={{ fontSize: "0.875rem", mx: 1 }}>
-                •
-              </Typography>
-              <Typography component="span" sx={{ fontSize: "0.875rem", color: "text.secondary" }}>
-                r/sales
-              </Typography>
-              <Typography component="span" sx={{ fontSize: "0.875rem", mx: 1 }}>
-                •
-              </Typography>
-              <Typography component="span" sx={{ fontSize: "0.875rem", color: "text.secondary" }}>
-                about 11 hours ago
-              </Typography>
-            </Stack>
-            <Typography variant="body1" sx={{ fontWeight: "medium" }}>
-              On a 9 month plan to become a sales manager with a new team from being an AE after 10...
-            </Typography>
-          </Stack>
-        </ListItem>
-      </List>
+          <Typography variant="body1" color="text.secondary">
+            Sit back and relax, we are finding relevant leads for you. We will
+            notify you once it’s ready.
+          </Typography>
+        </Box>
+      ) : (
+        <List sx={{ p: 0 }}>
+          {mockPosts.map((post, index) => (
+            <React.Fragment key={index}>
+              <ListItem sx={{ py: 2, px: 3 }}>
+                <Stack direction="column" spacing={1} width="100%">
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        color: post.progressColor,
+                        fontSize: "0.875rem",
+                      }}
+                    >
+                      <Box
+                        component="span"
+                        sx={{
+                          display: "inline-block",
+                          width: 10,
+                          height: 10,
+                          borderRadius: "50%",
+                          bgcolor: post.progressColor,
+                          mr: 0.5,
+                        }}
+                      />
+                      {post.progress}
+                    </Box>
+                    <Typography
+                      component="span"
+                      sx={{ fontSize: "0.875rem", mx: 1 }}
+                    >
+                      •
+                    </Typography>
+                    <Typography
+                      component="span"
+                      sx={{
+                        fontSize: "0.875rem",
+                        color: "text.secondary",
+                      }}
+                    >
+                      {post.subreddit}
+                    </Typography>
+                    <Typography
+                      component="span"
+                      sx={{ fontSize: "0.875rem", mx: 1 }}
+                    >
+                      •
+                    </Typography>
+                    <Typography
+                      component="span"
+                      sx={{
+                        fontSize: "0.875rem",
+                        color: "text.secondary",
+                      }}
+                    >
+                      {post.timeAgo}
+                    </Typography>
+                  </Stack>
+                  <Typography variant="body1" sx={{ fontWeight: "medium" }}>
+                    {post.title}
+                  </Typography>
+                </Stack>
+              </ListItem>
+              {index !== mockPosts.length - 1 && <Divider />}
+            </React.Fragment>
+          ))}
+        </List>
+      )}
     </Box>
-  </>);
-}
+  );
+};
 
 export default InboxComponent;
