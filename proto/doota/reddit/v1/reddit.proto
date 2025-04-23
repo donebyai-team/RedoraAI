@@ -65,7 +65,7 @@ message LeadMetadata {
   string suggested_comment = 2;
   string suggested_dm = 3;
   string chain_of_thought_suggested_comment = 4;
-  string chain_of_thought_comment_suggested_dm = 5;
+  string chain_of_thought_suggested_dm = 5;
   string post_url = 6;
 }
 

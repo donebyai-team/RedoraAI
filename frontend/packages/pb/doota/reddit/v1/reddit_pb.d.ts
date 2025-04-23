@@ -231,9 +231,9 @@ export declare type LeadMetadata = Message<"doota.reddit.v1.LeadMetadata"> & {
   chainOfThoughtSuggestedComment: string;
 
   /**
-   * @generated from field: string chain_of_thought_comment_suggested_dm = 5;
+   * @generated from field: string chain_of_thought_suggested_dm = 5;
    */
-  chainOfThoughtCommentSuggestedDm: string;
+  chainOfThoughtSuggestedDm: string;
 
   /**
    * @generated from field: string post_url = 6;
