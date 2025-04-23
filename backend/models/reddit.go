@@ -95,7 +95,6 @@ type RedditLead struct {
 }
 
 type LeadMetadata struct {
-	IsRelevant                       bool        `json:"is_relevant"`
 	ChainOfThought                   string      `json:"chain_of_thought"`
 	SuggestedComment                 string      `json:"suggested_comment"`
 	SuggestedDM                      string      `json:"suggested_dm"`
