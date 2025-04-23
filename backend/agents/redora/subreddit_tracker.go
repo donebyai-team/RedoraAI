@@ -46,7 +46,7 @@ type checkIfLeadExists func(ctx context.Context, projectID, ID string) (*models.
 
 func (s *SubRedditTracker) TrackSubreddit(ctx context.Context, subReddit *models.AugmentedSubReddit) error {
 	defer func() {
-		err := s.state.Release(ctx, subReddit.SubReddit.SubRedditID)
+		err := s.state.Release(ctx, subReddit.SubReddit.ID)
 		if err != nil {
 			s.logger.Error("failed to release lock on subreddit", zap.Error(err))
 		}
@@ -58,7 +58,7 @@ func (s *SubRedditTracker) TrackSubreddit(ctx context.Context, subReddit *models
 	}
 
 	// Lock the subreddit tracking
-	err = s.state.KeepAlive(ctx, subReddit.Project.OrganizationID, subReddit.SubReddit.SubRedditID)
+	err = s.state.KeepAlive(ctx, subReddit.Project.OrganizationID, subReddit.SubReddit.ID)
 	if err != nil {
 		return fmt.Errorf("unable to lock subReddit: %w", err)
 	}
