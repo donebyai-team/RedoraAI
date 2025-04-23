@@ -42,7 +42,16 @@ func NewSubRedditTracker(
 	}
 }
 
-type checkIfLeadExists func(ctx context.Context, projectID, ID string) (*models.RedditLead, error)
+func (s *SubRedditTracker) WithLogger(logger *zap.Logger) *SubRedditTracker {
+	return &SubRedditTracker{
+		gptModel:          s.gptModel,
+		db:                s.db,
+		aiClient:          s.aiClient,
+		logger:            logger,
+		state:             s.state,
+		redditOauthClient: s.redditOauthClient,
+	}
+}
 
 func (s *SubRedditTracker) TrackSubreddit(ctx context.Context, subReddit *models.AugmentedSubReddit) error {
 	defer func() {
@@ -125,11 +134,11 @@ func (s *SubRedditTracker) searchLeadsFromPosts(
 		newPosts = append(newPosts, post)
 	}
 
-	s.logger.Info("posts after check if already exists", zap.Int("total_posts", len(newPosts)))
-
 	// Hard filters
 	filteredPosts := s.filterAndEnrichPosts(newPosts)
 	countPostsWithHighRelevancy := 0
+
+	s.logger.Info("posts to be evaluated on relevancy via ai", zap.Int("total_posts", len(newPosts)))
 	// Filter by AI
 	for _, post := range filteredPosts {
 		redditLead := &models.RedditLead{
