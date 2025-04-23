@@ -187,21 +187,55 @@ func (s *SubRedditTracker) searchLeadsFromPosts(
 	return nil
 }
 
+const (
+	minSelftextLength   = 30
+	minTitleLength      = 5
+	maxPostAgeInMonths  = 6
+	minCommentThreshold = 5
+)
+
+var systemAuthors = []string{"[deleted]", "AutoModerator"}
+
+func isValidAuthor(author string) bool {
+	if strings.TrimSpace(author) == "" {
+		return false
+	}
+	// Check if the author contains any of the system author strings (case-insensitive)
+	for _, a := range systemAuthors {
+		if strings.Contains(strings.ToLower(author), strings.ToLower(a)) {
+			return false
+		}
+	}
+
+	return true
+}
+
 func (s *SubRedditTracker) filterAndEnrichPosts(posts []*reddit.Post) []*reddit.Post {
 	filteredPosts := []*reddit.Post{}
+	sixMonthsAgo := time.Now().AddDate(0, -maxPostAgeInMonths, 0).Unix()
+
 	for _, post := range posts {
-		if strings.TrimSpace(post.Author) == "" {
-			s.logger.Info("ignoring reddit post as author is empty", zap.String("post_id", post.ID), zap.String("author", post.Author))
-			continue
+		var reason string
+		author := strings.TrimSpace(post.Author)
+
+		if !isValidAuthor(author) {
+			reason = "invalid or system author"
 		}
 
-		if post.Author == "[deleted]" || post.Author == "AutoModerator" {
-			s.logger.Info("ignoring reddit post as author is deleted", zap.String("post_id", post.ID), zap.String("author", post.Author))
-			continue
+		if len(strings.TrimSpace(post.Selftext)) < minSelftextLength || len(strings.TrimSpace(post.Title)) < minTitleLength {
+			reason = "title or selftext is not big enough"
 		}
 
-		if len(strings.TrimSpace(post.Selftext)) < 30 || len(strings.TrimSpace(post.Title)) < 5 {
-			s.logger.Info("ignoring reddit post as title or selftext is not big enough", zap.String("post_id", post.ID))
+		if int64(post.CreatedAt) < sixMonthsAgo && post.NumComments < minCommentThreshold {
+			reason = fmt.Sprintf("post is older than %d months and has less than %d comments", maxPostAgeInMonths, minCommentThreshold)
+		}
+
+		if reason != "" {
+			s.logger.Info("ignoring reddit post",
+				zap.String("post_id", post.ID),
+				zap.String("author", post.Author),
+				zap.String("reason", reason),
+			)
 			continue
 		}
 
