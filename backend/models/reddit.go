@@ -10,7 +10,7 @@ type Keyword struct {
 	ProjectID string     `db:"project_id"`
 	Keyword   string     `db:"keyword"`
 	CreatedAt time.Time  `db:"created_at"`
-	UpdatedAt time.Time  `db:"updated_at"`
+	UpdatedAt *time.Time `db:"updated_at"`
 	DeletedAt *time.Time `db:"deleted_at"`
 }
 
@@ -95,6 +95,7 @@ type RedditLead struct {
 }
 
 type LeadMetadata struct {
+	IsRelevant                       bool        `json:"is_relevant"`
 	ChainOfThought                   string      `json:"chain_of_thought"`
 	SuggestedComment                 string      `json:"suggested_comment"`
 	SuggestedDM                      string      `json:"suggested_dm"`

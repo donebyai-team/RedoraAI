@@ -52,9 +52,9 @@ func (r *Database) CreateKeyword(ctx context.Context, keywords *models.Keyword) 
 	return keywords, nil
 }
 
-func (r *Database) GetKeywords(ctx context.Context, orgID string) ([]*models.Keyword, error) {
-	return getMany[models.Keyword](ctx, r, "keyword/query_keyword_by_id.sql", map[string]any{
-		"project_id": orgID,
+func (r *Database) GetKeywords(ctx context.Context, projectID string) ([]*models.Keyword, error) {
+	return getMany[models.Keyword](ctx, r, "keyword/query_keyword_by_project.sql", map[string]any{
+		"project_id": projectID,
 	})
 }
 
@@ -184,7 +184,7 @@ func (r *Database) GetRedditLeadsByStatus(ctx context.Context, projectID string,
 
 func (r *Database) GetRedditLeadsByRelevancy(ctx context.Context, projectID string, relevancy float32, subReddits []string) ([]*models.RedditLead, error) {
 	return getMany[models.RedditLead](ctx, r, "reddit_leads/query_reddit_lead_by_filter.sql", map[string]any{
-		"subreddit_id":    pq.Array(subReddits),
+		"subreddit_ids":   pq.Array(subReddits),
 		"relevancy_score": relevancy,
 		"status":          models.LeadStatusNEW,
 		"project_id":      projectID,

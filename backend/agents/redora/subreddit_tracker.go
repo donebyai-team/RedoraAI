@@ -12,6 +12,7 @@ import (
 	"github.com/shank318/doota/utils"
 	"go.uber.org/zap"
 	"sort"
+	"strings"
 	"time"
 )
 
@@ -88,7 +89,7 @@ func (s *SubRedditTracker) searchLeadsFromPosts(
 	subReddit *models.SubReddit,
 	redditClient *reddit.Client) error {
 
-	posts, err := redditClient.GetPosts(ctx, subReddit.SubRedditID, reddit.PostFilters{
+	posts, err := redditClient.GetPosts(ctx, subReddit.Name, reddit.PostFilters{
 		Keywords: []string{keyword.Keyword},
 		SortBy:   utils.Ptr(reddit.SortByNEW),
 		Limit:    100,
@@ -107,7 +108,7 @@ func (s *SubRedditTracker) searchLeadsFromPosts(
 
 	newPosts := []*reddit.Post{}
 	for _, post := range posts {
-		lead, err := s.db.GetRedditLeadByPostID(ctx, subReddit.SubRedditID, post.ID)
+		lead, err := s.db.GetRedditLeadByPostID(ctx, project.ID, post.ID)
 		if err != nil && !errors.Is(err, datastore.NotFound) {
 			// Unexpected error, log and skip
 			s.logger.Error("error while checking if lead exists by post id", zap.Error(err))
@@ -158,6 +159,7 @@ func (s *SubRedditTracker) searchLeadsFromPosts(
 			ChainOfThoughtCommentSuggestedDM: relevanceResponse.ChainOfThoughtSuggestedDM,
 			PostURL:                          post.URL,
 			AuthorInfo:                       post.AuthorInfo,
+			IsRelevant:                       relevanceResponse.IsRelevant,
 		}
 		err = s.db.CreateRedditLead(ctx, redditLead)
 		if err != nil {
@@ -177,10 +179,21 @@ func (s *SubRedditTracker) searchLeadsFromPosts(
 func (s *SubRedditTracker) filterAndEnrichPosts(posts []*reddit.Post) []*reddit.Post {
 	filteredPosts := []*reddit.Post{}
 	for _, post := range posts {
+		if strings.TrimSpace(post.Author) == "" {
+			s.logger.Info("ignoring reddit post as author is empty", zap.String("post_id", post.ID), zap.String("author", post.Author))
+			continue
+		}
+
 		if post.Author == "[deleted]" || post.Author == "AutoModerator" {
 			s.logger.Info("ignoring reddit post as author is deleted", zap.String("post_id", post.ID), zap.String("author", post.Author))
 			continue
 		}
+
+		if len(strings.TrimSpace(post.Selftext)) < 30 || len(strings.TrimSpace(post.Title)) < 5 {
+			s.logger.Info("ignoring reddit post as title or selftext is not big enough", zap.String("post_id", post.ID))
+			continue
+		}
+
 		filteredPosts = append(filteredPosts, post)
 	}
 
