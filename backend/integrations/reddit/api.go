@@ -66,7 +66,7 @@ type PostFilters struct {
 	Limit    int
 }
 
-func (r *Client) GetPosts(ctx context.Context, subRedditID string, filters PostFilters) ([]*Post, error) {
+func (r *Client) GetPosts(ctx context.Context, subRedditName string, filters PostFilters) ([]*Post, error) {
 	v := url.Values{}
 	if len(filters.Keywords) > 0 {
 		v.Set("q", strings.Join(filters.Keywords, " "))
@@ -89,7 +89,7 @@ func (r *Client) GetPosts(ctx context.Context, subRedditID string, filters PostF
 	}
 
 	v.Set("restrict_sr", "1")
-	reqURL := fmt.Sprintf("%s/r/%s/search.json?%s", r.baseURL, subRedditID, v.Encode())
+	reqURL := fmt.Sprintf("%s/r/%s/search.json?%s", r.baseURL, subRedditName, v.Encode())
 	resp, err := r.doRequest(ctx, http.MethodGet, reqURL)
 	if err != nil {
 		return nil, err

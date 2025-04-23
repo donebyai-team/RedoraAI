@@ -91,6 +91,7 @@ func (s *Spooler) runLoop(ctx context.Context) {
 }
 
 func (s *Spooler) processKeywordsTracking(ctx context.Context, subReddit *models.AugmentedSubReddit) error {
+	return nil
 	logger := s.logger.With(
 		zap.String("organization_id", subReddit.Project.OrganizationID),
 		zap.String("subreddit_id", subReddit.SubReddit.ID),
@@ -146,10 +147,14 @@ func (s *Spooler) loadSubRedditsToTrack(ctx context.Context) error {
 		return fmt.Errorf("processing subreddits: %w", err)
 	}
 
+	eligibleSubRedditsToTrack := 0
 	for _, reddit := range subReddits {
-		s.pushSubRedditToTack(reddit)
+		if len(reddit.Keywords) > 0 {
+			eligibleSubRedditsToTrack++
+			s.pushSubRedditToTack(reddit)
+		}
 	}
-	s.logger.Info("found subreddit to process from db", zap.Int("count", len(subReddits)), zap.Duration("elapsed", time.Since(t0)))
+	s.logger.Info("found subreddit to process from db", zap.Int("count", eligibleSubRedditsToTrack), zap.Duration("elapsed", time.Since(t0)))
 
 	return nil
 }
