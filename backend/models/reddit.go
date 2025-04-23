@@ -95,13 +95,13 @@ type RedditLead struct {
 }
 
 type LeadMetadata struct {
-	ChainOfThought                   string      `json:"chain_of_thought"`
-	SuggestedComment                 string      `json:"suggested_comment"`
-	SuggestedDM                      string      `json:"suggested_dm"`
-	ChainOfThoughtSuggestedComment   string      `json:"chain_of_thought_suggested_comment"`
-	ChainOfThoughtCommentSuggestedDM string      `json:"chain_of_thought_comment"`
-	PostURL                          string      `json:"post_url"`
-	AuthorInfo                       interface{} `json:"author_info"`
+	ChainOfThought                 string      `json:"chain_of_thought"`
+	SuggestedComment               string      `json:"suggested_comment"`
+	SuggestedDM                    string      `json:"suggested_dm"`
+	ChainOfThoughtSuggestedComment string      `json:"chain_of_thought_suggested_comment"`
+	ChainOfThoughtSuggestedDM      string      `json:"chain_of_thought_dm"`
+	PostURL                        string      `json:"post_url"`
+	AuthorInfo                     interface{} `json:"author_info"`
 }
 
 func (b LeadMetadata) Value() (driver.Value, error) {

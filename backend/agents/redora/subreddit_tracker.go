@@ -135,12 +135,12 @@ func (s *SubRedditTracker) searchLeadsFromPosts(
 	}
 
 	// Hard filters
-	filteredPosts := s.filterAndEnrichPosts(newPosts)
 	countPostsWithHighRelevancy := 0
+	countSkippedPosts := 0
 
 	s.logger.Info("posts to be evaluated on relevancy via ai", zap.Int("total_posts", len(newPosts)))
 	// Filter by AI
-	for _, post := range filteredPosts {
+	for _, post := range newPosts {
 		redditLead := &models.RedditLead{
 			ProjectID:     project.ID,
 			SubRedditID:   subReddit.ID,
@@ -150,28 +150,42 @@ func (s *SubRedditTracker) searchLeadsFromPosts(
 			Title:         utils.Ptr(post.Title),
 			Description:   post.Selftext,
 			PostCreatedAt: time.Unix(int64(post.CreatedAt), 0),
+			LeadMetadata: models.LeadMetadata{
+				PostURL:    post.URL,
+				AuthorInfo: post.AuthorInfo,
+			},
 		}
 
-		relevanceResponse, err := s.aiClient.IsRedditPostRelevant(ctx, project, redditLead, s.gptModel, s.logger)
-		if err != nil {
-			s.logger.Error("failed to get relevance response", zap.Error(err))
-			continue
+		isValid, reason := s.isValidPost(post)
+		if isValid {
+			relevanceResponse, err := s.aiClient.IsRedditPostRelevant(ctx, project, redditLead, s.gptModel, s.logger)
+			if err != nil {
+				s.logger.Error("failed to get relevance response", zap.Error(err))
+				continue
+			}
+
+			redditLead.RelevancyScore = relevanceResponse.IsRelevantConfidenceScore
+			if redditLead.RelevancyScore >= 90 {
+				countPostsWithHighRelevancy++
+			}
+
+			redditLead.LeadMetadata.ChainOfThought = relevanceResponse.ChainOfThoughtIsRelevant
+			redditLead.LeadMetadata.SuggestedComment = relevanceResponse.SuggestedComment
+			redditLead.LeadMetadata.SuggestedDM = relevanceResponse.SuggestedDM
+			redditLead.LeadMetadata.ChainOfThoughtSuggestedComment = relevanceResponse.ChainOfThoughtSuggestedComment
+			redditLead.LeadMetadata.ChainOfThoughtSuggestedDM = relevanceResponse.ChainOfThoughtSuggestedDM
+		} else {
+			countSkippedPosts++
+			s.logger.Info("ignoring reddit post for ai relevancy check",
+				zap.String("post_id", post.ID),
+				zap.String("author", post.Author),
+				zap.String("reason", reason),
+			)
+
+			redditLead.RelevancyScore = 0
+			redditLead.LeadMetadata.ChainOfThought = reason
 		}
 
-		redditLead.RelevancyScore = relevanceResponse.IsRelevantConfidenceScore
-		if redditLead.RelevancyScore >= 90 {
-			countPostsWithHighRelevancy++
-		}
-
-		redditLead.LeadMetadata = models.LeadMetadata{
-			ChainOfThought:                   relevanceResponse.ChainOfThoughtIsRelevant,
-			SuggestedComment:                 relevanceResponse.SuggestedComment,
-			SuggestedDM:                      relevanceResponse.SuggestedDM,
-			ChainOfThoughtSuggestedComment:   relevanceResponse.ChainOfThoughtSuggestedComment,
-			ChainOfThoughtCommentSuggestedDM: relevanceResponse.ChainOfThoughtSuggestedDM,
-			PostURL:                          post.URL,
-			AuthorInfo:                       post.AuthorInfo,
-		}
 		err = s.db.CreateRedditLead(ctx, redditLead)
 		if err != nil {
 			return fmt.Errorf("unable to create reddit lead: %w", err)
@@ -181,7 +195,7 @@ func (s *SubRedditTracker) searchLeadsFromPosts(
 	s.logger.Info("reddit_leads_summary",
 		zap.Int("total_posts_queried", len(posts)),
 		zap.Int("total_new_posts", len(newPosts)),
-		zap.Int("total_posts_after_filtering", len(filteredPosts)),
+		zap.Int("total_invalid_posts", countSkippedPosts),
 		zap.Int("high_relevancy_posts", countPostsWithHighRelevancy))
 
 	return nil
@@ -210,37 +224,27 @@ func isValidAuthor(author string) bool {
 	return true
 }
 
-func (s *SubRedditTracker) filterAndEnrichPosts(posts []*reddit.Post) []*reddit.Post {
-	filteredPosts := []*reddit.Post{}
+func (s *SubRedditTracker) isValidPost(post *reddit.Post) (bool, string) {
 	sixMonthsAgo := time.Now().AddDate(0, -maxPostAgeInMonths, 0).Unix()
 
-	for _, post := range posts {
-		var reason string
-		author := strings.TrimSpace(post.Author)
+	var reason string
+	author := strings.TrimSpace(post.Author)
 
-		if !isValidAuthor(author) {
-			reason = "invalid or system author"
-		}
-
-		if len(strings.TrimSpace(post.Selftext)) < minSelftextLength || len(strings.TrimSpace(post.Title)) < minTitleLength {
-			reason = "title or selftext is not big enough"
-		}
-
-		if int64(post.CreatedAt) < sixMonthsAgo && post.NumComments < minCommentThreshold {
-			reason = fmt.Sprintf("post is older than %d months and has less than %d comments", maxPostAgeInMonths, minCommentThreshold)
-		}
-
-		if reason != "" {
-			s.logger.Info("ignoring reddit post",
-				zap.String("post_id", post.ID),
-				zap.String("author", post.Author),
-				zap.String("reason", reason),
-			)
-			continue
-		}
-
-		filteredPosts = append(filteredPosts, post)
+	if !isValidAuthor(author) {
+		reason = "invalid or system author"
 	}
 
-	return filteredPosts
+	if len(strings.TrimSpace(post.Selftext)) < minSelftextLength || len(strings.TrimSpace(post.Title)) < minTitleLength {
+		reason = "title or selftext is not big enough"
+	}
+
+	if int64(post.CreatedAt) < sixMonthsAgo && post.NumComments < minCommentThreshold {
+		reason = fmt.Sprintf("post is older than %d months and has less than %d comments", maxPostAgeInMonths, minCommentThreshold)
+	}
+
+	if reason != "" {
+		return false, reason
+	}
+
+	return true, ""
 }
