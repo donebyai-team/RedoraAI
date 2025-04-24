@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Button, Menu, MenuItem, Tooltip } from '@mui/material'
+import { Button, CircularProgress, Menu, MenuItem, Skeleton, Tooltip } from '@mui/material'
 import { ChevronDown, LogOut, Settings } from 'lucide-react'
 import { useAuth } from '@doota/ui-core/hooks/useAuth'
 import { isPlatformAdmin, isAdmin } from '@doota/ui-core/helper/role'
@@ -110,6 +110,7 @@ const NavBar: React.FC<{ hoverActive?: boolean }> = ({ hoverActive = true }) => 
   const [currentActiveSubRedditId, setcurrentActiveSubRedditId] = useState<string>("");
   const [subRedditText, setSubRedditText] = useState<string>("");
   const open1 = Boolean(anchorEl1);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl1(event.currentTarget);
@@ -143,7 +144,7 @@ const NavBar: React.FC<{ hoverActive?: boolean }> = ({ hoverActive = true }) => 
 
       router.push(`${pathname}?${params.toString()}`, { scroll: false });
     }, 300);
-    
+
     return () => clearTimeout(debounceTimer);
 
   }, [activeTab, pathname, router, searchParams, currentActiveSubRedditId, relevancy_score]);
@@ -159,9 +160,8 @@ const NavBar: React.FC<{ hoverActive?: boolean }> = ({ hoverActive = true }) => 
     router.push('/dashboard/leads');
   };
 
-  const isMenuActive = (currentMenu: string) => {
-    const current = SIDEBAR_MENU_LIST.find(item => item?.name === currentMenu)?.active_menu;
-    const isActive = searchParams?.get('active_sidebar_menu') === current;
+  const isMenuActive = (id: string) => {
+    const isActive = searchParams?.get('currentActiveSubRedditId') === id;
     return isActive;
   }
 
@@ -179,20 +179,23 @@ const NavBar: React.FC<{ hoverActive?: boolean }> = ({ hoverActive = true }) => 
 
   useEffect(() => {
 
-    portalClient.getSubReddits({})
-      .then((resp: any) => {
-        console.log(`###_resp `, resp);
-        setSubredditList(resp?.subreddits ?? []);
-      })
-      .catch((err: unknown) => {
-        console.log(`###_err `, err);
-      }).finally(() => {
+    const getAllSubReddits = async () => {
+      setIsLoading(true);
+
+      try {
+        const result = await portalClient.getSubReddits({});
+        setSubredditList(result?.subreddits ?? []);
+      } catch (err: any) {
+        const message = err?.response?.data?.message || err.message || "Something went wrong"
+        toast.error(message);
+      } finally {
+        setIsLoading(false);
         setSubRedditText("");
-      });
+      }
+    }
+    getAllSubReddits();
 
   }, [subRedditText]);
-
-  console.log({ currentActiveSubRedditId, relevancy_score });
 
   return (
     <>
@@ -413,118 +416,133 @@ const NavBar: React.FC<{ hoverActive?: boolean }> = ({ hoverActive = true }) => 
             FILTER BY SUBREDDIT
           </Typography>
 
-          <List sx={{ p: 0, mb: "auto", display: "flex", flexDirection: "column", alignItems: "center", gap: 1.5 }}>
-            {subredditList.map((ele: subreddit, index) => (
-              <ListItem
-                key={index}
-                disablePadding
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  width: "100%",
-                  borderRadius: 1.5,
-                  bgcolor: isMenuActive(ele.name) ? "#f9fafb" : "",
-                  boxShadow: isMenuActive(ele.name) ? "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px" : "",
-                  "&:hover": {
-                    backgroundColor: "#F0F5FF"
-                  },
-                  "&:hover .hover-icon": {
-                    opacity: 1,
-                  },
-                }}
-                onClick={() => handleSubRedditsClick(ele)}
-              >
-                <ListItemButton
-                  sx={{
-                    flexGrow: 1,
-                    "&:hover": {
-                      backgroundColor: "transparent"
-                    },
-                  }}
-                >
-                  <ListItemText primary={`${ele.name}`} />
-                </ListItemButton>
-
-                <Box sx={{ display: "flex", alignItems: "center", gap: 5 }}>
-                  <Badge
-                    badgeContent={0}
-                    color="warning"
+          {isLoading ?
+            <Box sx={{ display: 'flex', flexDirection: "column", alignItems: "center", height: "100%", width: "100%", gap: 2 }}>
+              <Skeleton variant="rounded" width={"100%"} height={40} />
+              <Skeleton variant="rounded" width={"100%"} height={40} />
+              <Skeleton variant="rounded" width={"100%"} height={40} />
+            </Box>
+            :
+            subredditList?.length > 1 ?
+              <List sx={{ p: 0, mb: "auto", display: "flex", flexDirection: "column", alignItems: "center", gap: 1.5 }}>
+                {subredditList.map((ele: subreddit, index) => (
+                  <ListItem
+                    key={index}
+                    disablePadding
                     sx={{
-                      "& .MuiBadge-badge": {
-                        bgcolor: "#FF9800",
-                        color: "white",
-                        fontWeight: "bold",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      width: "100%",
+                      borderRadius: 1.5,
+                      bgcolor: isMenuActive(ele.id) ? "#f9fafb" : "",
+                      boxShadow: isMenuActive(ele.id) ? "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px" : "",
+                      "&:hover": {
+                        backgroundColor: "#F0F5FF"
+                      },
+                      "&:hover .hover-icon": {
+                        opacity: 1,
                       },
                     }}
-                  />
-                  <IconButton
-                    edge="end"
-                    className="hover-icon"
-                    disableRipple
-                    sx={{
-                      opacity: 0,
-                      transition: "opacity 0.2s ease",
-                    }}
-                    onClick={handleClick}
-                    size="small"
-                    aria-controls={open1 ? 'account-menu' : undefined}
-                    aria-haspopup="true"
-                    aria-expanded={open1 ? 'true' : undefined}
+                    onClick={() => handleSubRedditsClick(ele)}
                   >
-                    <MoreVertIcon fontSize="small" />
-                  </IconButton>
-                  <Menu
-                    anchorEl={anchorEl}
-                    id="account-menu"
-                    open={open1}
-                    onClose={handleClose1}
-                    onClick={handleClose1}
-                    slotProps={{
-                      paper: {
-                        elevation: 0,
-                        sx: {
-                          overflow: 'visible',
-                          filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
-                          mt: 1.5,
-                          '& .MuiAvatar-root': {
-                            width: 32,
-                            height: 32,
-                            ml: -0.5,
-                            mr: 1,
-                          },
-                          '&::before': {
-                            content: '""',
-                            display: 'block',
-                            position: 'absolute',
-                            top: 0,
-                            right: 14,
-                            width: 10,
-                            height: 10,
-                            bgcolor: 'background.paper',
-                            transform: 'translateY(-50%) rotate(45deg)',
-                            zIndex: 0,
-                          },
+                    <ListItemButton
+                      sx={{
+                        flexGrow: 1,
+                        "&:hover": {
+                          backgroundColor: "transparent"
                         },
-                      },
-                    }}
-                    transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                    anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-                  >
-                    <MenuItem onClick={handleClose1}>
-                      <DeleteOutline /> {`Remove`}
-                    </MenuItem>
-                  </Menu>
-                </Box>
-              </ListItem>
-            ))}
-          </List>
+                      }}
+                    >
+                      <ListItemText primary={`${ele.name}`} />
+                    </ListItemButton>
+
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 5 }}>
+                      <Badge
+                        badgeContent={0}
+                        color="warning"
+                        sx={{
+                          "& .MuiBadge-badge": {
+                            bgcolor: "#FF9800",
+                            color: "white",
+                            fontWeight: "bold",
+                          },
+                        }}
+                      />
+                      <IconButton
+                        edge="end"
+                        className="hover-icon"
+                        disableRipple
+                        sx={{
+                          opacity: 0,
+                          transition: "opacity 0.2s ease",
+                        }}
+                        onClick={handleClick}
+                        size="small"
+                        aria-controls={open1 ? 'account-menu' : undefined}
+                        aria-haspopup="true"
+                        aria-expanded={open1 ? 'true' : undefined}
+                      >
+                        <MoreVertIcon fontSize="small" />
+                      </IconButton>
+                      <Menu
+                        anchorEl={anchorEl}
+                        id="account-menu"
+                        open={open1}
+                        onClose={handleClose1}
+                        onClick={handleClose1}
+                        slotProps={{
+                          paper: {
+                            elevation: 0,
+                            sx: {
+                              overflow: 'visible',
+                              filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
+                              mt: 1.5,
+                              '& .MuiAvatar-root': {
+                                width: 32,
+                                height: 32,
+                                ml: -0.5,
+                                mr: 1,
+                              },
+                              '&::before': {
+                                content: '""',
+                                display: 'block',
+                                position: 'absolute',
+                                top: 0,
+                                right: 14,
+                                width: 10,
+                                height: 10,
+                                bgcolor: 'background.paper',
+                                transform: 'translateY(-50%) rotate(45deg)',
+                                zIndex: 0,
+                              },
+                            },
+                          },
+                        }}
+                        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                      >
+                        <MenuItem onClick={handleClose1}>
+                          <DeleteOutline /> {`Remove`}
+                        </MenuItem>
+                      </Menu>
+                    </Box>
+                  </ListItem>
+                ))}
+              </List>
+              :
+              <Box sx={{ display: 'flex', flexDirection: "column", alignItems: "center", height: "100%", width: "100%" }}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  No subreddits avalable.
+                </Typography>
+              </Box>
+          }
 
           {/* Bottom Actions */}
           <Box sx={{ mt: 2 }}>
             <Divider sx={{ mb: 2 }} />
             <List sx={{ p: 0 }}>
-              <ListItem onClick={handleOpenDialog} disablePadding sx={{ "&:hover": { backgroundColor: "#F0F5FF" } }}>
+              {/* <ListItem onClick={handleOpenDialog} disablePadding sx={{ "&:hover": { backgroundColor: "#F0F5FF" } }}>
                 <ListItemButton sx={{ borderRadius: 1.5 }}>
                   <ListItemIcon sx={{ minWidth: 40 }}>
                     <AddIcon />
@@ -537,7 +555,7 @@ const NavBar: React.FC<{ hoverActive?: boolean }> = ({ hoverActive = true }) => 
                     }
                   />
                 </ListItemButton>
-              </ListItem>
+              </ListItem> */}
 
               {/* Navigation */}
               {user && isAdmin(user) && (

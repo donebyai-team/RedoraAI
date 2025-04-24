@@ -24,6 +24,8 @@ interface AddSubredditDialogProps {
 
 export default function AddSubredditDialog({ open, onClose, onAdd }: AddSubredditDialogProps) {
     const [subreddit, setSubreddit] = useState("")
+    const [isLoading, setIsLoading] = useState(false)
+    const [error, setError] = useState<string | null>(null)
     const { portalClient } = useClientsContext()
 
     const validateSubreddit = (name: string) => {
@@ -34,35 +36,40 @@ export default function AddSubredditDialog({ open, onClose, onAdd }: AddSubreddi
 
     const handleAdd = async () => {
         const trimmedSubreddit = subreddit.trim()
+        setError(null)
 
+        // Frontend validations
         if (!trimmedSubreddit) {
-            toast.error("Please enter a subreddit name.")
-            return;
+            setError("Subreddit is required.")
+            return
         }
 
         if (!validateSubreddit(trimmedSubreddit)) {
-            toast.error("Enter a valid subreddit (e.g., r/marketing or full Reddit URL).")
-            return;
+            setError("Enter a valid subreddit (e.g., r/marketing or full Reddit URL).")
+            return
         }
 
-        const loadingToast = toast.loading("Adding subreddit...")
+        setIsLoading(true)
 
         try {
             await portalClient.addSubReddit({ name: trimmedSubreddit })
-            toast.success("Subreddit added successfully.", { id: loadingToast })
             onAdd(trimmedSubreddit)
             setSubreddit("")
             onClose()
-        } catch (error) {
-            console.error("###_err", error)
-            toast.error("Something went wrong. Please try again.", { id: loadingToast })
+        } catch (err: any) {
+            const message = err?.response?.data?.message || err.message || "Something went wrong"
+            toast.error(message)
+        } finally {
+            setIsLoading(false)
         }
     }
 
     const handleDialogClose = () => {
+        if (isLoading) return;
         setSubreddit("")
+        setError(null)
         onClose()
-    };
+    }
 
     return (
         <Dialog
@@ -74,13 +81,15 @@ export default function AddSubredditDialog({ open, onClose, onAdd }: AddSubreddi
                 sx: {
                     borderRadius: 2,
                     padding: 6,
-                    margin: 0
+                    margin: 0,
                 },
             }}
         >
             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", position: "relative" }}>
-                <DialogTitle sx={{ fontWeight: "bold", fontSize: "1.25rem", p: 0, mb: 2.5 }}>Add subreddit to track</DialogTitle>
-                <IconButton onClick={onClose} sx={{ position: "absolute", top: "-10px", right: "-10px" }} aria-label="close">
+                <DialogTitle sx={{ fontWeight: "bold", fontSize: "1.25rem", p: 0, mb: 2.5 }}>
+                    Add subreddit to track
+                </DialogTitle>
+                <IconButton onClick={handleDialogClose} sx={{ position: "absolute", top: "-10px", right: "-10px" }} aria-label="close">
                     <CloseIcon />
                 </IconButton>
             </Box>
@@ -93,9 +102,11 @@ export default function AddSubredditDialog({ open, onClose, onAdd }: AddSubreddi
                     fullWidth
                     placeholder="Example: r/marketing"
                     value={subreddit}
-                    size="small"
                     onChange={(e) => setSubreddit(e.target.value)}
+                    size="small"
                     variant="outlined"
+                    error={Boolean(error)}
+                    helperText={error}
                     InputProps={{
                         sx: {
                             borderRadius: 1.5,
@@ -106,13 +117,15 @@ export default function AddSubredditDialog({ open, onClose, onAdd }: AddSubreddi
 
             <DialogActions sx={{ justifyContent: "flex-end", gap: 1, px: 0, pt: 4, pb: 0 }}>
                 <Button
-                    onClick={onClose}
+                    onClick={handleDialogClose}
                     variant="outlined"
+                    disabled={isLoading}
                     sx={{
                         color: "text.primary",
                         textTransform: "none",
                         fontWeight: 500,
                         px: 3,
+                        opacity: isLoading ? 0.5 : 1,
                     }}
                 >
                     Cancel
@@ -120,6 +133,7 @@ export default function AddSubredditDialog({ open, onClose, onAdd }: AddSubreddi
                 <Button
                     onClick={handleAdd}
                     variant="contained"
+                    disabled={isLoading}
                     sx={{
                         bgcolor: "#f56f36",
                         "&:hover": {
@@ -129,11 +143,12 @@ export default function AddSubredditDialog({ open, onClose, onAdd }: AddSubreddi
                         fontWeight: 500,
                         borderRadius: 1,
                         px: 3,
+                        opacity: isLoading ? 0.5 : 1,
                     }}
                 >
                     Add subreddit
                 </Button>
             </DialogActions>
         </Dialog>
-    );
+    )
 }

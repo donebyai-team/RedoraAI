@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react";
+import React from "react";
 import {
   Box,
   Typography,
@@ -10,66 +10,20 @@ import {
   ListItem,
   Divider,
   Stack,
+  Button,
 } from "@mui/material";
-
-interface Post {
-  progress: string;
-  progressColor: string;
-  subreddit: string;
-  timeAgo: string;
-  title: string;
-}
-
-const mockPosts: Post[] = [
-  {
-    progress: "100%",
-    progressColor: "green",
-    subreddit: "r/sales",
-    timeAgo: "about 4 hours ago",
-    title: "Sales to developing markets",
-  },
-  {
-    progress: "100%",
-    progressColor: "green",
-    subreddit: "r/sales",
-    timeAgo: "about 4 hours ago",
-    title: "28 years as an Individual contributor, looking to move to become a sales manager",
-  },
-  {
-    progress: "100%",
-    progressColor: "green",
-    subreddit: "r/marketing",
-    timeAgo: "about 7 hours ago",
-    title: "When you gain a new client, do you draw up the contract/agreement or them?",
-  },
-  {
-    progress: "100%",
-    progressColor: "green",
-    subreddit: "r/marketing",
-    timeAgo: "about 8 hours ago",
-    title: "Where's the best place to get rack cards, business cards, etc printed?",
-  },
-  {
-    progress: "80%",
-    progressColor: "#9ACD32",
-    subreddit: "r/marketing",
-    timeAgo: "about 11 hours ago",
-    title: "Need career path help",
-  },
-  {
-    progress: "100%",
-    progressColor: "green",
-    subreddit: "r/sales",
-    timeAgo: "about 11 hours ago",
-    title: "On a 9 month plan to become a sales manager with a new team from being an AE after 10...",
-  },
-];
+import NewTabComponent from "./Tabs/NewTab";
+import CompletedTabComponent from "./Tabs/CompletedTab";
+import { useRedditIntegrationStatus } from "./Tabs/useRedditIntegrationStatus";
+import { routes } from "@doota/ui-core/routing";
+import Link from "next/link";
+import DiscardedTabComponent from "./Tabs/DiscardedTab";
 
 const InboxComponent = () => {
-  const [tabValue, setTabValue] = useState(0);
+  const [tabValue, setTabValue] = React.useState<number>(0);
+  const { isConnected } = useRedditIntegrationStatus();
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    console.log("###_debug_event ", event);
     setTabValue(newValue);
   };
 
@@ -117,95 +71,34 @@ const InboxComponent = () => {
           },
         }}
       >
-        <Tab label="NEW" sx={{ color: "text.secondary" }} />
-        <Tab label="COMPLETED" sx={{ color: "text.secondary" }} />
-        <Tab label="DISCARDED" sx={{ color: "text.secondary" }} />
+        <Tab label="New" sx={{ color: "text.secondary" }} />
+        <Tab label="Completed" sx={{ color: "text.secondary" }} />
+        <Tab label="Discarded" sx={{ color: "text.secondary" }} />
       </Tabs>
 
-      {mockPosts.length === 0 ? (
+      {isConnected ? (<>
+        {tabValue === 0 && <NewTabComponent />}
+        {tabValue === 1 && <CompletedTabComponent />}
+        {tabValue === 2 && <DiscardedTabComponent />}
+      </>) : (
         <Box
           sx={{
             display: "flex",
+            flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            height: "60vh",
+            height: "100%",
             textAlign: "center",
             px: 2,
           }}
         >
           <Typography variant="body1" color="text.secondary">
-            Sit back and relax, we are finding relevant leads for you. We will
-            notify you once it’s ready.
+            {`Please connect your reddit account and a button. On clicking it, it should redirect me to settings/account.`}
           </Typography>
+          <Button variant="contained" component={Link} href={routes.app.settings.account} sx={{ mt: 4 }}>
+            {`Connect`}
+          </Button>
         </Box>
-      ) : (
-        <List sx={{ p: 0 }}>
-          {mockPosts.map((post, index) => (
-            <React.Fragment key={index}>
-              <ListItem sx={{ py: 2, px: 3 }}>
-                <Stack direction="column" spacing={1} width="100%">
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        color: post.progressColor,
-                        fontSize: "0.875rem",
-                      }}
-                    >
-                      <Box
-                        component="span"
-                        sx={{
-                          display: "inline-block",
-                          width: 10,
-                          height: 10,
-                          borderRadius: "50%",
-                          bgcolor: post.progressColor,
-                          mr: 0.5,
-                        }}
-                      />
-                      {post.progress}
-                    </Box>
-                    <Typography
-                      component="span"
-                      sx={{ fontSize: "0.875rem", mx: 1 }}
-                    >
-                      •
-                    </Typography>
-                    <Typography
-                      component="span"
-                      sx={{
-                        fontSize: "0.875rem",
-                        color: "text.secondary",
-                      }}
-                    >
-                      {post.subreddit}
-                    </Typography>
-                    <Typography
-                      component="span"
-                      sx={{ fontSize: "0.875rem", mx: 1 }}
-                    >
-                      •
-                    </Typography>
-                    <Typography
-                      component="span"
-                      sx={{
-                        fontSize: "0.875rem",
-                        color: "text.secondary",
-                      }}
-                    >
-                      {post.timeAgo}
-                    </Typography>
-                  </Stack>
-                  <Typography variant="body1" sx={{ fontWeight: "medium" }}>
-                    {post.title}
-                  </Typography>
-                </Stack>
-              </ListItem>
-              {index !== mockPosts.length - 1 && <Divider />}
-            </React.Fragment>
-          ))}
-        </List>
       )}
     </Box>
   );
