@@ -60,10 +60,6 @@ message GetLeadsResponse {
   repeated RedditLead leads = 1;
 }
 
-message AuthorInfo {
-
-}
-
 message LeadMetadata {
   string chain_of_thought = 1;
   string suggested_comment = 2;
