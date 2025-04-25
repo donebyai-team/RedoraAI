@@ -4,4 +4,4 @@ WHERE project_id = :project_id
   AND relevancy_score >= :relevancy_score
   AND (:subreddit_ids = '{}' OR subreddit_id = ANY(:subreddit_ids))
   AND status = :status
-ORDER BY created_at DESC;
+ORDER BY post_created_at DESC;

@@ -207,6 +207,18 @@ export declare type GetLeadsResponse = Message<"doota.reddit.v1.GetLeadsResponse
 export declare const GetLeadsResponseSchema: GenMessage<GetLeadsResponse>;
 
 /**
+ * @generated from message doota.reddit.v1.AuthorInfo
+ */
+export declare type AuthorInfo = Message<"doota.reddit.v1.AuthorInfo"> & {
+};
+
+/**
+ * Describes the message doota.reddit.v1.AuthorInfo.
+ * Use `create(AuthorInfoSchema)` to create a new message.
+ */
+export declare const AuthorInfoSchema: GenMessage<AuthorInfo>;
+
+/**
  * @generated from message doota.reddit.v1.LeadMetadata
  */
 export declare type LeadMetadata = Message<"doota.reddit.v1.LeadMetadata"> & {
@@ -239,6 +251,36 @@ export declare type LeadMetadata = Message<"doota.reddit.v1.LeadMetadata"> & {
    * @generated from field: string post_url = 6;
    */
   postUrl: string;
+
+  /**
+   * @generated from field: string description_html = 7;
+   */
+  descriptionHtml: string;
+
+  /**
+   * @generated from field: string subreddit_prefixed = 8;
+   */
+  subredditPrefixed: string;
+
+  /**
+   * @generated from field: int64 no_of_comments = 9;
+   */
+  noOfComments: bigint;
+
+  /**
+   * @generated from field: int64 ups = 10;
+   */
+  ups: bigint;
+
+  /**
+   * @generated from field: string author_url = 11;
+   */
+  authorUrl: string;
+
+  /**
+   * @generated from field: string dm_url = 12;
+   */
+  dmUrl: string;
 };
 
 /**
