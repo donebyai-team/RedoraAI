@@ -172,7 +172,14 @@ func (r *Client) refreshToken(ctx context.Context) error {
 		Expiry:       r.config.ExpiresAt,
 	}
 
+	client := &http.Client{
+		Transport: &userAgentTransport{
+			base: http.DefaultTransport,
+		},
+	}
+
 	// Create a token source that can refresh
+	ctx = context.WithValue(ctx, oauth2.HTTPClient, client)
 	tokenSource := r.oauthConfig.TokenSource(ctx, oldToken)
 
 	newToken, err := tokenSource.Token()
