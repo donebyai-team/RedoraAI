@@ -87,6 +87,19 @@ func (s *SubRedditTracker) TrackSubreddit(ctx context.Context, subReddit *models
 	return nil
 }
 
+//func (s *SubRedditTracker) TrackPost(ctx context.Context,
+//	post *models.RedditLead,
+//	project *models.Project,
+//	subReddit *models.SubReddit,
+//	redditClient *reddit.Client) error {
+//	comments, err := redditClient.GetPostWithAllComments(ctx, post.PostID)
+//	if err != nil {
+//		return fmt.Errorf("failed to get reddit comments: %w", err)
+//	}
+//
+//	return nil
+//}
+
 // Call GetPosts of a subreddit created on and after subReddit LastPostCreatedAt
 // Filter them via a criteria - https://www.notion.so/Criteria-for-filtering-the-relevant-post-1c70029aaf8f80ec8ba6fd4e29342d6a
 // After filtering, ask AI to filter again
@@ -155,6 +168,7 @@ func (s *SubRedditTracker) searchLeadsFromPosts(
 			Type:          models.LeadTypePOST,
 			Title:         utils.Ptr(post.Title),
 			Description:   post.Selftext,
+			KeywordID:     keyword.ID,
 			PostCreatedAt: time.Unix(int64(post.CreatedAt), 0),
 			LeadMetadata: models.LeadMetadata{
 				PostURL:           post.URL,

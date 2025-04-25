@@ -2,10 +2,8 @@ package psql
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/lib/pq"
-	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/models"
 	"time"
 )
@@ -29,8 +27,6 @@ func init() {
 		"reddit_leads/update_reddit_lead_status.sql",
 		"reddit_leads/query_reddit_lead_by_id.sql",
 
-		"subreddit_tracker/query_sub_reddit_tracker.sql",
-		"subreddit_tracker/create_sub_reddit_tracker.sql",
 		"sub_reddit/query_sub_reddit_by_filter.sql",
 	})
 }
@@ -203,6 +199,7 @@ func (r *Database) CreateRedditLead(ctx context.Context, reddit *models.RedditLe
 		"subreddit_id":    reddit.SubRedditID,
 		"author":          reddit.Author,
 		"post_id":         reddit.PostID,
+		"keyword_id":      reddit.KeywordID,
 		"type":            reddit.Type,
 		"relevancy_score": reddit.RelevancyScore,
 		"post_created_at": reddit.PostCreatedAt,
@@ -214,71 +211,4 @@ func (r *Database) CreateRedditLead(ctx context.Context, reddit *models.RedditLe
 		return fmt.Errorf("failed to insert reddit_lead post_id [%s]: %w", reddit.PostID, err)
 	}
 	return nil
-}
-
-// Subreddit keyword trackers
-func (r *Database) UpdateSubRedditTracker(ctx context.Context, subreddit *models.SubRedditTracker) (*models.SubRedditTracker, error) {
-	tx, err := r.BeginTxx(ctx, nil)
-	if err != nil {
-		return nil, fmt.Errorf("begin transaction: %w", err)
-	}
-	defer func() {
-		err = executePotentialRollback(tx, err)
-	}()
-
-	stmt := r.mustGetTxStmt(ctx, "subreddit_tracker/create_sub_reddit_tracker.sql", tx)
-	var id string
-	err = stmt.GetContext(ctx, &id, map[string]interface{}{
-		"subreddit_id":        subreddit.SubRedditID,
-		"keyword_id":          subreddit.KeywordID,
-		"last_tracked_at":     subreddit.LastTrackedAt,
-		"newest_tracked_post": subreddit.NewestTrackedPost,
-		"oldest_tracked_post": subreddit.OldestTrackedPost,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to insert subreddit tracker: %w", err)
-	}
-	subreddit.ID = id
-
-	if subreddit.LastTrackedAt != nil {
-		stmt := r.mustGetTxStmt(ctx, "sub_reddit/update_sub_reddit_last_tracked_at.sql", tx)
-		_, err = stmt.ExecContext(ctx, map[string]interface{}{
-			"id":              id,
-			"last_tracked_at": subreddit.LastTrackedAt,
-		})
-
-		if err != nil {
-			return nil, fmt.Errorf("failed to delete subreddit tracker: %w", err)
-		}
-	}
-
-	if err := tx.Commit(); err != nil {
-		return nil, fmt.Errorf("commit transaction: %w", err)
-	}
-
-	return subreddit, nil
-}
-
-func (r *Database) GetOrCreateSubRedditTracker(ctx context.Context, subredditID, keywordID string) (*models.SubRedditTracker, error) {
-	tracker, err := getOne[models.SubRedditTracker](ctx, r, "subreddit_tracker/query_sub_reddit_tracker.sql", map[string]any{
-		"subreddit_id": subredditID,
-		"keyword_id":   keywordID,
-	})
-	if !errors.Is(err, datastore.NotFound) {
-		return nil, err
-	}
-
-	if tracker == nil {
-		obj := &models.SubRedditTracker{
-			SubRedditID: subredditID,
-			KeywordID:   keywordID,
-		}
-		redditTracker, err := r.UpdateSubRedditTracker(ctx, obj)
-		if err != nil {
-			return redditTracker, err
-		}
-	}
-
-	return tracker, nil
-
 }
