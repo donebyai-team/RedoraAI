@@ -217,6 +217,7 @@ const (
 )
 
 var systemAuthors = []string{"[deleted]", "AutoModerator"}
+var noSelfTextPosts = []string{"This post contains content not supported on old Reddit"}
 
 func isValidAuthor(author string) bool {
 	if strings.TrimSpace(author) == "" {
@@ -230,6 +231,20 @@ func isValidAuthor(author string) bool {
 	}
 
 	return true
+}
+
+func isValidPostDescription(selfText string) (bool, string) {
+	if strings.TrimSpace(selfText) == "" {
+		return false, "no post description"
+	}
+	// Check if the author contains any of the system author strings (case-insensitive)
+	for _, a := range noSelfTextPosts {
+		if strings.Contains(strings.ToLower(selfText), strings.ToLower(a)) {
+			return false, selfText
+		}
+	}
+
+	return true, ""
 }
 
 func (s *SubRedditTracker) isValidPost(post *reddit.Post) (bool, string) {
@@ -248,6 +263,11 @@ func (s *SubRedditTracker) isValidPost(post *reddit.Post) (bool, string) {
 
 	if int64(post.CreatedAt) < sixMonthsAgo && post.NumComments < minCommentThreshold {
 		reason = fmt.Sprintf("post is older than %d months and has less than %d comments", maxPostAgeInMonths, minCommentThreshold)
+	}
+
+	isValid, rsn := isValidPostDescription(post.Selftext)
+	if !isValid {
+		reason = rsn
 	}
 
 	if reason != "" {

@@ -35,7 +35,7 @@ func NewRedditOauthClient(logger *zap.Logger, db datastore.Repository, clientID,
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
 		RedirectURL:  redirectURL,
-		Scopes:       []string{"identity", "read"},
+		Scopes:       []string{"identity", "read", "modconfig", "mysubreddits"},
 		Endpoint: oauth2.Endpoint{
 			AuthURL:  redditAuthURL,
 			TokenURL: redditTokenURL,
@@ -111,6 +111,9 @@ func (r *OauthClient) Authorize(ctx context.Context, code string) (*models.Reddi
 	if err != nil {
 		return nil, fmt.Errorf("failed to exchange token: %w", err)
 	}
+
+	// TODO: Remove it later
+	r.logger.Info("reddit token received", zap.String("token", token.AccessToken))
 
 	// Step 2: Create an authenticated HTTP client
 	client := r.config.Client(ctx, token)
