@@ -266,12 +266,8 @@ func (s *SubRedditTracker) isValidPost(post *reddit.Post) (bool, string) {
 		reason = "title or selftext is not big enough"
 	}
 
-	if int64(post.CreatedAt) < sixMonthsAgo && post.NumComments < minCommentThreshold {
-		reason = fmt.Sprintf("post is older than %d months and has less than %d comments", maxPostAgeInMonths, minCommentThreshold)
-	}
-
-	if int64(post.CreatedAt) < sixMonthsAgo && post.Archived {
-		reason = fmt.Sprintf("post is older than %d months and has been archived", maxPostAgeInMonths)
+	if int64(post.CreatedAt) < sixMonthsAgo || post.Archived {
+		reason = fmt.Sprintf("post is older than %d months or has been archived", maxPostAgeInMonths)
 	}
 
 	isValid, rsn := isValidPostDescription(post.Selftext)
