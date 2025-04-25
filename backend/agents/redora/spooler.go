@@ -91,6 +91,7 @@ func (s *Spooler) runLoop(ctx context.Context) {
 }
 
 func (s *Spooler) processKeywordsTracking(ctx context.Context, subReddit *models.AugmentedSubReddit) error {
+	return nil
 	logger := s.logger.With(
 		zap.String("organization_id", subReddit.Project.OrganizationID),
 		zap.String("subreddit_id", subReddit.SubReddit.ID),
