@@ -84,10 +84,6 @@ type RedditRepository interface {
 	CreateRedditLead(ctx context.Context, reddit *models.RedditLead) error
 	UpdateRedditLeadStatus(ctx context.Context, lead *models.RedditLead) error
 	GetRedditLeadByID(ctx context.Context, projectID, id string) (*models.RedditLead, error)
-
-	// Subreddit tracker
-	GetOrCreateSubRedditTracker(ctx context.Context, subredditID, keywordID string) (*models.SubRedditTracker, error)
-	UpdateSubRedditTracker(ctx context.Context, subreddit *models.SubRedditTracker) (*models.SubRedditTracker, error)
 }
 
 type ConversationRepository interface {

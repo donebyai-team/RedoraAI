@@ -5,6 +5,7 @@ CREATE TABLE sub_reddits_leads
     id uuid DEFAULT public.uuid_generate_v4() NOT NULL PRIMARY KEY,
     project_id uuid NOT NULL,
     author varchar(255) NOT NULL,
+    keyword_id uuid NOT NULL, -- Table ID
     subreddit_id uuid NOT NULL, -- Table ID
     post_id varchar(255) NOT NULL,
     type character varying(255) NOT NULL, -- COMMENT, POST
@@ -20,6 +21,7 @@ CREATE TABLE sub_reddits_leads
 
 ALTER TABLE sub_reddits_leads ADD CONSTRAINT fk1_sub_reddits_leads FOREIGN KEY (project_id) REFERENCES projects (id);
 ALTER TABLE sub_reddits_leads ADD CONSTRAINT fk2_sub_reddits_leads FOREIGN KEY (subreddit_id) REFERENCES sub_reddits (id);
+ALTER TABLE sub_reddits_leads ADD CONSTRAINT fk3_sub_reddits_leads FOREIGN KEY (keyword_id) REFERENCES keywords (id);
 CREATE UNIQUE INDEX idx1_sub_reddits_leads ON sub_reddits_leads (project_id, post_id);
 CREATE INDEX idx2_sub_reddits_leads ON sub_reddits_leads (project_id);
 

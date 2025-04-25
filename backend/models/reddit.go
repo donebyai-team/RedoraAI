@@ -79,6 +79,7 @@ type RedditLead struct {
 	ID             string       `db:"id"`
 	ProjectID      string       `db:"project_id"`
 	SubRedditID    string       `db:"subreddit_id"`
+	KeywordID      string       `db:"keyword_id"`
 	Author         string       `db:"author"`
 	PostID         string       `db:"post_id"`
 	Type           LeadType     `db:"type"`

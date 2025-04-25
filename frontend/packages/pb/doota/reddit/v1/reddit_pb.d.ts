@@ -207,18 +207,6 @@ export declare type GetLeadsResponse = Message<"doota.reddit.v1.GetLeadsResponse
 export declare const GetLeadsResponseSchema: GenMessage<GetLeadsResponse>;
 
 /**
- * @generated from message doota.reddit.v1.AuthorInfo
- */
-export declare type AuthorInfo = Message<"doota.reddit.v1.AuthorInfo"> & {
-};
-
-/**
- * Describes the message doota.reddit.v1.AuthorInfo.
- * Use `create(AuthorInfoSchema)` to create a new message.
- */
-export declare const AuthorInfoSchema: GenMessage<AuthorInfo>;
-
-/**
  * @generated from message doota.reddit.v1.LeadMetadata
  */
 export declare type LeadMetadata = Message<"doota.reddit.v1.LeadMetadata"> & {
