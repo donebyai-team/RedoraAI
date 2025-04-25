@@ -60,6 +60,10 @@ message GetLeadsResponse {
   repeated RedditLead leads = 1;
 }
 
+message AuthorInfo {
+
+}
+
 message LeadMetadata {
   string chain_of_thought = 1;
   string suggested_comment = 2;
@@ -67,6 +71,12 @@ message LeadMetadata {
   string chain_of_thought_suggested_comment = 4;
   string chain_of_thought_suggested_dm = 5;
   string post_url = 6;
+  string description_html = 7;
+  string subreddit_prefixed = 8;
+  int64 no_of_comments = 9;
+  int64 ups = 10;
+  string author_url = 11;
+  string dm_url = 12;
 }
 
 message RedditLead {

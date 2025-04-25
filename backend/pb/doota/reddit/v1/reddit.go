@@ -27,7 +27,7 @@ func (u *RedditLead) FromModel(lead *models.RedditLead) *RedditLead {
 	u.Id = lead.ID
 	u.ProjectId = lead.ProjectID
 	u.SubredditId = lead.SubRedditID
-	u.Author = lead.Author
+	u.Author = fmt.Sprintf("/u/%s", lead.Author)
 	u.PostId = lead.PostID
 	u.Type.FromModel(lead.Type)
 	u.Status.FromModel(lead.Status)
@@ -47,6 +47,12 @@ func (u *LeadMetadata) FromModel(metadata models.LeadMetadata) *LeadMetadata {
 	u.ChainOfThoughtSuggestedComment = metadata.ChainOfThoughtSuggestedComment
 	u.ChainOfThoughtSuggestedDm = metadata.ChainOfThoughtSuggestedDM
 	u.PostUrl = metadata.PostURL
+	u.NoOfComments = metadata.NoOfComments
+	u.Ups = metadata.Ups
+	u.AuthorUrl = metadata.AuthorURL
+	u.DmUrl = metadata.DmURL
+	u.SubredditPrefixed = metadata.SubRedditPrefixed
+	u.DescriptionHtml = metadata.SelfTextHTML
 	return u
 }
 

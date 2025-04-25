@@ -157,8 +157,13 @@ func (s *SubRedditTracker) searchLeadsFromPosts(
 			Description:   post.Selftext,
 			PostCreatedAt: time.Unix(int64(post.CreatedAt), 0),
 			LeadMetadata: models.LeadMetadata{
-				PostURL:    post.URL,
-				AuthorInfo: post.AuthorInfo,
+				PostURL:           post.URL,
+				AuthorURL:         fmt.Sprintf("https://www.reddit.com/user/%s/", post.Author),
+				DmURL:             fmt.Sprintf("https://chat.reddit.com/user/%s/", post.AuthorFullName),
+				SelfTextHTML:      post.SelftextHTML,
+				SubRedditPrefixed: post.SubRedditPrefixed,
+				Ups:               post.Ups,
+				NoOfComments:      post.NumComments,
 			},
 		}
 
@@ -263,6 +268,10 @@ func (s *SubRedditTracker) isValidPost(post *reddit.Post) (bool, string) {
 
 	if int64(post.CreatedAt) < sixMonthsAgo && post.NumComments < minCommentThreshold {
 		reason = fmt.Sprintf("post is older than %d months and has less than %d comments", maxPostAgeInMonths, minCommentThreshold)
+	}
+
+	if int64(post.CreatedAt) < sixMonthsAgo && post.Archived {
+		reason = fmt.Sprintf("post is older than %d months and has been archived", maxPostAgeInMonths)
 	}
 
 	isValid, rsn := isValidPostDescription(post.Selftext)
