@@ -18,6 +18,7 @@ import { RedditLead, SubReddit } from "@doota/pb/doota/reddit/v1/reddit_pb";
 import { formatDistanceToNow } from 'date-fns';
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Timestamp } from "@bufbuild/protobuf/wkt";
+import { ChildComponentProps } from "../Inbox";
 
 export const formateDate = (timestamp: Timestamp): string => {
     const millis = Number(timestamp.seconds) * 1000; // convert bigint to number
@@ -38,10 +39,8 @@ export const setLeadActive = (parems_id: string, id: string) => {
     return ({});
 };
 
-const NewTabComponent = () => {
+const NewTabComponent: React.FC<ChildComponentProps> = ({ selectedleadData, setSelectedLeadData }) => {
     const { portalClient } = useClientsContext();
-    const router = useRouter();
-    const pathname = usePathname();
     const searchParams = useSearchParams()
     const relevancyScoreParam = searchParams.get('relevancy_score');
     const relevancyScore = relevancyScoreParam && !isNaN(Number(relevancyScoreParam)) ? Number(relevancyScoreParam) : "";
@@ -49,8 +48,6 @@ const NewTabComponent = () => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [listofleads, setListOfLeads] = useState<RedditLead[]>([]);
     const [subredditList, setSubredditList] = useState<SubReddit[]>([]);
-    const selected_lead_Id = searchParams.get('selected_lead_Id') ?? "";
-    const [selectedleadId, setSelectedLeadId] = useState<string>(selected_lead_Id ?? "");
 
     useEffect(() => {
 
@@ -60,6 +57,7 @@ const NewTabComponent = () => {
             try {
                 const result = await portalClient.getRelevantLeads({ ...(relevancyScore && { relevancyScore }), ...(subReddit && { subReddit }) });
                 setListOfLeads(result?.leads ?? []);
+                setSelectedLeadData(result?.leads[0]);
             } catch (err: any) {
                 const message = err?.response?.data?.message || err.message || "Something went wrong"
                 toast.error(message);
@@ -69,7 +67,7 @@ const NewTabComponent = () => {
         }
         getAllRelevantLeads();
 
-    }, [relevancyScore, subReddit]);
+    }, [relevancyScore, subReddit, (selectedleadData === null)]);
 
     useEffect(() => {
 
@@ -87,27 +85,8 @@ const NewTabComponent = () => {
 
     }, []);
 
-    let debounceTimer: NodeJS.Timeout;
-
-    useEffect(() => {
-        clearTimeout(debounceTimer);
-
-        debounceTimer = setTimeout(() => {
-            const params = new URLSearchParams(searchParams);
-
-            if (selectedleadId) {
-                params.set('selected_lead_Id', selectedleadId);
-            }
-
-            router.push(`${pathname}?${params.toString()}`, { scroll: false });
-        }, 300);
-
-        return () => clearTimeout(debounceTimer);
-
-    }, [selectedleadId, pathname, router, searchParams]);
-
-    const handleSelectedLead = (id: string) => {
-        setSelectedLeadId(id);
+    const handleSelectedLead = (data: RedditLead) => {
+        setSelectedLeadData(data);
     };
 
     return (
@@ -134,10 +113,10 @@ const NewTabComponent = () => {
                         </Typography>
                     </Box>
                 ) : (
-                    <List sx={{ p: 0 }}>
+                    <List sx={{ p: 0, mx: 4 }}>
                         {listofleads.map((post, index) => (
                             <React.Fragment key={index}>
-                                <ListItem onClick={() => handleSelectedLead(post.id)} sx={{ p: 3, mb: (index !== listofleads.length - 1) ? 2 : 0, ...setLeadActive(selected_lead_Id, post.id) }}>
+                                <ListItem onClick={() => handleSelectedLead(post)} sx={{ p: 3, mb: (index !== listofleads.length - 1) ? 2 : 0, cursor: "pointer", ...setLeadActive(selectedleadData?.id as string, post.id) }}>
                                     <Stack direction="column" spacing={1} width="100%">
                                         <Stack direction="row" spacing={1} alignItems="center">
                                             <Box

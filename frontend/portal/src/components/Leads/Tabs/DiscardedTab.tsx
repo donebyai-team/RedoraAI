@@ -13,9 +13,10 @@ import {
 import { useClientsContext } from "@doota/ui-core/context/ClientContext";
 import toast from "react-hot-toast";
 import { LeadStatus, RedditLead, SubReddit } from "@doota/pb/doota/reddit/v1/reddit_pb";
-import { formateDate, getSubredditName } from "./NewTab";
+import { formateDate, getSubredditName, setLeadActive } from "./NewTab";
+import { ChildComponentProps } from "../Inbox";
 
-const DiscardedTabComponent = () => {
+const DiscardedTabComponent: React.FC<ChildComponentProps> = ({ selectedleadData, setSelectedLeadData }) => {
     const { portalClient } = useClientsContext();
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [listofleads, setListOfLeads] = useState<RedditLead[]>([]);
@@ -38,7 +39,7 @@ const DiscardedTabComponent = () => {
         }
         getAllLeadsByStatus();
 
-    }, []);
+    }, [(selectedleadData === null)]);
 
     useEffect(() => {
 
@@ -55,6 +56,10 @@ const DiscardedTabComponent = () => {
         getAllSubReddits();
 
     }, []);
+
+    const handleSelectedLead = (data: RedditLead) => {
+        setSelectedLeadData(data);
+    };
 
     return (
         isLoading ?
@@ -83,7 +88,7 @@ const DiscardedTabComponent = () => {
                     <List sx={{ p: 0 }}>
                         {listofleads.map((post, index) => (
                             <React.Fragment key={index}>
-                                <ListItem sx={{ py: 2, px: 3 }}>
+                                <ListItem onClick={() => handleSelectedLead(post)} sx={{ p: 3, mb: (index !== listofleads.length - 1) ? 2 : 0, cursor: "pointer", ...setLeadActive(selectedleadData?.id as string, post.id) }}>
                                     <Stack direction="column" spacing={1} width="100%">
                                         <Stack direction="row" spacing={1} alignItems="center">
                                             <Box
@@ -143,7 +148,6 @@ const DiscardedTabComponent = () => {
                                         </Typography>
                                     </Stack>
                                 </ListItem>
-                                {index !== listofleads.length - 1 && <Divider />}
                             </React.Fragment>
                         ))}
                     </List>

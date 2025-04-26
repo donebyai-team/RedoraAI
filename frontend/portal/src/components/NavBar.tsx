@@ -36,38 +36,14 @@ import AddSubredditDialog from './AddSubredditDialog';
 import Link from 'next/link'
 import { useClientsContext } from '@doota/ui-core/context/ClientContext'
 
-const SUBREDDIT_LIST = [
-  {
-    prefix: "r/",
-    name: "marketing",
-    badge_count: 64
-  },
-  {
-    prefix: "r/",
-    name: "sales",
-    badge_count: 90
-  }
-];
-
-const SIDEBAR_MENU_LIST = [
-  {
-    name: "inbox",
-    active_menu: "inbox"
-  },
-  {
-    name: "marketing",
-    active_menu: "marketing"
-  },
-  {
-    name: "sales",
-    active_menu: "sales"
-  },
-];
-
 type subreddit = {
   id: string;
   name: string;
 };
+
+interface SUBREDIT extends subreddit {
+  leads_count?: number;
+}
 
 const NavBar: React.FC<{ hoverActive?: boolean }> = ({ hoverActive = true }) => {
   const { user, logout } = useAuth()
@@ -103,10 +79,9 @@ const NavBar: React.FC<{ hoverActive?: boolean }> = ({ hoverActive = true }) => 
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState(searchParams.get('active_sidebar_menu') || SIDEBAR_MENU_LIST[0].active_menu);
   const [openSubredditDialog, setOpenSubredditDialog] = useState(false);
   const [anchorEl1, setAnchorEl1] = useState<null | HTMLElement>(null);
-  const [subredditList, setSubredditList] = useState<subreddit[]>([]);
+  const [subredditList, setSubredditList] = useState<SUBREDIT[]>([]);
   const [currentActiveSubRedditId, setcurrentActiveSubRedditId] = useState<string>("");
   const [subRedditText, setSubRedditText] = useState<string>("");
   const open1 = Boolean(anchorEl1);
@@ -121,7 +96,7 @@ const NavBar: React.FC<{ hoverActive?: boolean }> = ({ hoverActive = true }) => 
   };
 
   const handleRelevancyChange = (_event: Event, newValue: number | number[]) => {
-    setRelevancy_Score(newValue as number)
+    setRelevancy_Score(newValue as number);
   }
 
   let debounceTimer: NodeJS.Timeout;
@@ -132,9 +107,6 @@ const NavBar: React.FC<{ hoverActive?: boolean }> = ({ hoverActive = true }) => 
     debounceTimer = setTimeout(() => {
       const params = new URLSearchParams(searchParams);
 
-      if (activeTab) {
-        params.set('active_sidebar_menu', activeTab);
-      }
       if (relevancy_score) {
         params.set('relevancy_score', `${relevancy_score}`);
       }
@@ -147,8 +119,7 @@ const NavBar: React.FC<{ hoverActive?: boolean }> = ({ hoverActive = true }) => 
 
     return () => clearTimeout(debounceTimer);
 
-  }, [activeTab, pathname, router, searchParams, currentActiveSubRedditId, relevancy_score]);
-
+  }, [pathname, router, searchParams, currentActiveSubRedditId, relevancy_score]);
 
   const handleSubRedditsClick = (data: subreddit) => {
     // const value = SIDEBAR_MENU_LIST.find(item => item?.name === menu)?.active_menu ?? SIDEBAR_MENU_LIST[0].active_menu;
@@ -178,23 +149,32 @@ const NavBar: React.FC<{ hoverActive?: boolean }> = ({ hoverActive = true }) => 
   }
 
   useEffect(() => {
-
     const getAllSubReddits = async () => {
       setIsLoading(true);
 
       try {
         const result = await portalClient.getSubReddits({});
-        setSubredditList(result?.subreddits ?? []);
+        const listOfSubReddits = result?.subreddits ?? [];
+
+        const newSubRedditsList = [];
+
+        for (const reddit of listOfSubReddits) {
+          const result = await portalClient.getRelevantLeads({ subReddit: reddit.id });
+          const leadsList = result?.leads ?? [];
+          newSubRedditsList.push({ ...reddit, leads_count: leadsList.length });
+        }
+
+        setSubredditList(newSubRedditsList);
       } catch (err: any) {
-        const message = err?.response?.data?.message || err.message || "Something went wrong"
+        const message = err?.response?.data?.message || err.message || "Something went wrong";
         toast.error(message);
       } finally {
         setIsLoading(false);
         setSubRedditText("");
       }
-    }
-    getAllSubReddits();
+    };
 
+    getAllSubReddits();
   }, [subRedditText]);
 
   return (
@@ -418,14 +398,12 @@ const NavBar: React.FC<{ hoverActive?: boolean }> = ({ hoverActive = true }) => 
 
           {isLoading ?
             <Box sx={{ display: 'flex', flexDirection: "column", alignItems: "center", height: "100%", width: "100%", gap: 2 }}>
-              <Skeleton variant="rounded" width={"100%"} height={40} />
-              <Skeleton variant="rounded" width={"100%"} height={40} />
-              <Skeleton variant="rounded" width={"100%"} height={40} />
+              <CircularProgress />
             </Box>
             :
             subredditList?.length > 1 ?
               <List sx={{ p: 0, mb: "auto", display: "flex", flexDirection: "column", alignItems: "center", gap: 1.5 }}>
-                {subredditList.map((ele: subreddit, index) => (
+                {subredditList.map((ele: SUBREDIT, index) => (
                   <ListItem
                     key={index}
                     disablePadding
@@ -459,7 +437,7 @@ const NavBar: React.FC<{ hoverActive?: boolean }> = ({ hoverActive = true }) => 
 
                     <Box sx={{ display: "flex", alignItems: "center", gap: 5 }}>
                       <Badge
-                        badgeContent={0}
+                        badgeContent={ele.leads_count}
                         color="warning"
                         sx={{
                           "& .MuiBadge-badge": {

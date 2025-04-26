@@ -6,10 +6,6 @@ import {
   Typography,
   Tabs,
   Tab,
-  List,
-  ListItem,
-  Divider,
-  Stack,
   Button,
 } from "@mui/material";
 import NewTabComponent from "./Tabs/NewTab";
@@ -18,8 +14,14 @@ import { useRedditIntegrationStatus } from "./Tabs/useRedditIntegrationStatus";
 import { routes } from "@doota/ui-core/routing";
 import Link from "next/link";
 import DiscardedTabComponent from "./Tabs/DiscardedTab";
+import { RedditLead } from "@doota/pb/doota/reddit/v1/reddit_pb";
 
-const InboxComponent = () => {
+export interface ChildComponentProps {
+  selectedleadData: RedditLead | null;
+  setSelectedLeadData: React.Dispatch<React.SetStateAction<RedditLead | null>>;
+}
+
+const InboxComponent: React.FC<ChildComponentProps> = ({ selectedleadData, setSelectedLeadData }) => {
   const [tabValue, setTabValue] = React.useState<number>(0);
   const { isConnected } = useRedditIntegrationStatus();
 
@@ -31,9 +33,8 @@ const InboxComponent = () => {
     <Box
       sx={{
         width: "100%",
-        px: 3,
         py: 2,
-        maxWidth: "25vw",
+        maxWidth: selectedleadData ? "25vw" : "100%",
         borderRight: "1px solid #e0e0e0",
       }}
     >
@@ -42,7 +43,8 @@ const InboxComponent = () => {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          my: 2,
+          mt: 5,
+          mx: 5,
         }}
       >
         <Typography variant="h4" component="h3" sx={{ fontWeight: "bold" }}>
@@ -55,6 +57,7 @@ const InboxComponent = () => {
         onChange={handleTabChange}
         sx={{
           mb: 2,
+          mx: 5,
           "& .MuiTab-root": {
             textTransform: "none",
             fontWeight: "medium",
@@ -77,9 +80,9 @@ const InboxComponent = () => {
       </Tabs>
 
       {isConnected ? (<>
-        {tabValue === 0 && <NewTabComponent />}
-        {tabValue === 1 && <CompletedTabComponent />}
-        {tabValue === 2 && <DiscardedTabComponent />}
+        {tabValue === 0 && <NewTabComponent selectedleadData={selectedleadData} setSelectedLeadData={setSelectedLeadData} />}
+        {tabValue === 1 && <CompletedTabComponent selectedleadData={selectedleadData} setSelectedLeadData={setSelectedLeadData} />}
+        {tabValue === 2 && <DiscardedTabComponent selectedleadData={selectedleadData} setSelectedLeadData={setSelectedLeadData} />}
       </>) : (
         <Box
           sx={{

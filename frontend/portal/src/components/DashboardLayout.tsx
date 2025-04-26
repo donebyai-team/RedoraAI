@@ -38,15 +38,15 @@ export const DashboardLayout: FC<{ children: ReactNode }> = ({ children }) => {
 
         <NavBar />
 
-        <div className={isSetting ? 'flex flex-col flex-1' : 'contents'}>
+        <section className={isSetting ? 'flex flex-col flex-1' : 'contents'}>
           {/* <Sidebar/> */}
 
           {/* <Grid item className={!isSetting ? 'sm:h-dvh flex-1 w-0' : 'flex-1 bg-neutral-50 h-full p-2'}>             */}
-            <Grid item className={'flex-1 bg-neutral-50 h-full p-2'}>            
+          <Grid item className={'flex-1 bg-neutral-50 h-full'}>
             {children}
-          </Grid>            
+          </Grid>
 
-        </div>
+        </section>
 
       </Grid>
     </>

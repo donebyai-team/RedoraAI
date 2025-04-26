@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import {
   Box,
   Typography,
@@ -13,8 +13,17 @@ import {
   Card,
   CardContent,
   Stack,
+  Tooltip,
 } from "@mui/material"
-import { ThumbDown, ThumbUp, Close, Lightbulb, Star, Send } from "@mui/icons-material"
+import { ThumbDown, ThumbUp, Close, Star, Send } from "@mui/icons-material"
+import { ChildComponentProps } from "./Inbox";
+import { LightbulbIcon } from "lucide-react";
+import { formateDate, getSubredditName } from "./Tabs/NewTab";
+import { LeadStatus, SubReddit } from "@doota/pb/doota/reddit/v1/reddit_pb";
+import { useClientsContext } from "@doota/ui-core/context/ClientContext";
+import Link from "next/link";
+import React from 'react';
+import ReactMarkdown from 'react-markdown';
 
 // Create a custom theme with Reddit-like colors
 const theme = createTheme({
@@ -35,8 +44,74 @@ const theme = createTheme({
   },
 })
 
-export default function LeadsPostDetails() {
-  const [relevancy] = useState(70)
+const LeadsPostDetails: React.FC<ChildComponentProps> = ({ selectedleadData, setSelectedLeadData }) => {
+
+  if (!selectedleadData) return null;
+
+  const { portalClient } = useClientsContext();
+  const [subredditList, setSubredditList] = useState<SubReddit[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  useEffect(() => {
+
+    const getAllSubReddits = async () => {
+
+      try {
+        const result = await portalClient.getSubReddits({});
+        setSubredditList(result?.subreddits ?? []);
+      } catch (err: any) {
+        const message = err?.response?.data?.message || err.message || "Something went wrong"
+        console.log(message);
+      }
+    }
+    getAllSubReddits();
+
+  }, []);
+
+  const copyTextAndOpenLink = (textToCopy: string, linkToOpen: string) => {
+    navigator.clipboard.writeText(textToCopy)
+      .then(() => {
+        console.log('Text copied successfully!');
+        window.open(linkToOpen, '_blank');
+      })
+      .catch((err) => {
+        console.error('Failed to copy text: ', err);
+      });
+  };
+
+  const handleCloseLeadDetail = () => {
+    setSelectedLeadData(null);
+  };
+
+  const handleLeadNotRelevent = async () => {
+    setIsLoading(true);
+    try {
+      const result = await portalClient.updateLeadStatus({ status: LeadStatus.NOT_RELEVANT, leadId: selectedleadData.id });
+      console.log("###_result ", result);
+      handleCloseLeadDetail();
+    } catch (err: any) {
+      const message = err?.response?.data?.message || err.message || "Something went wrong"
+      console.log("###_error", message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLeadComplete = async () => {
+    setIsLoading(true);
+    try {
+      const result = await portalClient.updateLeadStatus({ status: LeadStatus.COMPLETED, leadId: selectedleadData.id });
+      console.log("###_result ", result);
+      handleCloseLeadDetail();
+    } catch (err: any) {
+      const message = err?.response?.data?.message || err.message || "Something went wrong"
+      console.log("###_error", message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  console.log("###_leads ", selectedleadData);
 
   return (
     <ThemeProvider theme={theme}>
@@ -51,10 +126,9 @@ export default function LeadsPostDetails() {
               borderBottom: "1px solid #f0f0f0",
             }}
           >
-            <Box sx={{ display: "flex", alignItems: "center" }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
               <Chip
-                icon={<Lightbulb sx={{ color: "#b07d1a !important" }} />}
-                label={`${relevancy}% relevancy`}
+                label={`${selectedleadData.relevancyScore}% relevancy`}
                 sx={{
                   bgcolor: "rgba(255, 215, 0, 0.2)",
                   color: "#b07d1a",
@@ -62,6 +136,30 @@ export default function LeadsPostDetails() {
                   "& .MuiChip-icon": { color: "#b07d1a" },
                 }}
               />
+              <Tooltip
+                title={
+                  <Box>
+                    <ReactMarkdown>{selectedleadData.metadata?.chainOfThought}</ReactMarkdown>
+                  </Box>
+                }
+                placement="bottom-start"
+                slotProps={{
+                  tooltip: {
+                    sx: {
+                      backgroundColor: '#fff',
+                      color: '#666',
+                      boxShadow: 3,
+                      borderRadius: 1,
+                      p: 1.5,
+                      maxWidth: "30vw",
+                    },
+                  }
+                }}
+              >
+                <IconButton sx={{ borderRadius: 2.5 }}>
+                  <LightbulbIcon size={22} />
+                </IconButton>
+              </Tooltip>
             </Box>
             <Box sx={{ display: "flex", gap: 1 }}>
               <Button
@@ -74,6 +172,8 @@ export default function LeadsPostDetails() {
                   textTransform: "none",
                   boxShadow: "none",
                 }}
+                onClick={handleLeadNotRelevent}
+                disabled={isLoading}
               >
                 Not relevant
               </Button>
@@ -87,108 +187,100 @@ export default function LeadsPostDetails() {
                   textTransform: "none",
                   boxShadow: "none",
                 }}
+                onClick={handleLeadComplete}
+                disabled={isLoading}
               >
                 Complete
               </Button>
-              <IconButton size="small">
+              <IconButton size="small" onClick={handleCloseLeadDetail}>
                 <Close />
               </IconButton>
             </Box>
           </Box>
 
-          {/* Post content */}
-          <Box sx={{ p: 2 }}>
-            <Box sx={{ mb: 1 }}>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                /u/Action_Hank1 • r/sales • 30 minutes ago
-              </Typography>
-              <Typography variant="h5" component="h1" sx={{ fontWeight: "bold", mb: 2 }}>
-                Is your manager getting their playbook from LinkedIn Influencers?
-              </Typography>
-              <Typography variant="body1" paragraph>
-                Title - you know those posts by sales influencers that break down some too good to be true scenario with
-                a CTA that involves you commenting a one word answer like "playbook" or "outbound" on their post to get
-                access to their secret (aka get put in their sales funnel)?
-              </Typography>
-              <Typography variant="body1" paragraph>
-                I've seen a few former colleagues who are sales managers getting sucked into these posts.
-              </Typography>
-              <Typography variant="body1" paragraph>
-                On one hand, I think that if I saw my manager looking for answers on LinkedIn, I'd wonder about my
-                management team's competence.
-              </Typography>
-              <Typography variant="body1" paragraph>
-                On the other hand, maybe you need to go external for more knowledge. Sales is hard and a lot of places
-                are struggling right now. Especially if you're a nice-to-have product/service.
-              </Typography>
+          <Box sx={{ width: "100%", py: 2, height: "91dvh", overflowY: "scroll" }}>
+            {/* Post content */}
+            <Box sx={{ p: 2 }}>
+              <Box sx={{ mb: 1 }}>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                  <Link href={selectedleadData.metadata?.authorUrl as string} target="_blank">{`/u/Action_Hank1`}</Link> • {getSubredditName(subredditList, selectedleadData.subredditId)} • {selectedleadData.postCreatedAt ? formateDate(selectedleadData.postCreatedAt) : "N/A"}
+                </Typography>
+                <Typography variant="h5" component="h1" sx={{ fontWeight: "bold", mb: 2 }}>
+                  {selectedleadData.title}
+                </Typography>
+                <ReactMarkdown>{selectedleadData.description}</ReactMarkdown>
+              </Box>
             </Box>
+
+            {/* Suggested comment card */}
+            <Card sx={{ mb: 2, borderRadius: 2, mx: 2 }}>
+              <CardContent>
+                <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                  <Star sx={{ color: "#e25a9e", mr: 1 }} />
+                  <Typography color="#e25a9e" fontWeight="medium">
+                    Suggested comment
+                  </Typography>
+                </Box>
+                <Typography variant="body1" sx={{ mb: 2 }}>
+                  {selectedleadData.metadata?.chainOfThoughtSuggestedComment}
+                </Typography>
+                <Stack direction="row" justifyContent="end">
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    startIcon={<Send />}
+                    sx={{
+                      bgcolor: "#000",
+                      color: "#fff",
+                      "&:hover": { bgcolor: "#333" },
+                      borderRadius: "20px",
+                      textTransform: "none",
+                    }}
+                    onClick={() => copyTextAndOpenLink(selectedleadData.metadata?.chainOfThoughtSuggestedComment as string, selectedleadData.metadata?.postUrl as string)}
+                  >
+                    Copy & open post
+                  </Button>
+                </Stack>
+              </CardContent>
+            </Card>
+
+            {/* Suggested DM card */}
+            <Card sx={{ borderRadius: 2, mx: 2 }}>
+              <CardContent>
+                <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                  <Star sx={{ color: "#e25a9e", mr: 1 }} />
+                  <Typography color="#e25a9e" fontWeight="medium">
+                    Suggested DM
+                  </Typography>
+                </Box>
+                <Typography variant="body1" paragraph>
+                  {selectedleadData.metadata?.chainOfThoughtSuggestedDm}
+                </Typography>
+                <Stack direction="row" justifyContent="end">
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    startIcon={<Send />}
+                    sx={{
+                      bgcolor: "#000",
+                      color: "#fff",
+                      "&:hover": { bgcolor: "#333" },
+                      borderRadius: "20px",
+                      textTransform: "none",
+                    }}
+                    onClick={() => copyTextAndOpenLink(selectedleadData.metadata?.chainOfThoughtSuggestedDm as string, selectedleadData.metadata?.dmUrl as string)}
+                  >
+                    Copy & open DMs
+                  </Button>
+                </Stack>
+              </CardContent>
+            </Card>
           </Box>
+
         </Paper>
-
-        {/* Suggested comment card */}
-        <Card sx={{ mb: 2, borderRadius: 2, mx: 2 }}>
-          <CardContent>
-            <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-              <Star sx={{ color: "#e25a9e", mr: 1 }} />
-              <Typography color="#e25a9e" fontWeight="medium">
-                Suggested comment
-              </Typography>
-            </Box>
-            <Typography variant="body1" sx={{ mb: 2 }}>
-              Sales gurus are sus. Managers should learn from real work.
-            </Typography>
-            <Stack direction="row" justifyContent="end">
-              <Button
-                variant="contained"
-                color="primary"
-                startIcon={<Send />}
-                sx={{
-                  bgcolor: "#000",
-                  color: "#fff",
-                  "&:hover": { bgcolor: "#333" },
-                  borderRadius: "20px",
-                  textTransform: "none",
-                }}
-              >
-                Copy & open post
-              </Button>
-            </Stack>
-          </CardContent>
-        </Card>
-
-        {/* Suggested DM card */}
-        <Card sx={{ borderRadius: 2, mx: 2 }}>
-          <CardContent>
-            <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-              <Star sx={{ color: "#e25a9e", mr: 1 }} />
-              <Typography color="#e25a9e" fontWeight="medium">
-                Suggested DM
-              </Typography>
-            </Box>
-            <Typography variant="body1" paragraph>
-              Hi Hank, I'm John from Acme. I saw your post about managers getting sales advice from LinkedIn. I think
-              you could really use Acme to automate your team's sales tasks. Acme is an AI agent that can automate any
-              task. You can try it for free at acme.com
-            </Typography>
-            <Stack direction="row" justifyContent="end">
-              <Button
-                variant="contained"
-                color="primary"
-                startIcon={<Send />}
-                sx={{
-                  bgcolor: "#000",
-                  color: "#fff",
-                  "&:hover": { bgcolor: "#333" },
-                  borderRadius: "20px",
-                  textTransform: "none",
-                }}
-              >
-                Copy & open DMs
-              </Button>
-            </Stack>
-          </CardContent>
-        </Card>
       </Box>
     </ThemeProvider>
   )
 }
+
+export default LeadsPostDetails;
