@@ -16,7 +16,7 @@ import { useClientsContext } from "@doota/ui-core/context/ClientContext";
 import toast from "react-hot-toast";
 import { RedditLead, SubReddit } from "@doota/pb/doota/reddit/v1/reddit_pb";
 import { formatDistanceToNow } from 'date-fns';
-import { useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Timestamp } from "@bufbuild/protobuf/wkt";
 
 export const formateDate = (timestamp: Timestamp): string => {
@@ -31,8 +31,17 @@ export const getSubredditName = (list: SubReddit[], id: string) => {
     return name;
 };
 
+export const setLeadActive = (parems_id: string, id: string) => {
+    if (parems_id === id) {
+        return ({ border: "1px solid #000", backgroundColor: "#0f172a0d", borderRadius: "0.5rem" });
+    }
+    return ({});
+};
+
 const NewTabComponent = () => {
     const { portalClient } = useClientsContext();
+    const router = useRouter();
+    const pathname = usePathname();
     const searchParams = useSearchParams()
     const relevancyScoreParam = searchParams.get('relevancy_score');
     const relevancyScore = relevancyScoreParam && !isNaN(Number(relevancyScoreParam)) ? Number(relevancyScoreParam) : "";
@@ -40,6 +49,8 @@ const NewTabComponent = () => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [listofleads, setListOfLeads] = useState<RedditLead[]>([]);
     const [subredditList, setSubredditList] = useState<SubReddit[]>([]);
+    const selected_lead_Id = searchParams.get('selected_lead_Id') ?? "";
+    const [selectedleadId, setSelectedLeadId] = useState<string>(selected_lead_Id ?? "");
 
     useEffect(() => {
 
@@ -76,13 +87,36 @@ const NewTabComponent = () => {
 
     }, []);
 
+    let debounceTimer: NodeJS.Timeout;
+
+    useEffect(() => {
+        clearTimeout(debounceTimer);
+
+        debounceTimer = setTimeout(() => {
+            const params = new URLSearchParams(searchParams);
+
+            if (selectedleadId) {
+                params.set('selected_lead_Id', selectedleadId);
+            }
+
+            router.push(`${pathname}?${params.toString()}`, { scroll: false });
+        }, 300);
+
+        return () => clearTimeout(debounceTimer);
+
+    }, [selectedleadId, pathname, router, searchParams]);
+
+    const handleSelectedLead = (id: string) => {
+        setSelectedLeadId(id);
+    };
+
     return (
         isLoading ?
-            <Box sx={{ display: 'flex', flexDirection: "column", alignItems: "center", height: "100vh", width: "100%" }}>
+            <Box sx={{ display: 'flex', flexDirection: "column", alignItems: "center", height: "100vh", width: "100%", mt: 5 }}>
                 <CircularProgress />
             </Box>
             :
-            <Box sx={{ width: "100%", px: 3, py: 2 }}>
+            <Box sx={{ width: "100%", pt: 2, height: "83dvh", overflowY: "scroll" }}>
                 {listofleads.length === 0 ? (
                     <Box
                         sx={{
@@ -103,7 +137,7 @@ const NewTabComponent = () => {
                     <List sx={{ p: 0 }}>
                         {listofleads.map((post, index) => (
                             <React.Fragment key={index}>
-                                <ListItem sx={{ py: 2, px: 3 }}>
+                                <ListItem onClick={() => handleSelectedLead(post.id)} sx={{ p: 3, mb: (index !== listofleads.length - 1) ? 2 : 0, ...setLeadActive(selected_lead_Id, post.id) }}>
                                     <Stack direction="column" spacing={1} width="100%">
                                         <Stack direction="row" spacing={1} alignItems="center">
                                             <Box
@@ -163,7 +197,6 @@ const NewTabComponent = () => {
                                         </Typography>
                                     </Stack>
                                 </ListItem>
-                                {index !== listofleads.length - 1 && <Divider />}
                             </React.Fragment>
                         ))}
                     </List>

@@ -19,7 +19,6 @@ export const DashboardLayout: FC<{ children: ReactNode }> = ({ children }) => {
   // const handleMouseLeave = () => {
   //   setHoverActive(false)
   // }
-  console.log("###_debug_children :", children);
 
   return (
     <>
