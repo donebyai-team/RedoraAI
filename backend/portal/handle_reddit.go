@@ -156,7 +156,7 @@ func (p *Portal) UpdateLeadStatus(ctx context.Context, c *connect.Request[pbredd
 		return nil, err
 	}
 	lead, err := p.db.GetRedditLeadByID(ctx, actor.ProjectID, c.Msg.LeadId)
-	if err != nil && !errors.Is(err, datastore.NotFound) {
+	if !errors.Is(err, datastore.NotFound) {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to fetch lead: %w", err))
 	}
 
@@ -164,7 +164,12 @@ func (p *Portal) UpdateLeadStatus(ctx context.Context, c *connect.Request[pbredd
 		return connect.NewResponse(&emptypb.Empty{}), nil
 	}
 
-	lead.Status = c.Msg.Status.ToModel()
+	status, err := models.ParseLeadStatus(c.Msg.Status.String())
+	if err != nil {
+		return nil, err
+	}
+
+	lead.Status = status
 	err = p.db.UpdateRedditLeadStatus(ctx, lead)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to update lead status: %w", err))
