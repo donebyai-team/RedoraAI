@@ -50,7 +50,7 @@ func (r redditService) CreateSubReddit(ctx context.Context, source *models.Sourc
 	}
 
 	// Fill in the fields in models.Source using fetched details
-	source.ExternalID = subRedditDetails.ID
+	source.ExternalID = utils.Ptr(subRedditDetails.ID)
 	source.Name = subRedditDetails.DisplayName
 	source.Description = subRedditDetails.Description
 	source.SourceType = models.SourceTypeSUBREDDIT

@@ -133,6 +133,19 @@ VALUES (
 )
 RETURNING id;
 
+INSERT INTO sources (
+    name,
+    description,
+    project_id,
+    source_type
+)
+VALUES (
+    'all',
+    'across subreddits',
+    'XXX',
+    'SUBREDDIT'
+)
+
 INSERT INTO keyword_trackers (
     keyword_id,
     source_id

@@ -3,7 +3,7 @@ BEGIN;
 CREATE TABLE sources
 (
     id uuid DEFAULT public.uuid_generate_v4() NOT NULL PRIMARY KEY,
-    external_id varchar(255) NOT NULL,
+    external_id varchar(255),
     name varchar(255) NOT NULL,
     source_type varchar(255) NOT NULL,
     description TEXT NOT NULL,

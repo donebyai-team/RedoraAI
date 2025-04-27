@@ -30,7 +30,7 @@ type SourceType string
 type Source struct {
 	ID          string            `db:"id"`
 	ProjectID   string            `db:"project_id"`
-	ExternalID  string            `db:"external_id"`
+	ExternalID  *string           `db:"external_id"`
 	Name        string            `db:"name"`
 	Description string            `db:"description"`
 	SourceType  SourceType        `db:"source_type"`

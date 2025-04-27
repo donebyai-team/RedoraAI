@@ -181,6 +181,7 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 
 		isValid, reason := s.isValidPost(post)
 		if isValid {
+			countTestPosts++
 			relevanceResponse, err := s.aiClient.IsRedditPostRelevant(ctx, project, redditLead, s.gptModel, s.logger)
 			if err != nil {
 				s.logger.Error("failed to get relevance response", zap.Error(err))
@@ -213,8 +214,6 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 		if err != nil {
 			return fmt.Errorf("unable to create reddit lead: %w", err)
 		}
-
-		countTestPosts++
 	}
 
 	s.logger.Info("reddit_leads_summary",
