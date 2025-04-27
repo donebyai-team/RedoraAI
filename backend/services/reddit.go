@@ -61,9 +61,25 @@ func (r redditService) CreateSubReddit(ctx context.Context, source *models.Sourc
 	source.Metadata = metadata
 
 	// Insert the subreddit into the DB
-	_, err = r.db.AddSource(ctx, source)
+	createdSource, err := r.db.AddSource(ctx, source)
 	if err != nil {
 		return fmt.Errorf("failed to add subreddit to the database: %w", err)
+	}
+
+	// Create trackers for each keyword
+	keywords, err := r.db.GetKeywords(ctx, createdSource.ProjectID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch sources by project: %w", err)
+	}
+
+	for _, keyword := range keywords {
+		_, err := r.db.CreateKeywordTracker(ctx, &models.KeywordTracker{
+			SourceID:  createdSource.ID,
+			KeywordID: keyword.ID,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to add keyword tracker for source [%s]: %w", createdSource.Name, err)
+		}
 	}
 
 	return nil

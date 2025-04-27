@@ -12,6 +12,7 @@ func init() {
 		"keyword/query_keyword_by_id.sql",
 		"keyword/create_keyword.sql",
 		"keyword/query_keyword_by_project.sql",
+		"keyword/create_keyword_tracker.sql",
 		"keyword/query_keyword_tracker_by_filter.sql",
 		"keyword/update_keyword_tracker_last_tracked_at.sql",
 	})
@@ -87,4 +88,21 @@ func (r *Database) GetKeywordTrackers(ctx context.Context) ([]*models.AugmentedK
 	}
 
 	return results, nil
+}
+
+func (r *Database) CreateKeywordTracker(ctx context.Context, tracker *models.KeywordTracker) (*models.KeywordTracker, error) {
+	stmt := r.mustGetStmt("keyword/create_keyword_tracker.sql")
+	var id string
+
+	err := stmt.GetContext(ctx, &id, map[string]interface{}{
+		"keyword_id": tracker.KeywordID,
+		"source_id":  tracker.SourceID,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	tracker.ID = id
+	return tracker, nil
 }

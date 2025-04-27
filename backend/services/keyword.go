@@ -40,5 +40,21 @@ func (c *KeywordServiceImpl) CreateKeyword(ctx context.Context, session *CreateK
 		return nil, fmt.Errorf("failed to create keyword for organization: %w", err)
 	}
 
+	// Create trackers for each source
+	sources, err := c.db.GetSourcesByProject(ctx, keyword.ProjectID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch sources by project: %w", err)
+	}
+
+	for _, source := range sources {
+		_, err := c.db.CreateKeywordTracker(ctx, &models.KeywordTracker{
+			SourceID:  source.ID,
+			KeywordID: keyword.ID,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to add keyword tracker for keyword [%s]: %w", keyword.Keyword, err)
+		}
+	}
+
 	return keyword, nil
 }
