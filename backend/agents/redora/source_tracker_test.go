@@ -56,14 +56,14 @@ func testClient(t *testing.T) *ai.Client {
 }
 
 func TestSubRedditTracker(t *testing.T) {
-	tracker := SubRedditTracker{
+	tracker := KeywordTracker{
 		gptModel: ai.GPTModelGpt4O20240806,
 		aiClient: testClient(t),
 		logger:   logger,
 	}
 
-	subRedditToTrack := &models.AugmentedSubReddit{
-		SubReddit: &models.SubReddit{
+	subRedditToTrack := &models.AugmentedKeywordTracker{
+		Source: &models.Source{
 			ID:          "internal-subreddit",
 			SubRedditID: "sales",
 		},
@@ -82,7 +82,7 @@ func TestSubRedditTracker(t *testing.T) {
 		},
 	}
 
-	posts, err := tracker.searchLeadsFromPosts(context.Background(), "Email", subRedditToTrack, testRedditClient(t), func(ctx context.Context, projectID, postID string) (*models.RedditLead, error) {
+	posts, err := tracker.searchLeadsFromPosts(context.Background(), "Email", subRedditToTrack, testRedditClient(t), func(ctx context.Context, projectID, postID string) (*models.Lead, error) {
 		return nil, nil
 	})
 	assert.NoError(t, err)

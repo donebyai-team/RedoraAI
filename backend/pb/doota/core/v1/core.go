@@ -2,10 +2,37 @@ package pbcore
 
 import (
 	"fmt"
+	"github.com/shank318/doota/models"
+	"strings"
 	"time"
 
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
+
+func (u *Source_RedditMetadata) FromModel(metadata *models.SubRedditMetadata) *Source_RedditMetadata {
+	u.RedditMetadata = &SubRedditMetadata{
+		Title:     metadata.Title,
+		CreatedAt: timestamppb.New(metadata.CreatedAt),
+	}
+	return u
+}
+
+func (u *Source) FromModel(source *models.Source, details isSource_Details) *Source {
+	u.Id = source.ID
+	u.Name = source.Name
+	u.Description = source.Description
+	u.SourceType.FromModel(source.SourceType)
+	u.Details = details
+	return u
+}
+
+func (r *SourceType) FromModel(status models.SourceType) {
+	enum, found := SourceType_value["SOURCE_TYPE_"+strings.ToUpper(string(status))]
+	if !found {
+		panic(fmt.Errorf("unknown source type %q", status))
+	}
+	*r = SourceType(enum)
+}
 
 func (x *TzTimestamp) FromTimePtr(t *time.Time) *TzTimestamp {
 	if t == nil {

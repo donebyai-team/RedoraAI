@@ -1,3 +1,3 @@
 SELECT *
-FROM sub_reddits_leads
+FROM leads
 WHERE id = :id and project_id = :project_id;

@@ -1,4 +1,4 @@
-package pbreddit
+package pbcore
 
 import (
 	"fmt"
@@ -23,10 +23,10 @@ func (r *LeadType) FromModel(status models.LeadType) {
 	*r = LeadType(enum)
 }
 
-func (u *RedditLead) FromModel(lead *models.RedditLead) *RedditLead {
+func (u *Lead) FromModel(lead *models.Lead) *Lead {
 	u.Id = lead.ID
 	u.ProjectId = lead.ProjectID
-	u.SubredditId = lead.SubRedditID
+	u.SourceId = lead.SourceID
 	u.Author = fmt.Sprintf("/u/%s", lead.Author)
 	u.PostId = lead.PostID
 	u.Type.FromModel(lead.Type)

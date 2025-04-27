@@ -133,6 +133,15 @@ VALUES (
 )
 RETURNING id;
 
+INSERT INTO keyword_trackers (
+    keyword_id,
+    source_id
+)
+VALUES (
+    '12757f86-d517-4009-a3fc-4a09bbbec9ff',
+    'de452b3e-59a3-401f-8d0f-47832cfe6e4b'
+)
+
 ```
 
 ### Tracing

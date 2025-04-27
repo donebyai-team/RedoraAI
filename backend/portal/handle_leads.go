@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/models"
+	pbcore "github.com/shank318/doota/pb/doota/core/v1"
 	pbportal "github.com/shank318/doota/pb/doota/portal/v1"
-	pbreddit "github.com/shank318/doota/pb/doota/reddit/v1"
 	"github.com/shank318/doota/services"
 	"github.com/shank318/doota/utils"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -32,7 +32,7 @@ func (p *Portal) CreateKeyword(ctx context.Context, c *connect.Request[pbportal.
 	return connect.NewResponse(&emptypb.Empty{}), nil
 }
 
-func (p *Portal) AddSubReddit(ctx context.Context, c *connect.Request[pbreddit.AddSubRedditRequest]) (*connect.Response[emptypb.Empty], error) {
+func (p *Portal) AddSource(ctx context.Context, c *connect.Request[pbportal.AddSourceRequest]) (*connect.Response[emptypb.Empty], error) {
 	actor, err := p.gethAuthContext(ctx)
 	if err != nil {
 		return nil, err
@@ -43,7 +43,7 @@ func (p *Portal) AddSubReddit(ctx context.Context, c *connect.Request[pbreddit.A
 		return nil, err
 	}
 	redditService := services.NewRedditService(p.logger, p.db, redditClient)
-	err = redditService.CreateSubReddit(ctx, &models.SubReddit{
+	err = redditService.CreateSubReddit(ctx, &models.Source{
 		ProjectID: actor.ProjectID,
 		Name:      utils.CleanSubredditName(c.Msg.Name),
 	})
@@ -54,7 +54,7 @@ func (p *Portal) AddSubReddit(ctx context.Context, c *connect.Request[pbreddit.A
 	return connect.NewResponse(&emptypb.Empty{}), nil
 }
 
-func (p *Portal) GetSubReddits(ctx context.Context, c *connect.Request[emptypb.Empty]) (*connect.Response[pbreddit.GetSubredditsResponse], error) {
+func (p *Portal) GetSources(ctx context.Context, c *connect.Request[emptypb.Empty]) (*connect.Response[pbportal.GetSourceResponse], error) {
 	actor, err := p.gethAuthContext(ctx)
 	if err != nil {
 		return nil, err
@@ -65,25 +65,19 @@ func (p *Portal) GetSubReddits(ctx context.Context, c *connect.Request[emptypb.E
 		return nil, err
 	}
 	redditService := services.NewRedditService(p.logger, p.db, redditClient)
-	subReddits, err := redditService.GetSubReddits(ctx, actor.ProjectID)
+	sources, err := redditService.GetSubReddits(ctx, actor.ProjectID)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to get subreddits: %w", err))
 	}
-	subRedditProto := make([]*pbreddit.SubReddit, 0, len(subReddits))
-	for _, subReddit := range subReddits {
-		subRedditProto = append(subRedditProto, &pbreddit.SubReddit{
-			Id:          subReddit.ID,
-			Name:        fmt.Sprintf("r/%s", subReddit.Name),
-			Description: subReddit.Description,
-			Metadata:    &pbreddit.SubRedditMetadata{},
-			Title:       subReddit.Title,
-		})
+	sourcesProto := make([]*pbcore.Source, 0, len(sources))
+	for _, source := range sources {
+		sourcesProto = append(sourcesProto, new(pbcore.Source).FromModel(source, new(pbcore.Source_RedditMetadata).FromModel(&source.Metadata)))
 	}
 
-	return connect.NewResponse(&pbreddit.GetSubredditsResponse{Subreddits: subRedditProto}), nil
+	return connect.NewResponse(&pbportal.GetSourceResponse{Sources: sourcesProto}), nil
 }
 
-func (p *Portal) RemoveSubReddit(ctx context.Context, c *connect.Request[pbreddit.RemoveSubRedditRequest]) (*connect.Response[emptypb.Empty], error) {
+func (p *Portal) RemoveSource(ctx context.Context, c *connect.Request[pbportal.RemoveSourceRequest]) (*connect.Response[emptypb.Empty], error) {
 	actor, err := p.gethAuthContext(ctx)
 	if err != nil {
 		return nil, err
@@ -102,7 +96,7 @@ func (p *Portal) RemoveSubReddit(ctx context.Context, c *connect.Request[pbreddi
 	return connect.NewResponse(&emptypb.Empty{}), nil
 }
 
-func (p *Portal) GetRelevantLeads(ctx context.Context, c *connect.Request[pbreddit.GetRelevantLeadsRequest]) (*connect.Response[pbreddit.GetLeadsResponse], error) {
+func (p *Portal) GetRelevantLeads(ctx context.Context, c *connect.Request[pbportal.GetRelevantLeadsRequest]) (*connect.Response[pbportal.GetLeadsResponse], error) {
 	actor, err := p.gethAuthContext(ctx)
 	if err != nil {
 		return nil, err
@@ -113,20 +107,20 @@ func (p *Portal) GetRelevantLeads(ctx context.Context, c *connect.Request[pbredd
 		subReddits = append(subReddits, *c.Msg.SubReddit)
 	}
 
-	leads, err := p.db.GetRedditLeadsByRelevancy(ctx, actor.ProjectID, c.Msg.RelevancyScore, subReddits)
+	leads, err := p.db.GetLeadsByRelevancy(ctx, actor.ProjectID, c.Msg.RelevancyScore, subReddits)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to fetch leads: %w", err))
 	}
 
-	leadsProto := make([]*pbreddit.RedditLead, 0, len(leads))
+	leadsProto := make([]*pbcore.Lead, 0, len(leads))
 	for _, lead := range leads {
-		leadsProto = append(leadsProto, new(pbreddit.RedditLead).FromModel(lead))
+		leadsProto = append(leadsProto, new(pbcore.Lead).FromModel(lead))
 	}
 
-	return connect.NewResponse(&pbreddit.GetLeadsResponse{Leads: leadsProto}), nil
+	return connect.NewResponse(&pbportal.GetLeadsResponse{Leads: leadsProto}), nil
 }
 
-func (p *Portal) GetLeadsByStatus(ctx context.Context, c *connect.Request[pbreddit.GetLeadsByStatusRequest]) (*connect.Response[pbreddit.GetLeadsResponse], error) {
+func (p *Portal) GetLeadsByStatus(ctx context.Context, c *connect.Request[pbportal.GetLeadsByStatusRequest]) (*connect.Response[pbportal.GetLeadsResponse], error) {
 	actor, err := p.gethAuthContext(ctx)
 	if err != nil {
 		return nil, err
@@ -137,25 +131,25 @@ func (p *Portal) GetLeadsByStatus(ctx context.Context, c *connect.Request[pbredd
 		return nil, err
 	}
 
-	leads, err := p.db.GetRedditLeadsByStatus(ctx, actor.ProjectID, status)
+	leads, err := p.db.GetLeadsByStatus(ctx, actor.ProjectID, status)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to fetch leads: %w", err))
 	}
 
-	leadsProto := make([]*pbreddit.RedditLead, 0, len(leads))
+	leadsProto := make([]*pbcore.Lead, 0, len(leads))
 	for _, lead := range leads {
-		leadsProto = append(leadsProto, new(pbreddit.RedditLead).FromModel(lead))
+		leadsProto = append(leadsProto, new(pbcore.Lead).FromModel(lead))
 	}
 
-	return connect.NewResponse(&pbreddit.GetLeadsResponse{Leads: leadsProto}), nil
+	return connect.NewResponse(&pbportal.GetLeadsResponse{Leads: leadsProto}), nil
 }
 
-func (p *Portal) UpdateLeadStatus(ctx context.Context, c *connect.Request[pbreddit.UpdateLeadStatusRequest]) (*connect.Response[emptypb.Empty], error) {
+func (p *Portal) UpdateLeadStatus(ctx context.Context, c *connect.Request[pbportal.UpdateLeadStatusRequest]) (*connect.Response[emptypb.Empty], error) {
 	actor, err := p.gethAuthContext(ctx)
 	if err != nil {
 		return nil, err
 	}
-	lead, err := p.db.GetRedditLeadByID(ctx, actor.ProjectID, c.Msg.LeadId)
+	lead, err := p.db.GetLeadByID(ctx, actor.ProjectID, c.Msg.LeadId)
 	if err != nil && !errors.Is(err, datastore.NotFound) {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to fetch lead: %w", err))
 	}
@@ -165,7 +159,7 @@ func (p *Portal) UpdateLeadStatus(ctx context.Context, c *connect.Request[pbredd
 	}
 
 	lead.Status = c.Msg.Status.ToModel()
-	err = p.db.UpdateRedditLeadStatus(ctx, lead)
+	err = p.db.UpdateLeadStatus(ctx, lead)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to update lead status: %w", err))
 	}

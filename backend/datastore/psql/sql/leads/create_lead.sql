@@ -1,7 +1,7 @@
-INSERT INTO sub_reddits_leads (
+INSERT INTO leads (
     project_id,
     author,
-    subreddit_id,
+    source_id,
     keyword_id,
     post_id,
     type,
@@ -13,7 +13,7 @@ INSERT INTO sub_reddits_leads (
 VALUES (
     :project_id,
     :author,
-    :subreddit_id,
+    :source_id,
     :keyword_id,
     :post_id,
     :type,

@@ -8,7 +8,6 @@ package pbportal
 
 import (
 	context "context"
-	v1 "github.com/shank318/doota/pb/doota/reddit/v1"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -32,9 +31,9 @@ const (
 	PortalService_OauthCallback_FullMethodName      = "/doota.portal.v1.PortalService/OauthCallback"
 	PortalService_GetIntegrations_FullMethodName    = "/doota.portal.v1.PortalService/GetIntegrations"
 	PortalService_CreateKeyword_FullMethodName      = "/doota.portal.v1.PortalService/CreateKeyword"
-	PortalService_AddSubReddit_FullMethodName       = "/doota.portal.v1.PortalService/AddSubReddit"
-	PortalService_GetSubReddits_FullMethodName      = "/doota.portal.v1.PortalService/GetSubReddits"
-	PortalService_RemoveSubReddit_FullMethodName    = "/doota.portal.v1.PortalService/RemoveSubReddit"
+	PortalService_AddSource_FullMethodName          = "/doota.portal.v1.PortalService/AddSource"
+	PortalService_GetSources_FullMethodName         = "/doota.portal.v1.PortalService/GetSources"
+	PortalService_RemoveSource_FullMethodName       = "/doota.portal.v1.PortalService/RemoveSource"
 	PortalService_GetRelevantLeads_FullMethodName   = "/doota.portal.v1.PortalService/GetRelevantLeads"
 	PortalService_GetLeadsByStatus_FullMethodName   = "/doota.portal.v1.PortalService/GetLeadsByStatus"
 	PortalService_UpdateLeadStatus_FullMethodName   = "/doota.portal.v1.PortalService/UpdateLeadStatus"
@@ -58,12 +57,12 @@ type PortalServiceClient interface {
 	GetIntegrations(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Integrations, error)
 	// Reddit
 	CreateKeyword(ctx context.Context, in *CreateKeywordReq, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	AddSubReddit(ctx context.Context, in *v1.AddSubRedditRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	GetSubReddits(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*v1.GetSubredditsResponse, error)
-	RemoveSubReddit(ctx context.Context, in *v1.RemoveSubRedditRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	GetRelevantLeads(ctx context.Context, in *v1.GetRelevantLeadsRequest, opts ...grpc.CallOption) (*v1.GetLeadsResponse, error)
-	GetLeadsByStatus(ctx context.Context, in *v1.GetLeadsByStatusRequest, opts ...grpc.CallOption) (*v1.GetLeadsResponse, error)
-	UpdateLeadStatus(ctx context.Context, in *v1.UpdateLeadStatusRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	AddSource(ctx context.Context, in *AddSourceRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	GetSources(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetSourceResponse, error)
+	RemoveSource(ctx context.Context, in *RemoveSourceRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	GetRelevantLeads(ctx context.Context, in *GetRelevantLeadsRequest, opts ...grpc.CallOption) (*GetLeadsResponse, error)
+	GetLeadsByStatus(ctx context.Context, in *GetLeadsByStatusRequest, opts ...grpc.CallOption) (*GetLeadsResponse, error)
+	UpdateLeadStatus(ctx context.Context, in *UpdateLeadStatusRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type portalServiceClient struct {
@@ -173,35 +172,35 @@ func (c *portalServiceClient) CreateKeyword(ctx context.Context, in *CreateKeywo
 	return out, nil
 }
 
-func (c *portalServiceClient) AddSubReddit(ctx context.Context, in *v1.AddSubRedditRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *portalServiceClient) AddSource(ctx context.Context, in *AddSourceRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, PortalService_AddSubReddit_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, PortalService_AddSource_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *portalServiceClient) GetSubReddits(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*v1.GetSubredditsResponse, error) {
-	out := new(v1.GetSubredditsResponse)
-	err := c.cc.Invoke(ctx, PortalService_GetSubReddits_FullMethodName, in, out, opts...)
+func (c *portalServiceClient) GetSources(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetSourceResponse, error) {
+	out := new(GetSourceResponse)
+	err := c.cc.Invoke(ctx, PortalService_GetSources_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *portalServiceClient) RemoveSubReddit(ctx context.Context, in *v1.RemoveSubRedditRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *portalServiceClient) RemoveSource(ctx context.Context, in *RemoveSourceRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, PortalService_RemoveSubReddit_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, PortalService_RemoveSource_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *portalServiceClient) GetRelevantLeads(ctx context.Context, in *v1.GetRelevantLeadsRequest, opts ...grpc.CallOption) (*v1.GetLeadsResponse, error) {
-	out := new(v1.GetLeadsResponse)
+func (c *portalServiceClient) GetRelevantLeads(ctx context.Context, in *GetRelevantLeadsRequest, opts ...grpc.CallOption) (*GetLeadsResponse, error) {
+	out := new(GetLeadsResponse)
 	err := c.cc.Invoke(ctx, PortalService_GetRelevantLeads_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -209,8 +208,8 @@ func (c *portalServiceClient) GetRelevantLeads(ctx context.Context, in *v1.GetRe
 	return out, nil
 }
 
-func (c *portalServiceClient) GetLeadsByStatus(ctx context.Context, in *v1.GetLeadsByStatusRequest, opts ...grpc.CallOption) (*v1.GetLeadsResponse, error) {
-	out := new(v1.GetLeadsResponse)
+func (c *portalServiceClient) GetLeadsByStatus(ctx context.Context, in *GetLeadsByStatusRequest, opts ...grpc.CallOption) (*GetLeadsResponse, error) {
+	out := new(GetLeadsResponse)
 	err := c.cc.Invoke(ctx, PortalService_GetLeadsByStatus_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -218,7 +217,7 @@ func (c *portalServiceClient) GetLeadsByStatus(ctx context.Context, in *v1.GetLe
 	return out, nil
 }
 
-func (c *portalServiceClient) UpdateLeadStatus(ctx context.Context, in *v1.UpdateLeadStatusRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *portalServiceClient) UpdateLeadStatus(ctx context.Context, in *UpdateLeadStatusRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, PortalService_UpdateLeadStatus_FullMethodName, in, out, opts...)
 	if err != nil {
@@ -245,12 +244,12 @@ type PortalServiceServer interface {
 	GetIntegrations(context.Context, *emptypb.Empty) (*Integrations, error)
 	// Reddit
 	CreateKeyword(context.Context, *CreateKeywordReq) (*emptypb.Empty, error)
-	AddSubReddit(context.Context, *v1.AddSubRedditRequest) (*emptypb.Empty, error)
-	GetSubReddits(context.Context, *emptypb.Empty) (*v1.GetSubredditsResponse, error)
-	RemoveSubReddit(context.Context, *v1.RemoveSubRedditRequest) (*emptypb.Empty, error)
-	GetRelevantLeads(context.Context, *v1.GetRelevantLeadsRequest) (*v1.GetLeadsResponse, error)
-	GetLeadsByStatus(context.Context, *v1.GetLeadsByStatusRequest) (*v1.GetLeadsResponse, error)
-	UpdateLeadStatus(context.Context, *v1.UpdateLeadStatusRequest) (*emptypb.Empty, error)
+	AddSource(context.Context, *AddSourceRequest) (*emptypb.Empty, error)
+	GetSources(context.Context, *emptypb.Empty) (*GetSourceResponse, error)
+	RemoveSource(context.Context, *RemoveSourceRequest) (*emptypb.Empty, error)
+	GetRelevantLeads(context.Context, *GetRelevantLeadsRequest) (*GetLeadsResponse, error)
+	GetLeadsByStatus(context.Context, *GetLeadsByStatusRequest) (*GetLeadsResponse, error)
+	UpdateLeadStatus(context.Context, *UpdateLeadStatusRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedPortalServiceServer()
 }
 
@@ -291,22 +290,22 @@ func (UnimplementedPortalServiceServer) GetIntegrations(context.Context, *emptyp
 func (UnimplementedPortalServiceServer) CreateKeyword(context.Context, *CreateKeywordReq) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateKeyword not implemented")
 }
-func (UnimplementedPortalServiceServer) AddSubReddit(context.Context, *v1.AddSubRedditRequest) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AddSubReddit not implemented")
+func (UnimplementedPortalServiceServer) AddSource(context.Context, *AddSourceRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddSource not implemented")
 }
-func (UnimplementedPortalServiceServer) GetSubReddits(context.Context, *emptypb.Empty) (*v1.GetSubredditsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetSubReddits not implemented")
+func (UnimplementedPortalServiceServer) GetSources(context.Context, *emptypb.Empty) (*GetSourceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSources not implemented")
 }
-func (UnimplementedPortalServiceServer) RemoveSubReddit(context.Context, *v1.RemoveSubRedditRequest) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RemoveSubReddit not implemented")
+func (UnimplementedPortalServiceServer) RemoveSource(context.Context, *RemoveSourceRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveSource not implemented")
 }
-func (UnimplementedPortalServiceServer) GetRelevantLeads(context.Context, *v1.GetRelevantLeadsRequest) (*v1.GetLeadsResponse, error) {
+func (UnimplementedPortalServiceServer) GetRelevantLeads(context.Context, *GetRelevantLeadsRequest) (*GetLeadsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetRelevantLeads not implemented")
 }
-func (UnimplementedPortalServiceServer) GetLeadsByStatus(context.Context, *v1.GetLeadsByStatusRequest) (*v1.GetLeadsResponse, error) {
+func (UnimplementedPortalServiceServer) GetLeadsByStatus(context.Context, *GetLeadsByStatusRequest) (*GetLeadsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetLeadsByStatus not implemented")
 }
-func (UnimplementedPortalServiceServer) UpdateLeadStatus(context.Context, *v1.UpdateLeadStatusRequest) (*emptypb.Empty, error) {
+func (UnimplementedPortalServiceServer) UpdateLeadStatus(context.Context, *UpdateLeadStatusRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateLeadStatus not implemented")
 }
 func (UnimplementedPortalServiceServer) mustEmbedUnimplementedPortalServiceServer() {}
@@ -520,62 +519,62 @@ func _PortalService_CreateKeyword_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _PortalService_AddSubReddit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(v1.AddSubRedditRequest)
+func _PortalService_AddSource_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddSourceRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(PortalServiceServer).AddSubReddit(ctx, in)
+		return srv.(PortalServiceServer).AddSource(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: PortalService_AddSubReddit_FullMethodName,
+		FullMethod: PortalService_AddSource_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PortalServiceServer).AddSubReddit(ctx, req.(*v1.AddSubRedditRequest))
+		return srv.(PortalServiceServer).AddSource(ctx, req.(*AddSourceRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _PortalService_GetSubReddits_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _PortalService_GetSources_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(PortalServiceServer).GetSubReddits(ctx, in)
+		return srv.(PortalServiceServer).GetSources(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: PortalService_GetSubReddits_FullMethodName,
+		FullMethod: PortalService_GetSources_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PortalServiceServer).GetSubReddits(ctx, req.(*emptypb.Empty))
+		return srv.(PortalServiceServer).GetSources(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _PortalService_RemoveSubReddit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(v1.RemoveSubRedditRequest)
+func _PortalService_RemoveSource_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RemoveSourceRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(PortalServiceServer).RemoveSubReddit(ctx, in)
+		return srv.(PortalServiceServer).RemoveSource(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: PortalService_RemoveSubReddit_FullMethodName,
+		FullMethod: PortalService_RemoveSource_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PortalServiceServer).RemoveSubReddit(ctx, req.(*v1.RemoveSubRedditRequest))
+		return srv.(PortalServiceServer).RemoveSource(ctx, req.(*RemoveSourceRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _PortalService_GetRelevantLeads_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(v1.GetRelevantLeadsRequest)
+	in := new(GetRelevantLeadsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -587,13 +586,13 @@ func _PortalService_GetRelevantLeads_Handler(srv interface{}, ctx context.Contex
 		FullMethod: PortalService_GetRelevantLeads_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PortalServiceServer).GetRelevantLeads(ctx, req.(*v1.GetRelevantLeadsRequest))
+		return srv.(PortalServiceServer).GetRelevantLeads(ctx, req.(*GetRelevantLeadsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _PortalService_GetLeadsByStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(v1.GetLeadsByStatusRequest)
+	in := new(GetLeadsByStatusRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -605,13 +604,13 @@ func _PortalService_GetLeadsByStatus_Handler(srv interface{}, ctx context.Contex
 		FullMethod: PortalService_GetLeadsByStatus_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PortalServiceServer).GetLeadsByStatus(ctx, req.(*v1.GetLeadsByStatusRequest))
+		return srv.(PortalServiceServer).GetLeadsByStatus(ctx, req.(*GetLeadsByStatusRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _PortalService_UpdateLeadStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(v1.UpdateLeadStatusRequest)
+	in := new(UpdateLeadStatusRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -623,7 +622,7 @@ func _PortalService_UpdateLeadStatus_Handler(srv interface{}, ctx context.Contex
 		FullMethod: PortalService_UpdateLeadStatus_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PortalServiceServer).UpdateLeadStatus(ctx, req.(*v1.UpdateLeadStatusRequest))
+		return srv.(PortalServiceServer).UpdateLeadStatus(ctx, req.(*UpdateLeadStatusRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -680,16 +679,16 @@ var PortalService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _PortalService_CreateKeyword_Handler,
 		},
 		{
-			MethodName: "AddSubReddit",
-			Handler:    _PortalService_AddSubReddit_Handler,
+			MethodName: "AddSource",
+			Handler:    _PortalService_AddSource_Handler,
 		},
 		{
-			MethodName: "GetSubReddits",
-			Handler:    _PortalService_GetSubReddits_Handler,
+			MethodName: "GetSources",
+			Handler:    _PortalService_GetSources_Handler,
 		},
 		{
-			MethodName: "RemoveSubReddit",
-			Handler:    _PortalService_RemoveSubReddit_Handler,
+			MethodName: "RemoveSource",
+			Handler:    _PortalService_RemoveSource_Handler,
 		},
 		{
 			MethodName: "GetRelevantLeads",

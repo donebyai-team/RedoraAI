@@ -1,7 +1,7 @@
 SELECT *
-FROM sub_reddits_leads
+FROM leads
 WHERE project_id = :project_id
   AND relevancy_score >= :relevancy_score
-  AND (:subreddit_ids = '{}' OR subreddit_id = ANY(:subreddit_ids))
+  AND (:source_ids = '{}' OR source_id = ANY(:source_ids))
   AND status = :status
 ORDER BY post_created_at DESC;

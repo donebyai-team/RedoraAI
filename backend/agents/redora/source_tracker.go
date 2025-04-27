@@ -16,7 +16,12 @@ import (
 	"time"
 )
 
-type SubRedditTracker struct {
+type KeywordTracker interface {
+	TrackKeyword(ctx context.Context, tracker *models.AugmentedKeywordTracker) error
+	WithLogger(logger *zap.Logger) KeywordTracker
+}
+
+type redditKeywordTracker struct {
 	gptModel          ai.GPTModel
 	db                datastore.Repository
 	aiClient          *ai.Client
@@ -25,14 +30,14 @@ type SubRedditTracker struct {
 	redditOauthClient *reddit.OauthClient
 }
 
-func NewSubRedditTracker(
+func NewRedditKeywordTracker(
 	gptModel ai.GPTModel,
 	redditOauthClient *reddit.OauthClient,
 	db datastore.Repository,
 	aiClient *ai.Client,
 	logger *zap.Logger,
-	state state.ConversationState) *SubRedditTracker {
-	return &SubRedditTracker{
+	state state.ConversationState) KeywordTracker {
+	return &redditKeywordTracker{
 		gptModel:          gptModel,
 		db:                db,
 		aiClient:          aiClient,
@@ -42,8 +47,8 @@ func NewSubRedditTracker(
 	}
 }
 
-func (s *SubRedditTracker) WithLogger(logger *zap.Logger) *SubRedditTracker {
-	return &SubRedditTracker{
+func (s *redditKeywordTracker) WithLogger(logger *zap.Logger) KeywordTracker {
+	return &redditKeywordTracker{
 		gptModel:          s.gptModel,
 		db:                s.db,
 		aiClient:          s.aiClient,
@@ -53,44 +58,42 @@ func (s *SubRedditTracker) WithLogger(logger *zap.Logger) *SubRedditTracker {
 	}
 }
 
-func (s *SubRedditTracker) TrackSubreddit(ctx context.Context, subReddit *models.AugmentedSubReddit) error {
+func (s *redditKeywordTracker) TrackKeyword(ctx context.Context, tracker *models.AugmentedKeywordTracker) error {
 	defer func() {
-		err := s.state.Release(ctx, subReddit.SubReddit.ID)
+		err := s.state.Release(ctx, tracker.Tracker.ID)
 		if err != nil {
 			s.logger.Error("failed to release lock on subreddit", zap.Error(err))
 		}
 	}()
 
-	redditClient, err := s.redditOauthClient.NewRedditClient(ctx, subReddit.Project.OrganizationID)
+	redditClient, err := s.redditOauthClient.NewRedditClient(ctx, tracker.Project.OrganizationID)
 	if err != nil {
 		return fmt.Errorf("failed to create reddit client: %w", err)
 	}
 
 	// Lock the subreddit tracking
-	err = s.state.KeepAlive(ctx, subReddit.Project.OrganizationID, subReddit.SubReddit.ID)
+	err = s.state.KeepAlive(ctx, tracker.Project.OrganizationID, tracker.Source.ID)
 	if err != nil {
 		return fmt.Errorf("unable to lock subReddit: %w", err)
 	}
 
-	for _, keyword := range subReddit.Keywords {
-		err = s.searchLeadsFromPosts(ctx, keyword, subReddit.Project, subReddit.SubReddit, redditClient)
-		if err != nil {
-			return err
-		}
+	err = s.searchLeadsFromPosts(ctx, tracker.Keyword, tracker.Project, tracker.Source, redditClient)
+	if err != nil {
+		return err
+	}
 
-		err := s.db.UpdateSubRedditLastTrackedAt(ctx, subReddit.SubReddit.ID)
-		if err != nil {
-			s.logger.Error("failed to update subRedditLastTrackedAt", zap.Error(err))
-		}
+	err = s.db.UpdatKeywordTrackerLastTrackedAt(ctx, tracker.Tracker.ID)
+	if err != nil {
+		s.logger.Error("failed to update LastTrackedAt", zap.Error(err))
 	}
 
 	return nil
 }
 
-//func (s *SubRedditTracker) TrackPost(ctx context.Context,
-//	post *models.RedditLead,
+//func (s *redditKeywordTracker) TrackPost(ctx context.Context,
+//	post *models.Lead,
 //	project *models.Project,
-//	subReddit *models.SubReddit,
+//	subReddit *models.Source,
 //	redditClient *reddit.Client) error {
 //	comments, err := redditClient.GetPostWithAllComments(ctx, post.PostID)
 //	if err != nil {
@@ -103,12 +106,12 @@ func (s *SubRedditTracker) TrackSubreddit(ctx context.Context, subReddit *models
 // Call GetPosts of a subreddit created on and after subReddit LastPostCreatedAt
 // Filter them via a criteria - https://www.notion.so/Criteria-for-filtering-the-relevant-post-1c70029aaf8f80ec8ba6fd4e29342d6a
 // After filtering, ask AI to filter again
-// Save it into the table sub_reddits_leads (models.RedditLead)
-func (s *SubRedditTracker) searchLeadsFromPosts(
+// Save it into the table sub_reddits_leads (models.Lead)
+func (s *redditKeywordTracker) searchLeadsFromPosts(
 	ctx context.Context,
 	keyword *models.Keyword,
 	project *models.Project,
-	subReddit *models.SubReddit,
+	source *models.Source,
 	redditClient *reddit.Client) error {
 
 	redditQuery := reddit.PostFilters{
@@ -116,7 +119,7 @@ func (s *SubRedditTracker) searchLeadsFromPosts(
 		SortBy:   utils.Ptr(reddit.SortByNEW),
 		Limit:    100,
 	}
-	posts, err := redditClient.GetPosts(ctx, subReddit.Name, redditQuery)
+	posts, err := redditClient.GetPosts(ctx, source.Name, redditQuery)
 
 	if err != nil {
 		return fmt.Errorf("unable to fetch posts: %w", err)
@@ -133,7 +136,7 @@ func (s *SubRedditTracker) searchLeadsFromPosts(
 
 	newPosts := []*reddit.Post{}
 	for _, post := range posts {
-		lead, err := s.db.GetRedditLeadByPostID(ctx, project.ID, post.ID)
+		lead, err := s.db.GetLeadByPostID(ctx, project.ID, post.ID)
 		if err != nil && !errors.Is(err, datastore.NotFound) {
 			// Unexpected error, log and skip
 			s.logger.Error("error while checking if lead exists by post id", zap.Error(err))
@@ -160,9 +163,9 @@ func (s *SubRedditTracker) searchLeadsFromPosts(
 			break
 		}
 
-		redditLead := &models.RedditLead{
+		redditLead := &models.Lead{
 			ProjectID:     project.ID,
-			SubRedditID:   subReddit.ID,
+			SourceID:      source.ID,
 			Author:        post.Author,
 			PostID:        post.ID,
 			Type:          models.LeadTypePOST,
@@ -211,7 +214,7 @@ func (s *SubRedditTracker) searchLeadsFromPosts(
 			redditLead.LeadMetadata.ChainOfThought = reason
 		}
 
-		err = s.db.CreateRedditLead(ctx, redditLead)
+		err = s.db.CreateLead(ctx, redditLead)
 		if err != nil {
 			return fmt.Errorf("unable to create reddit lead: %w", err)
 		}
@@ -266,7 +269,7 @@ func isValidPostDescription(selfText string) (bool, string) {
 	return true, ""
 }
 
-func (s *SubRedditTracker) isValidPost(post *reddit.Post) (bool, string) {
+func (s *redditKeywordTracker) isValidPost(post *reddit.Post) (bool, string) {
 	sixMonthsAgo := time.Now().AddDate(0, -maxPostAgeInMonths, 0).Unix()
 
 	var reason string
