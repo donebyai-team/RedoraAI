@@ -16,11 +16,6 @@ import (
 	"time"
 )
 
-type KeywordTracker interface {
-	TrackKeyword(ctx context.Context, tracker *models.AugmentedKeywordTracker) error
-	WithLogger(logger *zap.Logger) KeywordTracker
-}
-
 type redditKeywordTracker struct {
 	gptModel          ai.GPTModel
 	db                datastore.Repository
@@ -30,7 +25,7 @@ type redditKeywordTracker struct {
 	redditOauthClient *reddit.OauthClient
 }
 
-func NewRedditKeywordTracker(
+func newRedditKeywordTracker(
 	gptModel ai.GPTModel,
 	redditOauthClient *reddit.OauthClient,
 	db datastore.Repository,

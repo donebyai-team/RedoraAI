@@ -24,7 +24,7 @@ type Spooler struct {
 	state             state.ConversationState
 	appIsReady        func() bool
 	maxParallelCalls  uint64
-	keywordTracker    KeywordTracker
+	keywordTracker    *KeywordTrackerFactory
 	logger            *zap.Logger
 }
 
@@ -37,7 +37,7 @@ func New(
 	maxParallelCalls uint64,
 	dbPollingInterval time.Duration,
 	isShuttingDown func() bool,
-	keywordTracker KeywordTracker,
+	keywordTracker *KeywordTrackerFactory,
 	logger *zap.Logger,
 ) *Spooler {
 	return &Spooler{
@@ -110,7 +110,8 @@ func (s *Spooler) processKeywordsTracking(ctx context.Context, tracker *models.A
 		return nil
 	}
 
-	err = s.keywordTracker.WithLogger(logger).TrackKeyword(ctx, tracker)
+	keywordTracker := s.keywordTracker.GetKeywordTrackerBySource(tracker.Source.SourceType)
+	err = keywordTracker.WithLogger(logger).TrackKeyword(ctx, tracker)
 	if err != nil {
 		logger.Error("failed to track subreddit", zap.Error(err))
 	}
