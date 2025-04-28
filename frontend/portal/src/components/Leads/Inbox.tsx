@@ -14,18 +14,16 @@ import { useRedditIntegrationStatus } from "./Tabs/useRedditIntegrationStatus";
 import { routes } from "@doota/ui-core/routing";
 import Link from "next/link";
 import DiscardedTabComponent from "./Tabs/DiscardedTab";
-import { RedditLead } from "@doota/pb/doota/reddit/v1/reddit_pb";
+import { useAppSelector } from "../../../store/hooks";
+import { RootState } from "../../../store/store";
 
-export interface ChildComponentProps {
-  selectedleadData: RedditLead | null;
-  setSelectedLeadData: React.Dispatch<React.SetStateAction<RedditLead | null>>;
-}
-
-const InboxComponent: React.FC<ChildComponentProps> = ({ selectedleadData, setSelectedLeadData }) => {
+const InboxComponent = () => {
   const [tabValue, setTabValue] = React.useState<number>(0);
   const { isConnected } = useRedditIntegrationStatus();
+  const { selectedleadData } = useAppSelector((state: RootState) => state.lead);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    console.log(event);
     setTabValue(newValue);
   };
 
@@ -80,9 +78,9 @@ const InboxComponent: React.FC<ChildComponentProps> = ({ selectedleadData, setSe
       </Tabs>
 
       {isConnected ? (<>
-        {tabValue === 0 && <NewTabComponent selectedleadData={selectedleadData} setSelectedLeadData={setSelectedLeadData} />}
-        {tabValue === 1 && <CompletedTabComponent selectedleadData={selectedleadData} setSelectedLeadData={setSelectedLeadData} />}
-        {tabValue === 2 && <DiscardedTabComponent selectedleadData={selectedleadData} setSelectedLeadData={setSelectedLeadData} />}
+        {tabValue === 0 && <NewTabComponent />}
+        {tabValue === 1 && <CompletedTabComponent />}
+        {tabValue === 2 && <DiscardedTabComponent />}
       </>) : (
         <Box
           sx={{

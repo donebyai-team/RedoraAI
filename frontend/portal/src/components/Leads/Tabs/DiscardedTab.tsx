@@ -12,148 +12,38 @@ import {
 } from "@mui/material";
 import { useClientsContext } from "@doota/ui-core/context/ClientContext";
 import toast from "react-hot-toast";
-import { LeadStatus, RedditLead, SubReddit } from "@doota/pb/doota/reddit/v1/reddit_pb";
-import { formateDate, getSubredditName, setLeadActive } from "./NewTab";
-import { ChildComponentProps } from "../Inbox";
+import { Lead, LeadStatus, Source } from "@doota/pb/doota/core/v1/core_pb";
+import { useAppDispatch, useAppSelector } from "../../../../store/hooks";
+import { RootState } from "../../../../store/store";
+import ListRenderComp from "./LeadListComp";
+import { setError, setIsLoading, setListOfLeads } from "../../../../store/Lead/leadSlice";
 
-const DiscardedTabComponent: React.FC<ChildComponentProps> = ({ selectedleadData, setSelectedLeadData }) => {
+const DiscardedTabComponent = () => {
     const { portalClient } = useClientsContext();
-    const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [listofleads, setListOfLeads] = useState<RedditLead[]>([]);
-    const [subredditList, setSubredditList] = useState<SubReddit[]>([]);
+    const dispatch = useAppDispatch();
+    const { selectedleadData } = useAppSelector((state: RootState) => state.lead);
 
     useEffect(() => {
 
         const getAllLeadsByStatus = async () => {
-            setIsLoading(true);
+            dispatch(setIsLoading(true));
 
             try {
                 const result = await portalClient.getLeadsByStatus({ status: LeadStatus.NOT_RELEVANT });
-                setListOfLeads(result?.leads ?? []);
+                dispatch(setListOfLeads(result?.leads ?? []));
             } catch (err: any) {
                 const message = err?.response?.data?.message || err.message || "Something went wrong"
                 toast.error(message);
+                dispatch(setError(message));
             } finally {
-                setIsLoading(false);
+                dispatch(setIsLoading(false));
             }
         }
         getAllLeadsByStatus();
 
     }, [(selectedleadData === null)]);
 
-    useEffect(() => {
-
-        const getAllSubReddits = async () => {
-
-            try {
-                const result = await portalClient.getSubReddits({});
-                setSubredditList(result?.subreddits ?? []);
-            } catch (err: any) {
-                const message = err?.response?.data?.message || err.message || "Something went wrong"
-                console.log(message);
-            }
-        }
-        getAllSubReddits();
-
-    }, []);
-
-    const handleSelectedLead = (data: RedditLead) => {
-        setSelectedLeadData(data);
-    };
-
-    return (
-        isLoading ?
-            <Box sx={{ display: 'flex', flexDirection: "column", alignItems: "center", height: "100vh", width: "100%" }}>
-                <CircularProgress />
-            </Box>
-            :
-            <Box sx={{ width: "100%", px: 3, py: 2 }}>
-                {listofleads.length === 0 ? (
-                    <Box
-                        sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            height: "100vh",
-                            textAlign: "center",
-                            px: 2,
-                        }}
-                    >
-                        <Typography variant="body1" color="text.secondary">
-                            {`Sit back and relax, we are finding relevant leads for you. We will
-                            notify you once it’s ready.`}
-                        </Typography>
-                    </Box>
-                ) : (
-                    <List sx={{ p: 0 }}>
-                        {listofleads.map((post, index) => (
-                            <React.Fragment key={index}>
-                                <ListItem onClick={() => handleSelectedLead(post)} sx={{ p: 3, mb: (index !== listofleads.length - 1) ? 2 : 0, cursor: "pointer", ...setLeadActive(selectedleadData?.id as string, post.id) }}>
-                                    <Stack direction="column" spacing={1} width="100%">
-                                        <Stack direction="row" spacing={1} alignItems="center">
-                                            <Box
-                                                sx={{
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    color: "green",
-                                                    fontSize: "0.875rem",
-                                                }}
-                                            >
-                                                <Box
-                                                    component="span"
-                                                    sx={{
-                                                        display: "inline-block",
-                                                        width: 10,
-                                                        height: 10,
-                                                        borderRadius: "50%",
-                                                        bgcolor: "green",
-                                                        mr: 1,
-                                                    }}
-                                                />
-                                                {post.relevancyScore}%
-                                            </Box>
-                                            <Typography
-                                                component="span"
-                                                sx={{ fontSize: "0.875rem", mx: 1 }}
-                                            >
-                                                •
-                                            </Typography>
-                                            <Typography
-                                                component="span"
-                                                sx={{
-                                                    fontSize: "0.875rem",
-                                                    color: "text.secondary",
-                                                }}
-                                            >
-                                                {getSubredditName(subredditList, post.subredditId)}
-                                            </Typography>
-                                            <Typography
-                                                component="span"
-                                                sx={{ fontSize: "0.875rem", mx: 1 }}
-                                            >
-                                                •
-                                            </Typography>
-                                            <Typography
-                                                component="span"
-                                                sx={{
-                                                    fontSize: "0.875rem",
-                                                    color: "text.secondary",
-                                                }}
-                                            >
-                                                {post.postCreatedAt ? formateDate(post.postCreatedAt) : "N/A"}
-                                            </Typography>
-                                        </Stack>
-                                        <Typography variant="body1" sx={{ fontWeight: "medium" }}>
-                                            {post.title}
-                                        </Typography>
-                                    </Stack>
-                                </ListItem>
-                            </React.Fragment>
-                        ))}
-                    </List>
-                )}
-            </Box>
-    );
+    return (<ListRenderComp />);
 };
 
 export default DiscardedTabComponent;
