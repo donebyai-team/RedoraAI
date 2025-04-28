@@ -55,3 +55,12 @@ func (u *LeadMetadata) FromModel(metadata models.LeadMetadata) *LeadMetadata {
 	u.DescriptionHtml = metadata.SelfTextHTML
 	return u
 }
+
+func (u LeadStatus) ToModel() models.LeadStatus {
+	model := models.LeadStatus(strings.ToUpper(u.String()))
+	if !model.IsValid() {
+		panic(fmt.Errorf("unknown lead status type pb %q", u.String()))
+	}
+
+	return model
+}
