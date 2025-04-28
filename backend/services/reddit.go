@@ -31,7 +31,7 @@ func NewRedditService(logger *zap.Logger, db datastore.Repository, redditClient 
 func (r redditService) CreateSubReddit(ctx context.Context, source *models.Source) error {
 	// Check if the subreddit already exists in the DB
 	existingSubreddit, err := r.db.GetSourceByName(ctx, source.Name, source.ProjectID)
-	if !errors.Is(err, datastore.NotFound) {
+	if err != nil && !errors.Is(err, datastore.NotFound) {
 		return fmt.Errorf("get existing subreddit: %w", err)
 	}
 
