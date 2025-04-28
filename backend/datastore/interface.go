@@ -19,7 +19,9 @@ type Repository interface {
 	ConversationRepository
 	CustomerRepository
 	CustomerCaseRepository
-	RedditRepository
+	SourceRepository
+	LeadRepository
+	KeywordRepository
 	ProjectRepository
 }
 
@@ -64,26 +66,30 @@ type ProjectRepository interface {
 	GetProject(ctx context.Context, id string) (*models.Project, error)
 }
 
-type RedditRepository interface {
+type SourceRepository interface {
+	AddSource(ctx context.Context, subreddit *models.Source) (*models.Source, error)
+	GetSourceByName(ctx context.Context, url, orgID string) (*models.Source, error)
+	DeleteSourceByID(ctx context.Context, id string) error
+	GetSourceByID(ctx context.Context, ID string) (*models.Source, error)
+	GetSourcesByProject(ctx context.Context, projectID string) ([]*models.Source, error)
+}
+
+type LeadRepository interface {
+	GetLeadsByStatus(ctx context.Context, projectID string, status models.LeadStatus) ([]*models.Lead, error)
+	GetLeadsByRelevancy(ctx context.Context, projectID string, relevancy float32, subReddits []string) ([]*models.Lead, error)
+	GetLeadByPostID(ctx context.Context, projectID, postID string) (*models.Lead, error)
+	GetLeadByCommentID(ctx context.Context, projectID, commentID string) (*models.Lead, error)
+	CreateLead(ctx context.Context, reddit *models.Lead) error
+	UpdateLeadStatus(ctx context.Context, lead *models.Lead) error
+	GetLeadByID(ctx context.Context, projectID, id string) (*models.Lead, error)
+}
+
+type KeywordRepository interface {
+	GetKeywords(ctx context.Context, projectID string) ([]*models.Keyword, error)
 	CreateKeyword(ctx context.Context, keyword *models.Keyword) (*models.Keyword, error)
-	GetSubReddits(ctx context.Context) ([]*models.AugmentedSubReddit, error)
-
-	// Subreddit
-	AddSubReddit(ctx context.Context, subreddit *models.SubReddit) (*models.SubReddit, error)
-	GetSubRedditByName(ctx context.Context, url, orgID string) (*models.SubReddit, error)
-	DeleteSubRedditByID(ctx context.Context, id string) error
-	GetSubRedditByID(ctx context.Context, ID string) (*models.SubReddit, error)
-	GetSubRedditsByProject(ctx context.Context, projectID string) ([]*models.SubReddit, error)
-	UpdateSubRedditLastTrackedAt(ctx context.Context, id string) error
-
-	// Subreddit leads
-	GetRedditLeadsByStatus(ctx context.Context, projectID string, status models.LeadStatus) ([]*models.RedditLead, error)
-	GetRedditLeadsByRelevancy(ctx context.Context, projectID string, relevancy float32, subReddits []string) ([]*models.RedditLead, error)
-	GetRedditLeadByPostID(ctx context.Context, projectID, postID string) (*models.RedditLead, error)
-	GetRedditLeadByCommentID(ctx context.Context, projectID, commentID string) (*models.RedditLead, error)
-	CreateRedditLead(ctx context.Context, reddit *models.RedditLead) error
-	UpdateRedditLeadStatus(ctx context.Context, lead *models.RedditLead) error
-	GetRedditLeadByID(ctx context.Context, projectID, id string) (*models.RedditLead, error)
+	GetKeywordTrackers(ctx context.Context) ([]*models.AugmentedKeywordTracker, error)
+	UpdatKeywordTrackerLastTrackedAt(ctx context.Context, id string) error
+	CreateKeywordTracker(ctx context.Context, tracker *models.KeywordTracker) (*models.KeywordTracker, error)
 }
 
 type ConversationRepository interface {

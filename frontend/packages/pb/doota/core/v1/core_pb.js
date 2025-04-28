@@ -9,7 +9,7 @@ import { file_google_protobuf_any, file_google_protobuf_timestamp } from "@bufbu
  * Describes the file doota/core/v1/core.proto.
  */
 export const file_doota_core_v1_core = /*@__PURE__*/
-  fileDesc("Chhkb290YS9jb3JlL3YxL2NvcmUucHJvdG8SDWRvb3RhLmNvcmUudjEiTAoLVHpUaW1lc3RhbXASLQoJdGltZXN0YW1wGAEgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIOCgZvZmZzZXQYAiABKAUiXwoISWRlbnRpdHkSDwoHdXNlcl9pZBgBIAEoCRIXCg9vcmdhbml6YXRpb25faWQYAiABKAkSKQoEcm9sZRgDIAEoDjIbLmRvb3RhLmNvcmUudjEuSWRlbnRpdHlSb2xlImoKFFBsYXRmb3JtRXJyb3JEZXRhaWxzEisKBWVycm9yGAEgASgOMhwuZG9vdGEuY29yZS52MS5QbGF0Zm9ybUVycm9yEiUKB2RldGFpbHMYAiABKAsyFC5nb29nbGUucHJvdG9idWYuQW55Ks0BCg1QbGF0Zm9ybUVycm9yEh4KGlBMQVRGT1JNX0VSUk9SX1VOU1BFQ0lGSUVEEAASKQolUExBVEZPUk1fRVJST1JfTUVTU0FHRV9BTFJFQURZX0VYSVNUUxABEiAKHFBMQVRGT1JNX0VSUk9SX0lOVkFMSURfUVVPVEUQAhIgChxQTEFURk9STV9VTkFVVEhPUklaRURfQUNDRVNTEAMSLQopUExBVEZPUk1fRVJST1JfUFJJQ0lOR19PUFRJT05fSU5WQUxJRF9BUkcQBCqAAQoMSWRlbnRpdHlSb2xlEh0KGUlERU5USVRZX1JPTEVfVU5TUEVDSUZJRUQQABIWChJJREVOVElUWV9ST0xFX1VTRVIQARIXChNJREVOVElUWV9ST0xFX0FETUlOEAISIAocSURFTlRJVFlfUk9MRV9QTEFURk9STV9BRE1JThADQjNaMWdpdGh1Yi5jb20vc2hhbmszMTgvZG9vdGEvcGIvZG9vdGEvY29yZS92MTtwYmNvcmViBnByb3RvMw", [file_google_protobuf_timestamp, file_google_protobuf_any]);
+  fileDesc("Chhkb290YS9jb3JlL3YxL2NvcmUucHJvdG8SDWRvb3RhLmNvcmUudjEiTAoLVHpUaW1lc3RhbXASLQoJdGltZXN0YW1wGAEgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIOCgZvZmZzZXQYAiABKAUiXwoISWRlbnRpdHkSDwoHdXNlcl9pZBgBIAEoCRIXCg9vcmdhbml6YXRpb25faWQYAiABKAkSKQoEcm9sZRgDIAEoDjIbLmRvb3RhLmNvcmUudjEuSWRlbnRpdHlSb2xlImoKFFBsYXRmb3JtRXJyb3JEZXRhaWxzEisKBWVycm9yGAEgASgOMhwuZG9vdGEuY29yZS52MS5QbGF0Zm9ybUVycm9yEiUKB2RldGFpbHMYAiABKAsyFC5nb29nbGUucHJvdG9idWYuQW55Iq4BCgZTb3VyY2USCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCRITCgtkZXNjcmlwdGlvbhgDIAEoCRItCgpTb3VyY2VUeXBlGAQgASgOMhkuZG9vdGEuY29yZS52MS5Tb3VyY2VUeXBlEjsKD3JlZGRpdF9tZXRhZGF0YRgFIAEoCzIgLmRvb3RhLmNvcmUudjEuU3ViUmVkZGl0TWV0YWRhdGFIAEIJCgdkZXRhaWxzImEKEVN1YlJlZGRpdE1ldGFkYXRhEhIKBXRpdGxlGAEgASgJSACIAQESLgoKY3JlYXRlZF9hdBgCIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXBCCAoGX3RpdGxlIr0CCgxMZWFkTWV0YWRhdGESGAoQY2hhaW5fb2ZfdGhvdWdodBgBIAEoCRIZChFzdWdnZXN0ZWRfY29tbWVudBgCIAEoCRIUCgxzdWdnZXN0ZWRfZG0YAyABKAkSKgoiY2hhaW5fb2ZfdGhvdWdodF9zdWdnZXN0ZWRfY29tbWVudBgEIAEoCRIlCh1jaGFpbl9vZl90aG91Z2h0X3N1Z2dlc3RlZF9kbRgFIAEoCRIQCghwb3N0X3VybBgGIAEoCRIYChBkZXNjcmlwdGlvbl9odG1sGAcgASgJEhoKEnN1YnJlZGRpdF9wcmVmaXhlZBgIIAEoCRIWCg5ub19vZl9jb21tZW50cxgJIAEoAxILCgN1cHMYCiABKAMSEgoKYXV0aG9yX3VybBgLIAEoCRIOCgZkbV91cmwYDCABKAkijAMKBExlYWQSCgoCaWQYASABKAkSEgoKcHJvamVjdF9pZBgCIAEoCRIRCglzb3VyY2VfaWQYAyABKAkSDgoGYXV0aG9yGAQgASgJEg8KB3Bvc3RfaWQYBSABKAkSJQoEdHlwZRgGIAEoDjIXLmRvb3RhLmNvcmUudjEuTGVhZFR5cGUSKQoGc3RhdHVzGAcgASgOMhkuZG9vdGEuY29yZS52MS5MZWFkU3RhdHVzEhcKD3JlbGV2YW5jeV9zY29yZRgIIAEoARIzCg9wb3N0X2NyZWF0ZWRfYXQYCSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEhIKBXRpdGxlGAogASgJSACIAQESEwoLZGVzY3JpcHRpb24YCyABKAkSLQoIbWV0YWRhdGEYDCABKAsyGy5kb290YS5jb3JlLnYxLkxlYWRNZXRhZGF0YRIuCgpjcmVhdGVkX2F0GA0gASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcEIICgZfdGl0bGUqzQEKDVBsYXRmb3JtRXJyb3ISHgoaUExBVEZPUk1fRVJST1JfVU5TUEVDSUZJRUQQABIpCiVQTEFURk9STV9FUlJPUl9NRVNTQUdFX0FMUkVBRFlfRVhJU1RTEAESIAocUExBVEZPUk1fRVJST1JfSU5WQUxJRF9RVU9URRACEiAKHFBMQVRGT1JNX1VOQVVUSE9SSVpFRF9BQ0NFU1MQAxItCilQTEFURk9STV9FUlJPUl9QUklDSU5HX09QVElPTl9JTlZBTElEX0FSRxAEKoABCgxJZGVudGl0eVJvbGUSHQoZSURFTlRJVFlfUk9MRV9VTlNQRUNJRklFRBAAEhYKEklERU5USVRZX1JPTEVfVVNFUhABEhcKE0lERU5USVRZX1JPTEVfQURNSU4QAhIgChxJREVOVElUWV9ST0xFX1BMQVRGT1JNX0FETUlOEAMqRAoKU291cmNlVHlwZRIbChdTT1VSQ0VfVFlQRV9VTlNQRUNJRklFRBAAEhkKFVNPVVJDRV9UWVBFX1NVQlJFRERJVBABKjYKCkxlYWRTdGF0dXMSBwoDTkVXEAASEAoMTk9UX1JFTEVWQU5UEAESDQoJQ09NUExFVEVEEAMqIQoITGVhZFR5cGUSCAoEUE9TVBAAEgsKB0NPTU1FTlQQAUIzWjFnaXRodWIuY29tL3NoYW5rMzE4L2Rvb3RhL3BiL2Rvb3RhL2NvcmUvdjE7cGJjb3JlYgZwcm90bzM", [file_google_protobuf_timestamp, file_google_protobuf_any]);
 
 /**
  * Describes the message doota.core.v1.TzTimestamp.
@@ -31,6 +31,34 @@ export const IdentitySchema = /*@__PURE__*/
  */
 export const PlatformErrorDetailsSchema = /*@__PURE__*/
   messageDesc(file_doota_core_v1_core, 2);
+
+/**
+ * Describes the message doota.core.v1.Source.
+ * Use `create(SourceSchema)` to create a new message.
+ */
+export const SourceSchema = /*@__PURE__*/
+  messageDesc(file_doota_core_v1_core, 3);
+
+/**
+ * Describes the message doota.core.v1.SubRedditMetadata.
+ * Use `create(SubRedditMetadataSchema)` to create a new message.
+ */
+export const SubRedditMetadataSchema = /*@__PURE__*/
+  messageDesc(file_doota_core_v1_core, 4);
+
+/**
+ * Describes the message doota.core.v1.LeadMetadata.
+ * Use `create(LeadMetadataSchema)` to create a new message.
+ */
+export const LeadMetadataSchema = /*@__PURE__*/
+  messageDesc(file_doota_core_v1_core, 5);
+
+/**
+ * Describes the message doota.core.v1.Lead.
+ * Use `create(LeadSchema)` to create a new message.
+ */
+export const LeadSchema = /*@__PURE__*/
+  messageDesc(file_doota_core_v1_core, 6);
 
 /**
  * Describes the enum doota.core.v1.PlatformError.
@@ -55,4 +83,40 @@ export const IdentityRoleSchema = /*@__PURE__*/
  */
 export const IdentityRole = /*@__PURE__*/
   tsEnum(IdentityRoleSchema);
+
+/**
+ * Describes the enum doota.core.v1.SourceType.
+ */
+export const SourceTypeSchema = /*@__PURE__*/
+  enumDesc(file_doota_core_v1_core, 2);
+
+/**
+ * @generated from enum doota.core.v1.SourceType
+ */
+export const SourceType = /*@__PURE__*/
+  tsEnum(SourceTypeSchema);
+
+/**
+ * Describes the enum doota.core.v1.LeadStatus.
+ */
+export const LeadStatusSchema = /*@__PURE__*/
+  enumDesc(file_doota_core_v1_core, 3);
+
+/**
+ * @generated from enum doota.core.v1.LeadStatus
+ */
+export const LeadStatus = /*@__PURE__*/
+  tsEnum(LeadStatusSchema);
+
+/**
+ * Describes the enum doota.core.v1.LeadType.
+ */
+export const LeadTypeSchema = /*@__PURE__*/
+  enumDesc(file_doota_core_v1_core, 4);
+
+/**
+ * @generated from enum doota.core.v1.LeadType
+ */
+export const LeadType = /*@__PURE__*/
+  tsEnum(LeadTypeSchema);
 

@@ -9,7 +9,7 @@ import { file_google_protobuf_timestamp } from "@bufbuild/protobuf/wkt";
  * Describes the file doota/reddit/v1/reddit.proto.
  */
 export const file_doota_reddit_v1_reddit = /*@__PURE__*/
-  fileDesc("Chxkb290YS9yZWRkaXQvdjEvcmVkZGl0LnByb3RvEg9kb290YS5yZWRkaXQudjEiIAoLSW50ZWdyYXRpb24SEQoJdXNlcl9uYW1lGAEgASgJIiQKFlJlbW92ZVN1YlJlZGRpdFJlcXVlc3QSCgoCaWQYASABKAkiIwoTQWRkU3ViUmVkZGl0UmVxdWVzdBIMCgRuYW1lGAEgASgJIpsBCglTdWJSZWRkaXQSCgoCaWQYASABKAkSCwoDdXJsGAIgASgJEgwKBG5hbWUYAyABKAkSEwoLZGVzY3JpcHRpb24YBCABKAkSNAoIbWV0YWRhdGEYBSABKAsyIi5kb290YS5yZWRkaXQudjEuU3ViUmVkZGl0TWV0YWRhdGESEgoFdGl0bGUYBiABKAlIAIgBAUIICgZfdGl0bGUiEwoRU3ViUmVkZGl0TWV0YWRhdGEiRwoVR2V0U3VicmVkZGl0c1Jlc3BvbnNlEi4KCnN1YnJlZGRpdHMYASADKAsyGi5kb290YS5yZWRkaXQudjEuU3ViUmVkZGl0IlcKF1VwZGF0ZUxlYWRTdGF0dXNSZXF1ZXN0EisKBnN0YXR1cxgBIAEoDjIbLmRvb3RhLnJlZGRpdC52MS5MZWFkU3RhdHVzEg8KB2xlYWRfaWQYAiABKAkiRgoXR2V0TGVhZHNCeVN0YXR1c1JlcXVlc3QSKwoGc3RhdHVzGAEgASgOMhsuZG9vdGEucmVkZGl0LnYxLkxlYWRTdGF0dXMiWgoXR2V0UmVsZXZhbnRMZWFkc1JlcXVlc3QSFwoKc3ViX3JlZGRpdBgBIAEoCUgAiAEBEhcKD3JlbGV2YW5jeV9zY29yZRgCIAEoAkINCgtfc3ViX3JlZGRpdCI+ChBHZXRMZWFkc1Jlc3BvbnNlEioKBWxlYWRzGAEgAygLMhsuZG9vdGEucmVkZGl0LnYxLlJlZGRpdExlYWQivQIKDExlYWRNZXRhZGF0YRIYChBjaGFpbl9vZl90aG91Z2h0GAEgASgJEhkKEXN1Z2dlc3RlZF9jb21tZW50GAIgASgJEhQKDHN1Z2dlc3RlZF9kbRgDIAEoCRIqCiJjaGFpbl9vZl90aG91Z2h0X3N1Z2dlc3RlZF9jb21tZW50GAQgASgJEiUKHWNoYWluX29mX3Rob3VnaHRfc3VnZ2VzdGVkX2RtGAUgASgJEhAKCHBvc3RfdXJsGAYgASgJEhgKEGRlc2NyaXB0aW9uX2h0bWwYByABKAkSGgoSc3VicmVkZGl0X3ByZWZpeGVkGAggASgJEhYKDm5vX29mX2NvbW1lbnRzGAkgASgDEgsKA3VwcxgKIAEoAxISCgphdXRob3JfdXJsGAsgASgJEg4KBmRtX3VybBgMIAEoCSKbAwoKUmVkZGl0TGVhZBIKCgJpZBgBIAEoCRISCgpwcm9qZWN0X2lkGAIgASgJEhQKDHN1YnJlZGRpdF9pZBgDIAEoCRIOCgZhdXRob3IYBCABKAkSDwoHcG9zdF9pZBgFIAEoCRInCgR0eXBlGAYgASgOMhkuZG9vdGEucmVkZGl0LnYxLkxlYWRUeXBlEisKBnN0YXR1cxgHIAEoDjIbLmRvb3RhLnJlZGRpdC52MS5MZWFkU3RhdHVzEhcKD3JlbGV2YW5jeV9zY29yZRgIIAEoARIzCg9wb3N0X2NyZWF0ZWRfYXQYCSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEhIKBXRpdGxlGAogASgJSACIAQESEwoLZGVzY3JpcHRpb24YCyABKAkSLwoIbWV0YWRhdGEYDCABKAsyHS5kb290YS5yZWRkaXQudjEuTGVhZE1ldGFkYXRhEi4KCmNyZWF0ZWRfYXQYDSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wQggKBl90aXRsZSo2CgpMZWFkU3RhdHVzEgcKA05FVxAAEhAKDE5PVF9SRUxFVkFOVBABEg0KCUNPTVBMRVRFRBADKiEKCExlYWRUeXBlEggKBFBPU1QQABILCgdDT01NRU5UEAFCN1o1Z2l0aHViLmNvbS9zaGFuazMxOC9kb290YS9wYi9kb290YS9yZWRkaXQvdjE7cGJyZWRkaXRiBnByb3RvMw", [file_google_protobuf_timestamp]);
+  fileDesc("Chxkb290YS9yZWRkaXQvdjEvcmVkZGl0LnByb3RvEg9kb290YS5yZWRkaXQudjEiIAoLSW50ZWdyYXRpb24SEQoJdXNlcl9uYW1lGAEgASgJIlcKF1VwZGF0ZUxlYWRTdGF0dXNSZXF1ZXN0EisKBnN0YXR1cxgBIAEoDjIbLmRvb3RhLnJlZGRpdC52MS5MZWFkU3RhdHVzEg8KB2xlYWRfaWQYAiABKAkiRgoXR2V0TGVhZHNCeVN0YXR1c1JlcXVlc3QSKwoGc3RhdHVzGAEgASgOMhsuZG9vdGEucmVkZGl0LnYxLkxlYWRTdGF0dXMiWgoXR2V0UmVsZXZhbnRMZWFkc1JlcXVlc3QSFwoKc3ViX3JlZGRpdBgBIAEoCUgAiAEBEhcKD3JlbGV2YW5jeV9zY29yZRgCIAEoAkINCgtfc3ViX3JlZGRpdCI+ChBHZXRMZWFkc1Jlc3BvbnNlEioKBWxlYWRzGAEgAygLMhsuZG9vdGEucmVkZGl0LnYxLlJlZGRpdExlYWQivQIKDExlYWRNZXRhZGF0YRIYChBjaGFpbl9vZl90aG91Z2h0GAEgASgJEhkKEXN1Z2dlc3RlZF9jb21tZW50GAIgASgJEhQKDHN1Z2dlc3RlZF9kbRgDIAEoCRIqCiJjaGFpbl9vZl90aG91Z2h0X3N1Z2dlc3RlZF9jb21tZW50GAQgASgJEiUKHWNoYWluX29mX3Rob3VnaHRfc3VnZ2VzdGVkX2RtGAUgASgJEhAKCHBvc3RfdXJsGAYgASgJEhgKEGRlc2NyaXB0aW9uX2h0bWwYByABKAkSGgoSc3VicmVkZGl0X3ByZWZpeGVkGAggASgJEhYKDm5vX29mX2NvbW1lbnRzGAkgASgDEgsKA3VwcxgKIAEoAxISCgphdXRob3JfdXJsGAsgASgJEg4KBmRtX3VybBgMIAEoCSKYAwoKUmVkZGl0TGVhZBIKCgJpZBgBIAEoCRISCgpwcm9qZWN0X2lkGAIgASgJEhEKCXNvdXJjZV9pZBgDIAEoCRIOCgZhdXRob3IYBCABKAkSDwoHcG9zdF9pZBgFIAEoCRInCgR0eXBlGAYgASgOMhkuZG9vdGEucmVkZGl0LnYxLkxlYWRUeXBlEisKBnN0YXR1cxgHIAEoDjIbLmRvb3RhLnJlZGRpdC52MS5MZWFkU3RhdHVzEhcKD3JlbGV2YW5jeV9zY29yZRgIIAEoARIzCg9wb3N0X2NyZWF0ZWRfYXQYCSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEhIKBXRpdGxlGAogASgJSACIAQESEwoLZGVzY3JpcHRpb24YCyABKAkSLwoIbWV0YWRhdGEYDCABKAsyHS5kb290YS5yZWRkaXQudjEuTGVhZE1ldGFkYXRhEi4KCmNyZWF0ZWRfYXQYDSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wQggKBl90aXRsZSo2CgpMZWFkU3RhdHVzEgcKA05FVxAAEhAKDE5PVF9SRUxFVkFOVBABEg0KCUNPTVBMRVRFRBADKiEKCExlYWRUeXBlEggKBFBPU1QQABILCgdDT01NRU5UEAFCN1o1Z2l0aHViLmNvbS9zaGFuazMxOC9kb290YS9wYi9kb290YS9yZWRkaXQvdjE7cGJyZWRkaXRiBnByb3RvMw", [file_google_protobuf_timestamp]);
 
 /**
  * Describes the message doota.reddit.v1.Integration.
@@ -19,81 +19,46 @@ export const IntegrationSchema = /*@__PURE__*/
   messageDesc(file_doota_reddit_v1_reddit, 0);
 
 /**
- * Describes the message doota.reddit.v1.RemoveSubRedditRequest.
- * Use `create(RemoveSubRedditRequestSchema)` to create a new message.
- */
-export const RemoveSubRedditRequestSchema = /*@__PURE__*/
-  messageDesc(file_doota_reddit_v1_reddit, 1);
-
-/**
- * Describes the message doota.reddit.v1.AddSubRedditRequest.
- * Use `create(AddSubRedditRequestSchema)` to create a new message.
- */
-export const AddSubRedditRequestSchema = /*@__PURE__*/
-  messageDesc(file_doota_reddit_v1_reddit, 2);
-
-/**
- * Describes the message doota.reddit.v1.SubReddit.
- * Use `create(SubRedditSchema)` to create a new message.
- */
-export const SubRedditSchema = /*@__PURE__*/
-  messageDesc(file_doota_reddit_v1_reddit, 3);
-
-/**
- * Describes the message doota.reddit.v1.SubRedditMetadata.
- * Use `create(SubRedditMetadataSchema)` to create a new message.
- */
-export const SubRedditMetadataSchema = /*@__PURE__*/
-  messageDesc(file_doota_reddit_v1_reddit, 4);
-
-/**
- * Describes the message doota.reddit.v1.GetSubredditsResponse.
- * Use `create(GetSubredditsResponseSchema)` to create a new message.
- */
-export const GetSubredditsResponseSchema = /*@__PURE__*/
-  messageDesc(file_doota_reddit_v1_reddit, 5);
-
-/**
  * Describes the message doota.reddit.v1.UpdateLeadStatusRequest.
  * Use `create(UpdateLeadStatusRequestSchema)` to create a new message.
  */
 export const UpdateLeadStatusRequestSchema = /*@__PURE__*/
-  messageDesc(file_doota_reddit_v1_reddit, 6);
+  messageDesc(file_doota_reddit_v1_reddit, 1);
 
 /**
  * Describes the message doota.reddit.v1.GetLeadsByStatusRequest.
  * Use `create(GetLeadsByStatusRequestSchema)` to create a new message.
  */
 export const GetLeadsByStatusRequestSchema = /*@__PURE__*/
-  messageDesc(file_doota_reddit_v1_reddit, 7);
+  messageDesc(file_doota_reddit_v1_reddit, 2);
 
 /**
  * Describes the message doota.reddit.v1.GetRelevantLeadsRequest.
  * Use `create(GetRelevantLeadsRequestSchema)` to create a new message.
  */
 export const GetRelevantLeadsRequestSchema = /*@__PURE__*/
-  messageDesc(file_doota_reddit_v1_reddit, 8);
+  messageDesc(file_doota_reddit_v1_reddit, 3);
 
 /**
  * Describes the message doota.reddit.v1.GetLeadsResponse.
  * Use `create(GetLeadsResponseSchema)` to create a new message.
  */
 export const GetLeadsResponseSchema = /*@__PURE__*/
-  messageDesc(file_doota_reddit_v1_reddit, 9);
+  messageDesc(file_doota_reddit_v1_reddit, 4);
 
 /**
  * Describes the message doota.reddit.v1.LeadMetadata.
  * Use `create(LeadMetadataSchema)` to create a new message.
  */
 export const LeadMetadataSchema = /*@__PURE__*/
-  messageDesc(file_doota_reddit_v1_reddit, 10);
+  messageDesc(file_doota_reddit_v1_reddit, 5);
 
 /**
  * Describes the message doota.reddit.v1.RedditLead.
  * Use `create(RedditLeadSchema)` to create a new message.
  */
 export const RedditLeadSchema = /*@__PURE__*/
-  messageDesc(file_doota_reddit_v1_reddit, 11);
+  messageDesc(file_doota_reddit_v1_reddit, 6);
 
 /**
  * Describes the enum doota.reddit.v1.LeadStatus.

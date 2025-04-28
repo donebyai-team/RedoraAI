@@ -169,7 +169,7 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 	}
 
 	redditOauthClient := reddit.NewRedditOauthClient(logger, deps.DataStore, sflags.MustGetString(cmd, "portal-reddit-client-id"), sflags.MustGetString(cmd, "portal-reddit-client-secret"))
-	tracker := redora.NewSubRedditTracker(gptModel, redditOauthClient, deps.DataStore, deps.AIClient, logger, deps.ConversationState)
+	tracker := redora.NewKeywordTrackerFactory(gptModel, redditOauthClient, deps.DataStore, deps.AIClient, logger, deps.ConversationState)
 
 	return redora.New(
 		deps.DataStore,

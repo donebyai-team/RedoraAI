@@ -8,7 +8,6 @@ import "google/protobuf/timestamp.proto";
 import "google/protobuf/any.proto";
 
 
-
 // TzTimestamp is a wrapper around Timestamp that includes a timezone offset
 // for displaying time in a specific timezone. Although timestamps are stored
 // with their extracted timezone offsets in the database (e.g., 2024-10-23 16:19:23 EST
@@ -57,4 +56,66 @@ enum IdentityRole {
   IDENTITY_ROLE_USER = 1;
   IDENTITY_ROLE_ADMIN = 2;
   IDENTITY_ROLE_PLATFORM_ADMIN = 3;
+}
+
+enum SourceType {
+  SOURCE_TYPE_UNSPECIFIED = 0;
+  SOURCE_TYPE_SUBREDDIT = 1;
+}
+
+message Source {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  SourceType SourceType = 4;
+  oneof details {
+    SubRedditMetadata reddit_metadata = 5;
+  }
+}
+
+message SubRedditMetadata {
+  optional string title = 1;
+  google.protobuf.Timestamp created_at = 2;
+}
+
+message LeadMetadata {
+  string chain_of_thought = 1;
+  string suggested_comment = 2;
+  string suggested_dm = 3;
+  string chain_of_thought_suggested_comment = 4;
+  string chain_of_thought_suggested_dm = 5;
+  string post_url = 6;
+  string description_html = 7;
+  string subreddit_prefixed = 8;
+  int64 no_of_comments = 9;
+  int64 ups = 10;
+  string author_url = 11;
+  string dm_url = 12;
+}
+
+message Lead {
+  string id = 1;
+  string project_id = 2;
+  string source_id = 3;
+  string author = 4;
+  string post_id = 5;
+  LeadType type = 6;
+  LeadStatus status = 7;
+  double relevancy_score = 8;
+  google.protobuf.Timestamp post_created_at = 9;
+  optional string title = 10;
+  string description = 11;
+  LeadMetadata metadata = 12;
+  google.protobuf.Timestamp created_at = 13;
+}
+
+enum LeadStatus {
+  NEW = 0;
+  NOT_RELEVANT = 1;
+  COMPLETED = 3;
+}
+
+enum LeadType {
+  POST = 0;
+  COMMENT = 1;
 }

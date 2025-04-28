@@ -44,7 +44,7 @@ func (v Variable) WithProjectDetails(project *models.Project) Variable {
 	return v
 }
 
-func (v Variable) WithRedditPost(post *models.RedditLead) Variable {
+func (v Variable) WithRedditPost(post *models.Lead) Variable {
 	if post.Title != nil {
 		v["Title"] = post.Title
 	}

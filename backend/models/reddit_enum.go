@@ -81,3 +81,34 @@ func ParseLeadType(name string) (LeadType, error) {
 	}
 	return LeadType(""), fmt.Errorf("%s is %w", name, ErrInvalidLeadType)
 }
+
+const (
+	// SourceTypeSUBREDDIT is a SourceType of type SUBREDDIT.
+	SourceTypeSUBREDDIT SourceType = "SUBREDDIT"
+)
+
+var ErrInvalidSourceType = errors.New("not a valid SourceType")
+
+// String implements the Stringer interface.
+func (x SourceType) String() string {
+	return string(x)
+}
+
+// IsValid provides a quick way to determine if the typed value is
+// part of the allowed enumerated values
+func (x SourceType) IsValid() bool {
+	_, err := ParseSourceType(string(x))
+	return err == nil
+}
+
+var _SourceTypeValue = map[string]SourceType{
+	"SUBREDDIT": SourceTypeSUBREDDIT,
+}
+
+// ParseSourceType attempts to convert a string to a SourceType.
+func ParseSourceType(name string) (SourceType, error) {
+	if x, ok := _SourceTypeValue[name]; ok {
+		return x, nil
+	}
+	return SourceType(""), fmt.Errorf("%s is %w", name, ErrInvalidSourceType)
+}

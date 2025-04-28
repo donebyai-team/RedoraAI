@@ -99,6 +99,216 @@ export declare type PlatformErrorDetails = Message<"doota.core.v1.PlatformErrorD
 export declare const PlatformErrorDetailsSchema: GenMessage<PlatformErrorDetails>;
 
 /**
+ * @generated from message doota.core.v1.Source
+ */
+export declare type Source = Message<"doota.core.v1.Source"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: string name = 2;
+   */
+  name: string;
+
+  /**
+   * @generated from field: string description = 3;
+   */
+  description: string;
+
+  /**
+   * @generated from field: doota.core.v1.SourceType SourceType = 4;
+   */
+  SourceType: SourceType;
+
+  /**
+   * @generated from oneof doota.core.v1.Source.details
+   */
+  details: {
+    /**
+     * @generated from field: doota.core.v1.SubRedditMetadata reddit_metadata = 5;
+     */
+    value: SubRedditMetadata;
+    case: "redditMetadata";
+  } | { case: undefined; value?: undefined };
+};
+
+/**
+ * Describes the message doota.core.v1.Source.
+ * Use `create(SourceSchema)` to create a new message.
+ */
+export declare const SourceSchema: GenMessage<Source>;
+
+/**
+ * @generated from message doota.core.v1.SubRedditMetadata
+ */
+export declare type SubRedditMetadata = Message<"doota.core.v1.SubRedditMetadata"> & {
+  /**
+   * @generated from field: optional string title = 1;
+   */
+  title?: string;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp created_at = 2;
+   */
+  createdAt?: Timestamp;
+};
+
+/**
+ * Describes the message doota.core.v1.SubRedditMetadata.
+ * Use `create(SubRedditMetadataSchema)` to create a new message.
+ */
+export declare const SubRedditMetadataSchema: GenMessage<SubRedditMetadata>;
+
+/**
+ * @generated from message doota.core.v1.LeadMetadata
+ */
+export declare type LeadMetadata = Message<"doota.core.v1.LeadMetadata"> & {
+  /**
+   * @generated from field: string chain_of_thought = 1;
+   */
+  chainOfThought: string;
+
+  /**
+   * @generated from field: string suggested_comment = 2;
+   */
+  suggestedComment: string;
+
+  /**
+   * @generated from field: string suggested_dm = 3;
+   */
+  suggestedDm: string;
+
+  /**
+   * @generated from field: string chain_of_thought_suggested_comment = 4;
+   */
+  chainOfThoughtSuggestedComment: string;
+
+  /**
+   * @generated from field: string chain_of_thought_suggested_dm = 5;
+   */
+  chainOfThoughtSuggestedDm: string;
+
+  /**
+   * @generated from field: string post_url = 6;
+   */
+  postUrl: string;
+
+  /**
+   * @generated from field: string description_html = 7;
+   */
+  descriptionHtml: string;
+
+  /**
+   * @generated from field: string subreddit_prefixed = 8;
+   */
+  subredditPrefixed: string;
+
+  /**
+   * @generated from field: int64 no_of_comments = 9;
+   */
+  noOfComments: bigint;
+
+  /**
+   * @generated from field: int64 ups = 10;
+   */
+  ups: bigint;
+
+  /**
+   * @generated from field: string author_url = 11;
+   */
+  authorUrl: string;
+
+  /**
+   * @generated from field: string dm_url = 12;
+   */
+  dmUrl: string;
+};
+
+/**
+ * Describes the message doota.core.v1.LeadMetadata.
+ * Use `create(LeadMetadataSchema)` to create a new message.
+ */
+export declare const LeadMetadataSchema: GenMessage<LeadMetadata>;
+
+/**
+ * @generated from message doota.core.v1.Lead
+ */
+export declare type Lead = Message<"doota.core.v1.Lead"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: string project_id = 2;
+   */
+  projectId: string;
+
+  /**
+   * @generated from field: string source_id = 3;
+   */
+  sourceId: string;
+
+  /**
+   * @generated from field: string author = 4;
+   */
+  author: string;
+
+  /**
+   * @generated from field: string post_id = 5;
+   */
+  postId: string;
+
+  /**
+   * @generated from field: doota.core.v1.LeadType type = 6;
+   */
+  type: LeadType;
+
+  /**
+   * @generated from field: doota.core.v1.LeadStatus status = 7;
+   */
+  status: LeadStatus;
+
+  /**
+   * @generated from field: double relevancy_score = 8;
+   */
+  relevancyScore: number;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp post_created_at = 9;
+   */
+  postCreatedAt?: Timestamp;
+
+  /**
+   * @generated from field: optional string title = 10;
+   */
+  title?: string;
+
+  /**
+   * @generated from field: string description = 11;
+   */
+  description: string;
+
+  /**
+   * @generated from field: doota.core.v1.LeadMetadata metadata = 12;
+   */
+  metadata?: LeadMetadata;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp created_at = 13;
+   */
+  createdAt?: Timestamp;
+};
+
+/**
+ * Describes the message doota.core.v1.Lead.
+ * Use `create(LeadSchema)` to create a new message.
+ */
+export declare const LeadSchema: GenMessage<Lead>;
+
+/**
  * @generated from enum doota.core.v1.PlatformError
  */
 export enum PlatformError {
@@ -162,4 +372,69 @@ export enum IdentityRole {
  * Describes the enum doota.core.v1.IdentityRole.
  */
 export declare const IdentityRoleSchema: GenEnum<IdentityRole>;
+
+/**
+ * @generated from enum doota.core.v1.SourceType
+ */
+export enum SourceType {
+  /**
+   * @generated from enum value: SOURCE_TYPE_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: SOURCE_TYPE_SUBREDDIT = 1;
+   */
+  SUBREDDIT = 1,
+}
+
+/**
+ * Describes the enum doota.core.v1.SourceType.
+ */
+export declare const SourceTypeSchema: GenEnum<SourceType>;
+
+/**
+ * @generated from enum doota.core.v1.LeadStatus
+ */
+export enum LeadStatus {
+  /**
+   * @generated from enum value: NEW = 0;
+   */
+  NEW = 0,
+
+  /**
+   * @generated from enum value: NOT_RELEVANT = 1;
+   */
+  NOT_RELEVANT = 1,
+
+  /**
+   * @generated from enum value: COMPLETED = 3;
+   */
+  COMPLETED = 3,
+}
+
+/**
+ * Describes the enum doota.core.v1.LeadStatus.
+ */
+export declare const LeadStatusSchema: GenEnum<LeadStatus>;
+
+/**
+ * @generated from enum doota.core.v1.LeadType
+ */
+export enum LeadType {
+  /**
+   * @generated from enum value: POST = 0;
+   */
+  POST = 0,
+
+  /**
+   * @generated from enum value: COMMENT = 1;
+   */
+  COMMENT = 1,
+}
+
+/**
+ * Describes the enum doota.core.v1.LeadType.
+ */
+export declare const LeadTypeSchema: GenEnum<LeadType>;
 
