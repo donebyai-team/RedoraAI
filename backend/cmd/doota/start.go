@@ -13,7 +13,6 @@ import (
 	"github.com/shank318/doota/portal"
 	"github.com/shank318/doota/portal/state"
 	"github.com/shank318/doota/services"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"time"
@@ -234,23 +233,6 @@ func vanaSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 }
 
 func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
-	credentialsPath := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
-	fmt.Println("dwefwe", credentialsPath)
-	// Check if the environment variable is set
-	if credentialsPath == "" {
-		fmt.Println("GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.")
-	}
-
-	// Read the credentials file
-	fileContents, err := ioutil.ReadFile(credentialsPath)
-	if err != nil {
-		fmt.Printf("Error reading credentials file: %v\n", err)
-	}
-
-	// Log the contents of the credentials file (for debugging)
-	// Be cautious with logging sensitive data like credentials in production!
-	fmt.Printf("Firebase Credentials File Content: %s\n", string(fileContents))
-
 	openaiApiKey, openaiOrganization, openaiDebugStore, langsmithApiKey, langsmithProject := openAILangsmithLegacyHandling(cmd, "common")
 	deps, err := app.NewDependenciesBuilder().
 		WithDataStore(sflags.MustGetString(cmd, "pg-dsn")).
