@@ -39,7 +39,6 @@ export const createClients = (
     baseUrl: baseUrl || 'http://localhost:8787',
     useBinaryFormat: false,
     interceptors: [auth, org],
-    credentials: 'include'
   })
 
   return {
