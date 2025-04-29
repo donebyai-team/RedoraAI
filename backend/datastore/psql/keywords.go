@@ -2,7 +2,9 @@ package psql
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/models"
 	"time"
 )
@@ -65,11 +67,17 @@ func (r *Database) GetKeywordTrackers(ctx context.Context) ([]*models.AugmentedK
 	var results []*models.AugmentedKeywordTracker
 	for _, tracker := range trackers {
 		keyword, err := r.GetKeywordByID(ctx, tracker.KeywordID)
+		if err != nil && errors.Is(err, datastore.NotFound) {
+			continue
+		}
 		if err != nil {
 			return nil, fmt.Errorf("failed to get keyword for project %q: %w", tracker.KeywordID, err)
 		}
 
 		source, err := r.GetSourceByID(ctx, tracker.SourceID)
+		if err != nil && errors.Is(err, datastore.NotFound) {
+			continue
+		}
 		if err != nil {
 			return nil, fmt.Errorf("failed to get source for project %q: %w", tracker.KeywordID, err)
 		}
