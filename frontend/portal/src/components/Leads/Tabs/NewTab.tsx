@@ -60,6 +60,7 @@ const NewTabComponent = () => {
         }
         getAllRelevantLeads();
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [relevancyScore, subReddit, (selectedleadData === null)]);
 
     return (<ListRenderComp />);

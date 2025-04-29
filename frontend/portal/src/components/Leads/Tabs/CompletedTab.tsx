@@ -33,6 +33,7 @@ const CompletedTabComponent = () => {
         }
         getAllLeadsByStatus();
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [(selectedleadData === null)]);
 
     return (<ListRenderComp />);

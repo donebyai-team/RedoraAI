@@ -4,13 +4,13 @@ import React, { FC, ReactNode } from 'react'
 import { Grid } from '@mui/material'
 import NavBar from './NavBar'
 // import { Sidebar } from './Sidebar'
-import { usePathname } from 'next/navigation'
-import { isActivePath } from '../utils/url'
+// import { usePathname } from 'next/navigation'
+// import { isActivePath } from '../utils/url'
 
 export const DashboardLayout: FC<{ children: ReactNode }> = ({ children }) => {
   // const [hoverActive, setHoverActive] = useState(false)
-  const pathname = usePathname()
-  const isSetting = isActivePath('/dashboard/settings', pathname)
+  // const pathname = usePathname()
+  // const isSetting = isActivePath('/dashboard/settings', pathname)
 
   // const handleMouseEnter = () => {
   //   setHoverActive(true)
@@ -38,11 +38,11 @@ export const DashboardLayout: FC<{ children: ReactNode }> = ({ children }) => {
 
         <NavBar />
 
-        <section className={isSetting ? 'flex flex-col flex-1' : 'contents'}>
+        <section className={'flex flex-1'}>
           {/* <Sidebar/> */}
 
           {/* <Grid item className={!isSetting ? 'sm:h-dvh flex-1 w-0' : 'flex-1 bg-neutral-50 h-full p-2'}>             */}
-          <Grid item className={'flex-1 bg-neutral-50 h-full'}>
+          <Grid item className={'flex-1 bg-neutral-50 h-full w-full'}>
             {children}
           </Grid>
 

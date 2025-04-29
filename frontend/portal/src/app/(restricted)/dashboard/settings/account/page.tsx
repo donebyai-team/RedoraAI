@@ -1,15 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
-import { useAuthUser } from '@doota/ui-core/hooks/useAuth'
-import { Box } from '@mui/system'
-import {  IntegrationType, Integration } from '@doota/pb/doota/portal/v1/portal_pb'
-import { FallbackSpinner } from '../../../../../atoms/FallbackSpinner'
-import { Button } from '../../../../../atoms/Button'
-import { portalClient } from '../../../../../services/grpc'
-import { buildAppUrl } from '../../../../routes'
-import { routes } from '@doota/ui-core/routing'
-
+import { useEffect, useState } from 'react'
 import Table from '@mui/material/Table'
 import TableBody from '@mui/material/TableBody'
 import TableCell from '@mui/material/TableCell'
@@ -17,20 +8,41 @@ import TableContainer from '@mui/material/TableContainer'
 import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 import Paper from '@mui/material/Paper'
-import Modal from '@mui/material/Modal'
-import Image from 'next/image'
+import { useAuthUser } from '@doota/ui-core/hooks/useAuth'
+import {  IntegrationType, Integration } from '@doota/pb/doota/portal/v1/portal_pb'
+import { FallbackSpinner } from '../../../../../atoms/FallbackSpinner'
+import { Button } from '../../../../../atoms/Button'
+import { portalClient } from '../../../../../services/grpc'
+import { buildAppUrl } from '../../../../routes'
+import { routes } from '@doota/ui-core/routing'
 import { isAdmin } from '@doota/ui-core/helper/role'
+// import { Box } from '@mui/system'
+// import Modal from '@mui/material/Modal'
+// import Image from 'next/image'
 
 export default function Page() {
   const user = useAuthUser()
   const [loading, setLoading] = useState(false)
-  const [open, setOpen] = React.useState(false)
-  const handleOpen = () => setOpen(true)
-  const handleClose = () => setOpen(false)
+  // const [open, setOpen] = useState(false)
+  // const handleOpen = () => setOpen(true)
+  // const handleClose = () => setOpen(false)
   const [integrations, setIntegrations] = useState<Integration[]>([]);
 
   useEffect(() => {
   }, [setLoading])
+
+  useEffect(() => {
+    portalClient.getIntegrations({})
+        .then((res) => {
+          setIntegrations(res.integrations);
+        })
+        .catch((err) => {
+          console.error("Error fetching integrations:", err);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+  }, []);
 
   if (loading) {
     return <FallbackSpinner />
@@ -46,19 +58,6 @@ export default function Page() {
         window.open(oAuthAuthorizeResp.authorizeUrl, '_self')
       })
   }
-
-  useEffect(() => {
-    portalClient.getIntegrations({})
-        .then((res) => {
-          setIntegrations(res.integrations);
-        })
-        .catch((err) => {
-          console.error("Error fetching integrations:", err);
-        })
-        .finally(() => {
-          setLoading(false);
-        });
-  }, []);
 
   return (
     <>
