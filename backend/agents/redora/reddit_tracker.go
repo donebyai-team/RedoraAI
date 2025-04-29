@@ -154,9 +154,9 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 	// Filter by AI
 	for _, post := range newPosts {
 		// TODO: Remove it later
-		if countTestPosts >= 5 {
-			break
-		}
+		//if countTestPosts >= 5 {
+		//	break
+		//}
 
 		redditLead := &models.Lead{
 			ProjectID:     project.ID,
