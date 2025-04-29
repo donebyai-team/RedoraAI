@@ -1,6 +1,7 @@
 {
   "extends": "../packages/ts-config/base",
   "compilerOptions": {
+    "noUnusedLocals": false,
     "target": "es5",
     "module": "esnext",
     "incremental": true,
