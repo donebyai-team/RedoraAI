@@ -15,6 +15,7 @@ import (
 	"github.com/shank318/doota/services"
 	"os"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -142,6 +143,7 @@ func openAILangsmithLegacyHandling(cmd *cobra.Command, prefix string) (string, s
 
 func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 	openaiApiKey, openaiOrganization, openaiDebugStore, langsmithApiKey, langsmithProject := openAILangsmithLegacyHandling(cmd, "common")
+	redisAddr := sflags.MustGetString(cmd, "redis-addr")
 	deps, err := app.NewDependenciesBuilder().
 		WithDataStore(sflags.MustGetString(cmd, "pg-dsn")).
 		WithKMSKeyPath(sflags.MustGetString(cmd, "jwt-kms-keypath")).
@@ -154,7 +156,7 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		).
 		WithConversationState(
 			sflags.MustGetDuration(cmd, "common-phone-call-ttl"),
-			sflags.MustGetString(cmd, "redis-addr"),
+			redisAddr,
 			"redora",
 			"tracker",
 		).
@@ -171,7 +173,14 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 	}
 
 	redditOauthClient := reddit.NewRedditOauthClient(logger, deps.DataStore, sflags.MustGetString(cmd, "portal-reddit-client-id"), sflags.MustGetString(cmd, "portal-reddit-client-secret"), sflags.MustGetString(cmd, "portal-reddit-redirect-url"))
-	tracker := redora.NewKeywordTrackerFactory(gptModel, redditOauthClient, deps.DataStore, deps.AIClient, logger, deps.ConversationState)
+
+	var isDev bool
+	// TODO: Hack to know the env
+	if strings.Contains(redisAddr, "localhost") {
+		isDev = true
+	}
+
+	tracker := redora.NewKeywordTrackerFactory(isDev, gptModel, redditOauthClient, deps.DataStore, deps.AIClient, logger, deps.ConversationState)
 
 	return redora.New(
 		deps.DataStore,

@@ -23,9 +23,11 @@ type redditKeywordTracker struct {
 	logger            *zap.Logger
 	state             state.ConversationState
 	redditOauthClient *reddit.OauthClient
+	isDev             bool
 }
 
 func newRedditKeywordTracker(
+	isDev bool,
 	gptModel ai.GPTModel,
 	redditOauthClient *reddit.OauthClient,
 	db datastore.Repository,
@@ -39,6 +41,7 @@ func newRedditKeywordTracker(
 		logger:            logger,
 		state:             state,
 		redditOauthClient: redditOauthClient,
+		isDev:             isDev,
 	}
 }
 
@@ -50,6 +53,7 @@ func (s *redditKeywordTracker) WithLogger(logger *zap.Logger) KeywordTracker {
 		logger:            logger,
 		state:             s.state,
 		redditOauthClient: s.redditOauthClient,
+		isDev:             s.isDev,
 	}
 }
 
@@ -153,10 +157,11 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 	s.logger.Info("posts to be evaluated on relevancy via ai", zap.Int("total_posts", len(newPosts)))
 	// Filter by AI
 	for _, post := range newPosts {
-		// TODO: Remove it later
-		//if countTestPosts >= 5 {
-		//	break
-		//}
+		// TODO: Only on dev to avoid openai calls
+		if countTestPosts >= 5 && s.isDev {
+			s.logger.Info("dev mode is on, max 5 posts extracted via openai")
+			break
+		}
 
 		redditLead := &models.Lead{
 			ProjectID:     project.ID,

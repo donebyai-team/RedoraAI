@@ -22,9 +22,11 @@ type KeywordTrackerFactory struct {
 	logger            *zap.Logger
 	state             state.ConversationState
 	redditOauthClient *reddit.OauthClient
+	isDev             bool
 }
 
 func NewKeywordTrackerFactory(
+	isDev bool,
 	gptModel ai.GPTModel,
 	redditOauthClient *reddit.OauthClient,
 	db datastore.Repository,
@@ -38,11 +40,13 @@ func NewKeywordTrackerFactory(
 		logger:            logger,
 		state:             state,
 		redditOauthClient: redditOauthClient,
+		isDev:             isDev,
 	}
 }
 
 func (f *KeywordTrackerFactory) GetKeywordTrackerBySource(sourceType models.SourceType) KeywordTracker {
 	return newRedditKeywordTracker(
+		f.isDev,
 		f.gptModel,
 		f.redditOauthClient,
 		f.db,
