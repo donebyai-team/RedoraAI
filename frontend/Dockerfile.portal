@@ -11,8 +11,8 @@ WORKDIR /usr/src/app
 ARG NEXT_PUBLIC_APP_URL
 ARG NEXT_PUBLIC_API_URL
 
-# Create the .env file, these are the default values
-RUN echo "NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}" > /usr/src/app/portal/.env && \
+RUN mkdir -p /usr/src/app/portal && \
+    echo "NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}" > /usr/src/app/portal/.env && \
     echo "NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}" >> /usr/src/app/portal/.env
 
 RUN pnpm install --frozen-lockfile && \
