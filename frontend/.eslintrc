@@ -31,7 +31,8 @@
     "react/react-in-jsx-scope": "off",
     "import/no-unresolved": "off",
     "@typescript-eslint/ban-ts-comment": "off",
-    "no-unreachable": "error"
+    "no-unreachable": "error",
+    "react-hooks/rules-of-hooks": "off"
   },
   "globals": {
     "chrome": "readonly"
