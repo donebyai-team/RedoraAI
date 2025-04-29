@@ -74,7 +74,7 @@ func (s *Spooler) runLoop(ctx context.Context) {
 			return
 		case subReddit := <-s.queue:
 			// Remove the case from the queued map, we are processing it
-			s.queued.Delete(subReddit.Source.ID)
+			s.queued.Delete(subReddit.Tracker.ID)
 
 			// FIXME: We need to deal with errors differently here. We need to separated
 			// internal spooler error that are irecoverable from the ones that are
