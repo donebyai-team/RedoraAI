@@ -52,7 +52,7 @@ export default function AddSubredditDialog({ open, onClose, onAdd }: AddSubreddi
         setIsLoading(true)
 
         try {
-            await portalClient.addSubReddit({ name: trimmedSubreddit })
+            await portalClient.addSource({ name: trimmedSubreddit })
             onAdd(trimmedSubreddit)
             setSubreddit("")
             onClose()
