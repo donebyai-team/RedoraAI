@@ -143,6 +143,7 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 	openaiApiKey, openaiOrganization, openaiDebugStore, langsmithApiKey, langsmithProject := openAILangsmithLegacyHandling(cmd, "common")
 	deps, err := app.NewDependenciesBuilder().
 		WithDataStore(sflags.MustGetString(cmd, "pg-dsn")).
+		WithKMSKeyPath(sflags.MustGetString(cmd, "jwt-kms-keypath")).
 		WithAI(
 			openaiApiKey,
 			openaiOrganization,
