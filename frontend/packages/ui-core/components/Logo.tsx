@@ -7,8 +7,8 @@ export const Logo: FC = () => {
   if (isInPortal) {
     return (
       <div className='flex flex-col items-center gap-4'>
-        <Image width={200} height={150} alt='doota logo' priority imageKey='logo_new' />
-        <div className='!text-[24px] font-bold text-[#284150]'>doota</div>
+        <Image width={120} height={120} alt='doota logo' priority imageKey='logo_new' />
+        {/* <div className='!text-[24px] font-bold text-[#284150]'>doota</div> */}
       </div>
     )
   }

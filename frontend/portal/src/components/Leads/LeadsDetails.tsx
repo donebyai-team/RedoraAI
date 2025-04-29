@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import {
   Box,
   Typography,
@@ -16,14 +16,16 @@ import {
   Tooltip,
 } from "@mui/material"
 import { ThumbDown, ThumbUp, Close, Star, Send } from "@mui/icons-material"
-import { ChildComponentProps } from "./Inbox";
 import { LightbulbIcon } from "lucide-react";
 import { formateDate, getSubredditName } from "./Tabs/NewTab";
-import { LeadStatus, SubReddit } from "@doota/pb/doota/reddit/v1/reddit_pb";
 import { useClientsContext } from "@doota/ui-core/context/ClientContext";
 import Link from "next/link";
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
+import { LeadStatus } from "@doota/pb/doota/core/v1/core_pb";
+import { useAppDispatch, useAppSelector } from "../../../store/hooks";
+import { RootState } from "../../../store/store";
+import { LeadTabStatus, setSelectedLeadData } from "../../../store/Lead/leadSlice";
 
 // Create a custom theme with Reddit-like colors
 const theme = createTheme({
@@ -44,29 +46,26 @@ const theme = createTheme({
   },
 })
 
-const LeadsPostDetails: React.FC<ChildComponentProps> = ({ selectedleadData, setSelectedLeadData }) => {
-
-  if (!selectedleadData) return null;
+const LeadsPostDetails = () => {
 
   const { portalClient } = useClientsContext();
-  const [subredditList, setSubredditList] = useState<SubReddit[]>([]);
+  const { subredditList } = useAppSelector((state: RootState) => state.source);
+  const { selectedleadData, listofleads, activeTab } = useAppSelector((state: RootState) => state.lead);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const dispatch = useAppDispatch();
 
-  useEffect(() => {
+  const handleSelectNext = () => {
+    if (activeTab === LeadTabStatus.NEW) {
+      const currentIndex = listofleads.findIndex(item => item.id === selectedleadData?.id);
+      const nextItem = listofleads[currentIndex + 1];
 
-    const getAllSubReddits = async () => {
-
-      try {
-        const result = await portalClient.getSubReddits({});
-        setSubredditList(result?.subreddits ?? []);
-      } catch (err: any) {
-        const message = err?.response?.data?.message || err.message || "Something went wrong"
-        console.log(message);
+      if (nextItem !== undefined) {
+        dispatch(setSelectedLeadData(nextItem));
+      } else {
+        handleCloseLeadDetail();
       }
     }
-    getAllSubReddits();
-
-  }, []);
+  };
 
   const copyTextAndOpenLink = (textToCopy: string, linkToOpen: string) => {
     navigator.clipboard.writeText(textToCopy)
@@ -80,15 +79,16 @@ const LeadsPostDetails: React.FC<ChildComponentProps> = ({ selectedleadData, set
   };
 
   const handleCloseLeadDetail = () => {
-    setSelectedLeadData(null);
+    dispatch(setSelectedLeadData(null));
   };
 
   const handleLeadNotRelevent = async () => {
     setIsLoading(true);
+    if (!selectedleadData) return;
     try {
       const result = await portalClient.updateLeadStatus({ status: LeadStatus.NOT_RELEVANT, leadId: selectedleadData.id });
       console.log("###_result ", result);
-      handleCloseLeadDetail();
+      handleSelectNext();
     } catch (err: any) {
       const message = err?.response?.data?.message || err.message || "Something went wrong"
       console.log("###_error", message);
@@ -99,10 +99,11 @@ const LeadsPostDetails: React.FC<ChildComponentProps> = ({ selectedleadData, set
 
   const handleLeadComplete = async () => {
     setIsLoading(true);
+    if (!selectedleadData) return;
     try {
       const result = await portalClient.updateLeadStatus({ status: LeadStatus.COMPLETED, leadId: selectedleadData.id });
       console.log("###_result ", result);
-      handleCloseLeadDetail();
+      handleSelectNext();
     } catch (err: any) {
       const message = err?.response?.data?.message || err.message || "Something went wrong"
       console.log("###_error", message);
@@ -111,7 +112,15 @@ const LeadsPostDetails: React.FC<ChildComponentProps> = ({ selectedleadData, set
     }
   };
 
-  console.log("###_leads ", selectedleadData);
+  const decodeHtml = (html: string) => {
+    const textarea = document.createElement('textarea');
+    textarea.innerHTML = html;
+    return textarea.value;
+  };
+
+  // console.log("###_leads ", selectedleadData);
+
+  if (!selectedleadData) return null;
 
   return (
     <ThemeProvider theme={theme}>
@@ -139,7 +148,7 @@ const LeadsPostDetails: React.FC<ChildComponentProps> = ({ selectedleadData, set
               <Tooltip
                 title={
                   <Box>
-                    <ReactMarkdown>{selectedleadData.metadata?.chainOfThought}</ReactMarkdown>
+                    <div dangerouslySetInnerHTML={{ __html: decodeHtml(selectedleadData.metadata?.chainOfThought as string) }} />
                   </Box>
                 }
                 placement="bottom-start"
@@ -162,36 +171,38 @@ const LeadsPostDetails: React.FC<ChildComponentProps> = ({ selectedleadData, set
               </Tooltip>
             </Box>
             <Box sx={{ display: "flex", gap: 1 }}>
-              <Button
-                variant="contained"
-                startIcon={<ThumbDown />}
-                sx={{
-                  bgcolor: "#f0f0f0",
-                  color: "#666",
-                  "&:hover": { bgcolor: "#e0e0e0" },
-                  textTransform: "none",
-                  boxShadow: "none",
-                }}
-                onClick={handleLeadNotRelevent}
-                disabled={isLoading}
-              >
-                Not relevant
-              </Button>
-              <Button
-                variant="contained"
-                startIcon={<ThumbUp />}
-                sx={{
-                  bgcolor: "#f0f0f0",
-                  color: "#666",
-                  "&:hover": { bgcolor: "#e0e0e0" },
-                  textTransform: "none",
-                  boxShadow: "none",
-                }}
-                onClick={handleLeadComplete}
-                disabled={isLoading}
-              >
-                Complete
-              </Button>
+              {activeTab === LeadTabStatus.NEW && <>
+                <Button
+                  variant="contained"
+                  startIcon={<ThumbDown />}
+                  sx={{
+                    bgcolor: "#f0f0f0",
+                    color: "#666",
+                    "&:hover": { bgcolor: "#e0e0e0" },
+                    textTransform: "none",
+                    boxShadow: "none",
+                  }}
+                  onClick={handleLeadNotRelevent}
+                  disabled={isLoading}
+                >
+                  Not relevant
+                </Button>
+                <Button
+                  variant="contained"
+                  startIcon={<ThumbUp />}
+                  sx={{
+                    bgcolor: "#f0f0f0",
+                    color: "#666",
+                    "&:hover": { bgcolor: "#e0e0e0" },
+                    textTransform: "none",
+                    boxShadow: "none",
+                  }}
+                  onClick={handleLeadComplete}
+                  disabled={isLoading}
+                >
+                  Complete
+                </Button>
+              </>}
               <IconButton size="small" onClick={handleCloseLeadDetail}>
                 <Close />
               </IconButton>
@@ -203,78 +214,84 @@ const LeadsPostDetails: React.FC<ChildComponentProps> = ({ selectedleadData, set
             <Box sx={{ p: 2 }}>
               <Box sx={{ mb: 1 }}>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                  <Link href={selectedleadData.metadata?.authorUrl as string} target="_blank">{`/u/Action_Hank1`}</Link> • {getSubredditName(subredditList, selectedleadData.subredditId)} • {selectedleadData.postCreatedAt ? formateDate(selectedleadData.postCreatedAt) : "N/A"}
+                  <Link href={selectedleadData.metadata?.authorUrl as string} target="_blank">{selectedleadData.author}</Link> • {getSubredditName(subredditList, selectedleadData.sourceId)} • {selectedleadData.postCreatedAt ? formateDate(selectedleadData.postCreatedAt) : "N/A"}
                 </Typography>
-                <Typography variant="h5" component="h1" sx={{ fontWeight: "bold", mb: 2 }}>
-                  {selectedleadData.title}
-                </Typography>
-                <ReactMarkdown>{selectedleadData.description}</ReactMarkdown>
+                <Link href={selectedleadData.metadata?.postUrl as string} target="_blank">
+                  <Typography variant="h5" component="h1" sx={{ fontWeight: "bold", mb: 2 }}>
+                    {selectedleadData.title}
+                  </Typography>
+                </Link>
+                <div dangerouslySetInnerHTML={{ __html: decodeHtml(selectedleadData.metadata?.descriptionHtml as string) }} />
               </Box>
             </Box>
 
             {/* Suggested comment card */}
-            <Card sx={{ mb: 2, borderRadius: 2, mx: 2 }}>
-              <CardContent>
-                <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                  <Star sx={{ color: "#e25a9e", mr: 1 }} />
-                  <Typography color="#e25a9e" fontWeight="medium">
-                    Suggested comment
+            {selectedleadData.metadata?.suggestedComment && (
+              <Card sx={{ mb: 2, borderRadius: 2, mx: 2 }}>
+                <CardContent>
+                  <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                    <Star sx={{ color: "#e25a9e", mr: 1 }} />
+                    <Typography color="#e25a9e" fontWeight="medium">
+                      Suggested comment
+                    </Typography>
+                  </Box>
+                  <Typography variant="body1" sx={{ mb: 2 }}>
+                    {selectedleadData.metadata?.suggestedComment}
                   </Typography>
-                </Box>
-                <Typography variant="body1" sx={{ mb: 2 }}>
-                  {selectedleadData.metadata?.chainOfThoughtSuggestedComment}
-                </Typography>
-                <Stack direction="row" justifyContent="end">
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    startIcon={<Send />}
-                    sx={{
-                      bgcolor: "#000",
-                      color: "#fff",
-                      "&:hover": { bgcolor: "#333" },
-                      borderRadius: "20px",
-                      textTransform: "none",
-                    }}
-                    onClick={() => copyTextAndOpenLink(selectedleadData.metadata?.chainOfThoughtSuggestedComment as string, selectedleadData.metadata?.postUrl as string)}
-                  >
-                    Copy & open post
-                  </Button>
-                </Stack>
-              </CardContent>
-            </Card>
+                  <Stack direction="row" justifyContent="end">
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      startIcon={<Send />}
+                      sx={{
+                        bgcolor: "#000",
+                        color: "#fff",
+                        "&:hover": { bgcolor: "#333" },
+                        borderRadius: "20px",
+                        textTransform: "none",
+                      }}
+                      onClick={() => copyTextAndOpenLink(selectedleadData.metadata?.suggestedComment as string, selectedleadData.metadata?.postUrl as string)}
+                    >
+                      Copy & open post
+                    </Button>
+                  </Stack>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Suggested DM card */}
-            <Card sx={{ borderRadius: 2, mx: 2 }}>
-              <CardContent>
-                <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                  <Star sx={{ color: "#e25a9e", mr: 1 }} />
-                  <Typography color="#e25a9e" fontWeight="medium">
-                    Suggested DM
+            {selectedleadData.metadata?.suggestedDm && (
+              <Card sx={{ borderRadius: 2, mx: 2 }}>
+                <CardContent>
+                  <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                    <Star sx={{ color: "#e25a9e", mr: 1 }} />
+                    <Typography color="#e25a9e" fontWeight="medium">
+                      Suggested DM
+                    </Typography>
+                  </Box>
+                  <Typography variant="body1" paragraph>
+                    {selectedleadData.metadata?.suggestedDm}
                   </Typography>
-                </Box>
-                <Typography variant="body1" paragraph>
-                  {selectedleadData.metadata?.chainOfThoughtSuggestedDm}
-                </Typography>
-                <Stack direction="row" justifyContent="end">
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    startIcon={<Send />}
-                    sx={{
-                      bgcolor: "#000",
-                      color: "#fff",
-                      "&:hover": { bgcolor: "#333" },
-                      borderRadius: "20px",
-                      textTransform: "none",
-                    }}
-                    onClick={() => copyTextAndOpenLink(selectedleadData.metadata?.chainOfThoughtSuggestedDm as string, selectedleadData.metadata?.dmUrl as string)}
-                  >
-                    Copy & open DMs
-                  </Button>
-                </Stack>
-              </CardContent>
-            </Card>
+                  <Stack direction="row" justifyContent="end">
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      startIcon={<Send />}
+                      sx={{
+                        bgcolor: "#000",
+                        color: "#fff",
+                        "&:hover": { bgcolor: "#333" },
+                        borderRadius: "20px",
+                        textTransform: "none",
+                      }}
+                      onClick={() => copyTextAndOpenLink(selectedleadData.metadata?.suggestedDm as string, selectedleadData.metadata?.dmUrl as string)}
+                    >
+                      Copy & open DMs
+                    </Button>
+                  </Stack>
+                </CardContent>
+              </Card>
+            )}
           </Box>
 
         </Paper>

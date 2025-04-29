@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { Button, CircularProgress, Menu, MenuItem, Skeleton, Tooltip } from '@mui/material'
-import { ChevronDown, LogOut, Settings } from 'lucide-react'
+import { CircularProgress, Menu, MenuItem, Tooltip } from '@mui/material'
+import { ChevronDown, LogOut } from 'lucide-react'
 import { useAuth } from '@doota/ui-core/hooks/useAuth'
 import { isPlatformAdmin, isAdmin } from '@doota/ui-core/helper/role'
 import { useOrganization } from '@doota/ui-core/hooks/useOrganization'
@@ -16,18 +16,14 @@ import {
   ListItemIcon,
   ListItemText,
   ListItemButton,
-  Avatar,
   Divider,
   IconButton,
   Badge,
   Paper,
-  // Menu,
-  // MenuItem,
 } from "@mui/material"
 import {
   Mail as MailIcon,
   MoreVert as MoreVertIcon,
-  Add as AddIcon,
   Settings as SettingsIcon,
   DeleteOutline,
 } from "@mui/icons-material"
@@ -35,15 +31,9 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import AddSubredditDialog from './AddSubredditDialog';
 import Link from 'next/link'
 import { useClientsContext } from '@doota/ui-core/context/ClientContext'
-
-type subreddit = {
-  id: string;
-  name: string;
-};
-
-interface SUBREDIT extends subreddit {
-  leads_count?: number;
-}
+import { useAppDispatch, useAppSelector } from '../../store/hooks'
+import { setError, setLoading, setSubredditList, SourceTyeps } from '../../store/Source/sourceSlice'
+import { RootState } from '../../store/store'
 
 const NavBar: React.FC<{ hoverActive?: boolean }> = ({ hoverActive = true }) => {
   const { user, logout } = useAuth()
@@ -51,6 +41,8 @@ const NavBar: React.FC<{ hoverActive?: boolean }> = ({ hoverActive = true }) => 
   const [currentOrg, setCurrentOrganization] = useOrganization()
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const open = Boolean(anchorEl)
+  const dispatch = useAppDispatch();
+  const { subredditList, loading, error } = useAppSelector((state: RootState) => state.source);
 
   const getInitials = (name: string | undefined) => {
     const matches = name?.match(/[A-Z]/g)
@@ -65,7 +57,7 @@ const NavBar: React.FC<{ hoverActive?: boolean }> = ({ hoverActive = true }) => 
     }
   }
 
-  const handleClose1 = () => {
+  const handleClose = () => {
     setAnchorEl(null)
   }
 
@@ -81,17 +73,15 @@ const NavBar: React.FC<{ hoverActive?: boolean }> = ({ hoverActive = true }) => 
   const searchParams = useSearchParams();
   const [openSubredditDialog, setOpenSubredditDialog] = useState(false);
   const [anchorEl1, setAnchorEl1] = useState<null | HTMLElement>(null);
-  const [subredditList, setSubredditList] = useState<SUBREDIT[]>([]);
   const [currentActiveSubRedditId, setcurrentActiveSubRedditId] = useState<string>("");
   const [subRedditText, setSubRedditText] = useState<string>("");
   const open1 = Boolean(anchorEl1);
-  const [isLoading, setIsLoading] = useState(false);
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl1(event.currentTarget);
   };
 
-  const handleClose = () => {
+  const handleClose1 = () => {
     setAnchorEl1(null);
   };
 
@@ -121,8 +111,7 @@ const NavBar: React.FC<{ hoverActive?: boolean }> = ({ hoverActive = true }) => 
 
   }, [pathname, router, searchParams, currentActiveSubRedditId, relevancy_score]);
 
-  const handleSubRedditsClick = (data: subreddit) => {
-    // const value = SIDEBAR_MENU_LIST.find(item => item?.name === menu)?.active_menu ?? SIDEBAR_MENU_LIST[0].active_menu;
+  const handleSubRedditsClick = (data: SourceTyeps) => {
     console.log(data);
     setcurrentActiveSubRedditId(data.id);
   };
@@ -150,11 +139,11 @@ const NavBar: React.FC<{ hoverActive?: boolean }> = ({ hoverActive = true }) => 
 
   useEffect(() => {
     const getAllSubReddits = async () => {
-      setIsLoading(true);
+      dispatch(setLoading(true));
 
       try {
-        const result = await portalClient.getSubReddits({});
-        const listOfSubReddits = result?.subreddits ?? [];
+        const result = await portalClient.getSources({});
+        const listOfSubReddits = result?.sources ?? [];
 
         const newSubRedditsList = [];
 
@@ -164,13 +153,14 @@ const NavBar: React.FC<{ hoverActive?: boolean }> = ({ hoverActive = true }) => 
           newSubRedditsList.push({ ...reddit, leads_count: leadsList.length });
         }
 
-        setSubredditList(newSubRedditsList);
+        dispatch(setSubredditList(newSubRedditsList));
       } catch (err: any) {
         const message = err?.response?.data?.message || err.message || "Something went wrong";
         toast.error(message);
+        dispatch(setError(message));
       } finally {
-        setIsLoading(false);
-        setSubRedditText("");
+        dispatch(setLoading(false));
+        // setSubRedditText("");
       }
     };
 
@@ -396,14 +386,14 @@ const NavBar: React.FC<{ hoverActive?: boolean }> = ({ hoverActive = true }) => 
             FILTER BY SUBREDDIT
           </Typography>
 
-          {isLoading ?
+          {loading ?
             <Box sx={{ display: 'flex', flexDirection: "column", alignItems: "center", height: "100%", width: "100%", gap: 2 }}>
               <CircularProgress />
             </Box>
             :
-            subredditList?.length > 1 ?
+            subredditList?.length > 0 ?
               <List sx={{ p: 0, mb: "auto", display: "flex", flexDirection: "column", alignItems: "center", gap: 1.5 }}>
-                {subredditList.map((ele: SUBREDIT, index) => (
+                {subredditList.map((ele, index) => (
                   <ListItem
                     key={index}
                     disablePadding
@@ -437,7 +427,7 @@ const NavBar: React.FC<{ hoverActive?: boolean }> = ({ hoverActive = true }) => 
 
                     <Box sx={{ display: "flex", alignItems: "center", gap: 5 }}>
                       <Badge
-                        badgeContent={ele.leads_count}
+                        badgeContent={ele?.leads_count ? ele?.leads_count : 0}
                         color="warning"
                         sx={{
                           "& .MuiBadge-badge": {
