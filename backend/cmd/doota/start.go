@@ -13,6 +13,7 @@ import (
 	"github.com/shank318/doota/portal"
 	"github.com/shank318/doota/portal/state"
 	"github.com/shank318/doota/services"
+	"io/ioutil"
 	"os"
 	"regexp"
 	"time"
@@ -34,7 +35,7 @@ var StartCmd = cli.Command(startCmdE,
 		flags.String("common-pubsub-project", "doota-local", "Google GCP Project")
 		flags.String("common-gpt-model", "gpt-4o-2024-08-06", "GPT Model to use for message creator and categorization")
 		flags.String("common-openai-api-key", "", "OpenAI API key")
-		flags.String("common-openai-debug-store", "data/debugstore", "OpenAI debug store")
+		flags.String("common-openai-debug-store", "gs://llm-debug-store-prod", "OpenAI debug store")
 		flags.String("common-openai-organization", "", "OpenAI Organization")
 		flags.String("common-langsmith-api-key", "", "Langsmith API key")
 		flags.String("common-langsmith-project", "", "Langsmith project name")
@@ -233,6 +234,23 @@ func vanaSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 }
 
 func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
+	credentialsPath := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
+	fmt.Println("dwefwe", credentialsPath)
+	// Check if the environment variable is set
+	if credentialsPath == "" {
+		fmt.Println("GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.")
+	}
+
+	// Read the credentials file
+	fileContents, err := ioutil.ReadFile(credentialsPath)
+	if err != nil {
+		fmt.Printf("Error reading credentials file: %v\n", err)
+	}
+
+	// Log the contents of the credentials file (for debugging)
+	// Be cautious with logging sensitive data like credentials in production!
+	fmt.Printf("Firebase Credentials File Content: %s\n", string(fileContents))
+
 	openaiApiKey, openaiOrganization, openaiDebugStore, langsmithApiKey, langsmithProject := openAILangsmithLegacyHandling(cmd, "common")
 	deps, err := app.NewDependenciesBuilder().
 		WithDataStore(sflags.MustGetString(cmd, "pg-dsn")).
