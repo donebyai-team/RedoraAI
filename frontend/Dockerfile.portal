@@ -17,7 +17,7 @@ RUN touch .env && \
     echo "NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}" >> .env && \
     mv .env /usr/src/app/portal/.env
 
-RUN --mount=type=cache,id=portal-pnpm-cache,target=/pnpm/store pnpm install --frozen-lockfile && \
+RUN pnpm install --frozen-lockfile && \
     pnpm run -F portal build && \
     pnpm deploy -F portal --prod /app
 
