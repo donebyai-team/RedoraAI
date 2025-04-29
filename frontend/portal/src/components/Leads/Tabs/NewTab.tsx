@@ -8,7 +8,7 @@ import { useSearchParams } from "next/navigation";
 import { Timestamp } from "@bufbuild/protobuf/wkt";
 import { useAppDispatch, useAppSelector } from "../../../../store/hooks";
 import { RootState } from "../../../../store/store";
-import { setError, setIsLoading, setListOfLeads, setSelectedLeadData } from "../../../../store/Lead/leadSlice";
+import { LeadTabStatus, setActiveTab, setError, setIsLoading, setListOfLeads, setSelectedLeadData } from "../../../../store/Lead/leadSlice";
 import ListRenderComp from "./LeadListComp";
 import { SourceTyeps } from "../../../../store/Source/sourceSlice";
 
@@ -44,6 +44,7 @@ const NewTabComponent = () => {
 
         const getAllRelevantLeads = async () => {
             dispatch(setIsLoading(true));
+            dispatch(setActiveTab(LeadTabStatus.NEW));
 
             try {
                 const result = await portalClient.getRelevantLeads({ ...(relevancyScore && { relevancyScore }), ...(subReddit && { subReddit }) });

@@ -3,11 +3,18 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export type LeadTyeps = Lead;
 
+export enum LeadTabStatus {
+    NEW = "new",
+    COMPLETED = "completed",
+    DISCARDED = "discarded",
+}
+
 // Define the types
 interface LeadStateTyeps {
     listofleads: LeadTyeps[];
     selectedleadData: LeadTyeps | null;
     isLoading: boolean;
+    activeTab: LeadTabStatus;
     error: string | null;
 }
 
@@ -16,6 +23,7 @@ const initialState: LeadStateTyeps = {
     listofleads: [],
     selectedleadData: null,
     isLoading: false,
+    activeTab: LeadTabStatus.NEW,
     error: null,
 };
 
@@ -30,6 +38,9 @@ const leadSlice = createSlice({
         setSelectedLeadData: (state, action: PayloadAction<LeadTyeps | null>) => {
             state.selectedleadData = action.payload;
         },
+        setActiveTab: (state, action: PayloadAction<LeadTabStatus>) => {
+            state.activeTab = action.payload;
+        },
         setIsLoading: (state, action: PayloadAction<boolean>) => {
             state.isLoading = action.payload;
         },
@@ -41,7 +52,7 @@ const leadSlice = createSlice({
 });
 
 // Export actions
-export const { setListOfLeads, setSelectedLeadData, setError, setIsLoading } = leadSlice.actions;
+export const { setListOfLeads, setSelectedLeadData, setActiveTab, setError, setIsLoading } = leadSlice.actions;
 
 // Export reducer
 export const leadReducer = leadSlice.reducer;

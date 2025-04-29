@@ -1,22 +1,13 @@
 "use client"
 
-import React, { useEffect, useState } from "react";
-import {
-    Box,
-    Typography,
-    List,
-    ListItem,
-    Divider,
-    Stack,
-    CircularProgress,
-} from "@mui/material";
+import React, { useEffect } from "react";
 import { useClientsContext } from "@doota/ui-core/context/ClientContext";
 import toast from "react-hot-toast";
-import { Lead, LeadStatus, Source } from "@doota/pb/doota/core/v1/core_pb";
+import { LeadStatus } from "@doota/pb/doota/core/v1/core_pb";
 import { useAppDispatch, useAppSelector } from "../../../../store/hooks";
 import { RootState } from "../../../../store/store";
 import ListRenderComp from "./LeadListComp";
-import { setError, setIsLoading, setListOfLeads } from "../../../../store/Lead/leadSlice";
+import { LeadTabStatus, setActiveTab, setError, setIsLoading, setListOfLeads } from "../../../../store/Lead/leadSlice";
 
 const DiscardedTabComponent = () => {
     const { portalClient } = useClientsContext();
@@ -27,6 +18,7 @@ const DiscardedTabComponent = () => {
 
         const getAllLeadsByStatus = async () => {
             dispatch(setIsLoading(true));
+            dispatch(setActiveTab(LeadTabStatus.DISCARDED));
 
             try {
                 const result = await portalClient.getLeadsByStatus({ status: LeadStatus.NOT_RELEVANT });

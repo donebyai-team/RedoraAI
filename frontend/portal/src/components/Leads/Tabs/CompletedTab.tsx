@@ -7,7 +7,7 @@ import { LeadStatus } from "@doota/pb/doota/core/v1/core_pb";
 import ListRenderComp from "./LeadListComp";
 import { useAppDispatch, useAppSelector } from "../../../../store/hooks";
 import { RootState } from "../../../../store/store";
-import { setError, setIsLoading, setListOfLeads } from "../../../../store/Lead/leadSlice";
+import { LeadTabStatus, setActiveTab, setError, setIsLoading, setListOfLeads } from "../../../../store/Lead/leadSlice";
 
 const CompletedTabComponent = () => {
     const { portalClient } = useClientsContext();
@@ -18,6 +18,7 @@ const CompletedTabComponent = () => {
 
         const getAllLeadsByStatus = async () => {
             dispatch(setIsLoading(true));
+            dispatch(setActiveTab(LeadTabStatus.COMPLETED));
 
             try {
                 const result = await portalClient.getLeadsByStatus({ status: LeadStatus.COMPLETED });

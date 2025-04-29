@@ -25,7 +25,7 @@ import ReactMarkdown from 'react-markdown';
 import { LeadStatus } from "@doota/pb/doota/core/v1/core_pb";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { RootState } from "../../../store/store";
-import { setSelectedLeadData } from "../../../store/Lead/leadSlice";
+import { LeadTabStatus, setSelectedLeadData } from "../../../store/Lead/leadSlice";
 
 // Create a custom theme with Reddit-like colors
 const theme = createTheme({
@@ -48,12 +48,24 @@ const theme = createTheme({
 
 const LeadsPostDetails = () => {
 
-  const dispatch = useAppDispatch();
-  const { subredditList } = useAppSelector((state: RootState) => state.source);
-  const { selectedleadData } = useAppSelector((state: RootState) => state.lead);
-
   const { portalClient } = useClientsContext();
+  const { subredditList } = useAppSelector((state: RootState) => state.source);
+  const { selectedleadData, listofleads, activeTab } = useAppSelector((state: RootState) => state.lead);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const dispatch = useAppDispatch();
+
+  const handleSelectNext = () => {
+    if (activeTab === LeadTabStatus.NEW) {
+      const currentIndex = listofleads.findIndex(item => item.id === selectedleadData?.id);
+      const nextItem = listofleads[currentIndex + 1];
+
+      if (nextItem !== undefined) {
+        dispatch(setSelectedLeadData(nextItem));
+      } else {
+        handleCloseLeadDetail();
+      }
+    }
+  };
 
   const copyTextAndOpenLink = (textToCopy: string, linkToOpen: string) => {
     navigator.clipboard.writeText(textToCopy)
@@ -76,7 +88,7 @@ const LeadsPostDetails = () => {
     try {
       const result = await portalClient.updateLeadStatus({ status: LeadStatus.NOT_RELEVANT, leadId: selectedleadData.id });
       console.log("###_result ", result);
-      handleCloseLeadDetail();
+      handleSelectNext();
     } catch (err: any) {
       const message = err?.response?.data?.message || err.message || "Something went wrong"
       console.log("###_error", message);
@@ -91,7 +103,7 @@ const LeadsPostDetails = () => {
     try {
       const result = await portalClient.updateLeadStatus({ status: LeadStatus.COMPLETED, leadId: selectedleadData.id });
       console.log("###_result ", result);
-      handleCloseLeadDetail();
+      handleSelectNext();
     } catch (err: any) {
       const message = err?.response?.data?.message || err.message || "Something went wrong"
       console.log("###_error", message);
@@ -136,7 +148,7 @@ const LeadsPostDetails = () => {
               <Tooltip
                 title={
                   <Box>
-                    <ReactMarkdown>{selectedleadData.metadata?.chainOfThought}</ReactMarkdown>
+                    <div dangerouslySetInnerHTML={{ __html: decodeHtml(selectedleadData.metadata?.chainOfThought as string) }} />
                   </Box>
                 }
                 placement="bottom-start"
@@ -159,36 +171,38 @@ const LeadsPostDetails = () => {
               </Tooltip>
             </Box>
             <Box sx={{ display: "flex", gap: 1 }}>
-              <Button
-                variant="contained"
-                startIcon={<ThumbDown />}
-                sx={{
-                  bgcolor: "#f0f0f0",
-                  color: "#666",
-                  "&:hover": { bgcolor: "#e0e0e0" },
-                  textTransform: "none",
-                  boxShadow: "none",
-                }}
-                onClick={handleLeadNotRelevent}
-                disabled={isLoading}
-              >
-                Not relevant
-              </Button>
-              <Button
-                variant="contained"
-                startIcon={<ThumbUp />}
-                sx={{
-                  bgcolor: "#f0f0f0",
-                  color: "#666",
-                  "&:hover": { bgcolor: "#e0e0e0" },
-                  textTransform: "none",
-                  boxShadow: "none",
-                }}
-                onClick={handleLeadComplete}
-                disabled={isLoading}
-              >
-                Complete
-              </Button>
+              {activeTab === LeadTabStatus.NEW && <>
+                <Button
+                  variant="contained"
+                  startIcon={<ThumbDown />}
+                  sx={{
+                    bgcolor: "#f0f0f0",
+                    color: "#666",
+                    "&:hover": { bgcolor: "#e0e0e0" },
+                    textTransform: "none",
+                    boxShadow: "none",
+                  }}
+                  onClick={handleLeadNotRelevent}
+                  disabled={isLoading}
+                >
+                  Not relevant
+                </Button>
+                <Button
+                  variant="contained"
+                  startIcon={<ThumbUp />}
+                  sx={{
+                    bgcolor: "#f0f0f0",
+                    color: "#666",
+                    "&:hover": { bgcolor: "#e0e0e0" },
+                    textTransform: "none",
+                    boxShadow: "none",
+                  }}
+                  onClick={handleLeadComplete}
+                  disabled={isLoading}
+                >
+                  Complete
+                </Button>
+              </>}
               <IconButton size="small" onClick={handleCloseLeadDetail}>
                 <Close />
               </IconButton>

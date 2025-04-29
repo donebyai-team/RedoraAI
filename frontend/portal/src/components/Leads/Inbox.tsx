@@ -14,17 +14,20 @@ import { useRedditIntegrationStatus } from "./Tabs/useRedditIntegrationStatus";
 import { routes } from "@doota/ui-core/routing";
 import Link from "next/link";
 import DiscardedTabComponent from "./Tabs/DiscardedTab";
-import { useAppSelector } from "../../../store/hooks";
+import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { RootState } from "../../../store/store";
+import { setSelectedLeadData } from "../../../store/Lead/leadSlice";
 
 const InboxComponent = () => {
   const [tabValue, setTabValue] = React.useState<number>(0);
   const { isConnected } = useRedditIntegrationStatus();
   const { selectedleadData } = useAppSelector((state: RootState) => state.lead);
+  const dispatch = useAppDispatch();
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     console.log(event);
     setTabValue(newValue);
+    dispatch(setSelectedLeadData(null));
   };
 
   return (
