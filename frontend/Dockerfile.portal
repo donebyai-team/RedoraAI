@@ -5,7 +5,7 @@ ENV PATH="$PNPM_HOME:$PATH"
 RUN npm install -g corepack@latest && corepack enable pnpm
 
 FROM base AS build
-COPY . /usr/src/app
+COPY frontend /usr/src/app
 WORKDIR /usr/src/app
 
 ARG NEXT_PUBLIC_APP_URL
