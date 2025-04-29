@@ -95,7 +95,7 @@ func (r *redisStore) SetState(s *State) error {
 	}
 
 	if cmd := r.redisClient.Set(key, value, 5*time.Minute); cmd.Err() != nil {
-		return fmt.Errorf("set auth state: %w", cmd.Err())
+		return fmt.Errorf("set auth  state: %w", cmd.Err())
 	}
 	return nil
 }
