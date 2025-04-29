@@ -58,22 +58,9 @@ func (s *redditKeywordTracker) WithLogger(logger *zap.Logger) KeywordTracker {
 }
 
 func (s *redditKeywordTracker) TrackKeyword(ctx context.Context, tracker *models.AugmentedKeywordTracker) error {
-	defer func() {
-		err := s.state.Release(ctx, tracker.Tracker.ID)
-		if err != nil {
-			s.logger.Error("failed to release lock on subreddit", zap.Error(err))
-		}
-	}()
-
 	redditClient, err := s.redditOauthClient.NewRedditClient(ctx, tracker.Project.OrganizationID)
 	if err != nil {
 		return fmt.Errorf("failed to create reddit client: %w", err)
-	}
-
-	// Lock the subreddit tracking
-	err = s.state.KeepAlive(ctx, tracker.Project.OrganizationID, tracker.Source.ID)
-	if err != nil {
-		return fmt.Errorf("unable to lock subReddit: %w", err)
 	}
 
 	err = s.searchLeadsFromPosts(ctx, tracker.Keyword, tracker.Project, tracker.Source, redditClient)
@@ -83,7 +70,7 @@ func (s *redditKeywordTracker) TrackKeyword(ctx context.Context, tracker *models
 
 	err = s.db.UpdatKeywordTrackerLastTrackedAt(ctx, tracker.Tracker.ID)
 	if err != nil {
-		s.logger.Error("failed to update LastTrackedAt", zap.Error(err))
+		return err
 	}
 
 	return nil
@@ -112,12 +99,17 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 	project *models.Project,
 	source *models.Source,
 	redditClient *reddit.Client) error {
-
 	redditQuery := reddit.PostFilters{
 		Keywords: []string{keyword.Keyword},
 		SortBy:   utils.Ptr(reddit.SortByNEW),
 		Limit:    100,
 	}
+
+	s.logger.Info("started tracking reddit keyword",
+		zap.String("keyword", keyword.Keyword),
+		zap.String("sub_reddit", source.Name),
+		zap.Any("query", redditQuery))
+
 	posts, err := redditClient.GetPosts(ctx, source.Name, redditQuery)
 
 	if err != nil {
@@ -129,9 +121,7 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 		return posts[i].CreatedAt > posts[j].CreatedAt
 	})
 
-	s.logger.Info("got posts from reddit",
-		zap.Any("query", redditQuery),
-		zap.Int("total_posts", len(posts)))
+	s.logger.Info("got posts from reddit", zap.Int("total_posts", len(posts)))
 
 	newPosts := []*reddit.Post{}
 	for _, post := range posts {

@@ -187,7 +187,7 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		deps.AIClient,
 		gptModel,
 		deps.ConversationState,
-		1000,
+		50,
 		10,
 		sflags.MustGetDuration(cmd, "spooler-db-polling-interval"),
 		isAppReady,

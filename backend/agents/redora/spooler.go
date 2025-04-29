@@ -74,7 +74,7 @@ func (s *Spooler) runLoop(ctx context.Context) {
 			return
 		case subReddit := <-s.queue:
 			// Remove the case from the queued map, we are processing it
-			s.queued.Delete(subReddit.Tracker.ID)
+			s.queued.Delete(subReddit.GetID())
 
 			// FIXME: We need to deal with errors differently here. We need to separated
 			// internal spooler error that are irecoverable from the ones that are
@@ -91,30 +91,38 @@ func (s *Spooler) runLoop(ctx context.Context) {
 }
 
 func (s *Spooler) processKeywordsTracking(ctx context.Context, tracker *models.AugmentedKeywordTracker) error {
-	logger := s.logger.With(
-		zap.String("organization_id", tracker.Project.OrganizationID),
-		zap.String("tracker_id", tracker.Tracker.ID),
-		zap.String("project_id", tracker.Project.ID),
-		zap.String("creator", "redora"),
-	)
-	logger.Debug("processing subreddit", zap.Int("queue_size", len(s.queue)))
+	logger := s.logger.With(zap.String("tracker_id", tracker.GetID()))
+	logger.Debug("processing tracker", zap.Int("queue_size", len(s.queue)))
 
 	// Check if a call is already running across organizations
-	isRunning, err := s.state.IsRunning(ctx, tracker.Tracker.ID)
+	isRunning, err := s.state.IsRunning(ctx, tracker.GetID())
 	if err != nil {
 		return fmt.Errorf("failed to check if tracker is running: %w", err)
 	}
 
 	if isRunning {
-		logger.Info("subreddit is already in processting state")
+		logger.Info("tracker is already in processting state")
 		return nil
 	}
 
-	keywordTracker := s.keywordTracker.GetKeywordTrackerBySource(tracker.Source.SourceType)
-	err = keywordTracker.WithLogger(logger).TrackKeyword(ctx, tracker)
-	if err != nil {
-		logger.Error("failed to track subreddit", zap.Error(err))
-	}
+	// Async call to TrackKeyword
+	go func() {
+		// Try to acquire the lock
+		if err := s.state.KeepAlive(ctx, tracker.Project.OrganizationID, tracker.GetID()); err != nil {
+			s.logger.Error("could not acquire lock for keyword tracker, skipping", zap.Error(err))
+		}
+
+		defer func() {
+			if err := s.state.Release(ctx, tracker.GetID()); err != nil {
+				s.logger.Error("failed to release lock on keyword tracker", zap.Error(err))
+			}
+		}()
+
+		keywordTracker := s.keywordTracker.GetKeywordTrackerBySource(tracker.Source.SourceType)
+		if err := keywordTracker.WithLogger(logger).TrackKeyword(ctx, tracker); err != nil {
+			logger.Error("failed to track keyword", zap.Error(err))
+		}
+	}()
 
 	return nil
 }
@@ -156,11 +164,11 @@ func (s *Spooler) loadKeywordTrackersToTrack(ctx context.Context) error {
 }
 
 func (s *Spooler) pushKeywordToTack(tracker *models.AugmentedKeywordTracker) {
-	if s.queued.Has(tracker.Tracker.ID) {
+	if s.queued.Has(tracker.GetID()) {
 		return
 	}
 
 	// TODO should we check size vs buffer?
 	s.queue <- tracker
-	s.queued.Set(tracker.Tracker.ID, true)
+	s.queued.Set(tracker.GetID(), true)
 }
