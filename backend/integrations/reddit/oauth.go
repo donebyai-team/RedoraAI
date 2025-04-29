@@ -30,7 +30,7 @@ func (u *userAgentTransport) RoundTrip(req *http.Request) (*http.Response, error
 	return u.base.RoundTrip(req)
 }
 
-func NewRedditOauthClient(logger *zap.Logger, db datastore.Repository, clientID, clientSecret string) *OauthClient {
+func NewRedditOauthClient(logger *zap.Logger, db datastore.Repository, clientID, clientSecret, redirectURL string) *OauthClient {
 	config := &oauth2.Config{
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
