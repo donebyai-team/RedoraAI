@@ -21,11 +21,11 @@ import { formateDate, getSubredditName } from "./Tabs/NewTab";
 import { useClientsContext } from "@doota/ui-core/context/ClientContext";
 import Link from "next/link";
 import React from 'react';
-import ReactMarkdown from 'react-markdown';
+// import ReactMarkdown from 'react-markdown';
 import { LeadStatus } from "@doota/pb/doota/core/v1/core_pb";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { RootState } from "../../../store/store";
-import { LeadTabStatus, setSelectedLeadData } from "../../../store/Lead/leadSlice";
+import { LeadTabStatus, setListOfLeads, setSelectedLeadData } from "../../../store/Lead/leadSlice";
 
 // Create a custom theme with Reddit-like colors
 const theme = createTheme({
@@ -53,14 +53,18 @@ const LeadsPostDetails = () => {
   const { selectedleadData, listofleads, activeTab } = useAppSelector((state: RootState) => state.lead);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const dispatch = useAppDispatch();
+  
+  if (!selectedleadData) return null;
 
   const handleSelectNext = () => {
     if (activeTab === LeadTabStatus.NEW) {
       const currentIndex = listofleads.findIndex(item => item.id === selectedleadData?.id);
+      const newlistofleads = listofleads.filter(item => item.id !== selectedleadData?.id);
       const nextItem = listofleads[currentIndex + 1];
 
       if (nextItem !== undefined) {
         dispatch(setSelectedLeadData(nextItem));
+        dispatch(setListOfLeads(newlistofleads));
       } else {
         handleCloseLeadDetail();
       }
@@ -84,7 +88,6 @@ const LeadsPostDetails = () => {
 
   const handleLeadNotRelevent = async () => {
     setIsLoading(true);
-    if (!selectedleadData) return;
     try {
       const result = await portalClient.updateLeadStatus({ status: LeadStatus.NOT_RELEVANT, leadId: selectedleadData.id });
       console.log("###_result ", result);
@@ -99,7 +102,6 @@ const LeadsPostDetails = () => {
 
   const handleLeadComplete = async () => {
     setIsLoading(true);
-    if (!selectedleadData) return;
     try {
       const result = await portalClient.updateLeadStatus({ status: LeadStatus.COMPLETED, leadId: selectedleadData.id });
       console.log("###_result ", result);
@@ -117,10 +119,6 @@ const LeadsPostDetails = () => {
     textarea.innerHTML = html;
     return textarea.value;
   };
-
-  // console.log("###_leads ", selectedleadData);
-
-  if (!selectedleadData) return null;
 
   return (
     <ThemeProvider theme={theme}>

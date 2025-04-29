@@ -2,7 +2,7 @@ import React, { FC, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { isActivePath } from '../utils/url'
 
-export const Sidebar: FC<{ drawerWidth?: number }> = ({ drawerWidth }) => {
+export const Sidebar: FC<{ drawerWidth?: number }> = () => {
   const pathname = usePathname()
   const isSetting = isActivePath('/dashboard/settings', pathname)
 

@@ -34,6 +34,7 @@ import { useClientsContext } from '@doota/ui-core/context/ClientContext'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import { setError, setLoading, setSubredditList, SourceTyeps } from '../../store/Source/sourceSlice'
 import { RootState } from '../../store/store'
+import { useDebouncedValue } from './hooks/useDebouncedValue'
 
 const NavBar: React.FC<{ hoverActive?: boolean }> = ({ hoverActive = true }) => {
   const { user, logout } = useAuth()
@@ -42,7 +43,7 @@ const NavBar: React.FC<{ hoverActive?: boolean }> = ({ hoverActive = true }) => 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const open = Boolean(anchorEl)
   const dispatch = useAppDispatch();
-  const { subredditList, loading, error } = useAppSelector((state: RootState) => state.source);
+  const { subredditList, loading } = useAppSelector((state: RootState) => state.source);
 
   const getInitials = (name: string | undefined) => {
     const matches = name?.match(/[A-Z]/g)
@@ -89,27 +90,27 @@ const NavBar: React.FC<{ hoverActive?: boolean }> = ({ hoverActive = true }) => 
     setRelevancy_Score(newValue as number);
   }
 
-  let debounceTimer: NodeJS.Timeout;
+  const debouncedRelevancyScore = useDebouncedValue(relevancy_score, 500);
+  const debouncedCurrentActiveSubRedditId = useDebouncedValue(currentActiveSubRedditId, 500);
 
   useEffect(() => {
-    clearTimeout(debounceTimer);
+    const params = new URLSearchParams(searchParams);
 
-    debounceTimer = setTimeout(() => {
-      const params = new URLSearchParams(searchParams);
+    if (debouncedRelevancyScore !== undefined && debouncedRelevancyScore !== null) {
+      params.set('relevancy_score', `${debouncedRelevancyScore}`);
+    } else {
+      params.delete('relevancy_score');
+    }
 
-      if (relevancy_score) {
-        params.set('relevancy_score', `${relevancy_score}`);
-      }
-      if (currentActiveSubRedditId) {
-        params.set('currentActiveSubRedditId', currentActiveSubRedditId);
-      }
+    if (debouncedCurrentActiveSubRedditId) {
+      params.set('currentActiveSubRedditId', debouncedCurrentActiveSubRedditId);
+    } else {
+      params.delete('currentActiveSubRedditId');
+    }
 
-      router.push(`${pathname}?${params.toString()}`, { scroll: false });
-    }, 300);
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
 
-    return () => clearTimeout(debounceTimer);
-
-  }, [pathname, router, searchParams, currentActiveSubRedditId, relevancy_score]);
+  }, [debouncedRelevancyScore, debouncedCurrentActiveSubRedditId, pathname, router, searchParams]);
 
   const handleSubRedditsClick = (data: SourceTyeps) => {
     console.log(data);
@@ -125,9 +126,9 @@ const NavBar: React.FC<{ hoverActive?: boolean }> = ({ hoverActive = true }) => 
     return isActive;
   }
 
-  const handleOpenDialog = () => {
-    setOpenSubredditDialog(true);
-  }
+  // const handleOpenDialog = () => {
+  //   setOpenSubredditDialog(true);
+  // }
 
   const handleClosDialog = () => {
     setOpenSubredditDialog(false);
@@ -165,6 +166,7 @@ const NavBar: React.FC<{ hoverActive?: boolean }> = ({ hoverActive = true }) => 
     };
 
     getAllSubReddits();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [subRedditText]);
 
   return (
