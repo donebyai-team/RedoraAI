@@ -13,9 +13,9 @@ import (
 	"github.com/shank318/doota/portal"
 	"github.com/shank318/doota/portal/state"
 	"github.com/shank318/doota/services"
-	"io/ioutil"
 	"os"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -42,6 +42,7 @@ var StartCmd = cli.Command(startCmdE,
 		flags.Uint64("common-auto-mem-limit-percent", 0, "Automatically sets GOMEMLIMIT to a percentage of memory limit from cgroup (useful for container environments)")
 		flags.Duration("spooler-db-polling-interval", 10*time.Second, "How often the spooler will check the database for new investigation")
 
+		flags.String("portal-reddit-redirect-url", "http://localhost:3000/auth/callback", "Reddit App Client ID")
 		flags.String("portal-reddit-client-id", "", "Reddit App Client ID")
 		flags.String("portal-reddit-client-secret", "", "Reddit App Client Secret")
 
@@ -142,8 +143,10 @@ func openAILangsmithLegacyHandling(cmd *cobra.Command, prefix string) (string, s
 
 func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 	openaiApiKey, openaiOrganization, openaiDebugStore, langsmithApiKey, langsmithProject := openAILangsmithLegacyHandling(cmd, "common")
+	redisAddr := sflags.MustGetString(cmd, "redis-addr")
 	deps, err := app.NewDependenciesBuilder().
 		WithDataStore(sflags.MustGetString(cmd, "pg-dsn")).
+		WithKMSKeyPath(sflags.MustGetString(cmd, "jwt-kms-keypath")).
 		WithAI(
 			openaiApiKey,
 			openaiOrganization,
@@ -153,7 +156,7 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		).
 		WithConversationState(
 			sflags.MustGetDuration(cmd, "common-phone-call-ttl"),
-			sflags.MustGetString(cmd, "redis-addr"),
+			redisAddr,
 			"redora",
 			"tracker",
 		).
@@ -169,15 +172,22 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		return nil, fmt.Errorf("initiated extractor with invalid gpt model: %w", err)
 	}
 
-	redditOauthClient := reddit.NewRedditOauthClient(logger, deps.DataStore, sflags.MustGetString(cmd, "portal-reddit-client-id"), sflags.MustGetString(cmd, "portal-reddit-client-secret"))
-	tracker := redora.NewKeywordTrackerFactory(gptModel, redditOauthClient, deps.DataStore, deps.AIClient, logger, deps.ConversationState)
+	redditOauthClient := reddit.NewRedditOauthClient(logger, deps.DataStore, sflags.MustGetString(cmd, "portal-reddit-client-id"), sflags.MustGetString(cmd, "portal-reddit-client-secret"), sflags.MustGetString(cmd, "portal-reddit-redirect-url"))
+
+	var isDev bool
+	// TODO: Hack to know the env
+	if strings.Contains(redisAddr, "localhost") {
+		isDev = true
+	}
+
+	tracker := redora.NewKeywordTrackerFactory(isDev, gptModel, redditOauthClient, deps.DataStore, deps.AIClient, logger, deps.ConversationState)
 
 	return redora.New(
 		deps.DataStore,
 		deps.AIClient,
 		gptModel,
 		deps.ConversationState,
-		1000,
+		50,
 		10,
 		sflags.MustGetDuration(cmd, "spooler-db-polling-interval"),
 		isAppReady,
@@ -234,23 +244,6 @@ func vanaSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 }
 
 func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
-	credentialsPath := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
-	fmt.Println("dwefwe", credentialsPath)
-	// Check if the environment variable is set
-	if credentialsPath == "" {
-		fmt.Println("GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.")
-	}
-
-	// Read the credentials file
-	fileContents, err := ioutil.ReadFile(credentialsPath)
-	if err != nil {
-		fmt.Printf("Error reading credentials file: %v\n", err)
-	}
-
-	// Log the contents of the credentials file (for debugging)
-	// Be cautious with logging sensitive data like credentials in production!
-	fmt.Printf("Firebase Credentials File Content: %s\n", string(fileContents))
-
 	openaiApiKey, openaiOrganization, openaiDebugStore, langsmithApiKey, langsmithProject := openAILangsmithLegacyHandling(cmd, "common")
 	deps, err := app.NewDependenciesBuilder().
 		WithDataStore(sflags.MustGetString(cmd, "pg-dsn")).
@@ -321,7 +314,7 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		return nil, fmt.Errorf("unable to create auth usecase: %w", err)
 	}
 
-	redditOauthClient := reddit.NewRedditOauthClient(logger, deps.DataStore, sflags.MustGetString(cmd, "portal-reddit-client-id"), sflags.MustGetString(cmd, "portal-reddit-client-secret"))
+	redditOauthClient := reddit.NewRedditOauthClient(logger, deps.DataStore, sflags.MustGetString(cmd, "portal-reddit-client-id"), sflags.MustGetString(cmd, "portal-reddit-client-secret"), sflags.MustGetString(cmd, "portal-reddit-redirect-url"))
 
 	p := portal.New(
 		redditOauthClient,

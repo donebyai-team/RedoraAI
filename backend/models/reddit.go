@@ -71,6 +71,10 @@ type AugmentedKeywordTracker struct {
 	Project *Project
 }
 
+func (a *AugmentedKeywordTracker) GetID() string {
+	return a.Tracker.ID
+}
+
 type KeywordTracker struct {
 	ID            string                 `db:"id"`
 	SourceID      string                 `db:"source_id"`

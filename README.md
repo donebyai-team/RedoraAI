@@ -248,5 +248,9 @@ You can find a sample seed file here [`./devel/seed.sql`](`./devel/seed.sql`)
 ```
 DAT:
 freight  tools integrations dat create <org-id> {\"auth_host\":\"identity.api.staging.dat.com\",\"api_host\":\"analytics.api.staging.dat.com\",\"org_user\":\"dat@loadlogic.ai\",\"org_password\":\"CHANGE_PASSWORD\",\"user_account\":\"mdm@streamingfast.io\"}
-
 ```
+
+## Deployment
+Redora is deployed on railway app. It uses google cloud store for openai debug and KMS for jwt
+Postgress and Redis is inside the railway itself. 
+Frontend is deployed via it's dockerfile and backend direct

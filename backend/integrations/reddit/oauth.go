@@ -30,7 +30,7 @@ func (u *userAgentTransport) RoundTrip(req *http.Request) (*http.Response, error
 	return u.base.RoundTrip(req)
 }
 
-func NewRedditOauthClient(logger *zap.Logger, db datastore.Repository, clientID, clientSecret string) *OauthClient {
+func NewRedditOauthClient(logger *zap.Logger, db datastore.Repository, clientID, clientSecret, redirectURL string) *OauthClient {
 	config := &oauth2.Config{
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
@@ -85,14 +85,14 @@ func (r *OauthClient) NewRedditClient(ctx context.Context, orgID string) (*Clien
 	if client.isTokenExpired() {
 		err := client.refreshToken(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("failed to reddit refresh token: %w", err)
+			return nil, fmt.Errorf("failed to refresh token: %w", err)
 		}
 
 		// Update the credentials
 		integrationType := models.SetIntegrationType(integration, models.IntegrationTypeREDDIT, client.config)
 		integration, err = r.db.UpsertIntegration(ctx, integrationType)
 		if err != nil {
-			return nil, fmt.Errorf("upsert integration: %w", err)
+			return nil, fmt.Errorf("failed to upsert reddit integration: %w", err)
 		}
 	}
 	return client, nil

@@ -16,7 +16,6 @@ import (
 
 const (
 	redditAPIBase  = "https://oauth.reddit.com"
-	redirectURL    = "http://localhost:3000/auth/callback"
 	redditAuthURL  = "https://www.reddit.com/api/v1/authorize"
 	redditTokenURL = "https://www.reddit.com/api/v1/access_token"
 )
