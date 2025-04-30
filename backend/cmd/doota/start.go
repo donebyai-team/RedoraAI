@@ -35,7 +35,7 @@ var StartCmd = cli.Command(startCmdE,
 		flags.String("common-pubsub-project", "doota-local", "Google GCP Project")
 		flags.String("common-gpt-model", "gpt-4o-2024-08-06", "GPT Model to use for message creator and categorization")
 		flags.String("common-openai-api-key", "", "OpenAI API key")
-		flags.String("common-openai-debug-store", "gs://llm-debug-store-prod", "OpenAI debug store")
+		flags.String("common-openai-debug-store", "data/debugstore", "OpenAI debug store")
 		flags.String("common-openai-organization", "", "OpenAI Organization")
 		flags.String("common-langsmith-api-key", "", "Langsmith API key")
 		flags.String("common-langsmith-project", "", "Langsmith project name")
