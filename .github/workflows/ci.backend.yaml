@@ -1,144 +1,144 @@
-name: ci backend
-
-on:
-  workflow_dispatch:
-
-jobs:
-  setup:
-    runs-on: ubuntu-latest
-
-    env:
-      SLACK_IDS: ${{ secrets.GH_USERNAME_TO_SLACK_IDS }}
-
-    outputs:
-      slack_id: ${{ steps.get-slack-id.outputs.SLACK_ID }}
-
-    steps:
-      - name: Check SLACK_IDS env variable
-        run: |
-          if [ -z "${SLACK_IDS}" ]; then
-            echo "The secret 'secrets.GH_USERNAME_TO_SLACK_IDS' is empty"
-            exit 1
-          fi
-
-      - name: Get Slack ID
-        id: get-slack-id
-        run: |
-          SLACK_IDS=$(echo "$SLACK_IDS" | sed 's/\\//g')
-          SLACK_ID=$(echo "$SLACK_IDS" | jq -r ".${{ github.actor }}")
-          echo "SLACK_ID=$SLACK_ID" >> $GITHUB_OUTPUT
-
-  docker-build-backend:
-    runs-on: ubuntu-latest
-
-    # Add "id-token" with the intended permissions.
-    permissions:
-      contents: "read"
-      id-token: "write"
-
-    outputs:
-      tags: ${{ steps.meta.outputs.tags }}
-
-    steps:
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: |
-            us-east1-docker.pkg.dev/doota/docker/backend
-          tags: |
-            type=schedule
-            type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern=v{{version}}
-            type=sha,prefix=,format=short
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Authenticate to Google Cloud
-        id: auth
-        uses: google-github-actions/auth@v1
-        with:
-          token_format: access_token
-          service_account: ${{ secrets.GAR_SERVICE_ACCOUNT_EMAIL }}
-          workload_identity_provider: ${{ secrets.GAR_WORKLOAD_IDENTITY_PROVIDER }}
-
-      - name: Login to Google Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: us-east1-docker.pkg.dev
-          username: oauth2accesstoken
-          password: ${{ steps.auth.outputs.access_token }}
-
-      - name: Go Build Cache for Docker
-        id: cache
-        uses: actions/cache@v4
-        with:
-          path: go-build-cache
-          key: ${{ runner.os }}-go-build-cache-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-build-cache-
-
-      - name: inject go-build-cache into docker
-        uses: reproducible-containers/buildkit-cache-dance@v3.1.0
-        with:
-          cache-map: |
-            {
-              "go-build-cache": "/root/.cache/go-build"
-            }
-          skip-extraction: ${{ steps.cache.outputs.cache-hit }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v5
-        with:
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          context: "{{defaultContext}}:backend"
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-
-      - name: Authenticate to GKE Cluster
-        if: github.ref_name != 'master' && !startsWith(github.ref, 'refs/tags/')
-        id: get-gke-credentials
-        uses: google-github-actions/get-gke-credentials@v0.4.0
-        with:
-          cluster_name: saas-us-east1
-          location: us-east1
-
-      - name: Set Kubernetes Image
-        if: github.ref_name != 'master' && !startsWith(github.ref, 'refs/tags/')
-        id: set-k8s-image
-        run: |
-          k8s_img=`echo $DOCKER_METADATA_OUTPUT_JSON | jq -r '.tags[-1]'`
-          echo "Image: $k8s_img"
-          kubectl set image deployment portal-api portal-api="$k8s_img" -n staging
-          kubectl set image deployment extractor extractor="$k8s_img" -n staging
-          kubectl set image statefulset migrator migrator="$k8s_img" -n staging
-          kubectl set image deployment msoft-service msoft="$k8s_img" -n staging
-          kubectl set image deployment goog-service goog="$k8s_img" -n staging
-          kubectl set image deployment tms-agl tms="$k8s_img" -n staging
-          kubectl set image deployment tms-router router="$k8s_img" -n staging
-          kubectl set image deployment tms-shipwell tms="$k8s_img" -n staging
-          kubectl set image deployment tms-turvo tms="$k8s_img" -n staging
-          kubectl set image deployment tms-revenova tms="$k8s_img" -n staging
-          kubectl set image deployment quote quote="$k8s_img" -n staging
-          kubectl set image deployment message-creator message-creator="$k8s_img" -n staging
-
-  slack-notifications:
-    needs: [setup, docker-build-backend]
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Slack notification
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-        uses: Ilshidur/action-slack@2.1.0
-        with:
-          args: |
-            :done: <@${{ needs.setup.outputs.slack_id }}> *${{ github.repository }}* Success building docker image from ${{ github.ref_type }} _${{ github.ref_name }}_ (${{ github.actor }}) :sparkling_heart:
-            *LoadLogic Backend* ```${{ join(needs.docker-build-backend.outputs.tags, ' ') }}```
+#name: ci backend
+#
+#on:
+#  workflow_dispatch:
+#
+#jobs:
+#  setup:
+#    runs-on: ubuntu-latest
+#
+#    env:
+#      SLACK_IDS: ${{ secrets.GH_USERNAME_TO_SLACK_IDS }}
+#
+#    outputs:
+#      slack_id: ${{ steps.get-slack-id.outputs.SLACK_ID }}
+#
+#    steps:
+#      - name: Check SLACK_IDS env variable
+#        run: |
+#          if [ -z "${SLACK_IDS}" ]; then
+#            echo "The secret 'secrets.GH_USERNAME_TO_SLACK_IDS' is empty"
+#            exit 1
+#          fi
+#
+#      - name: Get Slack ID
+#        id: get-slack-id
+#        run: |
+#          SLACK_IDS=$(echo "$SLACK_IDS" | sed 's/\\//g')
+#          SLACK_ID=$(echo "$SLACK_IDS" | jq -r ".${{ github.actor }}")
+#          echo "SLACK_ID=$SLACK_ID" >> $GITHUB_OUTPUT
+#
+#  docker-build-backend:
+#    runs-on: ubuntu-latest
+#
+#    # Add "id-token" with the intended permissions.
+#    permissions:
+#      contents: "read"
+#      id-token: "write"
+#
+#    outputs:
+#      tags: ${{ steps.meta.outputs.tags }}
+#
+#    steps:
+#      - name: Docker meta
+#        id: meta
+#        uses: docker/metadata-action@v5
+#        with:
+#          images: |
+#            us-east1-docker.pkg.dev/doota/docker/backend
+#          tags: |
+#            type=schedule
+#            type=ref,event=branch
+#            type=ref,event=pr
+#            type=semver,pattern=v{{version}}
+#            type=sha,prefix=,format=short
+#
+#      - name: Set up QEMU
+#        uses: docker/setup-qemu-action@v3
+#
+#      - name: Set up Docker Buildx
+#        uses: docker/setup-buildx-action@v3
+#
+#      - name: Authenticate to Google Cloud
+#        id: auth
+#        uses: google-github-actions/auth@v1
+#        with:
+#          token_format: access_token
+#          service_account: ${{ secrets.GAR_SERVICE_ACCOUNT_EMAIL }}
+#          workload_identity_provider: ${{ secrets.GAR_WORKLOAD_IDENTITY_PROVIDER }}
+#
+#      - name: Login to Google Container Registry
+#        uses: docker/login-action@v3
+#        with:
+#          registry: us-east1-docker.pkg.dev
+#          username: oauth2accesstoken
+#          password: ${{ steps.auth.outputs.access_token }}
+#
+#      - name: Go Build Cache for Docker
+#        id: cache
+#        uses: actions/cache@v4
+#        with:
+#          path: go-build-cache
+#          key: ${{ runner.os }}-go-build-cache-${{ hashFiles('**/go.sum') }}
+#          restore-keys: |
+#            ${{ runner.os }}-go-build-cache-
+#
+#      - name: inject go-build-cache into docker
+#        uses: reproducible-containers/buildkit-cache-dance@v3.1.0
+#        with:
+#          cache-map: |
+#            {
+#              "go-build-cache": "/root/.cache/go-build"
+#            }
+#          skip-extraction: ${{ steps.cache.outputs.cache-hit }}
+#
+#      - name: Build and push
+#        uses: docker/build-push-action@v5
+#        with:
+#          cache-from: type=gha
+#          cache-to: type=gha,mode=max
+#          context: "{{defaultContext}}:backend"
+#          push: ${{ github.event_name != 'pull_request' }}
+#          tags: ${{ steps.meta.outputs.tags }}
+#          labels: ${{ steps.meta.outputs.labels }}
+#
+#      - name: Authenticate to GKE Cluster
+#        if: github.ref_name != 'master' && !startsWith(github.ref, 'refs/tags/')
+#        id: get-gke-credentials
+#        uses: google-github-actions/get-gke-credentials@v0.4.0
+#        with:
+#          cluster_name: saas-us-east1
+#          location: us-east1
+#
+#      - name: Set Kubernetes Image
+#        if: github.ref_name != 'master' && !startsWith(github.ref, 'refs/tags/')
+#        id: set-k8s-image
+#        run: |
+#          k8s_img=`echo $DOCKER_METADATA_OUTPUT_JSON | jq -r '.tags[-1]'`
+#          echo "Image: $k8s_img"
+#          kubectl set image deployment portal-api portal-api="$k8s_img" -n staging
+#          kubectl set image deployment extractor extractor="$k8s_img" -n staging
+#          kubectl set image statefulset migrator migrator="$k8s_img" -n staging
+#          kubectl set image deployment msoft-service msoft="$k8s_img" -n staging
+#          kubectl set image deployment goog-service goog="$k8s_img" -n staging
+#          kubectl set image deployment tms-agl tms="$k8s_img" -n staging
+#          kubectl set image deployment tms-router router="$k8s_img" -n staging
+#          kubectl set image deployment tms-shipwell tms="$k8s_img" -n staging
+#          kubectl set image deployment tms-turvo tms="$k8s_img" -n staging
+#          kubectl set image deployment tms-revenova tms="$k8s_img" -n staging
+#          kubectl set image deployment quote quote="$k8s_img" -n staging
+#          kubectl set image deployment message-creator message-creator="$k8s_img" -n staging
+#
+#  slack-notifications:
+#    needs: [setup, docker-build-backend]
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - name: Slack notification
+#        env:
+#          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+#        uses: Ilshidur/action-slack@2.1.0
+#        with:
+#          args: |
+#            :done: <@${{ needs.setup.outputs.slack_id }}> *${{ github.repository }}* Success building docker image from ${{ github.ref_type }} _${{ github.ref_name }}_ (${{ github.actor }}) :sparkling_heart:
+#            *LoadLogic Backend* ```${{ join(needs.docker-build-backend.outputs.tags, ' ') }}```
