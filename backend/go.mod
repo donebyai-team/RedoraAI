@@ -42,7 +42,6 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/test-go/testify v1.1.4
 	github.com/tidwall/gjson v1.14.4
-	github.com/tmc/langchaingo v0.0.0-00010101000000-000000000000
 	github.com/uptrace/opentelemetry-go-extra/otelsqlx v0.3.2
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.51.0
 	go.opentelemetry.io/otel v1.30.0
@@ -56,7 +55,7 @@ require (
 	google.golang.org/protobuf v1.34.2
 )
 
-replace github.com/tmc/langchaingo => github.com/streamingfast/langchaingo v0.1.9-0.20241203182852-7b3db2b92bc1
+//replace github.com/tmc/langchaingo => github.com/streamingfast/langchaingo v0.1.9-0.20241203182852-7b3db2b92bc1
 
 replace github.com/VapiAI/server-sdk-go => github.com/shank318/server-sdk-go v0.0.1
 

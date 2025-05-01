@@ -1,12 +1,8 @@
 package ai
 
 import (
-	"fmt"
 	"github.com/shank318/doota/models"
-	"text/template"
 	"time"
-
-	"github.com/tmc/langchaingo/prompts"
 )
 
 //go:generate go-enum -f=$GOFILE
@@ -56,52 +52,8 @@ type PromptType string
 type PromptFeature string
 
 type Template struct {
+	content       string
 	path          string
 	promptType    PromptType
 	promptFeature PromptFeature
-}
-
-type ResponseFormat []byte
-
-func (g *GPTModel) getPromptTemplates(templates []Template) (prompts.ChatPromptTemplate, *template.Template, []*template.Template) {
-	var chatPrompts []prompts.MessageFormatter
-	var tmpls []*template.Template
-	var responseSchemaTemplate *template.Template
-	for _, tmpl := range templates {
-		data := rp(tmpl.path)
-		switch tmpl.promptType {
-		case PromptTypeSYSTEM:
-			chatPrompts = append(chatPrompts, prompts.NewSystemMessagePromptTemplate(data, nil))
-		case PromptTypeHUMAN:
-			chatPrompts = append(chatPrompts, prompts.NewHumanMessagePromptTemplate(data, nil))
-		case PromptTypeRESPONSESCHEMA:
-			// If the model supports structured outputs
-			responseSchemaTemplate = template.Must(template.New(tmpl.path).Parse(data))
-		}
-
-		tmpls = append(tmpls, template.Must(template.New(tmpl.path).Parse(data)))
-	}
-	return prompts.NewChatPromptTemplate(chatPrompts), responseSchemaTemplate, tmpls
-}
-
-func (g *GPTModel) getPromptTemplate(p *Prompt, templatePrefix string, addImageSupport bool) (prompts.ChatPromptTemplate, *template.Template, []*template.Template) {
-	var chatPrompts []prompts.MessageFormatter
-	var debugTemplates []*template.Template
-	var responseSchemaTemplate *template.Template
-	if p.PromptTmpl != "" {
-		chatPrompts = append(chatPrompts, prompts.NewSystemMessagePromptTemplate(p.PromptTmpl, nil))
-		debugTemplates = append(debugTemplates, template.Must(template.New(fmt.Sprintf("%s.prompt.gotmpl", templatePrefix)).Parse(p.PromptTmpl)))
-	}
-
-	if p.SchemaTmpl != "" {
-		responseSchemaTemplate = template.Must(template.New(fmt.Sprintf("%s.schema.gotmpl", templatePrefix)).Parse(p.SchemaTmpl))
-		debugTemplates = append(debugTemplates, template.Must(template.New(fmt.Sprintf("%s.schema.gotmpl", templatePrefix)).Parse(p.SchemaTmpl)))
-	}
-	if p.HumanTmpl != "" {
-		chatPrompts = append(chatPrompts, prompts.NewHumanMessagePromptTemplate(p.HumanTmpl, nil))
-		debugTemplates = append(debugTemplates, template.Must(template.New(fmt.Sprintf("%s.human.gotmpl", templatePrefix)).Parse(p.HumanTmpl)))
-
-	}
-
-	return prompts.NewChatPromptTemplate(chatPrompts), responseSchemaTemplate, debugTemplates
 }
