@@ -22,6 +22,7 @@ require (
 	github.com/k3a/html2text v1.2.1
 	github.com/lib/pq v1.10.9
 	github.com/nyaruka/phonenumbers v1.5.0
+	github.com/openai/openai-go v0.1.0-beta.10
 	github.com/pkg/errors v0.9.1
 	github.com/redis/go-redis/v9 v9.7.0
 	github.com/rs/cors v1.10.1
@@ -50,6 +51,7 @@ require (
 	go.uber.org/zap v1.26.0
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
 	golang.org/x/oauth2 v0.28.0
+	golang.org/x/time v0.5.0
 	google.golang.org/grpc v1.65.0
 	google.golang.org/protobuf v1.34.2
 )
@@ -131,15 +133,14 @@ require (
 	github.com/streamingfast/validator v0.0.0-20210812013448-b9da5752ce14 // indirect
 	github.com/thedevsaddam/govalidator v1.9.6 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
-	github.com/tidwall/pretty v1.2.0 // indirect
-	github.com/tidwall/sjson v1.0.4 // indirect
+	github.com/tidwall/pretty v1.2.1 // indirect
+	github.com/tidwall/sjson v1.2.5 // indirect
 	github.com/uptrace/opentelemetry-go-extra/otelsql v0.3.2 // indirect
 	github.com/wk8/go-ordered-map/v2 v2.1.8 // indirect
 	github.com/yargevad/filepathx v1.0.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.51.0 // indirect
 	go.starlark.net v0.0.0-20230302034142-4b1e35fe2254 // indirect
 	go.uber.org/goleak v1.3.0 // indirect
-	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/tools v0.24.0 // indirect
 )
 
