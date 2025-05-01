@@ -4,7 +4,7 @@ import AuthGuard from '../../../components/guard/AuthGuard'
 import {DashboardLayout} from "../../../components/DashboardLayout";
 
 export const metadata = {
-  title: 'Doota',
+  title: 'RedoraAI',
   description: ''
 }
 
