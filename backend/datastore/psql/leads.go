@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/lib/pq"
 	"github.com/shank318/doota/models"
+	"time"
 )
 
 func init() {
@@ -15,6 +16,16 @@ func init() {
 		"leads/query_lead_by_status.sql",
 		"leads/update_lead_status.sql",
 		"leads/query_lead_by_id.sql",
+		"leads/count_lead_by_created_at.sql",
+	})
+}
+
+func (r *Database) CountLeadByCreatedAt(ctx context.Context, projectID string, relevancyScore int, start, end time.Time) (*models.LeadsData, error) {
+	return getOne[models.LeadsData](ctx, r, "leads/count_lead_by_created_at.sql", map[string]any{
+		"relevancy_score": relevancyScore,
+		"project_id":      projectID,
+		"start_date":      start.Format(time.DateOnly),
+		"end_date":        end.Format(time.DateOnly),
 	})
 }
 
