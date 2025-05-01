@@ -4,7 +4,6 @@ import React, { useEffect } from "react";
 import { useClientsContext } from "@doota/ui-core/context/ClientContext";
 import toast from "react-hot-toast";
 import { formatDistanceToNow } from 'date-fns';
-import { useSearchParams } from "next/navigation";
 import { Timestamp } from "@bufbuild/protobuf/wkt";
 import { useAppDispatch, useAppSelector } from "../../../../store/hooks";
 import { RootState } from "../../../../store/store";
@@ -33,12 +32,9 @@ export const setLeadActive = (parems_id: string, id: string) => {
 
 const NewTabComponent = () => {
     const { portalClient } = useClientsContext();
-    const searchParams = useSearchParams()
-    const relevancyScoreParam = searchParams.get('relevancy_score');
-    const relevancyScore = relevancyScoreParam && !isNaN(Number(relevancyScoreParam)) ? Number(relevancyScoreParam) : "";
-    const subReddit = searchParams.get('currentActiveSubRedditId') ?? "";
     const dispatch = useAppDispatch();
     const { selectedleadData } = useAppSelector((state: RootState) => state.lead);
+    const { relevancyScore, subReddit } = useAppSelector((state: RootState) => state.parems);
 
     useEffect(() => {
 
@@ -60,7 +56,7 @@ const NewTabComponent = () => {
         }
         getAllRelevantLeads();
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [relevancyScore, subReddit, (selectedleadData === null)]);
 
     return (<ListRenderComp />);

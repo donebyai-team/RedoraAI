@@ -3,7 +3,7 @@
 // ** MUI Imports
 import Box, { BoxProps } from '@mui/material/Box'
 import CircularProgress from '@mui/material/CircularProgress'
-import Image from 'next/image'
+// import Image from 'next/image'
 import { useEffect, useState } from 'react'
 
 export const FallbackSpinner = ({ sx }: { sx?: BoxProps['sx'] }) => {
@@ -30,7 +30,7 @@ export const FallbackSpinner = ({ sx }: { sx?: BoxProps['sx'] }) => {
     >
       {inInitializationGracePeriod ? null : (
         <>
-          <Image width={150} height={50} alt='freightstream' priority src={'/images/logo.svg'} />
+          {/* <Image width={150} height={50} alt='freightstream' priority src={'/images/logo.svg'} /> */}
           <CircularProgress disableShrink sx={{ mt: 6, color: 'grey.600' }} />
         </>
       )}
