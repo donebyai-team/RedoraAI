@@ -26,6 +26,7 @@ import { LeadStatus } from "@doota/pb/doota/core/v1/core_pb";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { RootState } from "../../../store/store";
 import { LeadTabStatus, setListOfLeads, setSelectedLeadData } from "../../../store/Lead/leadSlice";
+import HtmlRenderer from "../Html/HtmlRenderer";
 
 // Create a custom theme with Reddit-like colors
 const theme = createTheme({
@@ -114,12 +115,6 @@ const LeadsPostDetails = () => {
     }
   };
 
-  const decodeHtml = (html: string) => {
-    const textarea = document.createElement('textarea');
-    textarea.innerHTML = html;
-    return textarea.value;
-  };
-
   return (
     <ThemeProvider theme={theme}>
       <Box sx={{ width: "100%", }}>
@@ -129,7 +124,8 @@ const LeadsPostDetails = () => {
             sx={{
               display: "flex",
               justifyContent: "space-between",
-              p: 1.5,
+              px: 1.5,
+              py: 1.4,
               borderBottom: "1px solid #f0f0f0",
             }}
           >
@@ -146,7 +142,7 @@ const LeadsPostDetails = () => {
               <Tooltip
                 title={
                   <Box>
-                    <div dangerouslySetInnerHTML={{ __html: decodeHtml(selectedleadData.metadata?.chainOfThought as string) }} />
+                    <HtmlRenderer htmlString={selectedleadData.metadata?.chainOfThought as string} />
                   </Box>
                 }
                 placement="bottom-start"
@@ -219,7 +215,7 @@ const LeadsPostDetails = () => {
                     {selectedleadData.title}
                   </Typography>
                 </Link>
-                <div dangerouslySetInnerHTML={{ __html: decodeHtml(selectedleadData.metadata?.descriptionHtml as string) }} />
+                <HtmlRenderer htmlString={selectedleadData.metadata?.descriptionHtml as string} />
               </Box>
             </Box>
 

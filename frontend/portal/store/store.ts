@@ -1,11 +1,13 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { sourceReducer } from './Source/sourceSlice';
 import { leadReducer } from './Lead/leadSlice';
+import { paremsReducer } from './Params/ParamsSlice';
 
 export const store = configureStore({
   reducer: {
     source: sourceReducer,
-    lead: leadReducer
+    lead: leadReducer,
+    parems: paremsReducer
   },
 });
 

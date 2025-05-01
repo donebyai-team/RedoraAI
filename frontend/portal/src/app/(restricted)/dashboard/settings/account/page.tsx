@@ -9,44 +9,36 @@ import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 import Paper from '@mui/material/Paper'
 import { useAuthUser } from '@doota/ui-core/hooks/useAuth'
-import {  IntegrationType, Integration } from '@doota/pb/doota/portal/v1/portal_pb'
+import { IntegrationType, Integration } from '@doota/pb/doota/portal/v1/portal_pb'
 import { FallbackSpinner } from '../../../../../atoms/FallbackSpinner'
 import { Button } from '../../../../../atoms/Button'
 import { portalClient } from '../../../../../services/grpc'
 import { buildAppUrl } from '../../../../routes'
 import { routes } from '@doota/ui-core/routing'
 import { isAdmin } from '@doota/ui-core/helper/role'
-// import { Box } from '@mui/system'
-// import Modal from '@mui/material/Modal'
-// import Image from 'next/image'
+import { Box } from '@mui/system'
+import { AppBar, Toolbar, Typography } from '@mui/material'
+import {
+  Reddit as RedditIcon,
+} from "@mui/icons-material"
 
 export default function Page() {
   const user = useAuthUser()
   const [loading, setLoading] = useState(false)
-  // const [open, setOpen] = useState(false)
-  // const handleOpen = () => setOpen(true)
-  // const handleClose = () => setOpen(false)
   const [integrations, setIntegrations] = useState<Integration[]>([]);
 
   useEffect(() => {
-  }, [setLoading])
-
-  useEffect(() => {
     portalClient.getIntegrations({})
-        .then((res) => {
-          setIntegrations(res.integrations);
-        })
-        .catch((err) => {
-          console.error("Error fetching integrations:", err);
-        })
-        .finally(() => {
-          setLoading(false);
-        });
+      .then((res) => {
+        setIntegrations(res.integrations);
+      })
+      .catch((err) => {
+        console.error("Error fetching integrations:", err);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
-
-  if (loading) {
-    return <FallbackSpinner />
-  }
 
   const openOauthConsentScreen = (integrationType: IntegrationType) => {
     portalClient
@@ -59,55 +51,57 @@ export default function Page() {
       })
   }
 
-  return (
-    <>
-      <div className='absolute bg-neutral-50 border border-neutral-200 rounded-lg top-0 right-0 p-1.5 px-2.5 text-sm m-2.5'>
-        {user && user.email}
-      </div>
+  if (loading) {
+    return <FallbackSpinner />
+  }
 
-      <div className='flex gap-6'>
-        <div className='flex-1'>
-          <TableContainer
-            component={Paper}
-            className='inline-table border border-neutral-200 !rounded-lg !overflow-hidden !shadow-none'
-          >
-            {user && isAdmin(user) && (
-              <>
-                <div className='flex justify-end !w-full flex-1 items-end text-end p-1 border-b border-neutral-200'>
-                  <Button
-                    variant='contained'
-                    className='!shadow-none !bg-purple-6 !text-purple-3 !rounded-md !font-semibold'
-                    onClick={() => openOauthConsentScreen(IntegrationType.REDDIT)}
-                  >
-                    Connect Reddit
-                  </Button>
-                </div>
-              </>
-            )}
+  return (<>
+    <Box component="main" sx={{ flexGrow: 1, p: 0, display: "flex", flexDirection: "column" }}>
+      <AppBar position="static" color="inherit" elevation={0} sx={{ borderBottom: "1px solid #e0e0e0", height: 61 }}>
+        <Toolbar>
+          <Box sx={{ flexGrow: 1 }} />
+          <Typography variant="body2" color="text.secondary" sx={{ mr: 2 }}>
+            {user && user.email}
+          </Typography>
+          {user && isAdmin(user) && (<>
+            <Button
+              variant="contained"
+              startIcon={<RedditIcon />}
+              sx={{
+                bgcolor: "#ff4500",
+                "&:hover": {
+                  bgcolor: "#e03d00",
+                },
+                gap: 0
+              }}
+              onClick={() => openOauthConsentScreen(IntegrationType.REDDIT)}
+            >
+              Connect Reddit
+            </Button>
+          </>)}
+        </Toolbar>
+      </AppBar>
 
-            <Table sx={{ minWidth: 650 }} size='small'>
-              <TableHead>
-                <TableRow className='bg-neutral-50'>
-                  <TableCell className='!p-1'>Provider</TableCell>
-                  <TableCell className='!p-1'>Username</TableCell>
-                  <TableCell align='right'></TableCell>
+      <Box sx={{ p: 3, flexGrow: 1 }}>
+        <TableContainer component={Paper} elevation={0} variant="outlined">
+          <Table sx={{ minWidth: 650 }}>
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ fontWeight: "medium" }}>Provider</TableCell>
+                <TableCell sx={{ fontWeight: "medium" }}>Username</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {integrations.map((row, index) => (
+                <TableRow key={index}>
+                  <TableCell>Reddit</TableCell>
+                  <TableCell>{row.details.value?.userName}</TableCell>
                 </TableRow>
-              </TableHead>
-              <TableBody>
-                {integrations.map((row, index) => (
-                    <TableRow key={index}>
-                      <TableCell className='!p-1'>Reddit</TableCell>
-                      <TableCell className='!p-1'>{row.details.value?.userName}</TableCell>
-                      <TableCell align='right' className='!p-1'>
-                        {/* Action buttons like Edit/Delete can go here */}
-                      </TableCell>
-                    </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </div>
-      </div>
-    </>
-  )
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Box>
+    </Box>
+  </>);
 }
