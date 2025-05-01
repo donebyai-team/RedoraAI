@@ -99,6 +99,11 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 	project *models.Project,
 	source *models.Source,
 	redditClient *reddit.Client) error {
+
+	if ok, err := s.isMaxLeadLimitReached(ctx, project.ID); err != nil || ok {
+		return err
+	}
+
 	redditQuery := reddit.PostFilters{
 		Keywords: []string{keyword.Keyword},
 		SortBy:   utils.Ptr(reddit.SortByNEW),
@@ -116,9 +121,9 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 		return fmt.Errorf("unable to fetch posts: %w", err)
 	}
 
-	// Sort in DESC
+	// Sort in DESC, we want to start from the most latest and keep going down till we find maxRelevantLeads per day
 	sort.Slice(posts, func(i, j int) bool {
-		return posts[i].CreatedAt > posts[j].CreatedAt
+		return posts[j].CreatedAt > posts[i].CreatedAt
 	})
 
 	s.logger.Info("got posts from reddit", zap.Int("total_posts", len(posts)))
@@ -209,6 +214,16 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 		if err != nil {
 			return fmt.Errorf("unable to create reddit lead: %w", err)
 		}
+
+		// Check if we have got enough relevant leads for the dat
+		ok, err := s.isMaxLeadLimitReached(ctx, project.ID)
+		if err != nil || ok {
+			if err != nil {
+				return err
+			}
+			break
+		}
+
 	}
 
 	s.logger.Info("reddit_leads_summary",
@@ -220,11 +235,31 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 	return nil
 }
 
+func (s *redditKeywordTracker) isMaxLeadLimitReached(ctx context.Context, projectID string) (bool, error) {
+	today := time.Now().Truncate(24 * time.Hour)
+	tomorrow := today.Add(24 * time.Hour)
+	leadsData, err := s.db.CountLeadByCreatedAt(ctx, projectID, 80, today, tomorrow)
+	if err != nil {
+		s.logger.Error("failed to count leads", zap.Error(err), zap.String("start_date", today.String()), zap.String("end_date", tomorrow.String()))
+		return false, fmt.Errorf("unable to count leads: %w", err)
+	}
+
+	if leadsData.Count >= maxLeadsPerDay {
+		s.logger.Info("reached max leads per day",
+			zap.Uint32("count", leadsData.Count),
+			zap.String("start_date", today.String()),
+			zap.String("end_date", tomorrow.String()))
+		return true, nil
+	}
+	return false, nil
+}
+
 const (
 	minSelftextLength   = 30
 	minTitleLength      = 5
 	maxPostAgeInMonths  = 6
 	minCommentThreshold = 5
+	maxLeadsPerDay      = 25
 )
 
 var systemAuthors = []string{"[deleted]", "AutoModerator"}

@@ -82,6 +82,7 @@ type LeadRepository interface {
 	CreateLead(ctx context.Context, reddit *models.Lead) error
 	UpdateLeadStatus(ctx context.Context, lead *models.Lead) error
 	GetLeadByID(ctx context.Context, projectID, id string) (*models.Lead, error)
+	CountLeadByCreatedAt(ctx context.Context, projectID string, relevancyScore int, start, end time.Time) (*models.LeadsData, error)
 }
 
 type KeywordRepository interface {

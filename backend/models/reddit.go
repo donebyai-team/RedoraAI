@@ -125,6 +125,10 @@ type Lead struct {
 	UpdatedAt *time.Time `db:"updated_at"`
 }
 
+type LeadsData struct {
+	Count uint32 `db:"count"`
+}
+
 type LeadMetadata struct {
 	ChainOfThought                 string `json:"chain_of_thought"`
 	SuggestedComment               string `json:"suggested_comment"`
