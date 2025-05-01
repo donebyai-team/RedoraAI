@@ -12,18 +12,10 @@ import (
 )
 
 const (
-	// GPTModelGpt4VisionPreview is a GPTModel of type gpt-4-vision-preview.
-	GPTModelGpt4VisionPreview GPTModel = "gpt-4-vision-preview"
-	// GPTModelGpt4Turbo is a GPTModel of type gpt-4-turbo.
-	GPTModelGpt4Turbo GPTModel = "gpt-4-turbo"
-	// GPTModelGpt4TurboPreview is a GPTModel of type gpt-4-turbo-preview.
-	GPTModelGpt4TurboPreview GPTModel = "gpt-4-turbo-preview"
-	// GPTModelGpt40125Preview is a GPTModel of type gpt-4-0125-preview.
-	GPTModelGpt40125Preview GPTModel = "gpt-4-0125-preview"
-	// GPTModelGpt4Turbo20240409 is a GPTModel of type gpt-4-turbo-2024-04-09.
-	GPTModelGpt4Turbo20240409 GPTModel = "gpt-4-turbo-2024-04-09"
-	// GPTModelGpt4O20240513 is a GPTModel of type gpt-4o-2024-05-13.
-	GPTModelGpt4O20240513 GPTModel = "gpt-4o-2024-05-13"
+	// GPTModelRedoraDevGpt4O20240806 is a GPTModel of type redora-dev-gpt-4o-2024-08-06.
+	GPTModelRedoraDevGpt4O20240806 GPTModel = "redora-dev-gpt-4o-2024-08-06"
+	// GPTModelRedoraProdGpt4O20240806 is a GPTModel of type redora-prod-gpt-4o-2024-08-06.
+	GPTModelRedoraProdGpt4O20240806 GPTModel = "redora-prod-gpt-4o-2024-08-06"
 	// GPTModelGpt4O20240806 is a GPTModel of type gpt-4o-2024-08-06.
 	GPTModelGpt4O20240806 GPTModel = "gpt-4o-2024-08-06"
 )
@@ -43,13 +35,9 @@ func (x GPTModel) IsValid() bool {
 }
 
 var _GPTModelValue = map[string]GPTModel{
-	"gpt-4-vision-preview":   GPTModelGpt4VisionPreview,
-	"gpt-4-turbo":            GPTModelGpt4Turbo,
-	"gpt-4-turbo-preview":    GPTModelGpt4TurboPreview,
-	"gpt-4-0125-preview":     GPTModelGpt40125Preview,
-	"gpt-4-turbo-2024-04-09": GPTModelGpt4Turbo20240409,
-	"gpt-4o-2024-05-13":      GPTModelGpt4O20240513,
-	"gpt-4o-2024-08-06":      GPTModelGpt4O20240806,
+	"redora-dev-gpt-4o-2024-08-06":  GPTModelRedoraDevGpt4O20240806,
+	"redora-prod-gpt-4o-2024-08-06": GPTModelRedoraProdGpt4O20240806,
+	"gpt-4o-2024-08-06":             GPTModelGpt4O20240806,
 }
 
 // ParseGPTModel attempts to convert a string to a GPTModel.
@@ -104,8 +92,8 @@ const (
 	PromptTypeSYSTEM PromptType = "SYSTEM"
 	// PromptTypeIMAGE is a PromptType of type IMAGE.
 	PromptTypeIMAGE PromptType = "IMAGE"
-	// PromptTypeResponseSchema is a PromptType of type RESPONSE_SCHEMA.
-	PromptTypeResponseSchema PromptType = "RESPONSE_SCHEMA"
+	// PromptTypeRESPONSESCHEMA is a PromptType of type RESPONSE_SCHEMA.
+	PromptTypeRESPONSESCHEMA PromptType = "RESPONSE_SCHEMA"
 )
 
 var ErrInvalidPromptType = errors.New("not a valid PromptType")
@@ -123,9 +111,10 @@ func (x PromptType) IsValid() bool {
 }
 
 var _PromptTypeValue = map[string]PromptType{
-	"HUMAN":  PromptTypeHUMAN,
-	"SYSTEM": PromptTypeSYSTEM,
-	"IMAGE":  PromptTypeIMAGE,
+	"HUMAN":           PromptTypeHUMAN,
+	"SYSTEM":          PromptTypeSYSTEM,
+	"IMAGE":           PromptTypeIMAGE,
+	"RESPONSE_SCHEMA": PromptTypeRESPONSESCHEMA,
 }
 
 // ParsePromptType attempts to convert a string to a PromptType.

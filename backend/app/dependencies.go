@@ -145,7 +145,6 @@ func (b *DependenciesBuilder) Build(ctx context.Context, logger *zap.Logger, tra
 		out.AIClient, err = ai.NewOpenAI(
 			b.AIConfig.OpenAIKey,
 			b.AIConfig.OpenAIOrganization,
-
 			ai.LangsmithConfig{
 				ApiKey:      b.AIConfig.LangsmithApiKey,
 				ProjectName: b.AIConfig.LangsmithProject,
