@@ -17,7 +17,7 @@ import (
 const MAX_RETRIES = 3
 
 func (c *Client) llmChain(template prompts.FormatPrompter) *chains.LLMChain {
-	return chains.NewLLMChain(c.model, template)
+	return chains.NewLLMChain(nil, template)
 }
 
 func (c *Client) langsmithTracer(runId string, logger *zap.Logger) (*langsmith.LangChainTracer, error) {
