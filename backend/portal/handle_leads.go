@@ -59,12 +59,7 @@ func (p *Portal) GetSources(ctx context.Context, c *connect.Request[emptypb.Empt
 	if err != nil {
 		return nil, err
 	}
-
-	redditClient, err := p.redditOauthClient.NewRedditClient(ctx, actor.OrganizationID)
-	if err != nil {
-		return nil, err
-	}
-	redditService := services.NewRedditService(p.logger, p.db, redditClient)
+	redditService := services.NewRedditService(p.logger, p.db, nil)
 	sources, err := redditService.GetSubReddits(ctx, actor.ProjectID)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to get subreddits: %w", err))
