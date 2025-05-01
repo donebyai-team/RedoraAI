@@ -26,11 +26,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
 
       <body>
-        <NextElementRegistryProvider>
-          <ConfigGuard fallback={<FallbackSpinner />}>
-            <PortalClientProvider>
-              <ConfigProvider>
-                <StoreProvider>
+        <StoreProvider>
+          <NextElementRegistryProvider>
+            <ConfigGuard fallback={<FallbackSpinner />}>
+              <PortalClientProvider>
+                <ConfigProvider>
                   <PortalExecutionRuntimeProvider>
                     <ThemeRegistry>
                       {children}
@@ -39,11 +39,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                       </StyledReactHotToast>
                     </ThemeRegistry>
                   </PortalExecutionRuntimeProvider>
-                </StoreProvider>
-              </ConfigProvider>
-            </PortalClientProvider>
-          </ConfigGuard>
-        </NextElementRegistryProvider>
+                </ConfigProvider>
+              </PortalClientProvider>
+            </ConfigGuard>
+          </NextElementRegistryProvider>
+        </StoreProvider>
       </body>
     </html>
   )

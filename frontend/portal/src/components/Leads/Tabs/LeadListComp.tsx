@@ -7,18 +7,22 @@ import {
     List,
     ListItem,
     Stack,
-    CircularProgress,
 } from "@mui/material";
 import { LeadTyeps, setSelectedLeadData } from "../../../../store/Lead/leadSlice";
 import { useAppDispatch, useAppSelector } from "../../../../store/hooks";
 import { formateDate, getSubredditName, setLeadActive } from "./NewTab";
 import { RootState } from "../../../../store/store";
+import { LoadigSkeletons } from "../../NavBar";
 
-const ListRenderComp = () => {
+interface ListRenderCompProps {
+    list: LeadTyeps[];
+    isLoading: boolean
+}
+const ListRenderComp: React.FC<ListRenderCompProps> = ({ isLoading, list }) => {
 
     const dispatch = useAppDispatch();
-    const { selectedleadData, isLoading, listofleads } = useAppSelector((state: RootState) => state.lead);
     const { subredditList } = useAppSelector((state: RootState) => state.source);
+    const { selectedleadData } = useAppSelector((state: RootState) => state.lead);
 
     const handleSelectedLead = (data: LeadTyeps) => {
         dispatch(setSelectedLeadData(data));
@@ -26,32 +30,16 @@ const ListRenderComp = () => {
 
     return (
         isLoading ?
-            <Box sx={{ display: 'flex', flexDirection: "column", alignItems: "center", height: "100vh", width: "100%", mt: 5 }}>
-                <CircularProgress />
+            <Box sx={{ display: 'flex', px: 4, flexDirection: "column", alignItems: "center", height: "100%", width: "100%", gap: 2, mt: 5 }}>
+                <LoadigSkeletons count={5} height={60} />
             </Box>
             :
             <Box sx={{ width: "100%", pt: 2, height: "83dvh", overflowY: "scroll" }}>
-                {listofleads.length === 0 ? (
-                    <Box
-                        sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            height: "100vh",
-                            textAlign: "center",
-                            px: 2,
-                        }}
-                    >
-                        <Typography variant="body1" color="text.secondary">
-                            {`Sit back and relax, we are finding relevant leads for you. We will
-                            notify you once it’s ready.`}
-                        </Typography>
-                    </Box>
-                ) : (
+                {(list.length > 0) ? (
                     <List sx={{ p: 0, mx: 4 }}>
-                        {listofleads.map((post, index) => (
+                        {list.map((post, index) => (
                             <React.Fragment key={index}>
-                                <ListItem onClick={() => handleSelectedLead(post)} sx={{ p: 3, mb: (index !== listofleads.length - 1) ? 2 : 0, cursor: "pointer", ...setLeadActive(selectedleadData?.id as string, post.id) }}>
+                                <ListItem onClick={() => handleSelectedLead(post)} sx={{ p: 3, mb: (index !== list.length - 1) ? 2 : 0, cursor: "pointer", ...setLeadActive(selectedleadData?.id as string, post.id) }}>
                                     <Stack direction="column" spacing={1} width="100%">
                                         <Stack direction="row" spacing={1} alignItems="center">
                                             <Box
@@ -114,6 +102,21 @@ const ListRenderComp = () => {
                             </React.Fragment>
                         ))}
                     </List>
+                ) : (
+                    <Box
+                        sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            height: "100vh",
+                            textAlign: "center",
+                            px: 2,
+                        }}
+                    >
+                        <Typography variant="body1" color="text.secondary">
+                            {`Sit back and relax, we are finding relevant leads for you. We will notify you once it’s ready.`}
+                        </Typography>
+                    </Box>
                 )}
             </Box>
     );

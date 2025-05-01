@@ -1,15 +1,11 @@
 "use client"
 
-import React, { useEffect } from "react";
-import { useClientsContext } from "@doota/ui-core/context/ClientContext";
-import toast from "react-hot-toast";
 import { formatDistanceToNow } from 'date-fns';
 import { Timestamp } from "@bufbuild/protobuf/wkt";
-import { useAppDispatch, useAppSelector } from "../../../../store/hooks";
-import { RootState } from "../../../../store/store";
-import { LeadTabStatus, setActiveTab, setError, setIsLoading, setListOfLeads, setSelectedLeadData } from "../../../../store/Lead/leadSlice";
 import ListRenderComp from "./LeadListComp";
 import { SourceTyeps } from "../../../../store/Source/sourceSlice";
+import { useAppSelector } from '../../../../store/hooks';
+import { RootState } from '../../../../store/store';
 
 export const formateDate = (timestamp: Timestamp): string => {
     const millis = Number(timestamp.seconds) * 1000; // convert bigint to number
@@ -31,35 +27,10 @@ export const setLeadActive = (parems_id: string, id: string) => {
 };
 
 const NewTabComponent = () => {
-    const { portalClient } = useClientsContext();
-    const dispatch = useAppDispatch();
-    const { selectedleadData } = useAppSelector((state: RootState) => state.lead);
-    const { relevancyScore, subReddit } = useAppSelector((state: RootState) => state.parems);
 
-    useEffect(() => {
+    const { newTabList, isLoading } = useAppSelector((state: RootState) => state.lead);
 
-        const getAllRelevantLeads = async () => {
-            dispatch(setIsLoading(true));
-            dispatch(setActiveTab(LeadTabStatus.NEW));
-
-            try {
-                const result = await portalClient.getRelevantLeads({ ...(relevancyScore && { relevancyScore }), ...(subReddit && { subReddit }) });
-                dispatch(setListOfLeads(result?.leads ?? []));
-                dispatch(setSelectedLeadData(result?.leads[0]));
-            } catch (err: any) {
-                const message = err?.response?.data?.message || err.message || "Something went wrong"
-                toast.error(message);
-                dispatch(setError(message));
-            } finally {
-                dispatch(setIsLoading(false));
-            }
-        }
-        getAllRelevantLeads();
-
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [relevancyScore, subReddit, (selectedleadData === null)]);
-
-    return (<ListRenderComp />);
+    return (<ListRenderComp list={newTabList} isLoading={isLoading} />);
 };
 
 export default NewTabComponent;

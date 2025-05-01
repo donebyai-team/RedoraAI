@@ -1,46 +1,65 @@
-// import React from "react";
-// import he from "he";
-
-// interface HtmlRendererProps {
-//   htmlString: string;
-// }
-
-// const HtmlRenderer: React.FC<HtmlRendererProps> = ({ htmlString }) => {
-//   const decodedHtml = he.decode(htmlString);
-//   console.log("###_debug_decodedHtml ", decodedHtml);
-
-//   return (<div dangerouslySetInnerHTML={{ __html: decodedHtml }} />);
-// };
-
-// export default HtmlRenderer;
-
-import { useRef, useEffect } from "react";
+import React from "react";
 import he from "he";
 
-const HtmlRenderer = ({ htmlString }: { htmlString: string }) => {
-  const iframeRef = useRef<HTMLIFrameElement>(null);
+interface HtmlRendererProps {
+  htmlString: string;
+}
+
+const HtmlTitleRenderer: React.FC<HtmlRendererProps> = ({ htmlString }) => {
+  const decodedHtml = he.decode(htmlString);
+  console.log("###_debug_decodedHtml ", decodedHtml);
+
+  return (<div style={{ all: "revert" }} dangerouslySetInnerHTML={{ __html: decodedHtml }} />);
+};
+
+const HtmlBodyRenderer = ({ htmlString }: { htmlString: string }) => {
+  const iframeRef = React.useRef<HTMLIFrameElement>(null);
   const decodedHtml = he.decode(htmlString);
 
-  useEffect(() => {
-    const doc = iframeRef.current?.contentDocument;
-    if (doc) {
-      doc.open();
-      doc.write(decodedHtml);
-      doc.close();
+  React.useEffect(() => {
+    const iframe = iframeRef.current;
+
+    if (iframe) {
+      const doc = iframe.contentDocument || iframe.contentWindow?.document;
+
+      if (doc) {
+        doc.open();
+        doc.write(decodedHtml);
+        doc.close();
+
+        const onLoadHandler = () => {
+          iframe.style.height = doc.body.scrollHeight + 'px';
+
+          const links = doc.querySelectorAll('a');
+          links.forEach((link) => {
+            link.setAttribute('target', '_blank');
+            link.setAttribute('rel', 'noopener noreferrer');
+          });
+        };
+
+        setTimeout(onLoadHandler, 0);
+      }
     }
+  }, [decodedHtml]);
+
+  // Use decodedHtml hash as key to force full iframe re-render
+  const iframeKey = React.useMemo(() => {
+    return `iframe-${decodedHtml.length}-${Date.now()}`; // or use a hash if needed
   }, [decodedHtml]);
 
   return (
     <iframe
+      key={iframeKey}
       ref={iframeRef}
       style={{
         width: '100%',
         border: 'none',
-        minHeight: 'max-c',
+        overflow: 'hidden',
+        height: '1px',
       }}
       title="HTML Preview"
     />
   );
 };
 
-export default HtmlRenderer;
+export { HtmlTitleRenderer, HtmlBodyRenderer };

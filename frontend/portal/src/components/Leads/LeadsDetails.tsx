@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react"
+import { useState, useMemo, useCallback, memo } from "react";
 import {
   Box,
   Typography,
@@ -14,112 +14,139 @@ import {
   CardContent,
   Stack,
   Tooltip,
-} from "@mui/material"
-import { ThumbDown, ThumbUp, Close, Star, Send } from "@mui/icons-material"
+} from "@mui/material";
+import { ThumbDown, ThumbUp, Close, Star, Send } from "@mui/icons-material";
 import { LightbulbIcon } from "lucide-react";
-import { formateDate, getSubredditName } from "./Tabs/NewTab";
-import { useClientsContext } from "@doota/ui-core/context/ClientContext";
 import Link from "next/link";
-import React from 'react';
-// import ReactMarkdown from 'react-markdown';
-import { LeadStatus } from "@doota/pb/doota/core/v1/core_pb";
+import toast from "react-hot-toast";
+
+import { useClientsContext } from "@doota/ui-core/context/ClientContext";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { RootState } from "../../../store/store";
-import { LeadTabStatus, setListOfLeads, setSelectedLeadData } from "../../../store/Lead/leadSlice";
-import HtmlRenderer from "../Html/HtmlRenderer";
+import {
+  LeadTabStatus,
+  setCompletedList,
+  setDiscardedTabList,
+  setNewTabList,
+  setSelectedLeadData,
+} from "../../../store/Lead/leadSlice";
+import { LeadStatus } from "@doota/pb/doota/core/v1/core_pb";
+import { HtmlTitleRenderer, HtmlBodyRenderer } from "../Html/HtmlRenderer";
+import { formateDate, getSubredditName } from "./Tabs/NewTab";
 
-// Create a custom theme with Reddit-like colors
-const theme = createTheme({
+// Memoized renderers
+const MemoizedHtmlTitleRenderer = memo(HtmlTitleRenderer);
+const MemoizedHtmlBodyRenderer = memo(HtmlBodyRenderer);
+
+// Memoized theme
+const redditTheme = createTheme({
   palette: {
-    primary: {
-      main: "#ff4500", // Reddit orange
-    },
-    secondary: {
-      main: "#0079d3", // Reddit blue
-    },
-    background: {
-      default: "#dae0e6",
-      paper: "#ffffff",
-    },
+    primary: { main: "#ff4500" },
+    secondary: { main: "#0079d3" },
+    background: { default: "#dae0e6", paper: "#ffffff" },
   },
   typography: {
     fontFamily: '"Noto Sans", "Helvetica", "Arial", sans-serif',
   },
-})
+});
 
 const LeadsPostDetails = () => {
-
-  const { portalClient } = useClientsContext();
-  const { subredditList } = useAppSelector((state: RootState) => state.source);
-  const { selectedleadData, listofleads, activeTab } = useAppSelector((state: RootState) => state.lead);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const dispatch = useAppDispatch();
-  
+  const { portalClient } = useClientsContext();
+
+  const selectedleadData = useAppSelector((state: RootState) => state.lead.selectedleadData);
+  const activeTab = useAppSelector((state: RootState) => state.lead.activeTab);
+  const newTabList = useAppSelector((state: RootState) => state.lead.newTabList);
+  const completedTabList = useAppSelector((state: RootState) => state.lead.completedTabList);
+  const discardedTabList = useAppSelector((state: RootState) => state.lead.discardedTabList);
+  const subredditList = useAppSelector((state: RootState) => state.source.subredditList);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const subredditName = useMemo(() => {
+    return getSubredditName(subredditList, selectedleadData?.sourceId ?? "");
+  }, [subredditList, selectedleadData?.sourceId]);
+
+  const formattedDate = useMemo(() => {
+    return selectedleadData?.postCreatedAt ? formateDate(selectedleadData.postCreatedAt) : "N/A";
+  }, [selectedleadData?.postCreatedAt]);
+
+  const handleCloseLeadDetail = useCallback(() => {
+    dispatch(setSelectedLeadData(null));
+  }, [dispatch]);
+
+  const handleSelectNext = useCallback((status: LeadStatus) => {
+    if (activeTab !== LeadTabStatus.NEW || !selectedleadData) return;
+
+    const currentIndex = newTabList.findIndex(item => item.id === selectedleadData.id);
+    const nextItem = newTabList[currentIndex + 1];
+    const newTabListArray = newTabList.filter(item => item.id !== selectedleadData.id);
+
+    if (status === LeadStatus.COMPLETED) {
+      dispatch(setCompletedList([...completedTabList, selectedleadData]));
+    } else if (status === LeadStatus.NOT_RELEVANT) {
+      dispatch(setDiscardedTabList([...discardedTabList, selectedleadData]));
+    }
+
+    if (nextItem) {
+      dispatch(setSelectedLeadData(nextItem));
+      dispatch(setNewTabList(newTabListArray));
+    } else {
+      handleCloseLeadDetail();
+    }
+  }, [activeTab, completedTabList, discardedTabList, dispatch, newTabList, selectedleadData, handleCloseLeadDetail]);
+
+  const copyTextAndOpenLink = useCallback((textToCopy: string, linkToOpen: string) => {
+    if (!navigator.clipboard) {
+      // Fallback for older browsers that do not support `navigator.clipboard`
+      const textArea = document.createElement("textarea");
+      textArea.value = textToCopy;
+      textArea.style.position = "fixed";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+
+      try {
+        const successful = document.execCommand("copy");
+        if (!successful) throw new Error("Fallback: Copy command was unsuccessful");
+        window.open(linkToOpen, '_blank');
+      } catch (err: any) {
+        const message = err?.message || "Fallback: Copy failed";
+        toast.error(message);
+      } finally {
+        document.body.removeChild(textArea);
+      }
+    } else {
+      navigator.clipboard.writeText(textToCopy)
+        .then(() => window.open(linkToOpen, '_blank'))
+        .catch((err: any) => {
+          const message = err?.message || "Clipboard copy failed";
+          toast.error(message);
+        });
+    }
+  }, []);
+
+
+  const handleLeadStatusUpdate = useCallback(async (status: LeadStatus) => {
+    if (!selectedleadData) return;
+    setIsLoading(true);
+    try {
+      await portalClient.updateLeadStatus({ status, leadId: selectedleadData.id });
+      handleSelectNext(status);
+    } catch (err: any) {
+      const message = err?.response?.data?.message || err.message || "Something went wrong";
+      toast.error(message);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [portalClient, selectedleadData, handleSelectNext]);
+
   if (!selectedleadData) return null;
 
-  const handleSelectNext = () => {
-    if (activeTab === LeadTabStatus.NEW) {
-      const currentIndex = listofleads.findIndex(item => item.id === selectedleadData?.id);
-      const newlistofleads = listofleads.filter(item => item.id !== selectedleadData?.id);
-      const nextItem = listofleads[currentIndex + 1];
-
-      if (nextItem !== undefined) {
-        dispatch(setSelectedLeadData(nextItem));
-        dispatch(setListOfLeads(newlistofleads));
-      } else {
-        handleCloseLeadDetail();
-      }
-    }
-  };
-
-  const copyTextAndOpenLink = (textToCopy: string, linkToOpen: string) => {
-    navigator.clipboard.writeText(textToCopy)
-      .then(() => {
-        console.log('Text copied successfully!');
-        window.open(linkToOpen, '_blank');
-      })
-      .catch((err) => {
-        console.error('Failed to copy text: ', err);
-      });
-  };
-
-  const handleCloseLeadDetail = () => {
-    dispatch(setSelectedLeadData(null));
-  };
-
-  const handleLeadNotRelevent = async () => {
-    setIsLoading(true);
-    try {
-      const result = await portalClient.updateLeadStatus({ status: LeadStatus.NOT_RELEVANT, leadId: selectedleadData.id });
-      console.log("###_result ", result);
-      handleSelectNext();
-    } catch (err: any) {
-      const message = err?.response?.data?.message || err.message || "Something went wrong"
-      console.log("###_error", message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleLeadComplete = async () => {
-    setIsLoading(true);
-    try {
-      const result = await portalClient.updateLeadStatus({ status: LeadStatus.COMPLETED, leadId: selectedleadData.id });
-      console.log("###_result ", result);
-      handleSelectNext();
-    } catch (err: any) {
-      const message = err?.response?.data?.message || err.message || "Something went wrong"
-      console.log("###_error", message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
-    <ThemeProvider theme={theme}>
-      <Box sx={{ width: "100%", }}>
-        <Paper elevation={0} sx={{ borderRadius: 2, overflow: "hidden", mb: 2 }}>
-          {/* Header with relevancy and actions */}
+    <ThemeProvider theme={redditTheme}>
+      <Box sx={{ width: "100%" }}>
+        <Paper elevation={0} sx={{ borderRadius: 2, overflow: "hidden" }}>
+          {/* Header */}
           <Box
             sx={{
               display: "flex",
@@ -136,13 +163,12 @@ const LeadsPostDetails = () => {
                   bgcolor: "rgba(255, 215, 0, 0.2)",
                   color: "#b07d1a",
                   fontWeight: "bold",
-                  "& .MuiChip-icon": { color: "#b07d1a" },
                 }}
               />
               <Tooltip
                 title={
                   <Box>
-                    <HtmlRenderer htmlString={selectedleadData.metadata?.chainOfThought as string} />
+                    <MemoizedHtmlBodyRenderer htmlString={selectedleadData.metadata?.chainOfThought || ""} />
                   </Box>
                 }
                 placement="bottom-start"
@@ -156,7 +182,7 @@ const LeadsPostDetails = () => {
                       p: 1.5,
                       maxWidth: "30vw",
                     },
-                  }
+                  },
                 }}
               >
                 <IconButton sx={{ borderRadius: 2.5 }}>
@@ -165,61 +191,68 @@ const LeadsPostDetails = () => {
               </Tooltip>
             </Box>
             <Box sx={{ display: "flex", gap: 1 }}>
-              {activeTab === LeadTabStatus.NEW && <>
-                <Button
-                  variant="contained"
-                  startIcon={<ThumbDown />}
-                  sx={{
-                    bgcolor: "#f0f0f0",
-                    color: "#666",
-                    "&:hover": { bgcolor: "#e0e0e0" },
-                    textTransform: "none",
-                    boxShadow: "none",
-                  }}
-                  onClick={handleLeadNotRelevent}
-                  disabled={isLoading}
-                >
-                  Not relevant
-                </Button>
-                <Button
-                  variant="contained"
-                  startIcon={<ThumbUp />}
-                  sx={{
-                    bgcolor: "#f0f0f0",
-                    color: "#666",
-                    "&:hover": { bgcolor: "#e0e0e0" },
-                    textTransform: "none",
-                    boxShadow: "none",
-                  }}
-                  onClick={handleLeadComplete}
-                  disabled={isLoading}
-                >
-                  Complete
-                </Button>
-              </>}
+              {activeTab === LeadTabStatus.NEW && (
+                <>
+                  <Button
+                    variant="contained"
+                    startIcon={<ThumbDown />}
+                    sx={{
+                      bgcolor: "#f0f0f0",
+                      color: "#666",
+                      "&:hover": { bgcolor: "#e0e0e0" },
+                      textTransform: "none",
+                      boxShadow: "none",
+                    }}
+                    onClick={() => handleLeadStatusUpdate(LeadStatus.NOT_RELEVANT)}
+                    disabled={isLoading}
+                  >
+                    Not relevant
+                  </Button>
+                  <Button
+                    variant="contained"
+                    startIcon={<ThumbUp />}
+                    sx={{
+                      bgcolor: "#f0f0f0",
+                      color: "#666",
+                      "&:hover": { bgcolor: "#e0e0e0" },
+                      textTransform: "none",
+                      boxShadow: "none",
+                    }}
+                    onClick={() => handleLeadStatusUpdate(LeadStatus.COMPLETED)}
+                    disabled={isLoading}
+                  >
+                    Complete
+                  </Button>
+                </>
+              )}
               <IconButton size="small" onClick={handleCloseLeadDetail}>
                 <Close />
               </IconButton>
             </Box>
           </Box>
 
-          <Box sx={{ width: "100%", py: 2, height: "91dvh", overflowY: "scroll" }}>
-            {/* Post content */}
-            <Box sx={{ p: 2 }}>
-              <Box sx={{ mb: 1 }}>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                  <Link href={selectedleadData.metadata?.authorUrl as string} target="_blank">{selectedleadData.author}</Link> • {getSubredditName(subredditList, selectedleadData.sourceId)} • {selectedleadData.postCreatedAt ? formateDate(selectedleadData.postCreatedAt) : "N/A"}
-                </Typography>
-                <Link href={selectedleadData.metadata?.postUrl as string} target="_blank">
-                  <Typography variant="h5" component="h1" sx={{ fontWeight: "bold", mb: 2 }}>
-                    {selectedleadData.title}
-                  </Typography>
-                </Link>
-                <HtmlRenderer htmlString={selectedleadData.metadata?.descriptionHtml as string} />
-              </Box>
+          {/* Body */}
+          <Box sx={{ width: "100%", pb: 2 }}>
+            <Box sx={{ px: 2, pt: 2, height: "35dvh", maxHeight: "100%", overflowY: "scroll" }}>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                <Link href={selectedleadData.metadata?.authorUrl || "#"} target="_blank">
+                  {selectedleadData.author}
+                </Link>{" "}
+                • {subredditName} • {formattedDate}
+              </Typography>
+              <Typography
+                variant="h5"
+                component={Link}
+                href={selectedleadData.metadata?.postUrl || "#"}
+                target="_blank"
+                sx={{ fontWeight: "bold", mb: 2 }}
+              >
+                <MemoizedHtmlTitleRenderer htmlString={selectedleadData.title || ""} />
+              </Typography>
+              <MemoizedHtmlBodyRenderer htmlString={selectedleadData.metadata?.descriptionHtml || ""} />
             </Box>
 
-            {/* Suggested comment card */}
+            {/* Suggested Comment */}
             {selectedleadData.metadata?.suggestedComment && (
               <Card sx={{ mb: 2, borderRadius: 2, mx: 2 }}>
                 <CardContent>
@@ -230,7 +263,7 @@ const LeadsPostDetails = () => {
                     </Typography>
                   </Box>
                   <Typography variant="body1" sx={{ mb: 2 }}>
-                    {selectedleadData.metadata?.suggestedComment}
+                    {selectedleadData.metadata.suggestedComment}
                   </Typography>
                   <Stack direction="row" justifyContent="end">
                     <Button
@@ -244,7 +277,12 @@ const LeadsPostDetails = () => {
                         borderRadius: "20px",
                         textTransform: "none",
                       }}
-                      onClick={() => copyTextAndOpenLink(selectedleadData.metadata?.suggestedComment as string, selectedleadData.metadata?.postUrl as string)}
+                      onClick={() =>
+                        copyTextAndOpenLink(
+                          selectedleadData.metadata?.suggestedComment ?? "",
+                          selectedleadData.metadata?.postUrl ?? "#"
+                        )
+                      }
                     >
                       Copy & open post
                     </Button>
@@ -253,7 +291,7 @@ const LeadsPostDetails = () => {
               </Card>
             )}
 
-            {/* Suggested DM card */}
+            {/* Suggested DM */}
             {selectedleadData.metadata?.suggestedDm && (
               <Card sx={{ borderRadius: 2, mx: 2 }}>
                 <CardContent>
@@ -264,7 +302,7 @@ const LeadsPostDetails = () => {
                     </Typography>
                   </Box>
                   <Typography variant="body1" paragraph>
-                    {selectedleadData.metadata?.suggestedDm}
+                    {selectedleadData.metadata.suggestedDm}
                   </Typography>
                   <Stack direction="row" justifyContent="end">
                     <Button
@@ -278,7 +316,12 @@ const LeadsPostDetails = () => {
                         borderRadius: "20px",
                         textTransform: "none",
                       }}
-                      onClick={() => copyTextAndOpenLink(selectedleadData.metadata?.suggestedDm as string, selectedleadData.metadata?.dmUrl as string)}
+                      onClick={() =>
+                        copyTextAndOpenLink(
+                          selectedleadData.metadata?.suggestedDm ?? "",
+                          selectedleadData.metadata?.dmUrl ?? "#"
+                        )
+                      }
                     >
                       Copy & open DMs
                     </Button>
@@ -287,11 +330,10 @@ const LeadsPostDetails = () => {
               </Card>
             )}
           </Box>
-
         </Paper>
       </Box>
     </ThemeProvider>
-  )
-}
+  );
+};
 
-export default LeadsPostDetails;
+export default memo(LeadsPostDetails);
