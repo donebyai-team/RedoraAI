@@ -33,7 +33,7 @@ var StartCmd = cli.Command(startCmdE,
 	cli.Flags(func(flags *pflag.FlagSet) {
 		flags.Duration("common-phone-call-ttl", 5*time.Minute, cli.FlagDescription(`TTL to set in redis for a phone call`))
 		flags.String("common-pubsub-project", "doota-local", "Google GCP Project")
-		flags.String("common-gpt-model", "gpt-4o-2024-08-06", "GPT Model to use for message creator and categorization")
+		flags.String("common-gpt-model", "redora-dev-gpt-4o-2024-08-06", "GPT Model to use for message creator and categorization")
 		flags.String("common-openai-api-key", "", "OpenAI API key")
 		flags.String("common-openai-debug-store", "data/debugstore", "OpenAI debug store")
 		flags.String("common-openai-organization", "", "OpenAI Organization")

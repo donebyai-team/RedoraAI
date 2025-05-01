@@ -54,6 +54,7 @@ func NewOpenAI(apiKey, openAIOrganization string, config LangsmithConfig, debugF
 	}
 
 	model, err := openai.New(
+		openai.WithBaseURL("https://litellm.donebyai.team"),
 		openai.WithToken(apiKey),
 		openai.WithOrganization(openAIOrganization),
 	)

@@ -3,7 +3,6 @@ package ai
 import (
 	"fmt"
 	"github.com/shank318/doota/models"
-	"slices"
 	"text/template"
 	"time"
 
@@ -14,17 +13,17 @@ import (
 
 var caseDecisionTemplates = []Template{
 	{path: "case_decision.prompt.gotmpl", promptType: PromptTypeSYSTEM, promptFeature: PromptFeatureTEXTONLY},
-	{path: "case_decision.schema.gotmpl", promptType: PromptTypeResponseSchema, promptFeature: PromptFeatureBOTH},
+	{path: "case_decision.schema.gotmpl", promptType: PromptTypeRESPONSESCHEMA, promptFeature: PromptFeatureBOTH},
 	{path: "case_decision.human.gotmpl", promptType: PromptTypeSYSTEM, promptFeature: PromptFeatureBOTH},
 }
 
 var redditPostRelevancyTemplates = []Template{
 	{path: "reddit_post.prompt.gotmpl", promptType: PromptTypeSYSTEM, promptFeature: PromptFeatureTEXTONLY},
-	{path: "reddit_post.schema.gotmpl", promptType: PromptTypeResponseSchema, promptFeature: PromptFeatureBOTH},
+	{path: "reddit_post.schema.gotmpl", promptType: PromptTypeRESPONSESCHEMA, promptFeature: PromptFeatureBOTH},
 	{path: "reddit_post.human.gotmpl", promptType: PromptTypeSYSTEM, promptFeature: PromptFeatureBOTH},
 }
 
-// ENUM(gpt-4-vision-preview, gpt-4-turbo, gpt-4-turbo-preview, gpt-4-0125-preview, gpt-4-turbo-2024-04-09, gpt-4o-2024-05-13, gpt-4o-2024-08-06)
+// ENUM(redora-dev-gpt-4o-2024-08-06, redora-prod-gpt-4o-2024-08-06, gpt-4o-2024-08-06)
 type GPTModel string
 
 func (g GPTModel) GetVars(customerCase *models.AugmentedCustomerCase, currentTime time.Time) Variable {
@@ -50,27 +49,7 @@ func (g GPTModel) GetRedditPostRelevancyVars(project *models.Project, post *mode
 	return out
 }
 
-// TODO: Create list of all gptModels that support images
-var visionGPTModelList = []GPTModel{
-	"gpt-4-turbo",
-	"gpt-4-vision-preview",
-	"gpt-4o-2024-05-13",
-	"gpt-4o-2024-08-06",
-}
-
-var structuredOutputGPTModelList = []GPTModel{
-	"gpt-4o-2024-08-06",
-}
-
-func (g GPTModel) SupportsImage() bool {
-	return slices.Contains(visionGPTModelList, g)
-}
-
-func (g GPTModel) SupportsStructuredOutput() bool {
-	return slices.Contains(structuredOutputGPTModelList, g)
-}
-
-// ENUM(HUMAN,SYSTEM,IMAGE)
+// ENUM(HUMAN,SYSTEM,IMAGE,RESPONSE_SCHEMA)
 type PromptType string
 
 // ENUM(IMAGE_ONLY,TEXT_ONLY,BOTH)
@@ -88,8 +67,6 @@ func (g *GPTModel) getPromptTemplates(templates []Template) (prompts.ChatPromptT
 	var chatPrompts []prompts.MessageFormatter
 	var tmpls []*template.Template
 	var responseSchemaTemplate *template.Template
-	supportsStructuredOutputs := g.SupportsStructuredOutput()
-
 	for _, tmpl := range templates {
 		data := rp(tmpl.path)
 		switch tmpl.promptType {
@@ -97,13 +74,9 @@ func (g *GPTModel) getPromptTemplates(templates []Template) (prompts.ChatPromptT
 			chatPrompts = append(chatPrompts, prompts.NewSystemMessagePromptTemplate(data, nil))
 		case PromptTypeHUMAN:
 			chatPrompts = append(chatPrompts, prompts.NewHumanMessagePromptTemplate(data, nil))
-		case PromptTypeResponseSchema:
+		case PromptTypeRESPONSESCHEMA:
 			// If the model supports structured outputs
-			if supportsStructuredOutputs {
-				responseSchemaTemplate = template.Must(template.New(tmpl.path).Parse(data))
-			} else {
-				chatPrompts = append(chatPrompts, prompts.NewSystemMessagePromptTemplate(data, nil))
-			}
+			responseSchemaTemplate = template.Must(template.New(tmpl.path).Parse(data))
 		}
 
 		tmpls = append(tmpls, template.Must(template.New(tmpl.path).Parse(data)))
@@ -121,22 +94,13 @@ func (g *GPTModel) getPromptTemplate(p *Prompt, templatePrefix string, addImageS
 	}
 
 	if p.SchemaTmpl != "" {
-		// Return responseSchemaTemplate only when the model supports structured outputs
-		if g.SupportsStructuredOutput() {
-			responseSchemaTemplate = template.Must(template.New(fmt.Sprintf("%s.schema.gotmpl", templatePrefix)).Parse(p.SchemaTmpl))
-		} else {
-			chatPrompts = append(chatPrompts, prompts.NewSystemMessagePromptTemplate(p.PromptTmpl, nil))
-		}
+		responseSchemaTemplate = template.Must(template.New(fmt.Sprintf("%s.schema.gotmpl", templatePrefix)).Parse(p.SchemaTmpl))
 		debugTemplates = append(debugTemplates, template.Must(template.New(fmt.Sprintf("%s.schema.gotmpl", templatePrefix)).Parse(p.SchemaTmpl)))
 	}
 	if p.HumanTmpl != "" {
 		chatPrompts = append(chatPrompts, prompts.NewHumanMessagePromptTemplate(p.HumanTmpl, nil))
 		debugTemplates = append(debugTemplates, template.Must(template.New(fmt.Sprintf("%s.human.gotmpl", templatePrefix)).Parse(p.HumanTmpl)))
 
-	}
-
-	if g.SupportsImage() && addImageSupport {
-		chatPrompts = append(chatPrompts, prompts.MessagesPlaceholder{VariableName: "Images"})
 	}
 
 	return prompts.NewChatPromptTemplate(chatPrompts), responseSchemaTemplate, debugTemplates
