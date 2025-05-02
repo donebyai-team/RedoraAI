@@ -86,7 +86,16 @@ func (r redditService) CreateSubReddit(ctx context.Context, source *models.Sourc
 }
 
 func (r redditService) GetSubReddits(ctx context.Context, projectID string) ([]*models.Source, error) {
-	return r.db.GetSourcesByProject(ctx, projectID)
+	sources, err := r.db.GetSourcesByProject(ctx, projectID)
+	if err != nil {
+		return nil, err
+	}
+	for _, source := range sources {
+		if source.SourceType == models.SourceTypeSUBREDDIT {
+			source.Name = fmt.Sprintf("r/%s", source.Name)
+		}
+	}
+	return sources, nil
 }
 
 func (r redditService) RemoveSubReddit(ctx context.Context, id string) error {
