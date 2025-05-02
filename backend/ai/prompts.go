@@ -4,11 +4,9 @@ import (
 	"embed"
 	"github.com/shank318/doota/models"
 	"github.com/streamingfast/cli"
-	"github.com/tmc/langchaingo/prompts"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 	"strings"
-	"text/template"
 	"time"
 )
 
@@ -17,10 +15,6 @@ type Prompt struct {
 	PromptTmpl string   `json:"prompt_tmpl"`
 	SchemaTmpl string   `json:"schema_tmpl"`
 	HumanTmpl  string   `json:"human_tmpl"`
-}
-
-func (p *Prompt) getPromptTemplate(templatePrefix string, addImageSupport bool) (prompts.ChatPromptTemplate, *template.Template, []*template.Template) {
-	return p.Model.getPromptTemplate(p, templatePrefix, addImageSupport)
 }
 
 //go:embed prompts/*.gotmpl

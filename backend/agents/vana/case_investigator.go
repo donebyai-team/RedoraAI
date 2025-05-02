@@ -154,7 +154,7 @@ func (s *CaseInvestigator) updateCaseDecision(ctx context.Context, augConversati
 		augConversation.CustomerCase.Summary = "Customer didn't pick the call, next call is scheduled"
 	} else if shouldAskAI(augConversation) {
 		s.logger.Info("ai making case decision..", zap.String("conversation_id", conversation.ID), zap.String("call_id", callResponse.CallID))
-		decision, err := s.aiClient.CustomerCaseDecision(ctx, conversation, s.gptModel, s.logger)
+		decision, err := s.aiClient.CustomerCaseDecision(ctx, augConversation.Customer.OrgID, conversation, s.gptModel, s.logger)
 		if err != nil {
 			s.logger.Error("failed to ask customer case decision",
 				zap.Error(err),
