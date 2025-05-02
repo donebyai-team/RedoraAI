@@ -16,7 +16,7 @@ import Link from "next/link";
 import DiscardedTabComponent from "./Tabs/DiscardedTab";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { RootState } from "../../../store/store";
-import { LeadTabStatus, setActiveTab, setSelectedLeadData } from "../../../store/Lead/leadSlice";
+import { LeadTabStatus, setActiveTab } from "../../../store/Lead/leadSlice";
 
 const tabList: { label: string; value: LeadTabStatus }[] = [
   { label: "New", value: LeadTabStatus.NEW },
@@ -31,7 +31,6 @@ const InboxComponent = () => {
 
   const handleTabChange = (_: React.SyntheticEvent, newValue: LeadTabStatus) => {
     dispatch(setActiveTab(newValue));
-    dispatch(setSelectedLeadData(null));
   };
 
   const renderTabContent = () => {

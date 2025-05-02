@@ -258,13 +258,9 @@ const LeadsPostDetails = () => {
                 <CardContent>
                   <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                     <Star sx={{ color: "#e25a9e", mr: 1 }} />
-                    <Typography color="#e25a9e" fontWeight="medium">
-                      Suggested comment
-                    </Typography>
+                    <Typography color="#e25a9e" fontWeight="medium">Suggested comment</Typography>
                   </Box>
-                  <Typography variant="body1" sx={{ mb: 2 }}>
-                    {selectedleadData.metadata.suggestedComment}
-                  </Typography>
+                  <Typography variant="body1" sx={{ mb: 2 }}>{selectedleadData.metadata.suggestedComment}</Typography>
                   <Stack direction="row" justifyContent="end">
                     <Button
                       variant="contained"
@@ -277,12 +273,7 @@ const LeadsPostDetails = () => {
                         borderRadius: "20px",
                         textTransform: "none",
                       }}
-                      onClick={() =>
-                        copyTextAndOpenLink(
-                          selectedleadData.metadata?.suggestedComment ?? "",
-                          selectedleadData.metadata?.postUrl ?? "#"
-                        )
-                      }
+                      onClick={() => copyTextAndOpenLink(selectedleadData.metadata?.suggestedComment ?? "", selectedleadData.metadata?.postUrl ?? "#")}
                     >
                       Copy & open post
                     </Button>
@@ -297,13 +288,9 @@ const LeadsPostDetails = () => {
                 <CardContent>
                   <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                     <Star sx={{ color: "#e25a9e", mr: 1 }} />
-                    <Typography color="#e25a9e" fontWeight="medium">
-                      Suggested DM
-                    </Typography>
+                    <Typography color="#e25a9e" fontWeight="medium">Suggested DM</Typography>
                   </Box>
-                  <Typography variant="body1" paragraph>
-                    {selectedleadData.metadata.suggestedDm}
-                  </Typography>
+                  <Typography variant="body1" paragraph>{selectedleadData.metadata.suggestedDm}</Typography>
                   <Stack direction="row" justifyContent="end">
                     <Button
                       variant="contained"
@@ -316,12 +303,7 @@ const LeadsPostDetails = () => {
                         borderRadius: "20px",
                         textTransform: "none",
                       }}
-                      onClick={() =>
-                        copyTextAndOpenLink(
-                          selectedleadData.metadata?.suggestedDm ?? "",
-                          selectedleadData.metadata?.dmUrl ?? "#"
-                        )
-                      }
+                      onClick={() => copyTextAndOpenLink(selectedleadData.metadata?.suggestedDm ?? "", selectedleadData.metadata?.dmUrl ?? "#")}
                     >
                       Copy & open DMs
                     </Button>

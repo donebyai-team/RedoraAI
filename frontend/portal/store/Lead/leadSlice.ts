@@ -26,7 +26,7 @@ const initialState: LeadStateTyeps = {
     completedTabList: [],
     discardedTabList: [],
     selectedleadData: null,
-    isLoading: false,
+    isLoading: true,
     activeTab: LeadTabStatus.NEW,
     error: null,
 };

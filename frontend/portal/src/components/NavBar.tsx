@@ -41,6 +41,7 @@ import { setRelevancyScore, setSubReddit } from '../../store/Params/ParamsSlice'
 import { useRedditIntegrationStatus } from './Leads/Tabs/useRedditIntegrationStatus'
 import { LeadTabStatus, setActiveTab, setCompletedList, setDiscardedTabList, setIsLoading, setNewTabList, setSelectedLeadData } from '../../store/Lead/leadSlice'
 import { LeadStatus } from '@doota/pb/doota/core/v1/core_pb'
+import { GetLeadsResponse } from '@doota/pb/doota/portal/v1/portal_pb'
 
 export const LoadigSkeletons = ({ count, height }: { count: number, height: number | string }) => (
   [...Array(count)].map((_, i) => (
@@ -64,7 +65,7 @@ const NavBar: FC = () => {
   const { relevancyScore, subReddit } = useAppSelector((state: RootState) => state.parems);
   const { newTabList, isLoading } = useAppSelector((state: RootState) => state.lead);
   const [relevancy_score, setRelevancy_Score] = useState<number>(relevancyScore);
-  const { isConnected } = useRedditIntegrationStatus();
+  const { isConnected, loading: isLoadingRedditIntegrationStatus } = useRedditIntegrationStatus();
   const canChangeOrg = user && isPlatformAdmin(user) && user.organizations.length > 1;
 
   const onChangeCommitted = useCallback((key: string, value: number | string) => {
@@ -144,11 +145,11 @@ const NavBar: FC = () => {
       }
     };
 
-    if (isConnected === true) {
+    if (isConnected === true && isLoadingRedditIntegrationStatus === false) {
       getAllSubReddits();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isConnected]);
+  }, [isConnected, isLoadingRedditIntegrationStatus]);
 
   const handleResetFilters = () => {
     // Reset any other filters here
@@ -159,7 +160,7 @@ const NavBar: FC = () => {
 
   const isleads = isActivePath('/dashboard/leads', pathname);
 
-  const subRedditsLoaded = (subredditList.length > 0 && loading === false);
+  const subRedditsLoaded = useMemo(() => subredditList.length > 0 && !loading, [subredditList, loading]);
 
   useEffect(() => {
     if (!subRedditsLoaded) return; // Ensure we only proceed after subreddits are loaded
@@ -167,6 +168,7 @@ const NavBar: FC = () => {
     const getAllRelevantLeads = async () => {
       dispatch(setIsLoading(true));
       dispatch(setActiveTab(LeadTabStatus.NEW));
+      dispatch(setSelectedLeadData(null));
 
       try {
         const result = await portalClient.getRelevantLeads({
@@ -177,8 +179,11 @@ const NavBar: FC = () => {
         dispatch(setNewTabList(allLeads));
 
         // After relevant leads are fetched, trigger completed and discarded leads
-        await getAllLeadsByStatus(LeadStatus.COMPLETED);
-        await getAllLeadsByStatus(LeadStatus.NOT_RELEVANT);
+        const completedResult = await getAllLeadsByStatus(LeadStatus.COMPLETED);
+        const discardedResult = await getAllLeadsByStatus(LeadStatus.NOT_RELEVANT);
+
+        dispatch(setCompletedList(completedResult.leads ?? []));
+        dispatch(setDiscardedTabList(discardedResult?.leads ?? []));
 
         // Set the first lead only once after all API calls are complete
         if (allLeads.length > 0) {
@@ -194,23 +199,13 @@ const NavBar: FC = () => {
       }
     };
 
-    const getAllLeadsByStatus = async (status: LeadStatus) => {
-      dispatch(setIsLoading(true));
-
+    const getAllLeadsByStatus = async (status: LeadStatus): Promise<GetLeadsResponse> => {
       try {
         const result = await portalClient.getLeadsByStatus({ status });
-        if (status == LeadStatus.COMPLETED) {
-          dispatch(setCompletedList(result?.leads ?? []));
-        }
-        if (status == LeadStatus.NOT_RELEVANT) {
-          dispatch(setDiscardedTabList(result?.leads ?? []));
-        }
+        return result;
       } catch (err: any) {
         const message = err?.response?.data?.message || err.message || "Something went wrong";
-        toast.error(message);
-        dispatch(setError(message));
-      } finally {
-        dispatch(setIsLoading(false));
+        throw new Error(message);
       }
     };
 
@@ -227,7 +222,6 @@ const NavBar: FC = () => {
       ? newTabList.length
       : newTabList.reduce((count, ele) => ele.sourceId === id ? count + 1 : count, 0);
   }, [newTabListLoaded, newTabList]);
-
 
   return (<>
     <Paper
@@ -403,7 +397,7 @@ const NavBar: FC = () => {
           FILTER BY SUBREDDIT
         </Typography>
 
-        {loading ?
+        {(loading || isLoadingRedditIntegrationStatus) ?
           <Box sx={{ display: 'flex', px: 4, flexDirection: "column", alignItems: "center", height: "100%", width: "100%", gap: 2 }}>
             <LoadigSkeletons count={3} height={40} />
           </Box>
