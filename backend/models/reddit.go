@@ -79,6 +79,7 @@ type KeywordTracker struct {
 	ID            string                 `db:"id"`
 	SourceID      string                 `db:"source_id"`
 	KeywordID     string                 `db:"keyword_id"`
+	ProjectID     string                 `db:"project_id"`
 	Metadata      KeywordTrackerMetadata `db:"metadata"`
 	LastTrackedAt *time.Time             `db:"last_tracked_at"`
 	CreatedAt     time.Time              `db:"created_at"`

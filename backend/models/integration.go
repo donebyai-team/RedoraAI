@@ -8,7 +8,7 @@ import (
 
 //go:generate go-enum -f=$GOFILE
 
-// ENUM(VOICE_MILLIS, VOICE_VAPI, REDDIT)
+// ENUM(VOICE_MILLIS, VOICE_VAPI, REDDIT, SLACK_WEBHOOK)
 type IntegrationType string
 
 // ENUM(ACTIVE, AUTH_REVOKED)
@@ -92,6 +92,53 @@ func (i *Integration) GetRedditConfig() *RedditConfig {
 	}
 	out.AccessToken = encryptedData.AccessToken
 	out.RefreshToken = encryptedData.RefreshToken
+	return &out
+}
+
+type SlackWebhookConfig struct {
+	Webhook string `json:"webhook"`
+}
+
+func (i *SlackWebhookConfig) EncryptedData() []byte {
+	toEncrypt := struct {
+		Webhook string `json:"webhook"`
+	}{
+		Webhook: i.Webhook,
+	}
+	data, err := json.Marshal(toEncrypt)
+	if err != nil {
+		panic(err)
+	}
+	return data
+
+}
+
+func (i *SlackWebhookConfig) PlainTextData() []byte {
+	data, err := json.Marshal(i)
+	if err != nil {
+		panic(err)
+	}
+	return data
+}
+
+func (i *Integration) GetSlackWebhook() *SlackWebhookConfig {
+	if i.Type != IntegrationTypeSLACKWEBHOOK {
+		panic(fmt.Errorf("integration is not a slack webhook integration"))
+	}
+
+	out := SlackWebhookConfig{}
+	if err := json.Unmarshal([]byte(i.PlainTextConfig), &out); err != nil {
+		panic(fmt.Errorf("unable to unmarshal reddit config: %w", err))
+	}
+
+	encryptedData := struct {
+		Webhook string `json:"webhook"`
+	}{}
+
+	if err := json.Unmarshal([]byte(i.EncryptedConfig), &encryptedData); err != nil {
+		panic(fmt.Errorf("unable to unmarshal reddit config: %w", err))
+	}
+	out.Webhook = encryptedData.Webhook
 	return &out
 }
 

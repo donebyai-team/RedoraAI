@@ -16,12 +16,19 @@ var toolsIntegrationsGroup = Group(
 	"Commands related to a integrations store",
 	toolsDat,
 	toolsGet,
+	toolsSlackWebhook,
 )
 
 var toolsDat = Group(
 	"vapi",
 	"Will insert the vapi config in integrations db for a tenant",
 	toolsDatCreate,
+)
+
+var toolsSlackWebhook = Group(
+	"slack_webhook",
+	"Will insert the Slack webhook config in integrations db for a tenant",
+	toolsSlackWebhookCreate,
 )
 
 var toolsGet = Command(
@@ -35,6 +42,11 @@ var toolsDatCreate = Command(
 	"create <tenant-id> <config>",
 	"Will insert the dat config in integrations db",
 )
+
+var toolsSlackWebhookCreate = Command(
+	toolsCreateIntegrationSlackWebhook,
+	"create <tenant-id> <config>",
+	"Will insert the slack webhook config in integrations db")
 
 func toolsGetRunE(cmd *cobra.Command, args []string) error {
 	ctx := cmd.Context()
@@ -92,6 +104,40 @@ func toolsCreateIntegration(cmd *cobra.Command, args []string) error {
 	out.APIKey = gjson.Get(args[1], "api_key").String()
 
 	integration = models.SetIntegrationType(integration, models.IntegrationTypeVOICEVAPI, out)
+	upsertIntegration, err := db.UpsertIntegration(ctx, integration)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Integration Created: ", upsertIntegration.ID)
+	data, _ := json.MarshalIndent(upsertIntegration, "", "  ")
+	fmt.Println(string(data))
+
+	return nil
+}
+
+func toolsCreateIntegrationSlackWebhook(cmd *cobra.Command, args []string) error {
+	ctx := cmd.Context()
+
+	db, err := app.SetupDataStore(ctx, sflags.MustGetString(cmd, "pg-dsn"), zlog, tracer)
+	if err != nil {
+		return fmt.Errorf("failed to setup datastore: %w", err)
+	}
+
+	integration := &models.Integration{
+		OrganizationID: args[0],
+		State:          models.IntegrationStateACTIVE,
+		Type:           models.IntegrationTypeSLACKWEBHOOK,
+	}
+
+	out := &models.SlackWebhookConfig{}
+	if err := json.Unmarshal([]byte(args[1]), out); err != nil {
+		return fmt.Errorf("unable to unmarshal dat config: %w", err)
+	}
+	// we need to chery pick the password since it is not exposed via json interface
+	out.Webhook = gjson.Get(args[1], "webhook").String()
+
+	integration = models.SetIntegrationType(integration, models.IntegrationTypeSLACKWEBHOOK, out)
 	upsertIntegration, err := db.UpsertIntegration(ctx, integration)
 	if err != nil {
 		return err

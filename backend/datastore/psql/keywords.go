@@ -17,6 +17,7 @@ func init() {
 		"keyword/create_keyword_tracker.sql",
 		"keyword/query_keyword_tracker_by_filter.sql",
 		"keyword/update_keyword_tracker_last_tracked_at.sql",
+		"keyword/query_keyword_tracker_by_project.sql",
 	})
 }
 
@@ -46,6 +47,12 @@ func (r *Database) GetKeywords(ctx context.Context, projectID string) ([]*models
 func (r *Database) GetKeywordByID(ctx context.Context, id string) (*models.Keyword, error) {
 	return getOne[models.Keyword](ctx, r, "keyword/query_keyword_by_id.sql", map[string]any{
 		"id": id,
+	})
+}
+
+func (r *Database) GetKeywordTrackerByProjectID(ctx context.Context, projectID string) ([]*models.KeywordTracker, error) {
+	return getMany[models.KeywordTracker](ctx, r, "keyword/query_keyword_tracker_by_project.sql", map[string]any{
+		"project_id": projectID,
 	})
 }
 
@@ -82,7 +89,7 @@ func (r *Database) GetKeywordTrackers(ctx context.Context) ([]*models.AugmentedK
 			return nil, fmt.Errorf("failed to get source for project %q: %w", tracker.KeywordID, err)
 		}
 
-		project, err := r.GetProject(ctx, source.ProjectID)
+		project, err := r.GetProject(ctx, tracker.ProjectID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get project %q: %w", keyword.ProjectID, err)
 		}

@@ -9,6 +9,7 @@ import (
 	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/integrations/reddit"
 	"github.com/shank318/doota/models"
+	"github.com/shank318/doota/notifiers/alerts"
 	"github.com/shank318/doota/utils"
 	"go.uber.org/zap"
 	"sort"
@@ -73,7 +74,86 @@ func (s *redditKeywordTracker) TrackKeyword(ctx context.Context, tracker *models
 		return err
 	}
 
+	// Once done, send the summary
+	go s.sendAlert(context.Background(), tracker.Project)
+
 	return nil
+}
+
+func (s *redditKeywordTracker) isTrackingDone(ctx context.Context, projectID string) (bool, error) {
+	trackers, err := s.db.GetKeywordTrackerByProjectID(ctx, projectID)
+	if err != nil {
+		return false, fmt.Errorf("failed to fetch keyword trackers while checking completion: %w", err)
+	}
+
+	today := time.Now().Format(time.DateOnly)
+
+	for _, tracker := range trackers {
+		if tracker.LastTrackedAt == nil {
+			return false, nil
+		}
+		if tracker.LastTrackedAt.Format(time.DateOnly) != today {
+			return false, nil
+		}
+	}
+
+	return true, nil
+}
+
+func (s *redditKeywordTracker) sendAlert(ctx context.Context, project *models.Project) {
+	//isTrackingDoneKey := fmt.Sprintf("daily_tracking_summary:%s", projectID)
+	//// Check if a call is already running across organizations
+	//isRunning, err := s.state.IsRunning(ctx, isTrackingDoneKey)
+	//if err == nil && isRunning {
+	//	return false, nil
+	//}
+	//
+	//if isRunning {
+	//	return false, nil
+	//}
+	//
+	//// Try to acquire the lock
+	//if err := s.state.KeepAlive(ctx, orgID, isTrackingDoneKey); err != nil {
+	//	s.logger.Error("could not acquire lock for keyword tracker summary, skipping", zap.Error(err))
+	//}
+	//
+	//defer func() {
+	//	if err := s.state.Release(ctx, isTrackingDoneKey); err != nil {
+	//		s.logger.Error("failed to release lock on keyword tracker summary", zap.Error(err))
+	//	}
+	//}()
+
+	integration, err := s.db.GetIntegrationByOrgAndType(ctx, project.OrganizationID, models.IntegrationTypeSLACKWEBHOOK)
+	if err != nil && errors.Is(err, datastore.NotFound) {
+		s.logger.Info("so integration configured for alerts")
+		return
+	}
+
+	done, err := s.isTrackingDone(ctx, project.ID)
+	if err != nil {
+		s.logger.Error("check if tracking is done", zap.Error(err))
+		return
+	}
+
+	// Send alert
+	if done {
+		dailyCount, err := s.getLeadsCountOfTheDay(ctx, project.ID, defaultRelevancyScore)
+		if err != nil {
+			s.logger.Error("failed to get leads count", zap.Error(err))
+			return
+		}
+		leadsURL := "https://app.redoraai.com/dashboard/leads"
+
+		msg := fmt.Sprintf(
+			"*RedoraAI*\n\n🔍 *Daily Lead Summary*\n%d leads found today.\n<%s|View leads →>",
+			dailyCount,
+			leadsURL,
+		)
+		err = alerts.NewSlackNotifier(integration.GetSlackWebhook().Webhook).Send(ctx, msg)
+		if err != nil {
+			s.logger.Error("failed to send slack notification", zap.Error(err))
+		}
+	}
 }
 
 //func (s *redditKeywordTracker) TrackPost(ctx context.Context,
@@ -100,7 +180,7 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 	source *models.Source,
 	redditClient *reddit.Client) error {
 
-	if ok, err := s.isMaxLeadLimitReached(ctx, project.ID); err != nil || ok {
+	if ok, err := s.isMaxLeadLimitReached(ctx, project.ID, defaultRelevancyScore); err != nil || ok {
 		return err
 	}
 
@@ -216,7 +296,7 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 		}
 
 		// Check if we have got enough relevant leads for the dat
-		ok, err := s.isMaxLeadLimitReached(ctx, project.ID)
+		ok, err := s.isMaxLeadLimitReached(ctx, project.ID, defaultRelevancyScore)
 		if err != nil || ok {
 			if err != nil {
 				return err
@@ -235,18 +315,18 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 	return nil
 }
 
-func (s *redditKeywordTracker) isMaxLeadLimitReached(ctx context.Context, projectID string) (bool, error) {
-	today := time.Now().Truncate(24 * time.Hour)
-	tomorrow := today.Add(24 * time.Hour)
-	leadsData, err := s.db.CountLeadByCreatedAt(ctx, projectID, 80, today, tomorrow)
+func (s *redditKeywordTracker) isMaxLeadLimitReached(ctx context.Context, projectID string, relevancyScore int) (bool, error) {
+	count, err := s.getLeadsCountOfTheDay(ctx, projectID, relevancyScore)
 	if err != nil {
-		s.logger.Error("failed to count leads", zap.Error(err), zap.String("start_date", today.String()), zap.String("end_date", tomorrow.String()))
-		return false, fmt.Errorf("unable to count leads: %w", err)
+		return false, err
 	}
 
-	if leadsData.Count >= maxLeadsPerDay {
+	today := time.Now().Truncate(24 * time.Hour)
+	tomorrow := today.Add(24 * time.Hour)
+
+	if count >= maxLeadsPerDay {
 		s.logger.Info("reached max leads per day",
-			zap.Uint32("count", leadsData.Count),
+			zap.Uint32("count", count),
 			zap.String("start_date", today.String()),
 			zap.String("end_date", tomorrow.String()))
 		return true, nil
@@ -254,12 +334,23 @@ func (s *redditKeywordTracker) isMaxLeadLimitReached(ctx context.Context, projec
 	return false, nil
 }
 
+func (s *redditKeywordTracker) getLeadsCountOfTheDay(ctx context.Context, projectID string, relevancyScore int) (uint32, error) {
+	today := time.Now().Truncate(24 * time.Hour)
+	tomorrow := today.Add(24 * time.Hour)
+	leadsData, err := s.db.CountLeadByCreatedAt(ctx, projectID, relevancyScore, today, tomorrow)
+	if err != nil {
+		return 0, err
+	}
+	return leadsData.Count, nil
+}
+
 const (
-	minSelftextLength   = 30
-	minTitleLength      = 5
-	maxPostAgeInMonths  = 6
-	minCommentThreshold = 5
-	maxLeadsPerDay      = 25
+	minSelftextLength     = 30
+	minTitleLength        = 5
+	maxPostAgeInMonths    = 6
+	minCommentThreshold   = 5
+	maxLeadsPerDay        = 25
+	defaultRelevancyScore = 80
 )
 
 var systemAuthors = []string{"[deleted]", "AutoModerator"}

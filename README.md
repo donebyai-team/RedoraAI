@@ -248,6 +248,7 @@ You can find a sample seed file here [`./devel/seed.sql`](`./devel/seed.sql`)
 ```
 DAT:
 freight  tools integrations dat create <org-id> {\"auth_host\":\"identity.api.staging.dat.com\",\"api_host\":\"analytics.api.staging.dat.com\",\"org_user\":\"dat@loadlogic.ai\",\"org_password\":\"CHANGE_PASSWORD\",\"user_account\":\"mdm@streamingfast.io\"}
+doota tools integrations slack_webhook create e250ced8-7441-4805-b9dd-2686d9492c4f {\"webhook\":\"https://hooks.slack.com/services/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\"}
 ```
 
 ## Deployment
