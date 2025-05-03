@@ -1,8 +1,10 @@
 package reddit
 
 import (
+	"connectrpc.com/connect"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/models"
@@ -60,6 +62,10 @@ func NewRedditOauthClient(logger *zap.Logger, db datastore.Repository, clientID,
 
 func (r *OauthClient) NewRedditClient(ctx context.Context, orgID string) (*Client, error) {
 	integration, err := r.db.GetIntegrationByOrgAndType(ctx, orgID, models.IntegrationTypeREDDIT)
+	if err != nil && errors.Is(err, datastore.NotFound) {
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("reddit integration not configured"))
+	}
+
 	if err != nil {
 		return nil, err
 	}

@@ -31,6 +31,14 @@ func (r *Client) GetUser(ctx context.Context, userID string) (*User, error) {
 }
 
 func (r *Client) GetSubRedditByName(ctx context.Context, name string) (*SubReddit, error) {
+	if strings.ToLower(strings.TrimSpace(name)) == "all" {
+		return &SubReddit{
+			DisplayName: "all",
+			Description: "all subreddits",
+			Title:       "Global",
+		}, nil
+	}
+
 	reqURL := fmt.Sprintf("%s/r/%s/about.json", r.baseURL, name)
 	resp, err := r.doRequest(ctx, http.MethodGet, reqURL)
 	if err != nil {

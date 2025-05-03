@@ -34,15 +34,17 @@ func (v Variable) WithProjectDetails(project *models.Project) Variable {
 	v["ProductName"] = project.Name
 	v["ProductDescription"] = project.ProductDescription
 	v["TargetCustomerPersona"] = project.CustomerPersona
-	v["EngagementGoals"] = project.EngagementGoals
 	return v
 }
 
 func (v Variable) WithRedditPost(post *models.Lead) Variable {
 	if post.Title != nil {
 		v["Title"] = post.Title
+	} else {
+		v["Title"] = "Comment"
 	}
 	v["Description"] = post.Description
+	v["Author"] = post.Author
 	return v
 }
 

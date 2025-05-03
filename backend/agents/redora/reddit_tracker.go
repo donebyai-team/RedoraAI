@@ -241,7 +241,7 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 		redditLead := &models.Lead{
 			ProjectID:     project.ID,
 			SourceID:      source.ID,
-			Author:        post.Author,
+			Author:        post.Author, // actual username not id
 			PostID:        post.ID,
 			Type:          models.LeadTypePOST,
 			Title:         utils.Ptr(post.Title),

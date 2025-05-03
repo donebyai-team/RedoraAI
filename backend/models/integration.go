@@ -97,6 +97,7 @@ func (i *Integration) GetRedditConfig() *RedditConfig {
 
 type SlackWebhookConfig struct {
 	Webhook string `json:"-"`
+	Channel string `json:"channel"`
 }
 
 func (i *SlackWebhookConfig) EncryptedData() []byte {

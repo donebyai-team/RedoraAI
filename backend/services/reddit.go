@@ -45,12 +45,10 @@ func (r redditService) CreateSubReddit(ctx context.Context, source *models.Sourc
 		return fmt.Errorf("failed to fetch subreddit details from Reddit: %w", err)
 	}
 
-	if subRedditDetails.ID == "" {
-		return fmt.Errorf("subreddit ID is missing or invalid subreddit URL: %s", source.Name)
-	}
-
 	// Fill in the fields in models.Source using fetched details
-	source.ExternalID = utils.Ptr(subRedditDetails.ID)
+	if subRedditDetails.ID != "" {
+		source.ExternalID = utils.Ptr(subRedditDetails.ID)
+	}
 	source.Name = subRedditDetails.DisplayName
 	source.Description = subRedditDetails.Description
 	source.SourceType = models.SourceTypeSUBREDDIT
