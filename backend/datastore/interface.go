@@ -3,6 +3,7 @@ package datastore
 import (
 	"context"
 	"errors"
+	"github.com/lib/pq"
 	"github.com/shank318/doota/models"
 	"time"
 )
@@ -10,6 +11,13 @@ import (
 var NotFound = errors.New("not found")
 var ErrMessageSourceAlreadyExists = errors.New("message source already exists")
 var ErrMessageAlreadyExists = errors.New("message already exists")
+
+func IsUniqueViolation(err error) bool {
+	if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505" {
+		return true
+	}
+	return false
+}
 
 type Repository interface {
 	OrganizationRepository

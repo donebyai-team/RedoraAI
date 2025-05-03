@@ -92,8 +92,5 @@ func (r *Database) CreateLead(ctx context.Context, reddit *models.Lead) error {
 		"description":     reddit.Description,
 		"title":           reddit.Title,
 	})
-	if err != nil {
-		return fmt.Errorf("failed to insert lead post_id [%s]: %w", reddit.PostID, err)
-	}
-	return nil
+	return err
 }

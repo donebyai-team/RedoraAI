@@ -292,7 +292,14 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 
 		err = s.db.CreateLead(ctx, redditLead)
 		if err != nil {
-			return fmt.Errorf("unable to create reddit lead: %w", err)
+			if datastore.IsUniqueViolation(err) {
+				s.logger.Warn(
+					"failed to create reddit lead",
+					zap.Error(err),
+					zap.String("post_id", post.ID))
+			} else {
+				return fmt.Errorf("unable to create reddit lead: %w", err)
+			}
 		}
 
 		// Check if we have got enough relevant leads for the dat
