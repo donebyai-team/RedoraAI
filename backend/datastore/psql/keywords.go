@@ -112,6 +112,7 @@ func (r *Database) CreateKeywordTracker(ctx context.Context, tracker *models.Key
 	err := stmt.GetContext(ctx, &id, map[string]interface{}{
 		"keyword_id": tracker.KeywordID,
 		"source_id":  tracker.SourceID,
+		"project_id": tracker.ProjectID,
 	})
 
 	if err != nil {
