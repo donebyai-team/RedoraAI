@@ -23,10 +23,11 @@ func (r *LeadType) FromModel(status models.LeadType) {
 	*r = LeadType(enum)
 }
 
-func (u *Lead) FromModel(lead *models.Lead) *Lead {
+func (u *Lead) FromModel(lead *models.AugmentedLead) *Lead {
 	u.Id = lead.ID
 	u.ProjectId = lead.ProjectID
 	u.SourceId = lead.SourceID
+	u.Keyword = new(Keyword).FromModel(lead.Keyword)
 	u.Author = fmt.Sprintf("/u/%s", lead.Author)
 	u.PostId = lead.PostID
 	u.Type.FromModel(lead.Type)

@@ -56,15 +56,15 @@ func (r *Database) UpdateLeadStatus(ctx context.Context, lead *models.Lead) erro
 	return nil
 }
 
-func (r *Database) GetLeadsByStatus(ctx context.Context, projectID string, status models.LeadStatus) ([]*models.Lead, error) {
-	return getMany[models.Lead](ctx, r, "leads/query_lead_by_status.sql", map[string]any{
+func (r *Database) GetLeadsByStatus(ctx context.Context, projectID string, status models.LeadStatus) ([]*models.AugmentedLead, error) {
+	return getMany[models.AugmentedLead](ctx, r, "leads/query_lead_by_status.sql", map[string]any{
 		"status":     status,
 		"project_id": projectID,
 	})
 }
 
-func (r *Database) GetLeadsByRelevancy(ctx context.Context, projectID string, relevancy float32, sources []string) ([]*models.Lead, error) {
-	return getMany[models.Lead](ctx, r, "leads/query_lead_by_filter.sql", map[string]any{
+func (r *Database) GetLeadsByRelevancy(ctx context.Context, projectID string, relevancy float32, sources []string) ([]*models.AugmentedLead, error) {
+	return getMany[models.AugmentedLead](ctx, r, "leads/query_lead_by_filter.sql", map[string]any{
 		"source_ids":      pq.Array(sources),
 		"relevancy_score": relevancy,
 		"status":          models.LeadStatusNEW,

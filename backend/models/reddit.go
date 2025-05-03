@@ -126,6 +126,27 @@ type Lead struct {
 	UpdatedAt *time.Time `db:"updated_at"`
 }
 
+type AugmentedLead struct {
+	ID             string       `db:"id"`
+	ProjectID      string       `db:"project_id"`
+	SourceID       string       `db:"source_id"`
+	Keyword        *Keyword     `db:"keyword"`
+	KeywordID      string       `db:"keyword_id"`
+	Author         string       `db:"author"`
+	PostID         string       `db:"post_id"`
+	Type           LeadType     `db:"type"`
+	Status         LeadStatus   `db:"status"`
+	RelevancyScore float64      `db:"relevancy_score"`
+	PostCreatedAt  time.Time    `db:"post_created_at"`
+	CommentID      *string      `db:"comment_id"`
+	Title          *string      `db:"title"` // Optional in case of comment
+	Description    string       `db:"description"`
+	LeadMetadata   LeadMetadata `db:"metadata"`
+
+	CreatedAt time.Time  `db:"created_at"`
+	UpdatedAt *time.Time `db:"updated_at"`
+}
+
 type LeadsData struct {
 	Count uint32 `db:"count"`
 }

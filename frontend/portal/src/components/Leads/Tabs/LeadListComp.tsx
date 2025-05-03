@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 import { LeadTyeps, setSelectedLeadData } from "../../../../store/Lead/leadSlice";
 import { useAppDispatch, useAppSelector } from "../../../../store/hooks";
-import { formateDate, getSubredditName, setLeadActive } from "./NewTab";
+import { formateDate, setLeadActive } from "./NewTab";
 import { RootState } from "../../../../store/store";
 import { LoadigSkeletons } from "../../NavBar";
 
@@ -21,7 +21,7 @@ interface ListRenderCompProps {
 const ListRenderComp: React.FC<ListRenderCompProps> = ({ isLoading, list }) => {
 
     const dispatch = useAppDispatch();
-    const { subredditList } = useAppSelector((state: RootState) => state.source);
+    // const { subredditList } = useAppSelector((state: RootState) => state.source);
     const { selectedleadData } = useAppSelector((state: RootState) => state.lead);
 
     const handleSelectedLead = (data: LeadTyeps) => {
@@ -102,6 +102,23 @@ const ListRenderComp: React.FC<ListRenderCompProps> = ({ isLoading, list }) => {
                                         <Typography sx={{ fontSize: "0.7rem", color: "text.secondary" }}>
                                             Scraped On: {post.createdAt ? formateDate(post.createdAt) : "N/A"}
                                         </Typography>
+
+                                        <Box
+                                            sx={{
+                                                display: "inline-block",
+                                                backgroundColor: "#4CAF50", // Lighter green
+                                                color: "white",
+                                                fontSize: "0.7rem", // Slightly larger text
+                                                px: 1.2, // More horizontal padding
+                                                py: 0.3, // More vertical padding
+                                                borderRadius: "6px", // Slightly more rounded corners
+                                                width: "fit-content",
+                                                mt: 0.7, // More spacing from "Scraped On"
+                                                fontWeight: "bold", // Make text stand out a little more
+                                            }}
+                                        >
+                                            Keyword: { post.keyword?.name }
+                                        </Box>
                                     </Stack>
                                 </ListItem>
                             </React.Fragment>

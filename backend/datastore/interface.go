@@ -83,8 +83,8 @@ type SourceRepository interface {
 }
 
 type LeadRepository interface {
-	GetLeadsByStatus(ctx context.Context, projectID string, status models.LeadStatus) ([]*models.Lead, error)
-	GetLeadsByRelevancy(ctx context.Context, projectID string, relevancy float32, subReddits []string) ([]*models.Lead, error)
+	GetLeadsByStatus(ctx context.Context, projectID string, status models.LeadStatus) ([]*models.AugmentedLead, error)
+	GetLeadsByRelevancy(ctx context.Context, projectID string, relevancy float32, sources []string) ([]*models.AugmentedLead, error)
 	GetLeadByPostID(ctx context.Context, projectID, postID string) (*models.Lead, error)
 	GetLeadByCommentID(ctx context.Context, projectID, commentID string) (*models.Lead, error)
 	CreateLead(ctx context.Context, reddit *models.Lead) error
