@@ -145,7 +145,8 @@ func (s *redditKeywordTracker) sendAlert(ctx context.Context, project *models.Pr
 		leadsURL := "https://app.redoraai.com/dashboard/leads"
 
 		msg := fmt.Sprintf(
-			"*RedoraAI*\n\n🔍 *Daily Lead Summary*\n%d leads found today.\n<%s|View leads →>",
+			"*RedoraAI*\n\nProduct: %s\n\n *Daily Lead Summary*\n%d leads found today.\n<%s|View leads →>",
+			project.Name,
 			dailyCount,
 			leadsURL,
 		)
