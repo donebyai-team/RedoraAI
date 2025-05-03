@@ -269,7 +269,7 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 			}
 
 			redditLead.RelevancyScore = relevanceResponse.IsRelevantConfidenceScore
-			if redditLead.RelevancyScore >= 90 {
+			if redditLead.RelevancyScore >= defaultRelevancyScore {
 				countPostsWithHighRelevancy++
 			}
 
@@ -357,7 +357,7 @@ const (
 	maxPostAgeInMonths    = 6
 	minCommentThreshold   = 5
 	maxLeadsPerDay        = 25
-	defaultRelevancyScore = 80
+	defaultRelevancyScore = 90
 )
 
 var systemAuthors = []string{"[deleted]", "AutoModerator"}
