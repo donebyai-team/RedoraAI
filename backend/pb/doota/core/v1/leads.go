@@ -40,6 +40,12 @@ func (u *Lead) FromModel(lead *models.Lead) *Lead {
 	return u
 }
 
+func (u *Keyword) FromModel(lead *models.Keyword) *Keyword {
+	u.Id = lead.ID
+	u.Name = lead.Keyword
+	return u
+}
+
 func (u *LeadMetadata) FromModel(metadata models.LeadMetadata) *LeadMetadata {
 	u.ChainOfThought = metadata.ChainOfThought
 	u.SuggestedComment = metadata.SuggestedComment

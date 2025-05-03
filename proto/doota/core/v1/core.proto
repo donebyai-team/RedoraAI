@@ -107,6 +107,7 @@ message Lead {
   string description = 11;
   LeadMetadata metadata = 12;
   google.protobuf.Timestamp created_at = 13;
+  Keyword keyword = 14;
 }
 
 enum LeadStatus {
@@ -118,4 +119,9 @@ enum LeadStatus {
 enum LeadType {
   POST = 0;
   COMMENT = 1;
+}
+
+message Keyword {
+  string id = 1;
+  string name = 2;
 }

@@ -300,6 +300,11 @@ export declare type Lead = Message<"doota.core.v1.Lead"> & {
    * @generated from field: google.protobuf.Timestamp created_at = 13;
    */
   createdAt?: Timestamp;
+
+  /**
+   * @generated from field: doota.core.v1.Keyword keyword = 14;
+   */
+  keyword?: Keyword;
 };
 
 /**
@@ -307,6 +312,27 @@ export declare type Lead = Message<"doota.core.v1.Lead"> & {
  * Use `create(LeadSchema)` to create a new message.
  */
 export declare const LeadSchema: GenMessage<Lead>;
+
+/**
+ * @generated from message doota.core.v1.Keyword
+ */
+export declare type Keyword = Message<"doota.core.v1.Keyword"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: string name = 2;
+   */
+  name: string;
+};
+
+/**
+ * Describes the message doota.core.v1.Keyword.
+ * Use `create(KeywordSchema)` to create a new message.
+ */
+export declare const KeywordSchema: GenMessage<Keyword>;
 
 /**
  * @generated from enum doota.core.v1.PlatformError
