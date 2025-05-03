@@ -50,6 +50,7 @@ func (c *KeywordServiceImpl) CreateKeyword(ctx context.Context, session *CreateK
 		_, err := c.db.CreateKeywordTracker(ctx, &models.KeywordTracker{
 			SourceID:  source.ID,
 			KeywordID: keyword.ID,
+			ProjectID: keyword.ProjectID,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("failed to add keyword tracker for keyword [%s]: %w", keyword.Keyword, err)
