@@ -76,7 +76,7 @@ const ListRenderComp: React.FC<ListRenderCompProps> = ({ isLoading, list }) => {
                                                     color: "text.secondary",
                                                 }}
                                             >
-                                                {getSubredditName(subredditList, post.sourceId)}
+                                                {post.metadata?.subredditPrefixed}
                                             </Typography>
                                             <Typography
                                                 component="span"
