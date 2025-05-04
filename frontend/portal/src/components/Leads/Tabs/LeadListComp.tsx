@@ -18,6 +18,20 @@ interface ListRenderCompProps {
     list: LeadTyeps[];
     isLoading: boolean
 }
+
+const getRandomColor = () => {
+    const colors = [
+        { bg: "#BBDEFB", text: "#0D47A1" }, // light blue
+        { bg: "#F8BBD0", text: "#880E4F" }, // pink
+        { bg: "#C8E6C9", text: "#1B5E20" }, // green
+        { bg: "#D1C4E9", text: "#4A148C" }, // purple
+        { bg: "#B2EBF2", text: "#006064" }, // teal
+        { bg: "#E1BEE7", text: "#6A1B9A" }, // violet
+        { bg: "#FFE082", text: "#E65100" }, // amber
+    ];
+    return colors[Math.floor(Math.random() * colors.length)];
+};
+
 const ListRenderComp: React.FC<ListRenderCompProps> = ({ isLoading, list }) => {
 
     const dispatch = useAppDispatch();
@@ -119,6 +133,38 @@ const ListRenderComp: React.FC<ListRenderCompProps> = ({ isLoading, list }) => {
                                         >
                                             Keyword: { post.keyword?.name }
                                         </Box>
+
+                                        {post.intents && post.intents.length > 0 && (
+                                            <Box
+                                                sx={{
+                                                    display: "flex",
+                                                    flexWrap: "wrap",
+                                                    gap: 1,
+                                                    mt: 0.5,
+                                                }}
+                                            >
+                                                {post.intents.map((label: string, idx: number) => {
+                                                    const { bg, text } = getRandomColor();
+                                                    return (
+                                                        <Box
+                                                            key={idx}
+                                                            sx={{
+                                                                backgroundColor: bg,
+                                                                color: text,
+                                                                fontSize: "0.7rem",
+                                                                px: 1.5,
+                                                                py: 0.5,
+                                                                borderRadius: "999px", // full pill shape
+                                                                whiteSpace: "nowrap",
+                                                                fontWeight: 500,
+                                                            }}
+                                                        >
+                                                            {label}
+                                                        </Box>
+                                                    );
+                                                })}
+                                            </Box>
+                                        )}
                                     </Stack>
                                 </ListItem>
                             </React.Fragment>
