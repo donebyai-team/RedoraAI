@@ -124,13 +124,6 @@ func (s *redditKeywordTracker) sendAlert(ctx context.Context, project *models.Pr
 	//		s.logger.Error("failed to release lock on keyword tracker summary", zap.Error(err))
 	//	}
 	//}()
-
-	integration, err := s.db.GetIntegrationByOrgAndType(ctx, project.OrganizationID, models.IntegrationTypeSLACKWEBHOOK)
-	if err != nil && errors.Is(err, datastore.NotFound) {
-		s.logger.Info("so integration configured for alerts")
-		return
-	}
-
 	done, err := s.isTrackingDone(ctx, project.ID)
 	if err != nil {
 		s.logger.Error("check if tracking is done", zap.Error(err))
@@ -153,18 +146,20 @@ func (s *redditKeywordTracker) sendAlert(ctx context.Context, project *models.Pr
 			leadsURL,
 		)
 
-		clientWebhook := integration.GetSlackWebhook().Webhook
-
-		err = alerts.NewSlackNotifier(clientWebhook).Send(ctx, msg)
+		// Send alert on redora
+		err = alerts.NewSlackNotifier(redoraChannel).Send(ctx, msg)
 		if err != nil {
 			s.logger.Error("failed to send slack notification", zap.Error(err))
 		}
 
-		if clientWebhook != redoraChannel {
-			err = alerts.NewSlackNotifier(clientWebhook).Send(ctx, msg)
-			if err != nil {
-				s.logger.Error("failed to send slack notification", zap.Error(err))
-			}
+		integration, err := s.db.GetIntegrationByOrgAndType(ctx, project.OrganizationID, models.IntegrationTypeSLACKWEBHOOK)
+		if err != nil && errors.Is(err, datastore.NotFound) {
+			s.logger.Info("no integration configured for alerts, skipped")
+			return
+		}
+		err = alerts.NewSlackNotifier(integration.GetSlackWebhook().Webhook).Send(ctx, msg)
+		if err != nil {
+			s.logger.Error("failed to send slack notification", zap.Error(err))
 		}
 	}
 }
