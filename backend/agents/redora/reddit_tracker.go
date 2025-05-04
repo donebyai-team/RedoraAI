@@ -17,6 +17,8 @@ import (
 	"time"
 )
 
+const redoraChannel = "https://hooks.slack.com/services/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"
+
 type redditKeywordTracker struct {
 	gptModel          ai.GPTModel
 	db                datastore.Repository
@@ -150,9 +152,19 @@ func (s *redditKeywordTracker) sendAlert(ctx context.Context, project *models.Pr
 			dailyCount,
 			leadsURL,
 		)
-		err = alerts.NewSlackNotifier(integration.GetSlackWebhook().Webhook).Send(ctx, msg)
+
+		clientWebhook := integration.GetSlackWebhook().Webhook
+
+		err = alerts.NewSlackNotifier(clientWebhook).Send(ctx, msg)
 		if err != nil {
 			s.logger.Error("failed to send slack notification", zap.Error(err))
+		}
+
+		if clientWebhook != redoraChannel {
+			err = alerts.NewSlackNotifier(clientWebhook).Send(ctx, msg)
+			if err != nil {
+				s.logger.Error("failed to send slack notification", zap.Error(err))
+			}
 		}
 	}
 }
