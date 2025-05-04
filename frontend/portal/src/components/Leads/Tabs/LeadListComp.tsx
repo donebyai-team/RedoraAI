@@ -19,19 +19,6 @@ interface ListRenderCompProps {
     isLoading: boolean
 }
 
-const getRandomColor = () => {
-    const colors = [
-        { bg: "#BBDEFB", text: "#0D47A1" }, // light blue
-        { bg: "#F8BBD0", text: "#880E4F" }, // pink
-        { bg: "#C8E6C9", text: "#1B5E20" }, // green
-        { bg: "#D1C4E9", text: "#4A148C" }, // purple
-        { bg: "#B2EBF2", text: "#006064" }, // teal
-        { bg: "#E1BEE7", text: "#6A1B9A" }, // violet
-        { bg: "#FFE082", text: "#E65100" }, // amber
-    ];
-    return colors[Math.floor(Math.random() * colors.length)];
-};
-
 const ListRenderComp: React.FC<ListRenderCompProps> = ({ isLoading, list }) => {
 
     const dispatch = useAppDispatch();
@@ -144,22 +131,36 @@ const ListRenderComp: React.FC<ListRenderCompProps> = ({ isLoading, list }) => {
                                                 }}
                                             >
                                                 {post.intents.map((label: string, idx: number) => {
-                                                    const { bg, text } = getRandomColor();
+                                                    let emoji = '';
+                                                    let bgColor = ''; // Default background color
+                                                    let textColor ='';
+
+                                                    if (label === 'PROBABLE_LEAD') {
+                                                        emoji = '🔥 '; // Emoji for Probable Lead
+                                                        bgColor = '#F8BBD0';
+                                                        textColor = '#880E4F';
+                                                    } else if (label === 'BEST_FOR_ENGAGEMENT') {
+                                                        emoji = '🌟 '; // Emoji for Best for Engagement
+                                                        bgColor = '#D1C4E9';
+                                                        textColor = '#4A148C' ;
+                                                    }
+
                                                     return (
                                                         <Box
                                                             key={idx}
                                                             sx={{
-                                                                backgroundColor: bg,
-                                                                color: text,
-                                                                fontSize: "0.7rem",
+                                                                backgroundColor: bgColor,
+                                                                color: textColor,
+                                                                fontSize: "0.8rem",
                                                                 px: 1.5,
                                                                 py: 0.5,
+                                                                mt: "0.5rem",
                                                                 borderRadius: "999px", // full pill shape
                                                                 whiteSpace: "nowrap",
                                                                 fontWeight: 500,
                                                             }}
                                                         >
-                                                            {label}
+                                                            {emoji}{label}
                                                         </Box>
                                                     );
                                                 })}
