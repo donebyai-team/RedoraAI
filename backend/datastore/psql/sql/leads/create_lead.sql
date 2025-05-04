@@ -9,7 +9,8 @@ INSERT INTO leads (
     post_created_at,
     metadata,
     title,
-    description)
+    description,
+    intents)
 VALUES (
     :project_id,
     :author,
@@ -21,5 +22,6 @@ VALUES (
     :post_created_at,
     :metadata,
     :title,
-    :description)
+    :description,
+    :intents)
 RETURNING id;

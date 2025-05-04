@@ -83,6 +83,70 @@ func ParseLeadType(name string) (LeadType, error) {
 }
 
 const (
+	// PostIntentUNKNOWN is a PostIntent of type UNKNOWN.
+	PostIntentUNKNOWN PostIntent = "UNKNOWN"
+	// PostIntentSEEKINGRECOMMENDATIONS is a PostIntent of type SEEKING_RECOMMENDATIONS.
+	PostIntentSEEKINGRECOMMENDATIONS PostIntent = "SEEKING_RECOMMENDATIONS"
+	// PostIntentEXPRESSINGPAIN is a PostIntent of type EXPRESSING_PAIN.
+	PostIntentEXPRESSINGPAIN PostIntent = "EXPRESSING_PAIN"
+	// PostIntentEXPLORINGALTERNATIVES is a PostIntent of type EXPLORING_ALTERNATIVES.
+	PostIntentEXPLORINGALTERNATIVES PostIntent = "EXPLORING_ALTERNATIVES"
+	// PostIntentASKINGFORSOLUTIONS is a PostIntent of type ASKING_FOR_SOLUTIONS.
+	PostIntentASKINGFORSOLUTIONS PostIntent = "ASKING_FOR_SOLUTIONS"
+	// PostIntentSHARINGRECOMMENDATION is a PostIntent of type SHARING_RECOMMENDATION.
+	PostIntentSHARINGRECOMMENDATION PostIntent = "SHARING_RECOMMENDATION"
+	// PostIntentEXPRESSINGGOAL is a PostIntent of type EXPRESSING_GOAL.
+	PostIntentEXPRESSINGGOAL PostIntent = "EXPRESSING_GOAL"
+	// PostIntentBUILDINGINPUBLIC is a PostIntent of type BUILDING_IN_PUBLIC.
+	PostIntentBUILDINGINPUBLIC PostIntent = "BUILDING_IN_PUBLIC"
+	// PostIntentASKINGFORFEEDBACK is a PostIntent of type ASKING_FOR_FEEDBACK.
+	PostIntentASKINGFORFEEDBACK PostIntent = "ASKING_FOR_FEEDBACK"
+	// PostIntentDESCRIBINGCURRENTSTACK is a PostIntent of type DESCRIBING_CURRENT_STACK.
+	PostIntentDESCRIBINGCURRENTSTACK PostIntent = "DESCRIBING_CURRENT_STACK"
+	// PostIntentCOMPETITORMENTION is a PostIntent of type COMPETITOR_MENTION.
+	PostIntentCOMPETITORMENTION PostIntent = "COMPETITOR_MENTION"
+	// PostIntentGENERALDISCUSSION is a PostIntent of type GENERAL_DISCUSSION.
+	PostIntentGENERALDISCUSSION PostIntent = "GENERAL_DISCUSSION"
+)
+
+var ErrInvalidPostIntent = errors.New("not a valid PostIntent")
+
+// String implements the Stringer interface.
+func (x PostIntent) String() string {
+	return string(x)
+}
+
+// IsValid provides a quick way to determine if the typed value is
+// part of the allowed enumerated values
+func (x PostIntent) IsValid() bool {
+	_, err := ParsePostIntent(string(x))
+	return err == nil
+}
+
+var _PostIntentValue = map[string]PostIntent{
+	"UNKNOWN":                  PostIntentUNKNOWN,
+	"SEEKING_RECOMMENDATIONS":  PostIntentSEEKINGRECOMMENDATIONS,
+	"EXPRESSING_PAIN":          PostIntentEXPRESSINGPAIN,
+	"EXPLORING_ALTERNATIVES":   PostIntentEXPLORINGALTERNATIVES,
+	"ASKING_FOR_SOLUTIONS":     PostIntentASKINGFORSOLUTIONS,
+	"SHARING_RECOMMENDATION":   PostIntentSHARINGRECOMMENDATION,
+	"EXPRESSING_GOAL":          PostIntentEXPRESSINGGOAL,
+	"BUILDING_IN_PUBLIC":       PostIntentBUILDINGINPUBLIC,
+	"ASKING_FOR_FEEDBACK":      PostIntentASKINGFORFEEDBACK,
+	"DESCRIBING_CURRENT_STACK": PostIntentDESCRIBINGCURRENTSTACK,
+	"COMPETITOR_MENTION":       PostIntentCOMPETITORMENTION,
+	"GENERAL_DISCUSSION":       PostIntentGENERALDISCUSSION,
+}
+
+// ParsePostIntent attempts to convert a string to a PostIntent.
+func ParsePostIntent(name string) (PostIntent, error) {
+	if x, ok := _PostIntentValue[name]; ok {
+		return x, nil
+	}
+	return PostIntent(""), fmt.Errorf("%s is %w", name, ErrInvalidPostIntent)
+}
+
+const (
 	// SourceTypeSUBREDDIT is a SourceType of type SUBREDDIT.
 	SourceTypeSUBREDDIT SourceType = "SUBREDDIT"
 )

@@ -38,6 +38,9 @@ func (u *Lead) FromModel(lead *models.AugmentedLead) *Lead {
 	u.Title = lead.Title
 	u.Description = lead.Description
 	u.Metadata = new(LeadMetadata).FromModel(lead.LeadMetadata)
+	for _, intent := range lead.Intents {
+		u.Intents = append(u.Intents, intent.String())
+	}
 	return u
 }
 

@@ -276,6 +276,7 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 
 			redditLead.LeadMetadata.ChainOfThought = relevanceResponse.ChainOfThoughtIsRelevant
 			redditLead.LeadMetadata.SuggestedComment = relevanceResponse.SuggestedComment
+			redditLead.Intents = relevanceResponse.Intents
 			redditLead.LeadMetadata.SuggestedDM = relevanceResponse.SuggestedDM
 			redditLead.LeadMetadata.ChainOfThoughtSuggestedComment = relevanceResponse.ChainOfThoughtSuggestedComment
 			redditLead.LeadMetadata.ChainOfThoughtSuggestedDM = relevanceResponse.ChainOfThoughtSuggestedDM

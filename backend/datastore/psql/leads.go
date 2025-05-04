@@ -85,6 +85,7 @@ func (r *Database) CreateLead(ctx context.Context, reddit *models.Lead) error {
 		"author":          reddit.Author,
 		"post_id":         reddit.PostID,
 		"keyword_id":      reddit.KeywordID,
+		"intents":         reddit.Intents,
 		"type":            reddit.Type,
 		"relevancy_score": reddit.RelevancyScore,
 		"post_created_at": reddit.PostCreatedAt,

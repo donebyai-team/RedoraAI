@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql/driver"
+	"github.com/lib/pq"
 	"time"
 )
 
@@ -100,6 +101,54 @@ func (b *KeywordTrackerMetadata) Scan(value interface{}) error {
 
 //go:generate go-enum -f=$GOFILE
 
+// PostIntent represents the inferred intent of a Reddit post or comment.
+//
+// ENUM(
+//
+//	UNKNOWN,
+//	SEEKING_RECOMMENDATIONS,
+//	EXPRESSING_PAIN,
+//	EXPLORING_ALTERNATIVES,
+//	ASKING_FOR_SOLUTIONS,
+//	SHARING_RECOMMENDATION,
+//	EXPRESSING_GOAL,
+//	BUILDING_IN_PUBLIC,
+//	ASKING_FOR_FEEDBACK,
+//	DESCRIBING_CURRENT_STACK,
+//	COMPETITOR_MENTION,
+//	GENERAL_DISCUSSION
+//
+// )
+type PostIntent string
+
+type PostIntents []PostIntent
+
+func (a PostIntents) Value() (driver.Value, error) {
+	strs := make([]string, len(a))
+	for i, v := range a {
+		strs[i] = string(v)
+	}
+	return pq.Array(strs).Value()
+}
+
+func (a *PostIntents) Scan(src interface{}) error {
+	var stringArray []string
+	if src == nil {
+		*a = nil
+		return nil
+	}
+	if err := pq.Array(&stringArray).Scan(src); err != nil {
+		return err
+	}
+
+	result := make([]PostIntent, len(stringArray))
+	for i, v := range stringArray {
+		result[i] = PostIntent(v)
+	}
+	*a = result
+	return nil
+}
+
 // ENUM(COMMENT, POST)
 type LeadType string
 
@@ -111,6 +160,7 @@ type Lead struct {
 	ProjectID      string       `db:"project_id"`
 	SourceID       string       `db:"source_id"`
 	KeywordID      string       `db:"keyword_id"`
+	Intents        PostIntents  `db:"intents"`
 	Author         string       `db:"author"`
 	PostID         string       `db:"post_id"`
 	Type           LeadType     `db:"type"`
@@ -131,6 +181,7 @@ type AugmentedLead struct {
 	ProjectID      string       `db:"project_id"`
 	SourceID       string       `db:"source_id"`
 	Keyword        *Keyword     `db:"keyword"`
+	Intents        PostIntents  `db:"intents"`
 	KeywordID      string       `db:"keyword_id"`
 	Author         string       `db:"author"`
 	PostID         string       `db:"post_id"`

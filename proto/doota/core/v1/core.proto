@@ -108,6 +108,7 @@ message Lead {
   LeadMetadata metadata = 12;
   google.protobuf.Timestamp created_at = 13;
   Keyword keyword = 14;
+  repeated string intents = 15;
 }
 
 enum LeadStatus {

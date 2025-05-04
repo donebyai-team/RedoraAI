@@ -305,6 +305,11 @@ export declare type Lead = Message<"doota.core.v1.Lead"> & {
    * @generated from field: doota.core.v1.Keyword keyword = 14;
    */
   keyword?: Keyword;
+
+  /**
+   * @generated from field: repeated string intents = 15;
+   */
+  intents: string[];
 };
 
 /**

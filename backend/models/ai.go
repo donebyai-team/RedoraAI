@@ -6,12 +6,13 @@ import (
 )
 
 type RedditPostRelevanceResponse struct {
-	ChainOfThoughtIsRelevant       string  `json:"chain_of_thought"`
-	IsRelevantConfidenceScore      float64 `json:"relevant_confidence_score"`
-	SuggestedDM                    string  `json:"suggested_dm"`
-	ChainOfThoughtSuggestedDM      string  `json:"chain_of_thought_suggested_dm"`
-	SuggestedComment               string  `json:"suggested_comment"`
-	ChainOfThoughtSuggestedComment string  `json:"chain_of_thought_suggested_comment"`
+	ChainOfThoughtIsRelevant       string       `json:"chain_of_thought"`
+	IsRelevantConfidenceScore      float64      `json:"relevant_confidence_score"`
+	SuggestedDM                    string       `json:"suggested_dm"`
+	Intents                        []PostIntent `json:"intents"`
+	ChainOfThoughtSuggestedDM      string       `json:"chain_of_thought_suggested_dm"`
+	SuggestedComment               string       `json:"suggested_comment"`
+	ChainOfThoughtSuggestedComment string       `json:"chain_of_thought_suggested_comment"`
 }
 
 type CaseDecisionResponse struct {
