@@ -132,16 +132,29 @@ func (s *redditKeywordTracker) sendAlert(ctx context.Context, project *models.Pr
 
 	// Send alert
 	if done {
+		s.logger.Info("daily tracking summary for project", zap.String("project_name", project.Name))
 		dailyCount, err := s.getLeadsCountOfTheDay(ctx, project.ID, defaultRelevancyScore)
 		if err != nil {
 			s.logger.Error("failed to get leads count", zap.Error(err))
 			return
 		}
+
+		totalPostsAnalysed, err := s.getLeadsCountOfTheDay(ctx, project.ID, 0)
+		if err != nil {
+			s.logger.Error("failed to get leads count", zap.Error(err))
+			return
+		}
+
 		leadsURL := "https://app.redoraai.com/dashboard/leads"
 
 		msg := fmt.Sprintf(
-			"*RedoraAI*\n\nProduct: %s\n\n *Daily Lead Summary*\n%d leads found today.\n<%s|View leads →>",
+			"*📊 Daily Lead Summary — RedoraAI*\n"+
+				"*Product:* %s\n"+
+				"*Posts Analyzed:* %d\n"+
+				"*Leads Found:* *%d*\n\n"+
+				"🔗 <%s|View all leads in your dashboard>",
 			project.Name,
+			totalPostsAnalysed,
 			dailyCount,
 			leadsURL,
 		)
