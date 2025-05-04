@@ -92,7 +92,7 @@ const ListRenderComp: React.FC<ListRenderCompProps> = ({ isLoading, list }) => {
                                                     color: "text.secondary",
                                                 }}
                                             >
-                                                {post.postCreatedAt ? formateDate(post.postCreatedAt) : "N/A"}
+                                                Post: {post.postCreatedAt ? formateDate(post.postCreatedAt) : "N/A"}
                                             </Typography>
                                         </Stack>
                                         <Typography variant="body1" sx={{ fontWeight: "medium" }}>
@@ -101,7 +101,7 @@ const ListRenderComp: React.FC<ListRenderCompProps> = ({ isLoading, list }) => {
 
                                         {/* Scraped On line */}
                                         <Typography sx={{ fontSize: "0.7rem", color: "text.secondary" }}>
-                                            Scraped On: {post.createdAt ? formateDate(post.createdAt) : "N/A"}
+                                            Match: {post.createdAt ? formateDate(post.createdAt) : "N/A"}
                                         </Typography>
 
                                         <Box

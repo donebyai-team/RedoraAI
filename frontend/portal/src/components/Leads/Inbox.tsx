@@ -20,7 +20,7 @@ import { LeadTabStatus, setActiveTab } from "../../../store/Lead/leadSlice";
 
 const tabList: { label: string; value: LeadTabStatus }[] = [
   { label: "New", value: LeadTabStatus.NEW },
-  { label: "Completed", value: LeadTabStatus.COMPLETED },
+  { label: "Responded", value: LeadTabStatus.COMPLETED },
   { label: "Discarded", value: LeadTabStatus.DISCARDED },
 ];
 

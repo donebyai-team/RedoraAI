@@ -221,7 +221,7 @@ const LeadsPostDetails = () => {
                     onClick={() => handleLeadStatusUpdate(LeadStatus.COMPLETED)}
                     disabled={isLoading}
                   >
-                    Complete
+                    Mark Responded
                   </Button>
                 </>
               )}
