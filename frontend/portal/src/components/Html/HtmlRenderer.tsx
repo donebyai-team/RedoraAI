@@ -24,7 +24,10 @@ const HtmlBodyRenderer = ({ htmlString }: { htmlString: string }) => {
 
       if (doc) {
         doc.open();
-        doc.write(decodedHtml);
+        doc.write(`
+          <style>body { margin: 0; }</style>
+          ${decodedHtml}
+        `);
         doc.close();
 
         const onLoadHandler = () => {

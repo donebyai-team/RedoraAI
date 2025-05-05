@@ -36,19 +36,26 @@ const ListRenderComp: React.FC<ListRenderCompProps> = ({ isLoading, list }) => {
             </Box>
             :
             <Box sx={{ width: "100%", pt: 2, height: "83dvh", overflowY: "scroll" }}>
-                {(list.length > 0) ? (
+                {(list?.length > 0) ? (
                     <List sx={{ p: 0, mx: 4 }}>
                         {list.map((post, index) => (
                             <React.Fragment key={index}>
                                 <ListItem onClick={() => handleSelectedLead(post)} sx={{ p: 3, mb: (index !== list.length - 1) ? 2 : 0, cursor: "pointer", ...setLeadActive(selectedleadData?.id as string, post.id) }}>
                                     <Stack direction="column" spacing={1} width="100%">
-                                        <Stack direction="row" spacing={1} alignItems="center">
+                                        <Stack
+                                            direction="row"
+                                            spacing={1}
+                                            alignItems="center"
+                                            flexWrap="wrap"
+                                            useFlexGap
+                                        >
                                             <Box
                                                 sx={{
                                                     display: "flex",
                                                     alignItems: "center",
                                                     color: "green",
                                                     fontSize: "0.875rem",
+                                                    wordBreak: "break-word",
                                                 }}
                                             >
                                                 <Box
@@ -60,41 +67,49 @@ const ListRenderComp: React.FC<ListRenderCompProps> = ({ isLoading, list }) => {
                                                         borderRadius: "50%",
                                                         bgcolor: "green",
                                                         mr: 1,
+                                                        flexShrink: 0,
                                                     }}
                                                 />
                                                 {post.relevancyScore}%
                                             </Box>
+
                                             <Typography
                                                 component="span"
                                                 sx={{ fontSize: "0.875rem", mx: 1 }}
                                             >
                                                 •
                                             </Typography>
+
                                             <Typography
                                                 component="span"
                                                 sx={{
                                                     fontSize: "0.875rem",
                                                     color: "text.secondary",
+                                                    wordBreak: "break-word",
                                                 }}
                                             >
                                                 {post.metadata?.subredditPrefixed}
                                             </Typography>
+
                                             <Typography
                                                 component="span"
                                                 sx={{ fontSize: "0.875rem", mx: 1 }}
                                             >
                                                 •
                                             </Typography>
+
                                             <Typography
                                                 component="span"
                                                 sx={{
                                                     fontSize: "0.875rem",
                                                     color: "text.secondary",
+                                                    wordBreak: "break-word",
                                                 }}
                                             >
                                                 Post: {post.postCreatedAt ? formateDate(post.postCreatedAt) : "N/A"}
                                             </Typography>
                                         </Stack>
+
                                         <Typography variant="body1" sx={{ fontWeight: "medium" }}>
                                             {post.title}
                                         </Typography>
@@ -118,7 +133,7 @@ const ListRenderComp: React.FC<ListRenderCompProps> = ({ isLoading, list }) => {
                                                 fontWeight: "bold", // Make text stand out a little more
                                             }}
                                         >
-                                            Keyword: { post.keyword?.name }
+                                            Keyword: {post.keyword?.name}
                                         </Box>
 
                                         {post.intents && post.intents.length > 0 && (
@@ -133,7 +148,7 @@ const ListRenderComp: React.FC<ListRenderCompProps> = ({ isLoading, list }) => {
                                                 {post.intents.map((label: string, idx: number) => {
                                                     let emoji = '';
                                                     let bgColor = ''; // Default background color
-                                                    let textColor ='';
+                                                    let textColor = '';
 
                                                     if (label === 'PROBABLE_LEAD') {
                                                         emoji = '🔥 '; // Emoji for Probable Lead
@@ -142,7 +157,7 @@ const ListRenderComp: React.FC<ListRenderCompProps> = ({ isLoading, list }) => {
                                                     } else if (label === 'BEST_FOR_ENGAGEMENT') {
                                                         emoji = '🌟 '; // Emoji for Best for Engagement
                                                         bgColor = '#D1C4E9';
-                                                        textColor = '#4A148C' ;
+                                                        textColor = '#4A148C';
                                                     }
 
                                                     return (

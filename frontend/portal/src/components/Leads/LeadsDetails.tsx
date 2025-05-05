@@ -233,7 +233,7 @@ const LeadsPostDetails = () => {
 
           {/* Body */}
           <Box sx={{ width: "100%", pb: 2 }}>
-            <Box sx={{ px: 2, pt: 2, height: "35dvh", maxHeight: "100%", overflowY: "scroll" }}>
+            <Box sx={{ px: 2, pt: 2, height: "42dvh", maxHeight: "100%", overflowY: "scroll" }}>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                 <Link href={selectedleadData.metadata?.authorUrl || "#"} target="_blank">
                   {selectedleadData.author}
@@ -254,8 +254,8 @@ const LeadsPostDetails = () => {
 
             {/* Suggested Comment */}
             {selectedleadData.metadata?.suggestedComment && (
-              <Card sx={{ mb: 2, borderRadius: 2, mx: 2 }}>
-                <CardContent>
+              <Card sx={{ mb: 1.5, borderRadius: 2, mx: 2, bgcolor: "#f3f4f6" }}>
+                <CardContent sx={{ p: 1.5, "&:last-child": { pb: 1.5 } }}>
                   <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                     <Star sx={{ color: "#e25a9e", mr: 1 }} />
                     <Typography color="#e25a9e" fontWeight="medium">Suggested comment</Typography>
@@ -284,8 +284,8 @@ const LeadsPostDetails = () => {
 
             {/* Suggested DM */}
             {selectedleadData.metadata?.suggestedDm && (
-              <Card sx={{ borderRadius: 2, mx: 2 }}>
-                <CardContent>
+              <Card sx={{ borderRadius: 2, mx: 2, bgcolor: "#f3f4f6" }}>
+                <CardContent sx={{ p: 1.5, "&:last-child": { pb: 1.5 } }}>
                   <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                     <Star sx={{ color: "#e25a9e", mr: 1 }} />
                     <Typography color="#e25a9e" fontWeight="medium">Suggested DM</Typography>

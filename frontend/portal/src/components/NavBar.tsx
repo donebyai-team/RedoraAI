@@ -231,7 +231,7 @@ const NavBar: FC = () => {
         height: "100vh",
         borderRight: "1px solid #e0e0e0",
         borderRadius: 0,
-        bgcolor: "white",
+        bgcolor: "rgb(17 24 39)",
       }}
     >
       <Box sx={{ py: 3, display: "flex", flexDirection: "column", height: "100%" }}>
@@ -251,8 +251,8 @@ const NavBar: FC = () => {
                 disableInteractive
                 disableHoverListener={canChangeOrg ? false : true}
               >
-                <div className='flex items-center gap-[4px] text-black/60 hover:text-black'>
-                  <div className='text-black'>{currentOrg?.name}</div>
+                <div className='flex items-center gap-[4px] text-gray-100'>
+                  <div className=''>{currentOrg?.name}</div>
                   {canChangeOrg && (
                     <div className={`inline-block`}>
                       <ChevronDown size={18} />
@@ -289,13 +289,20 @@ const NavBar: FC = () => {
             )}
           </div>
           <Tooltip title='Log Out' placement='right' arrow disableInteractive>
-            <LogOut className='text-black/80 hover:text-black cursor-pointer' size={14} onClick={handleLogout} />
+            <LogOut className='text-gray-100 cursor-pointer' size={14} onClick={handleLogout} />
           </Tooltip>
         </Box>
-        <Divider />
+        <Divider sx={{ bgcolor: "#2d3748" }} />
 
         {/* Inbox */}
-        <List sx={{ m: 2, display: "flex", flexDirection: "column", alignItems: "center" }}>
+        <List
+          sx={{
+            m: 2,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+          }}
+        >
           <ListItem
             disablePadding
             sx={{
@@ -304,16 +311,22 @@ const NavBar: FC = () => {
               justifyContent: "space-between",
               width: "100%",
               borderRadius: 1.5,
-              bgcolor: isleads ? "#f9fafb" : "",
-              boxShadow: isleads ? "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px" : "",
+              bgcolor: isleads ? "#1f2937" : "",
+              boxShadow: isleads ? "rgba(0, 0, 0, 0.05) 0px 1px 2px 0px" : "",
               "&:hover": {
-                backgroundColor: "#F0F5FF"
+                backgroundColor: "#1f2937",
+                "& .MuiListItemIcon-root, & .MuiListItemText-primary": {
+                  color: isleads ? "white" : "#d1d5db",
+                },
+              },
+              "& .MuiListItemSecondaryAction-root": {
+                right: "26px",
               },
             }}
             onClick={() => handleMenuClick()}
             secondaryAction={
               <Badge
-                badgeContent={countItem('inbox')}
+                badgeContent={countItem("inbox")}
                 color="warning"
                 sx={{
                   "& .MuiBadge-badge": {
@@ -331,12 +344,16 @@ const NavBar: FC = () => {
                 flexGrow: 1,
                 pl: 2,
                 "&:hover": {
-                  backgroundColor: "transparent"
-                }
+                  backgroundColor: "transparent",
+                },
+                // Apply white color when active
+                "& .MuiListItemIcon-root, & .MuiListItemText-primary": {
+                  color: isleads ? "white" : "#d1d5db",
+                },
               }}
             >
               <ListItemIcon sx={{ minWidth: "auto", mr: 2 }}>
-                <MailIcon color="action" />
+                <MailIcon />
               </ListItemIcon>
               <ListItemText primary={`Inbox`} />
             </ListItemButton>
@@ -345,7 +362,7 @@ const NavBar: FC = () => {
 
         {/* Filters */}
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2, mx: 4.5 }}>
-          <Typography variant="subtitle2" color="text.secondary">
+          <Typography variant="subtitle2" sx={{ color: "#9ca3af" }}>
             FILTERS
           </Typography>
           <Tooltip
@@ -360,9 +377,9 @@ const NavBar: FC = () => {
               onClick={handleResetFilters}
               aria-label="Reset filters"
               sx={{
-                color: "text.secondary",
+                color: "#9ca3af",
                 "&:hover": {
-                  color: "primary.main",
+                  color: "primary",
                   backgroundColor: "rgba(63, 81, 181, 0.04)",
                 },
               }}
@@ -374,8 +391,8 @@ const NavBar: FC = () => {
 
         <Box sx={{ mb: 3, mx: 4.5 }}>
           <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-            <Typography variant="body2">Relevancy</Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{ color: "#9ca3af" }}>Relevancy</Typography>
+            <Typography variant="body2" sx={{ color: "#9ca3af" }}>
               {relevancy_score}%
             </Typography>
           </Box>
@@ -393,12 +410,12 @@ const NavBar: FC = () => {
         </Box>
 
         {/* Filter by Subreddit */}
-        <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 2, mx: 4.5 }}>
+        <Typography variant="subtitle2" sx={{ mb: 2, mx: 4.5, color: "#9ca3af" }}>
           FILTER BY SUBREDDIT
         </Typography>
 
         {(loading || isLoadingRedditIntegrationStatus) ?
-          <Box sx={{ display: 'flex', px: 4, flexDirection: "column", alignItems: "center", height: "100%", width: "100%", gap: 2 }}>
+          <Box sx={{ display: 'flex', px: 2, flexDirection: "column", alignItems: "center", height: "100%", width: "100%", gap: 2 }}>
             <LoadigSkeletons count={3} height={40} />
           </Box>
           :
@@ -415,13 +432,23 @@ const NavBar: FC = () => {
                     width: "100%",
                     borderRadius: 1.5,
                     px: 4,
-                    bgcolor: isMenuActive(ele.id) ? "#f9fafb" : "",
+                    bgcolor: isMenuActive(ele.id) ? "#1f2937" : "",
                     boxShadow: isMenuActive(ele.id) ? "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px" : "",
                     "&:hover": {
-                      backgroundColor: "#F0F5FF"
+                      backgroundColor: "#1f2937",
+                      "& .MuiListItemIcon-root, & .MuiListItemText-primary": {
+                        color: isMenuActive(ele.id) ? "white" : "#d1d5db",
+                      },
+                    },
+                    "& .hover-icon": {
+                      color: "#d1d5db"
                     },
                     "&:hover .hover-icon": {
                       opacity: 1,
+                      color: "white"
+                    },
+                    "& .MuiListItemSecondaryAction-root": {
+                      right: "26px",
                     },
                   }}
                   onClick={() => handleSubRedditsClick(ele)}
@@ -507,6 +534,9 @@ const NavBar: FC = () => {
                       "&:hover": {
                         backgroundColor: "transparent"
                       },
+                      "& .MuiListItemIcon-root, & .MuiListItemText-primary": {
+                        color: isMenuActive(ele.id) ? "white" : "#d1d5db",
+                      },
                     }}
                   >
                     <ListItemText primary={`${ele.name}`} />
@@ -524,7 +554,7 @@ const NavBar: FC = () => {
 
         {/* Bottom Actions */}
         <Box sx={{ mt: 2 }}>
-          <Divider sx={{ mb: 2 }} />
+          <Divider sx={{ mb: 2, bgcolor: "#2d3748" }} />
           <List disablePadding sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1.5, mx: 2 }}>
             {/* <ListItem onClick={handleOpenDialog} disablePadding sx={{ "&:hover": { backgroundColor: "#F0F5FF" } }}>
                 <ListItemButton sx={{ borderRadius: 1.5 }}>
@@ -542,41 +572,44 @@ const NavBar: FC = () => {
               </ListItem> */}
 
             {/* Navigation */}
-            {user && isAdmin(user) && (
+            {user && isAdmin(user) && (<>
               <ListItem
                 component={Link}
                 href={routes.app.settings.account}
                 disablePadding
                 sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  width: "100%",
                   borderRadius: 1.5,
                   "&:hover": {
-                    backgroundColor: "#F0F5FF"
-                  },
+                    backgroundColor: "#1f2937",
+                    "& .MuiListItemIcon-root, & .MuiListItemText-primary": {
+                      color: "#d1d5db",
+                    },
+                  }
                 }}
               >
                 <ListItemButton
                   sx={{
                     flexGrow: 1,
-                    borderRadius: 2,
                     pl: 2,
                     "&:hover": {
-                      backgroundColor: "transparent"
-                    }
+                      backgroundColor: "transparent",
+                    },
+                    "& .MuiListItemIcon-root, & .MuiListItemText-primary": {
+                      color: "#d1d5db",
+                    },
                   }}
                 >
                   <ListItemIcon sx={{ minWidth: "auto", mr: 2 }}>
                     <SettingsIcon />
                   </ListItemIcon>
-                  <ListItemText
-                    primary={
-                      <Typography variant="body2" fontWeight={500}>
-                        Settings
-                      </Typography>
-                    }
-                  />
+                  <ListItemText primary={`Settings`} />
                 </ListItemButton>
               </ListItem>
-            )}
+            </>)}
           </List>
         </Box>
 
