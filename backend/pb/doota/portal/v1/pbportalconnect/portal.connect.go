@@ -8,6 +8,7 @@ import (
 	connect "connectrpc.com/connect"
 	context "context"
 	errors "errors"
+	v11 "github.com/shank318/doota/pb/doota/core/v1"
 	v1 "github.com/shank318/doota/pb/doota/portal/v1"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	http "net/http"
@@ -84,6 +85,9 @@ const (
 	// PortalServiceGetProjectsProcedure is the fully-qualified name of the PortalService's GetProjects
 	// RPC.
 	PortalServiceGetProjectsProcedure = "/doota.portal.v1.PortalService/GetProjects"
+	// PortalServiceCreateProjectProcedure is the fully-qualified name of the PortalService's
+	// CreateProject RPC.
+	PortalServiceCreateProjectProcedure = "/doota.portal.v1.PortalService/CreateProject"
 )
 
 // These variables are the protoreflect.Descriptor objects for the RPCs defined in this package.
@@ -107,6 +111,7 @@ var (
 	portalServiceGetLeadsByStatusMethodDescriptor   = portalServiceServiceDescriptor.Methods().ByName("GetLeadsByStatus")
 	portalServiceUpdateLeadStatusMethodDescriptor   = portalServiceServiceDescriptor.Methods().ByName("UpdateLeadStatus")
 	portalServiceGetProjectsMethodDescriptor        = portalServiceServiceDescriptor.Methods().ByName("GetProjects")
+	portalServiceCreateProjectMethodDescriptor      = portalServiceServiceDescriptor.Methods().ByName("CreateProject")
 )
 
 // PortalServiceClient is a client for the doota.portal.v1.PortalService service.
@@ -132,6 +137,7 @@ type PortalServiceClient interface {
 	GetLeadsByStatus(context.Context, *connect.Request[v1.GetLeadsByStatusRequest]) (*connect.Response[v1.GetLeadsResponse], error)
 	UpdateLeadStatus(context.Context, *connect.Request[v1.UpdateLeadStatusRequest]) (*connect.Response[emptypb.Empty], error)
 	GetProjects(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetProjectsResponse], error)
+	CreateProject(context.Context, *connect.Request[v1.CreateProjectRequest]) (*connect.Response[v11.Project], error)
 }
 
 // NewPortalServiceClient constructs a client for the doota.portal.v1.PortalService service. By
@@ -252,6 +258,12 @@ func NewPortalServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(portalServiceGetProjectsMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
+		createProject: connect.NewClient[v1.CreateProjectRequest, v11.Project](
+			httpClient,
+			baseURL+PortalServiceCreateProjectProcedure,
+			connect.WithSchema(portalServiceCreateProjectMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -275,6 +287,7 @@ type portalServiceClient struct {
 	getLeadsByStatus   *connect.Client[v1.GetLeadsByStatusRequest, v1.GetLeadsResponse]
 	updateLeadStatus   *connect.Client[v1.UpdateLeadStatusRequest, emptypb.Empty]
 	getProjects        *connect.Client[emptypb.Empty, v1.GetProjectsResponse]
+	createProject      *connect.Client[v1.CreateProjectRequest, v11.Project]
 }
 
 // GetConfig calls doota.portal.v1.PortalService.GetConfig.
@@ -367,6 +380,11 @@ func (c *portalServiceClient) GetProjects(ctx context.Context, req *connect.Requ
 	return c.getProjects.CallUnary(ctx, req)
 }
 
+// CreateProject calls doota.portal.v1.PortalService.CreateProject.
+func (c *portalServiceClient) CreateProject(ctx context.Context, req *connect.Request[v1.CreateProjectRequest]) (*connect.Response[v11.Project], error) {
+	return c.createProject.CallUnary(ctx, req)
+}
+
 // PortalServiceHandler is an implementation of the doota.portal.v1.PortalService service.
 type PortalServiceHandler interface {
 	GetConfig(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.Config], error)
@@ -390,6 +408,7 @@ type PortalServiceHandler interface {
 	GetLeadsByStatus(context.Context, *connect.Request[v1.GetLeadsByStatusRequest]) (*connect.Response[v1.GetLeadsResponse], error)
 	UpdateLeadStatus(context.Context, *connect.Request[v1.UpdateLeadStatusRequest]) (*connect.Response[emptypb.Empty], error)
 	GetProjects(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetProjectsResponse], error)
+	CreateProject(context.Context, *connect.Request[v1.CreateProjectRequest]) (*connect.Response[v11.Project], error)
 }
 
 // NewPortalServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -506,6 +525,12 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(portalServiceGetProjectsMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
+	portalServiceCreateProjectHandler := connect.NewUnaryHandler(
+		PortalServiceCreateProjectProcedure,
+		svc.CreateProject,
+		connect.WithSchema(portalServiceCreateProjectMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/doota.portal.v1.PortalService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case PortalServiceGetConfigProcedure:
@@ -544,6 +569,8 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 			portalServiceUpdateLeadStatusHandler.ServeHTTP(w, r)
 		case PortalServiceGetProjectsProcedure:
 			portalServiceGetProjectsHandler.ServeHTTP(w, r)
+		case PortalServiceCreateProjectProcedure:
+			portalServiceCreateProjectHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -623,4 +650,8 @@ func (UnimplementedPortalServiceHandler) UpdateLeadStatus(context.Context, *conn
 
 func (UnimplementedPortalServiceHandler) GetProjects(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetProjectsResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.GetProjects is not implemented"))
+}
+
+func (UnimplementedPortalServiceHandler) CreateProject(context.Context, *connect.Request[v1.CreateProjectRequest]) (*connect.Response[v11.Project], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.CreateProject is not implemented"))
 }

@@ -11,6 +11,14 @@ func init() {
 		"project/create_project.sql",
 		"project/query_project_by_org.sql",
 		"project/query_project_by_id.sql",
+		"project/query_project_by_name.sql",
+	})
+}
+
+func (r *Database) GetProjectByName(ctx context.Context, name, orgID string) (*models.Project, error) {
+	return getOne[models.Project](ctx, r, "project/query_project_by_name.sql", map[string]any{
+		"name":            name,
+		"organization_id": orgID,
 	})
 }
 

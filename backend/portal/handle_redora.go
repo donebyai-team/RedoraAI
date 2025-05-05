@@ -15,6 +15,7 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"net/http"
+	"net/url"
 )
 
 func (p *Portal) getProject(ctx context.Context, headers http.Header, orgID string) (string, error) {
@@ -39,6 +40,59 @@ func (p *Portal) getProject(ctx context.Context, headers http.Header, orgID stri
 	}
 
 	return projectID, nil
+}
+
+func (p *Portal) CreateProject(ctx context.Context, c *connect.Request[pbportal.CreateProjectRequest]) (*connect.Response[pbcore.Project], error) {
+	actor, err := p.gethAuthContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(c.Msg.Name) < 3 {
+		return nil, status.New(codes.InvalidArgument, "project name should be at least 3 character").Err()
+	}
+
+	if len(c.Msg.Description) < 10 {
+		return nil, status.New(codes.InvalidArgument, "project description should be at least 10 characters").Err()
+	}
+
+	if len(c.Msg.TargetPersona) < 10 {
+		return nil, status.New(codes.InvalidArgument, "project target persona should be at least 10 characters").Err()
+	}
+
+	// Validate website URL
+	_, err = url.ParseRequestURI(c.Msg.Website)
+	if err != nil {
+		return nil, status.New(codes.InvalidArgument, "invalid website URL").Err()
+	}
+
+	project, err := p.db.GetProjectByName(ctx, c.Msg.Name, actor.OrganizationID)
+	if err != nil && !errors.Is(err, datastore.NotFound) {
+		return nil, err
+	}
+
+	if project != nil {
+		return nil, status.New(codes.AlreadyExists, "project already exists").Err()
+	}
+
+	createProject, err := p.db.CreateProject(ctx, &models.Project{
+		OrganizationID:     actor.OrganizationID,
+		Name:               c.Msg.Name,
+		ProductDescription: c.Msg.Description,
+		CustomerPersona:    c.Msg.TargetPersona,
+		WebsiteURL:         c.Msg.Website,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return connect.NewResponse(&pbcore.Project{
+		Id:            createProject.ID,
+		Name:          createProject.Name,
+		Description:   createProject.ProductDescription,
+		Website:       createProject.WebsiteURL,
+		TargetPersona: createProject.CustomerPersona,
+	}), nil
 }
 
 func (p *Portal) GetProjects(ctx context.Context, c *connect.Request[emptypb.Empty]) (*connect.Response[pbportal.GetProjectsResponse], error) {

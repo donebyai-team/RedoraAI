@@ -4,13 +4,44 @@
 
 import type { GenEnum, GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv1";
 import type { Message } from "@bufbuild/protobuf";
-import type { Lead, LeadStatus, Project, Source } from "../../core/v1/core_pb";
+import type { Lead, LeadStatus, Project, ProjectSchema, Source } from "../../core/v1/core_pb";
 import type { EmptySchema, Timestamp } from "@bufbuild/protobuf/wkt";
 
 /**
  * Describes the file doota/portal/v1/portal.proto.
  */
 export declare const file_doota_portal_v1_portal: GenFile;
+
+/**
+ * @generated from message doota.portal.v1.CreateProjectRequest
+ */
+export declare type CreateProjectRequest = Message<"doota.portal.v1.CreateProjectRequest"> & {
+  /**
+   * @generated from field: string name = 1;
+   */
+  name: string;
+
+  /**
+   * @generated from field: string description = 2;
+   */
+  description: string;
+
+  /**
+   * @generated from field: string website = 3;
+   */
+  website: string;
+
+  /**
+   * @generated from field: string target_persona = 4;
+   */
+  targetPersona: string;
+};
+
+/**
+ * Describes the message doota.portal.v1.CreateProjectRequest.
+ * Use `create(CreateProjectRequestSchema)` to create a new message.
+ */
+export declare const CreateProjectRequestSchema: GenMessage<CreateProjectRequest>;
 
 /**
  * @generated from message doota.portal.v1.GetProjectsResponse
@@ -990,6 +1021,14 @@ export declare const PortalService: GenService<{
     methodKind: "unary";
     input: typeof EmptySchema;
     output: typeof GetProjectsResponseSchema;
+  },
+  /**
+   * @generated from rpc doota.portal.v1.PortalService.CreateProject
+   */
+  createProject: {
+    methodKind: "unary";
+    input: typeof CreateProjectRequestSchema;
+    output: typeof ProjectSchema;
   },
 }>;
 

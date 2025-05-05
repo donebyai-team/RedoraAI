@@ -2,5 +2,7 @@ BEGIN;
 
 DROP TABLE IF EXISTS projects;
 DROP INDEX IF EXISTS fk_projects;
+DROP INDEX IF EXISTS idx1_projects;
+DROP INDEX IF EXISTS idx2_projects;
 
 COMMIT;

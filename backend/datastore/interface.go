@@ -72,6 +72,7 @@ type ProjectRepository interface {
 	CreateProject(ctx context.Context, project *models.Project) (*models.Project, error)
 	GetProjects(ctx context.Context, orgID string) ([]*models.Project, error)
 	GetProject(ctx context.Context, id string) (*models.Project, error)
+	GetProjectByName(ctx context.Context, name, orgID string) (*models.Project, error)
 }
 
 type SourceRepository interface {

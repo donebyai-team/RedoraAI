@@ -8,6 +8,7 @@ package pbportal
 
 import (
 	context "context"
+	v1 "github.com/shank318/doota/pb/doota/core/v1"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -38,6 +39,7 @@ const (
 	PortalService_GetLeadsByStatus_FullMethodName   = "/doota.portal.v1.PortalService/GetLeadsByStatus"
 	PortalService_UpdateLeadStatus_FullMethodName   = "/doota.portal.v1.PortalService/UpdateLeadStatus"
 	PortalService_GetProjects_FullMethodName        = "/doota.portal.v1.PortalService/GetProjects"
+	PortalService_CreateProject_FullMethodName      = "/doota.portal.v1.PortalService/CreateProject"
 )
 
 // PortalServiceClient is the client API for PortalService service.
@@ -65,6 +67,7 @@ type PortalServiceClient interface {
 	GetLeadsByStatus(ctx context.Context, in *GetLeadsByStatusRequest, opts ...grpc.CallOption) (*GetLeadsResponse, error)
 	UpdateLeadStatus(ctx context.Context, in *UpdateLeadStatusRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GetProjects(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetProjectsResponse, error)
+	CreateProject(ctx context.Context, in *CreateProjectRequest, opts ...grpc.CallOption) (*v1.Project, error)
 }
 
 type portalServiceClient struct {
@@ -237,6 +240,15 @@ func (c *portalServiceClient) GetProjects(ctx context.Context, in *emptypb.Empty
 	return out, nil
 }
 
+func (c *portalServiceClient) CreateProject(ctx context.Context, in *CreateProjectRequest, opts ...grpc.CallOption) (*v1.Project, error) {
+	out := new(v1.Project)
+	err := c.cc.Invoke(ctx, PortalService_CreateProject_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PortalServiceServer is the server API for PortalService service.
 // All implementations must embed UnimplementedPortalServiceServer
 // for forward compatibility
@@ -262,6 +274,7 @@ type PortalServiceServer interface {
 	GetLeadsByStatus(context.Context, *GetLeadsByStatusRequest) (*GetLeadsResponse, error)
 	UpdateLeadStatus(context.Context, *UpdateLeadStatusRequest) (*emptypb.Empty, error)
 	GetProjects(context.Context, *emptypb.Empty) (*GetProjectsResponse, error)
+	CreateProject(context.Context, *CreateProjectRequest) (*v1.Project, error)
 	mustEmbedUnimplementedPortalServiceServer()
 }
 
@@ -322,6 +335,9 @@ func (UnimplementedPortalServiceServer) UpdateLeadStatus(context.Context, *Updat
 }
 func (UnimplementedPortalServiceServer) GetProjects(context.Context, *emptypb.Empty) (*GetProjectsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetProjects not implemented")
+}
+func (UnimplementedPortalServiceServer) CreateProject(context.Context, *CreateProjectRequest) (*v1.Project, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateProject not implemented")
 }
 func (UnimplementedPortalServiceServer) mustEmbedUnimplementedPortalServiceServer() {}
 
@@ -660,6 +676,24 @@ func _PortalService_GetProjects_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PortalService_CreateProject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateProjectRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortalServiceServer).CreateProject(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortalService_CreateProject_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortalServiceServer).CreateProject(ctx, req.(*CreateProjectRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // PortalService_ServiceDesc is the grpc.ServiceDesc for PortalService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -738,6 +772,10 @@ var PortalService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetProjects",
 			Handler:    _PortalService_GetProjects_Handler,
+		},
+		{
+			MethodName: "CreateProject",
+			Handler:    _PortalService_CreateProject_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

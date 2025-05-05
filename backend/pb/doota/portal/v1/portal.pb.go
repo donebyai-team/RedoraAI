@@ -225,6 +225,77 @@ func (IntegrationState) EnumDescriptor() ([]byte, []int) {
 	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{3}
 }
 
+type CreateProjectRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Name          string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Description   string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	Website       string `protobuf:"bytes,3,opt,name=website,proto3" json:"website,omitempty"`
+	TargetPersona string `protobuf:"bytes,4,opt,name=target_persona,json=targetPersona,proto3" json:"target_persona,omitempty"`
+}
+
+func (x *CreateProjectRequest) Reset() {
+	*x = CreateProjectRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_doota_portal_v1_portal_proto_msgTypes[0]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *CreateProjectRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateProjectRequest) ProtoMessage() {}
+
+func (x *CreateProjectRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_doota_portal_v1_portal_proto_msgTypes[0]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateProjectRequest.ProtoReflect.Descriptor instead.
+func (*CreateProjectRequest) Descriptor() ([]byte, []int) {
+	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *CreateProjectRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *CreateProjectRequest) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
+func (x *CreateProjectRequest) GetWebsite() string {
+	if x != nil {
+		return x.Website
+	}
+	return ""
+}
+
+func (x *CreateProjectRequest) GetTargetPersona() string {
+	if x != nil {
+		return x.TargetPersona
+	}
+	return ""
+}
+
 type GetProjectsResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -236,7 +307,7 @@ type GetProjectsResponse struct {
 func (x *GetProjectsResponse) Reset() {
 	*x = GetProjectsResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_doota_portal_v1_portal_proto_msgTypes[0]
+		mi := &file_doota_portal_v1_portal_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -249,7 +320,7 @@ func (x *GetProjectsResponse) String() string {
 func (*GetProjectsResponse) ProtoMessage() {}
 
 func (x *GetProjectsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_doota_portal_v1_portal_proto_msgTypes[0]
+	mi := &file_doota_portal_v1_portal_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -262,7 +333,7 @@ func (x *GetProjectsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetProjectsResponse.ProtoReflect.Descriptor instead.
 func (*GetProjectsResponse) Descriptor() ([]byte, []int) {
-	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{0}
+	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *GetProjectsResponse) GetProjects() []*v1.Project {
@@ -284,7 +355,7 @@ type UpdateLeadStatusRequest struct {
 func (x *UpdateLeadStatusRequest) Reset() {
 	*x = UpdateLeadStatusRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_doota_portal_v1_portal_proto_msgTypes[1]
+		mi := &file_doota_portal_v1_portal_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -297,7 +368,7 @@ func (x *UpdateLeadStatusRequest) String() string {
 func (*UpdateLeadStatusRequest) ProtoMessage() {}
 
 func (x *UpdateLeadStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_doota_portal_v1_portal_proto_msgTypes[1]
+	mi := &file_doota_portal_v1_portal_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -310,7 +381,7 @@ func (x *UpdateLeadStatusRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateLeadStatusRequest.ProtoReflect.Descriptor instead.
 func (*UpdateLeadStatusRequest) Descriptor() ([]byte, []int) {
-	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{1}
+	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *UpdateLeadStatusRequest) GetStatus() v1.LeadStatus {
@@ -338,7 +409,7 @@ type GetLeadsByStatusRequest struct {
 func (x *GetLeadsByStatusRequest) Reset() {
 	*x = GetLeadsByStatusRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_doota_portal_v1_portal_proto_msgTypes[2]
+		mi := &file_doota_portal_v1_portal_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -351,7 +422,7 @@ func (x *GetLeadsByStatusRequest) String() string {
 func (*GetLeadsByStatusRequest) ProtoMessage() {}
 
 func (x *GetLeadsByStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_doota_portal_v1_portal_proto_msgTypes[2]
+	mi := &file_doota_portal_v1_portal_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -364,7 +435,7 @@ func (x *GetLeadsByStatusRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetLeadsByStatusRequest.ProtoReflect.Descriptor instead.
 func (*GetLeadsByStatusRequest) Descriptor() ([]byte, []int) {
-	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{2}
+	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *GetLeadsByStatusRequest) GetStatus() v1.LeadStatus {
@@ -386,7 +457,7 @@ type GetRelevantLeadsRequest struct {
 func (x *GetRelevantLeadsRequest) Reset() {
 	*x = GetRelevantLeadsRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_doota_portal_v1_portal_proto_msgTypes[3]
+		mi := &file_doota_portal_v1_portal_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -399,7 +470,7 @@ func (x *GetRelevantLeadsRequest) String() string {
 func (*GetRelevantLeadsRequest) ProtoMessage() {}
 
 func (x *GetRelevantLeadsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_doota_portal_v1_portal_proto_msgTypes[3]
+	mi := &file_doota_portal_v1_portal_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -412,7 +483,7 @@ func (x *GetRelevantLeadsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetRelevantLeadsRequest.ProtoReflect.Descriptor instead.
 func (*GetRelevantLeadsRequest) Descriptor() ([]byte, []int) {
-	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{3}
+	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *GetRelevantLeadsRequest) GetSubReddit() string {
@@ -440,7 +511,7 @@ type GetLeadsResponse struct {
 func (x *GetLeadsResponse) Reset() {
 	*x = GetLeadsResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_doota_portal_v1_portal_proto_msgTypes[4]
+		mi := &file_doota_portal_v1_portal_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -453,7 +524,7 @@ func (x *GetLeadsResponse) String() string {
 func (*GetLeadsResponse) ProtoMessage() {}
 
 func (x *GetLeadsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_doota_portal_v1_portal_proto_msgTypes[4]
+	mi := &file_doota_portal_v1_portal_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -466,7 +537,7 @@ func (x *GetLeadsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetLeadsResponse.ProtoReflect.Descriptor instead.
 func (*GetLeadsResponse) Descriptor() ([]byte, []int) {
-	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{4}
+	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *GetLeadsResponse) GetLeads() []*v1.Lead {
@@ -487,7 +558,7 @@ type AddSourceRequest struct {
 func (x *AddSourceRequest) Reset() {
 	*x = AddSourceRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_doota_portal_v1_portal_proto_msgTypes[5]
+		mi := &file_doota_portal_v1_portal_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -500,7 +571,7 @@ func (x *AddSourceRequest) String() string {
 func (*AddSourceRequest) ProtoMessage() {}
 
 func (x *AddSourceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_doota_portal_v1_portal_proto_msgTypes[5]
+	mi := &file_doota_portal_v1_portal_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -513,7 +584,7 @@ func (x *AddSourceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddSourceRequest.ProtoReflect.Descriptor instead.
 func (*AddSourceRequest) Descriptor() ([]byte, []int) {
-	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{5}
+	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *AddSourceRequest) GetName() string {
@@ -534,7 +605,7 @@ type GetSourceResponse struct {
 func (x *GetSourceResponse) Reset() {
 	*x = GetSourceResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_doota_portal_v1_portal_proto_msgTypes[6]
+		mi := &file_doota_portal_v1_portal_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -547,7 +618,7 @@ func (x *GetSourceResponse) String() string {
 func (*GetSourceResponse) ProtoMessage() {}
 
 func (x *GetSourceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_doota_portal_v1_portal_proto_msgTypes[6]
+	mi := &file_doota_portal_v1_portal_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -560,7 +631,7 @@ func (x *GetSourceResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetSourceResponse.ProtoReflect.Descriptor instead.
 func (*GetSourceResponse) Descriptor() ([]byte, []int) {
-	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{6}
+	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *GetSourceResponse) GetSources() []*v1.Source {
@@ -581,7 +652,7 @@ type RemoveSourceRequest struct {
 func (x *RemoveSourceRequest) Reset() {
 	*x = RemoveSourceRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_doota_portal_v1_portal_proto_msgTypes[7]
+		mi := &file_doota_portal_v1_portal_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -594,7 +665,7 @@ func (x *RemoveSourceRequest) String() string {
 func (*RemoveSourceRequest) ProtoMessage() {}
 
 func (x *RemoveSourceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_doota_portal_v1_portal_proto_msgTypes[7]
+	mi := &file_doota_portal_v1_portal_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -607,7 +678,7 @@ func (x *RemoveSourceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemoveSourceRequest.ProtoReflect.Descriptor instead.
 func (*RemoveSourceRequest) Descriptor() ([]byte, []int) {
-	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{7}
+	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *RemoveSourceRequest) GetId() string {
@@ -633,7 +704,7 @@ type CreateCustomerCaseReq struct {
 func (x *CreateCustomerCaseReq) Reset() {
 	*x = CreateCustomerCaseReq{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_doota_portal_v1_portal_proto_msgTypes[8]
+		mi := &file_doota_portal_v1_portal_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -646,7 +717,7 @@ func (x *CreateCustomerCaseReq) String() string {
 func (*CreateCustomerCaseReq) ProtoMessage() {}
 
 func (x *CreateCustomerCaseReq) ProtoReflect() protoreflect.Message {
-	mi := &file_doota_portal_v1_portal_proto_msgTypes[8]
+	mi := &file_doota_portal_v1_portal_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -659,7 +730,7 @@ func (x *CreateCustomerCaseReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateCustomerCaseReq.ProtoReflect.Descriptor instead.
 func (*CreateCustomerCaseReq) Descriptor() ([]byte, []int) {
-	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{8}
+	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *CreateCustomerCaseReq) GetFirstName() string {
@@ -715,7 +786,7 @@ type CreateKeywordReq struct {
 func (x *CreateKeywordReq) Reset() {
 	*x = CreateKeywordReq{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_doota_portal_v1_portal_proto_msgTypes[9]
+		mi := &file_doota_portal_v1_portal_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -728,7 +799,7 @@ func (x *CreateKeywordReq) String() string {
 func (*CreateKeywordReq) ProtoMessage() {}
 
 func (x *CreateKeywordReq) ProtoReflect() protoreflect.Message {
-	mi := &file_doota_portal_v1_portal_proto_msgTypes[9]
+	mi := &file_doota_portal_v1_portal_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -741,7 +812,7 @@ func (x *CreateKeywordReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateKeywordReq.ProtoReflect.Descriptor instead.
 func (*CreateKeywordReq) Descriptor() ([]byte, []int) {
-	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{9}
+	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *CreateKeywordReq) GetKeyword() string {
@@ -763,7 +834,7 @@ type BatchReq struct {
 func (x *BatchReq) Reset() {
 	*x = BatchReq{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_doota_portal_v1_portal_proto_msgTypes[10]
+		mi := &file_doota_portal_v1_portal_proto_msgTypes[11]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -776,7 +847,7 @@ func (x *BatchReq) String() string {
 func (*BatchReq) ProtoMessage() {}
 
 func (x *BatchReq) ProtoReflect() protoreflect.Message {
-	mi := &file_doota_portal_v1_portal_proto_msgTypes[10]
+	mi := &file_doota_portal_v1_portal_proto_msgTypes[11]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -789,7 +860,7 @@ func (x *BatchReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BatchReq.ProtoReflect.Descriptor instead.
 func (*BatchReq) Descriptor() ([]byte, []int) {
-	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{10}
+	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *BatchReq) GetCsvData() []byte {
@@ -819,7 +890,7 @@ type BatchResp struct {
 func (x *BatchResp) Reset() {
 	*x = BatchResp{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_doota_portal_v1_portal_proto_msgTypes[11]
+		mi := &file_doota_portal_v1_portal_proto_msgTypes[12]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -832,7 +903,7 @@ func (x *BatchResp) String() string {
 func (*BatchResp) ProtoMessage() {}
 
 func (x *BatchResp) ProtoReflect() protoreflect.Message {
-	mi := &file_doota_portal_v1_portal_proto_msgTypes[11]
+	mi := &file_doota_portal_v1_portal_proto_msgTypes[12]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -845,7 +916,7 @@ func (x *BatchResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BatchResp.ProtoReflect.Descriptor instead.
 func (*BatchResp) Descriptor() ([]byte, []int) {
-	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{11}
+	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *BatchResp) GetRows() int32 {
@@ -885,7 +956,7 @@ type Config struct {
 func (x *Config) Reset() {
 	*x = Config{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_doota_portal_v1_portal_proto_msgTypes[12]
+		mi := &file_doota_portal_v1_portal_proto_msgTypes[13]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -898,7 +969,7 @@ func (x *Config) String() string {
 func (*Config) ProtoMessage() {}
 
 func (x *Config) ProtoReflect() protoreflect.Message {
-	mi := &file_doota_portal_v1_portal_proto_msgTypes[12]
+	mi := &file_doota_portal_v1_portal_proto_msgTypes[13]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -911,7 +982,7 @@ func (x *Config) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Config.ProtoReflect.Descriptor instead.
 func (*Config) Descriptor() ([]byte, []int) {
-	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{12}
+	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *Config) GetAuth0Domain() string {
@@ -968,7 +1039,7 @@ type PasswordlessStartRequest struct {
 func (x *PasswordlessStartRequest) Reset() {
 	*x = PasswordlessStartRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_doota_portal_v1_portal_proto_msgTypes[13]
+		mi := &file_doota_portal_v1_portal_proto_msgTypes[14]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -981,7 +1052,7 @@ func (x *PasswordlessStartRequest) String() string {
 func (*PasswordlessStartRequest) ProtoMessage() {}
 
 func (x *PasswordlessStartRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_doota_portal_v1_portal_proto_msgTypes[13]
+	mi := &file_doota_portal_v1_portal_proto_msgTypes[14]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -994,7 +1065,7 @@ func (x *PasswordlessStartRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PasswordlessStartRequest.ProtoReflect.Descriptor instead.
 func (*PasswordlessStartRequest) Descriptor() ([]byte, []int) {
-	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{13}
+	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *PasswordlessStartRequest) GetRedirectUri() string {
@@ -1023,7 +1094,7 @@ type PasswordlessStartVerify struct {
 func (x *PasswordlessStartVerify) Reset() {
 	*x = PasswordlessStartVerify{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_doota_portal_v1_portal_proto_msgTypes[14]
+		mi := &file_doota_portal_v1_portal_proto_msgTypes[15]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1036,7 +1107,7 @@ func (x *PasswordlessStartVerify) String() string {
 func (*PasswordlessStartVerify) ProtoMessage() {}
 
 func (x *PasswordlessStartVerify) ProtoReflect() protoreflect.Message {
-	mi := &file_doota_portal_v1_portal_proto_msgTypes[14]
+	mi := &file_doota_portal_v1_portal_proto_msgTypes[15]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1049,7 +1120,7 @@ func (x *PasswordlessStartVerify) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PasswordlessStartVerify.ProtoReflect.Descriptor instead.
 func (*PasswordlessStartVerify) Descriptor() ([]byte, []int) {
-	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{14}
+	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *PasswordlessStartVerify) GetEmail() string {
@@ -1077,7 +1148,7 @@ type AuthStateRequest struct {
 func (x *AuthStateRequest) Reset() {
 	*x = AuthStateRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_doota_portal_v1_portal_proto_msgTypes[15]
+		mi := &file_doota_portal_v1_portal_proto_msgTypes[16]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1090,7 +1161,7 @@ func (x *AuthStateRequest) String() string {
 func (*AuthStateRequest) ProtoMessage() {}
 
 func (x *AuthStateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_doota_portal_v1_portal_proto_msgTypes[15]
+	mi := &file_doota_portal_v1_portal_proto_msgTypes[16]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1103,7 +1174,7 @@ func (x *AuthStateRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AuthStateRequest.ProtoReflect.Descriptor instead.
 func (*AuthStateRequest) Descriptor() ([]byte, []int) {
-	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{15}
+	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *AuthStateRequest) GetRedirectUri() string {
@@ -1125,7 +1196,7 @@ type State struct {
 func (x *State) Reset() {
 	*x = State{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_doota_portal_v1_portal_proto_msgTypes[16]
+		mi := &file_doota_portal_v1_portal_proto_msgTypes[17]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1138,7 +1209,7 @@ func (x *State) String() string {
 func (*State) ProtoMessage() {}
 
 func (x *State) ProtoReflect() protoreflect.Message {
-	mi := &file_doota_portal_v1_portal_proto_msgTypes[16]
+	mi := &file_doota_portal_v1_portal_proto_msgTypes[17]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1151,7 +1222,7 @@ func (x *State) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use State.ProtoReflect.Descriptor instead.
 func (*State) Descriptor() ([]byte, []int) {
-	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{16}
+	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *State) GetState() string {
@@ -1184,7 +1255,7 @@ type User struct {
 func (x *User) Reset() {
 	*x = User{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_doota_portal_v1_portal_proto_msgTypes[17]
+		mi := &file_doota_portal_v1_portal_proto_msgTypes[18]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1197,7 +1268,7 @@ func (x *User) String() string {
 func (*User) ProtoMessage() {}
 
 func (x *User) ProtoReflect() protoreflect.Message {
-	mi := &file_doota_portal_v1_portal_proto_msgTypes[17]
+	mi := &file_doota_portal_v1_portal_proto_msgTypes[18]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1210,7 +1281,7 @@ func (x *User) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use User.ProtoReflect.Descriptor instead.
 func (*User) Descriptor() ([]byte, []int) {
-	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{17}
+	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *User) GetId() string {
@@ -1267,7 +1338,7 @@ type OauthAuthorizeRequest struct {
 func (x *OauthAuthorizeRequest) Reset() {
 	*x = OauthAuthorizeRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_doota_portal_v1_portal_proto_msgTypes[18]
+		mi := &file_doota_portal_v1_portal_proto_msgTypes[19]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1280,7 +1351,7 @@ func (x *OauthAuthorizeRequest) String() string {
 func (*OauthAuthorizeRequest) ProtoMessage() {}
 
 func (x *OauthAuthorizeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_doota_portal_v1_portal_proto_msgTypes[18]
+	mi := &file_doota_portal_v1_portal_proto_msgTypes[19]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1293,7 +1364,7 @@ func (x *OauthAuthorizeRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OauthAuthorizeRequest.ProtoReflect.Descriptor instead.
 func (*OauthAuthorizeRequest) Descriptor() ([]byte, []int) {
-	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{18}
+	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *OauthAuthorizeRequest) GetIntegrationType() IntegrationType {
@@ -1321,7 +1392,7 @@ type OauthAuthorizeResponse struct {
 func (x *OauthAuthorizeResponse) Reset() {
 	*x = OauthAuthorizeResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_doota_portal_v1_portal_proto_msgTypes[19]
+		mi := &file_doota_portal_v1_portal_proto_msgTypes[20]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1334,7 +1405,7 @@ func (x *OauthAuthorizeResponse) String() string {
 func (*OauthAuthorizeResponse) ProtoMessage() {}
 
 func (x *OauthAuthorizeResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_doota_portal_v1_portal_proto_msgTypes[19]
+	mi := &file_doota_portal_v1_portal_proto_msgTypes[20]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1347,7 +1418,7 @@ func (x *OauthAuthorizeResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OauthAuthorizeResponse.ProtoReflect.Descriptor instead.
 func (*OauthAuthorizeResponse) Descriptor() ([]byte, []int) {
-	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{19}
+	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *OauthAuthorizeResponse) GetAuthorizeUrl() string {
@@ -1369,7 +1440,7 @@ type IssueRequest struct {
 func (x *IssueRequest) Reset() {
 	*x = IssueRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_doota_portal_v1_portal_proto_msgTypes[20]
+		mi := &file_doota_portal_v1_portal_proto_msgTypes[21]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1382,7 +1453,7 @@ func (x *IssueRequest) String() string {
 func (*IssueRequest) ProtoMessage() {}
 
 func (x *IssueRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_doota_portal_v1_portal_proto_msgTypes[20]
+	mi := &file_doota_portal_v1_portal_proto_msgTypes[21]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1395,7 +1466,7 @@ func (x *IssueRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IssueRequest.ProtoReflect.Descriptor instead.
 func (*IssueRequest) Descriptor() ([]byte, []int) {
-	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{20}
+	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *IssueRequest) GetCode() string {
@@ -1424,7 +1495,7 @@ type JWT struct {
 func (x *JWT) Reset() {
 	*x = JWT{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_doota_portal_v1_portal_proto_msgTypes[21]
+		mi := &file_doota_portal_v1_portal_proto_msgTypes[22]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1437,7 +1508,7 @@ func (x *JWT) String() string {
 func (*JWT) ProtoMessage() {}
 
 func (x *JWT) ProtoReflect() protoreflect.Message {
-	mi := &file_doota_portal_v1_portal_proto_msgTypes[21]
+	mi := &file_doota_portal_v1_portal_proto_msgTypes[22]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1450,7 +1521,7 @@ func (x *JWT) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use JWT.ProtoReflect.Descriptor instead.
 func (*JWT) Descriptor() ([]byte, []int) {
-	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{21}
+	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *JWT) GetToken() string {
@@ -1481,7 +1552,7 @@ type Organization struct {
 func (x *Organization) Reset() {
 	*x = Organization{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_doota_portal_v1_portal_proto_msgTypes[22]
+		mi := &file_doota_portal_v1_portal_proto_msgTypes[23]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1494,7 +1565,7 @@ func (x *Organization) String() string {
 func (*Organization) ProtoMessage() {}
 
 func (x *Organization) ProtoReflect() protoreflect.Message {
-	mi := &file_doota_portal_v1_portal_proto_msgTypes[22]
+	mi := &file_doota_portal_v1_portal_proto_msgTypes[23]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1507,7 +1578,7 @@ func (x *Organization) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Organization.ProtoReflect.Descriptor instead.
 func (*Organization) Descriptor() ([]byte, []int) {
-	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{22}
+	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *Organization) GetId() string {
@@ -1547,7 +1618,7 @@ type OrganizationFeatureFlags struct {
 func (x *OrganizationFeatureFlags) Reset() {
 	*x = OrganizationFeatureFlags{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_doota_portal_v1_portal_proto_msgTypes[23]
+		mi := &file_doota_portal_v1_portal_proto_msgTypes[24]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1560,7 +1631,7 @@ func (x *OrganizationFeatureFlags) String() string {
 func (*OrganizationFeatureFlags) ProtoMessage() {}
 
 func (x *OrganizationFeatureFlags) ProtoReflect() protoreflect.Message {
-	mi := &file_doota_portal_v1_portal_proto_msgTypes[23]
+	mi := &file_doota_portal_v1_portal_proto_msgTypes[24]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1573,7 +1644,7 @@ func (x *OrganizationFeatureFlags) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OrganizationFeatureFlags.ProtoReflect.Descriptor instead.
 func (*OrganizationFeatureFlags) Descriptor() ([]byte, []int) {
-	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{23}
+	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{24}
 }
 
 type Integration struct {
@@ -1594,7 +1665,7 @@ type Integration struct {
 func (x *Integration) Reset() {
 	*x = Integration{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_doota_portal_v1_portal_proto_msgTypes[24]
+		mi := &file_doota_portal_v1_portal_proto_msgTypes[25]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1607,7 +1678,7 @@ func (x *Integration) String() string {
 func (*Integration) ProtoMessage() {}
 
 func (x *Integration) ProtoReflect() protoreflect.Message {
-	mi := &file_doota_portal_v1_portal_proto_msgTypes[24]
+	mi := &file_doota_portal_v1_portal_proto_msgTypes[25]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1620,7 +1691,7 @@ func (x *Integration) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Integration.ProtoReflect.Descriptor instead.
 func (*Integration) Descriptor() ([]byte, []int) {
-	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{24}
+	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *Integration) GetId() string {
@@ -1686,7 +1757,7 @@ type RedditIntegration struct {
 func (x *RedditIntegration) Reset() {
 	*x = RedditIntegration{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_doota_portal_v1_portal_proto_msgTypes[25]
+		mi := &file_doota_portal_v1_portal_proto_msgTypes[26]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1699,7 +1770,7 @@ func (x *RedditIntegration) String() string {
 func (*RedditIntegration) ProtoMessage() {}
 
 func (x *RedditIntegration) ProtoReflect() protoreflect.Message {
-	mi := &file_doota_portal_v1_portal_proto_msgTypes[25]
+	mi := &file_doota_portal_v1_portal_proto_msgTypes[26]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1712,7 +1783,7 @@ func (x *RedditIntegration) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RedditIntegration.ProtoReflect.Descriptor instead.
 func (*RedditIntegration) Descriptor() ([]byte, []int) {
-	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{25}
+	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *RedditIntegration) GetUserName() string {
@@ -1733,7 +1804,7 @@ type Integrations struct {
 func (x *Integrations) Reset() {
 	*x = Integrations{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_doota_portal_v1_portal_proto_msgTypes[26]
+		mi := &file_doota_portal_v1_portal_proto_msgTypes[27]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1746,7 +1817,7 @@ func (x *Integrations) String() string {
 func (*Integrations) ProtoMessage() {}
 
 func (x *Integrations) ProtoReflect() protoreflect.Message {
-	mi := &file_doota_portal_v1_portal_proto_msgTypes[26]
+	mi := &file_doota_portal_v1_portal_proto_msgTypes[27]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1759,7 +1830,7 @@ func (x *Integrations) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Integrations.ProtoReflect.Descriptor instead.
 func (*Integrations) Descriptor() ([]byte, []int) {
-	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{26}
+	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *Integrations) GetIntegrations() []*Integration {
@@ -1780,7 +1851,7 @@ type GetIntegrationRequest struct {
 func (x *GetIntegrationRequest) Reset() {
 	*x = GetIntegrationRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_doota_portal_v1_portal_proto_msgTypes[27]
+		mi := &file_doota_portal_v1_portal_proto_msgTypes[28]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1793,7 +1864,7 @@ func (x *GetIntegrationRequest) String() string {
 func (*GetIntegrationRequest) ProtoMessage() {}
 
 func (x *GetIntegrationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_doota_portal_v1_portal_proto_msgTypes[27]
+	mi := &file_doota_portal_v1_portal_proto_msgTypes[28]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1806,7 +1877,7 @@ func (x *GetIntegrationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetIntegrationRequest.ProtoReflect.Descriptor instead.
 func (*GetIntegrationRequest) Descriptor() ([]byte, []int) {
-	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{27}
+	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *GetIntegrationRequest) GetType() IntegrationType {
@@ -1829,7 +1900,7 @@ type AddUserRequest struct {
 func (x *AddUserRequest) Reset() {
 	*x = AddUserRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_doota_portal_v1_portal_proto_msgTypes[28]
+		mi := &file_doota_portal_v1_portal_proto_msgTypes[29]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1842,7 +1913,7 @@ func (x *AddUserRequest) String() string {
 func (*AddUserRequest) ProtoMessage() {}
 
 func (x *AddUserRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_doota_portal_v1_portal_proto_msgTypes[28]
+	mi := &file_doota_portal_v1_portal_proto_msgTypes[29]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1855,7 +1926,7 @@ func (x *AddUserRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddUserRequest.ProtoReflect.Descriptor instead.
 func (*AddUserRequest) Descriptor() ([]byte, []int) {
-	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{28}
+	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *AddUserRequest) GetEmail() string {
@@ -1890,7 +1961,7 @@ type RenewUserRequest struct {
 func (x *RenewUserRequest) Reset() {
 	*x = RenewUserRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_doota_portal_v1_portal_proto_msgTypes[29]
+		mi := &file_doota_portal_v1_portal_proto_msgTypes[30]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1903,7 +1974,7 @@ func (x *RenewUserRequest) String() string {
 func (*RenewUserRequest) ProtoMessage() {}
 
 func (x *RenewUserRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_doota_portal_v1_portal_proto_msgTypes[29]
+	mi := &file_doota_portal_v1_portal_proto_msgTypes[30]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1916,7 +1987,7 @@ func (x *RenewUserRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RenewUserRequest.ProtoReflect.Descriptor instead.
 func (*RenewUserRequest) Descriptor() ([]byte, []int) {
-	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{29}
+	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *RenewUserRequest) GetMessageSourceId() string {
@@ -1938,7 +2009,7 @@ type MessageSourceOptions struct {
 func (x *MessageSourceOptions) Reset() {
 	*x = MessageSourceOptions{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_doota_portal_v1_portal_proto_msgTypes[30]
+		mi := &file_doota_portal_v1_portal_proto_msgTypes[31]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1951,7 +2022,7 @@ func (x *MessageSourceOptions) String() string {
 func (*MessageSourceOptions) ProtoMessage() {}
 
 func (x *MessageSourceOptions) ProtoReflect() protoreflect.Message {
-	mi := &file_doota_portal_v1_portal_proto_msgTypes[30]
+	mi := &file_doota_portal_v1_portal_proto_msgTypes[31]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1964,7 +2035,7 @@ func (x *MessageSourceOptions) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MessageSourceOptions.ProtoReflect.Descriptor instead.
 func (*MessageSourceOptions) Descriptor() ([]byte, []int) {
-	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{30}
+	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *MessageSourceOptions) GetIntegrationId() string {
@@ -1993,7 +2064,7 @@ type OauthCallbackRequest struct {
 func (x *OauthCallbackRequest) Reset() {
 	*x = OauthCallbackRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_doota_portal_v1_portal_proto_msgTypes[31]
+		mi := &file_doota_portal_v1_portal_proto_msgTypes[32]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2006,7 +2077,7 @@ func (x *OauthCallbackRequest) String() string {
 func (*OauthCallbackRequest) ProtoMessage() {}
 
 func (x *OauthCallbackRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_doota_portal_v1_portal_proto_msgTypes[31]
+	mi := &file_doota_portal_v1_portal_proto_msgTypes[32]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2019,7 +2090,7 @@ func (x *OauthCallbackRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OauthCallbackRequest.ProtoReflect.Descriptor instead.
 func (*OauthCallbackRequest) Descriptor() ([]byte, []int) {
-	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{31}
+	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *OauthCallbackRequest) GetState() string {
@@ -2047,7 +2118,7 @@ type OauthCallbackResponse struct {
 func (x *OauthCallbackResponse) Reset() {
 	*x = OauthCallbackResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_doota_portal_v1_portal_proto_msgTypes[32]
+		mi := &file_doota_portal_v1_portal_proto_msgTypes[33]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2060,7 +2131,7 @@ func (x *OauthCallbackResponse) String() string {
 func (*OauthCallbackResponse) ProtoMessage() {}
 
 func (x *OauthCallbackResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_doota_portal_v1_portal_proto_msgTypes[32]
+	mi := &file_doota_portal_v1_portal_proto_msgTypes[33]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2073,7 +2144,7 @@ func (x *OauthCallbackResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OauthCallbackResponse.ProtoReflect.Descriptor instead.
 func (*OauthCallbackResponse) Descriptor() ([]byte, []int) {
-	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{32}
+	return file_doota_portal_v1_portal_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *OauthCallbackResponse) GetRedirectUrl() string {
@@ -2094,7 +2165,16 @@ var file_doota_portal_v1_portal_proto_rawDesc = []byte{
 	0x1a, 0x1b, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75,
 	0x66, 0x2f, 0x65, 0x6d, 0x70, 0x74, 0x79, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x18, 0x64,
 	0x6f, 0x6f, 0x74, 0x61, 0x2f, 0x63, 0x6f, 0x72, 0x65, 0x2f, 0x76, 0x31, 0x2f, 0x63, 0x6f, 0x72,
-	0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x49, 0x0a, 0x13, 0x47, 0x65, 0x74, 0x50, 0x72,
+	0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x8d, 0x01, 0x0a, 0x14, 0x43, 0x72, 0x65, 0x61,
+	0x74, 0x65, 0x50, 0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04,
+	0x6e, 0x61, 0x6d, 0x65, 0x12, 0x20, 0x0a, 0x0b, 0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74,
+	0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x64, 0x65, 0x73, 0x63, 0x72,
+	0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x18, 0x0a, 0x07, 0x77, 0x65, 0x62, 0x73, 0x69, 0x74,
+	0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x77, 0x65, 0x62, 0x73, 0x69, 0x74, 0x65,
+	0x12, 0x25, 0x0a, 0x0e, 0x74, 0x61, 0x72, 0x67, 0x65, 0x74, 0x5f, 0x70, 0x65, 0x72, 0x73, 0x6f,
+	0x6e, 0x61, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0d, 0x74, 0x61, 0x72, 0x67, 0x65, 0x74,
+	0x50, 0x65, 0x72, 0x73, 0x6f, 0x6e, 0x61, 0x22, 0x49, 0x0a, 0x13, 0x47, 0x65, 0x74, 0x50, 0x72,
 	0x6f, 0x6a, 0x65, 0x63, 0x74, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x32,
 	0x0a, 0x08, 0x70, 0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b,
 	0x32, 0x16, 0x2e, 0x64, 0x6f, 0x6f, 0x74, 0x61, 0x2e, 0x63, 0x6f, 0x72, 0x65, 0x2e, 0x76, 0x31,
@@ -2337,7 +2417,7 @@ var file_doota_portal_v1_portal_proto_rawDesc = []byte{
 	0x53, 0x54, 0x41, 0x54, 0x45, 0x5f, 0x41, 0x43, 0x54, 0x49, 0x56, 0x45, 0x10, 0x01, 0x12, 0x22,
 	0x0a, 0x1e, 0x49, 0x4e, 0x54, 0x45, 0x47, 0x52, 0x41, 0x54, 0x49, 0x4f, 0x4e, 0x5f, 0x53, 0x54,
 	0x41, 0x54, 0x45, 0x5f, 0x41, 0x55, 0x54, 0x48, 0x5f, 0x52, 0x45, 0x56, 0x4f, 0x4b, 0x45, 0x44,
-	0x10, 0x02, 0x32, 0xbe, 0x0b, 0x0a, 0x0d, 0x50, 0x6f, 0x72, 0x74, 0x61, 0x6c, 0x53, 0x65, 0x72,
+	0x10, 0x02, 0x32, 0x8e, 0x0c, 0x0a, 0x0d, 0x50, 0x6f, 0x72, 0x74, 0x61, 0x6c, 0x53, 0x65, 0x72,
 	0x76, 0x69, 0x63, 0x65, 0x12, 0x3c, 0x0a, 0x09, 0x47, 0x65, 0x74, 0x43, 0x6f, 0x6e, 0x66, 0x69,
 	0x67, 0x12, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
 	0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x17, 0x2e, 0x64, 0x6f, 0x6f, 0x74,
@@ -2429,7 +2509,12 @@ var file_doota_portal_v1_portal_proto_rawDesc = []byte{
 	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x24, 0x2e,
 	0x64, 0x6f, 0x6f, 0x74, 0x61, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x61, 0x6c, 0x2e, 0x76, 0x31, 0x2e,
 	0x47, 0x65, 0x74, 0x50, 0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x42, 0x37, 0x5a, 0x35, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f,
+	0x6e, 0x73, 0x65, 0x12, 0x4e, 0x0a, 0x0d, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x50, 0x72, 0x6f,
+	0x6a, 0x65, 0x63, 0x74, 0x12, 0x25, 0x2e, 0x64, 0x6f, 0x6f, 0x74, 0x61, 0x2e, 0x70, 0x6f, 0x72,
+	0x74, 0x61, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x50, 0x72, 0x6f,
+	0x6a, 0x65, 0x63, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x16, 0x2e, 0x64, 0x6f,
+	0x6f, 0x74, 0x61, 0x2e, 0x63, 0x6f, 0x72, 0x65, 0x2e, 0x76, 0x31, 0x2e, 0x50, 0x72, 0x6f, 0x6a,
+	0x65, 0x63, 0x74, 0x42, 0x37, 0x5a, 0x35, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f,
 	0x6d, 0x2f, 0x73, 0x68, 0x61, 0x6e, 0x6b, 0x33, 0x31, 0x38, 0x2f, 0x64, 0x6f, 0x6f, 0x74, 0x61,
 	0x2f, 0x70, 0x62, 0x2f, 0x64, 0x6f, 0x6f, 0x74, 0x61, 0x2f, 0x70, 0x6f, 0x72, 0x74, 0x61, 0x6c,
 	0x2f, 0x76, 0x31, 0x3b, 0x70, 0x62, 0x70, 0x6f, 0x72, 0x74, 0x61, 0x6c, 0x62, 0x06, 0x70, 0x72,
@@ -2449,109 +2534,112 @@ func file_doota_portal_v1_portal_proto_rawDescGZIP() []byte {
 }
 
 var file_doota_portal_v1_portal_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
-var file_doota_portal_v1_portal_proto_msgTypes = make([]protoimpl.MessageInfo, 33)
+var file_doota_portal_v1_portal_proto_msgTypes = make([]protoimpl.MessageInfo, 34)
 var file_doota_portal_v1_portal_proto_goTypes = []interface{}{
 	(OauthAuthorizeType)(0),          // 0: doota.portal.v1.OauthAuthorizeType
 	(UserRole)(0),                    // 1: doota.portal.v1.UserRole
 	(IntegrationType)(0),             // 2: doota.portal.v1.IntegrationType
 	(IntegrationState)(0),            // 3: doota.portal.v1.IntegrationState
-	(*GetProjectsResponse)(nil),      // 4: doota.portal.v1.GetProjectsResponse
-	(*UpdateLeadStatusRequest)(nil),  // 5: doota.portal.v1.UpdateLeadStatusRequest
-	(*GetLeadsByStatusRequest)(nil),  // 6: doota.portal.v1.GetLeadsByStatusRequest
-	(*GetRelevantLeadsRequest)(nil),  // 7: doota.portal.v1.GetRelevantLeadsRequest
-	(*GetLeadsResponse)(nil),         // 8: doota.portal.v1.GetLeadsResponse
-	(*AddSourceRequest)(nil),         // 9: doota.portal.v1.AddSourceRequest
-	(*GetSourceResponse)(nil),        // 10: doota.portal.v1.GetSourceResponse
-	(*RemoveSourceRequest)(nil),      // 11: doota.portal.v1.RemoveSourceRequest
-	(*CreateCustomerCaseReq)(nil),    // 12: doota.portal.v1.CreateCustomerCaseReq
-	(*CreateKeywordReq)(nil),         // 13: doota.portal.v1.CreateKeywordReq
-	(*BatchReq)(nil),                 // 14: doota.portal.v1.BatchReq
-	(*BatchResp)(nil),                // 15: doota.portal.v1.BatchResp
-	(*Config)(nil),                   // 16: doota.portal.v1.Config
-	(*PasswordlessStartRequest)(nil), // 17: doota.portal.v1.PasswordlessStartRequest
-	(*PasswordlessStartVerify)(nil),  // 18: doota.portal.v1.PasswordlessStartVerify
-	(*AuthStateRequest)(nil),         // 19: doota.portal.v1.AuthStateRequest
-	(*State)(nil),                    // 20: doota.portal.v1.State
-	(*User)(nil),                     // 21: doota.portal.v1.User
-	(*OauthAuthorizeRequest)(nil),    // 22: doota.portal.v1.OauthAuthorizeRequest
-	(*OauthAuthorizeResponse)(nil),   // 23: doota.portal.v1.OauthAuthorizeResponse
-	(*IssueRequest)(nil),             // 24: doota.portal.v1.IssueRequest
-	(*JWT)(nil),                      // 25: doota.portal.v1.JWT
-	(*Organization)(nil),             // 26: doota.portal.v1.Organization
-	(*OrganizationFeatureFlags)(nil), // 27: doota.portal.v1.OrganizationFeatureFlags
-	(*Integration)(nil),              // 28: doota.portal.v1.Integration
-	(*RedditIntegration)(nil),        // 29: doota.portal.v1.RedditIntegration
-	(*Integrations)(nil),             // 30: doota.portal.v1.Integrations
-	(*GetIntegrationRequest)(nil),    // 31: doota.portal.v1.GetIntegrationRequest
-	(*AddUserRequest)(nil),           // 32: doota.portal.v1.AddUserRequest
-	(*RenewUserRequest)(nil),         // 33: doota.portal.v1.RenewUserRequest
-	(*MessageSourceOptions)(nil),     // 34: doota.portal.v1.MessageSourceOptions
-	(*OauthCallbackRequest)(nil),     // 35: doota.portal.v1.OauthCallbackRequest
-	(*OauthCallbackResponse)(nil),    // 36: doota.portal.v1.OauthCallbackResponse
-	(*v1.Project)(nil),               // 37: doota.core.v1.Project
-	(v1.LeadStatus)(0),               // 38: doota.core.v1.LeadStatus
-	(*v1.Lead)(nil),                  // 39: doota.core.v1.Lead
-	(*v1.Source)(nil),                // 40: doota.core.v1.Source
-	(*timestamppb.Timestamp)(nil),    // 41: google.protobuf.Timestamp
-	(*emptypb.Empty)(nil),            // 42: google.protobuf.Empty
+	(*CreateProjectRequest)(nil),     // 4: doota.portal.v1.CreateProjectRequest
+	(*GetProjectsResponse)(nil),      // 5: doota.portal.v1.GetProjectsResponse
+	(*UpdateLeadStatusRequest)(nil),  // 6: doota.portal.v1.UpdateLeadStatusRequest
+	(*GetLeadsByStatusRequest)(nil),  // 7: doota.portal.v1.GetLeadsByStatusRequest
+	(*GetRelevantLeadsRequest)(nil),  // 8: doota.portal.v1.GetRelevantLeadsRequest
+	(*GetLeadsResponse)(nil),         // 9: doota.portal.v1.GetLeadsResponse
+	(*AddSourceRequest)(nil),         // 10: doota.portal.v1.AddSourceRequest
+	(*GetSourceResponse)(nil),        // 11: doota.portal.v1.GetSourceResponse
+	(*RemoveSourceRequest)(nil),      // 12: doota.portal.v1.RemoveSourceRequest
+	(*CreateCustomerCaseReq)(nil),    // 13: doota.portal.v1.CreateCustomerCaseReq
+	(*CreateKeywordReq)(nil),         // 14: doota.portal.v1.CreateKeywordReq
+	(*BatchReq)(nil),                 // 15: doota.portal.v1.BatchReq
+	(*BatchResp)(nil),                // 16: doota.portal.v1.BatchResp
+	(*Config)(nil),                   // 17: doota.portal.v1.Config
+	(*PasswordlessStartRequest)(nil), // 18: doota.portal.v1.PasswordlessStartRequest
+	(*PasswordlessStartVerify)(nil),  // 19: doota.portal.v1.PasswordlessStartVerify
+	(*AuthStateRequest)(nil),         // 20: doota.portal.v1.AuthStateRequest
+	(*State)(nil),                    // 21: doota.portal.v1.State
+	(*User)(nil),                     // 22: doota.portal.v1.User
+	(*OauthAuthorizeRequest)(nil),    // 23: doota.portal.v1.OauthAuthorizeRequest
+	(*OauthAuthorizeResponse)(nil),   // 24: doota.portal.v1.OauthAuthorizeResponse
+	(*IssueRequest)(nil),             // 25: doota.portal.v1.IssueRequest
+	(*JWT)(nil),                      // 26: doota.portal.v1.JWT
+	(*Organization)(nil),             // 27: doota.portal.v1.Organization
+	(*OrganizationFeatureFlags)(nil), // 28: doota.portal.v1.OrganizationFeatureFlags
+	(*Integration)(nil),              // 29: doota.portal.v1.Integration
+	(*RedditIntegration)(nil),        // 30: doota.portal.v1.RedditIntegration
+	(*Integrations)(nil),             // 31: doota.portal.v1.Integrations
+	(*GetIntegrationRequest)(nil),    // 32: doota.portal.v1.GetIntegrationRequest
+	(*AddUserRequest)(nil),           // 33: doota.portal.v1.AddUserRequest
+	(*RenewUserRequest)(nil),         // 34: doota.portal.v1.RenewUserRequest
+	(*MessageSourceOptions)(nil),     // 35: doota.portal.v1.MessageSourceOptions
+	(*OauthCallbackRequest)(nil),     // 36: doota.portal.v1.OauthCallbackRequest
+	(*OauthCallbackResponse)(nil),    // 37: doota.portal.v1.OauthCallbackResponse
+	(*v1.Project)(nil),               // 38: doota.core.v1.Project
+	(v1.LeadStatus)(0),               // 39: doota.core.v1.LeadStatus
+	(*v1.Lead)(nil),                  // 40: doota.core.v1.Lead
+	(*v1.Source)(nil),                // 41: doota.core.v1.Source
+	(*timestamppb.Timestamp)(nil),    // 42: google.protobuf.Timestamp
+	(*emptypb.Empty)(nil),            // 43: google.protobuf.Empty
 }
 var file_doota_portal_v1_portal_proto_depIdxs = []int32{
-	37, // 0: doota.portal.v1.GetProjectsResponse.projects:type_name -> doota.core.v1.Project
-	38, // 1: doota.portal.v1.UpdateLeadStatusRequest.status:type_name -> doota.core.v1.LeadStatus
-	38, // 2: doota.portal.v1.GetLeadsByStatusRequest.status:type_name -> doota.core.v1.LeadStatus
-	39, // 3: doota.portal.v1.GetLeadsResponse.leads:type_name -> doota.core.v1.Lead
-	40, // 4: doota.portal.v1.GetSourceResponse.sources:type_name -> doota.core.v1.Source
+	38, // 0: doota.portal.v1.GetProjectsResponse.projects:type_name -> doota.core.v1.Project
+	39, // 1: doota.portal.v1.UpdateLeadStatusRequest.status:type_name -> doota.core.v1.LeadStatus
+	39, // 2: doota.portal.v1.GetLeadsByStatusRequest.status:type_name -> doota.core.v1.LeadStatus
+	40, // 3: doota.portal.v1.GetLeadsResponse.leads:type_name -> doota.core.v1.Lead
+	41, // 4: doota.portal.v1.GetSourceResponse.sources:type_name -> doota.core.v1.Source
 	1,  // 5: doota.portal.v1.User.role:type_name -> doota.portal.v1.UserRole
-	26, // 6: doota.portal.v1.User.organizations:type_name -> doota.portal.v1.Organization
-	41, // 7: doota.portal.v1.User.created_at:type_name -> google.protobuf.Timestamp
+	27, // 6: doota.portal.v1.User.organizations:type_name -> doota.portal.v1.Organization
+	42, // 7: doota.portal.v1.User.created_at:type_name -> google.protobuf.Timestamp
 	2,  // 8: doota.portal.v1.OauthAuthorizeRequest.integration_type:type_name -> doota.portal.v1.IntegrationType
-	27, // 9: doota.portal.v1.Organization.feature_flags:type_name -> doota.portal.v1.OrganizationFeatureFlags
-	41, // 10: doota.portal.v1.Organization.created_at:type_name -> google.protobuf.Timestamp
+	28, // 9: doota.portal.v1.Organization.feature_flags:type_name -> doota.portal.v1.OrganizationFeatureFlags
+	42, // 10: doota.portal.v1.Organization.created_at:type_name -> google.protobuf.Timestamp
 	2,  // 11: doota.portal.v1.Integration.type:type_name -> doota.portal.v1.IntegrationType
 	3,  // 12: doota.portal.v1.Integration.status:type_name -> doota.portal.v1.IntegrationState
-	29, // 13: doota.portal.v1.Integration.reddit:type_name -> doota.portal.v1.RedditIntegration
-	28, // 14: doota.portal.v1.Integrations.integrations:type_name -> doota.portal.v1.Integration
+	30, // 13: doota.portal.v1.Integration.reddit:type_name -> doota.portal.v1.RedditIntegration
+	29, // 14: doota.portal.v1.Integrations.integrations:type_name -> doota.portal.v1.Integration
 	2,  // 15: doota.portal.v1.GetIntegrationRequest.type:type_name -> doota.portal.v1.IntegrationType
-	34, // 16: doota.portal.v1.AddUserRequest.message_source:type_name -> doota.portal.v1.MessageSourceOptions
+	35, // 16: doota.portal.v1.AddUserRequest.message_source:type_name -> doota.portal.v1.MessageSourceOptions
 	2,  // 17: doota.portal.v1.AddUserRequest.integration_type:type_name -> doota.portal.v1.IntegrationType
-	42, // 18: doota.portal.v1.PortalService.GetConfig:input_type -> google.protobuf.Empty
-	42, // 19: doota.portal.v1.PortalService.Self:input_type -> google.protobuf.Empty
-	31, // 20: doota.portal.v1.PortalService.GetIntegration:input_type -> doota.portal.v1.GetIntegrationRequest
-	14, // 21: doota.portal.v1.PortalService.Batch:input_type -> doota.portal.v1.BatchReq
-	12, // 22: doota.portal.v1.PortalService.CreateCustomerCase:input_type -> doota.portal.v1.CreateCustomerCaseReq
-	17, // 23: doota.portal.v1.PortalService.PasswordlessStart:input_type -> doota.portal.v1.PasswordlessStartRequest
-	18, // 24: doota.portal.v1.PortalService.PasswordlessVerify:input_type -> doota.portal.v1.PasswordlessStartVerify
-	22, // 25: doota.portal.v1.PortalService.OauthAuthorize:input_type -> doota.portal.v1.OauthAuthorizeRequest
-	35, // 26: doota.portal.v1.PortalService.OauthCallback:input_type -> doota.portal.v1.OauthCallbackRequest
-	42, // 27: doota.portal.v1.PortalService.GetIntegrations:input_type -> google.protobuf.Empty
-	13, // 28: doota.portal.v1.PortalService.CreateKeyword:input_type -> doota.portal.v1.CreateKeywordReq
-	9,  // 29: doota.portal.v1.PortalService.AddSource:input_type -> doota.portal.v1.AddSourceRequest
-	42, // 30: doota.portal.v1.PortalService.GetSources:input_type -> google.protobuf.Empty
-	11, // 31: doota.portal.v1.PortalService.RemoveSource:input_type -> doota.portal.v1.RemoveSourceRequest
-	7,  // 32: doota.portal.v1.PortalService.GetRelevantLeads:input_type -> doota.portal.v1.GetRelevantLeadsRequest
-	6,  // 33: doota.portal.v1.PortalService.GetLeadsByStatus:input_type -> doota.portal.v1.GetLeadsByStatusRequest
-	5,  // 34: doota.portal.v1.PortalService.UpdateLeadStatus:input_type -> doota.portal.v1.UpdateLeadStatusRequest
-	42, // 35: doota.portal.v1.PortalService.GetProjects:input_type -> google.protobuf.Empty
-	16, // 36: doota.portal.v1.PortalService.GetConfig:output_type -> doota.portal.v1.Config
-	21, // 37: doota.portal.v1.PortalService.Self:output_type -> doota.portal.v1.User
-	28, // 38: doota.portal.v1.PortalService.GetIntegration:output_type -> doota.portal.v1.Integration
-	15, // 39: doota.portal.v1.PortalService.Batch:output_type -> doota.portal.v1.BatchResp
-	42, // 40: doota.portal.v1.PortalService.CreateCustomerCase:output_type -> google.protobuf.Empty
-	42, // 41: doota.portal.v1.PortalService.PasswordlessStart:output_type -> google.protobuf.Empty
-	25, // 42: doota.portal.v1.PortalService.PasswordlessVerify:output_type -> doota.portal.v1.JWT
-	23, // 43: doota.portal.v1.PortalService.OauthAuthorize:output_type -> doota.portal.v1.OauthAuthorizeResponse
-	36, // 44: doota.portal.v1.PortalService.OauthCallback:output_type -> doota.portal.v1.OauthCallbackResponse
-	30, // 45: doota.portal.v1.PortalService.GetIntegrations:output_type -> doota.portal.v1.Integrations
-	42, // 46: doota.portal.v1.PortalService.CreateKeyword:output_type -> google.protobuf.Empty
-	42, // 47: doota.portal.v1.PortalService.AddSource:output_type -> google.protobuf.Empty
-	10, // 48: doota.portal.v1.PortalService.GetSources:output_type -> doota.portal.v1.GetSourceResponse
-	42, // 49: doota.portal.v1.PortalService.RemoveSource:output_type -> google.protobuf.Empty
-	8,  // 50: doota.portal.v1.PortalService.GetRelevantLeads:output_type -> doota.portal.v1.GetLeadsResponse
-	8,  // 51: doota.portal.v1.PortalService.GetLeadsByStatus:output_type -> doota.portal.v1.GetLeadsResponse
-	42, // 52: doota.portal.v1.PortalService.UpdateLeadStatus:output_type -> google.protobuf.Empty
-	4,  // 53: doota.portal.v1.PortalService.GetProjects:output_type -> doota.portal.v1.GetProjectsResponse
-	36, // [36:54] is the sub-list for method output_type
-	18, // [18:36] is the sub-list for method input_type
+	43, // 18: doota.portal.v1.PortalService.GetConfig:input_type -> google.protobuf.Empty
+	43, // 19: doota.portal.v1.PortalService.Self:input_type -> google.protobuf.Empty
+	32, // 20: doota.portal.v1.PortalService.GetIntegration:input_type -> doota.portal.v1.GetIntegrationRequest
+	15, // 21: doota.portal.v1.PortalService.Batch:input_type -> doota.portal.v1.BatchReq
+	13, // 22: doota.portal.v1.PortalService.CreateCustomerCase:input_type -> doota.portal.v1.CreateCustomerCaseReq
+	18, // 23: doota.portal.v1.PortalService.PasswordlessStart:input_type -> doota.portal.v1.PasswordlessStartRequest
+	19, // 24: doota.portal.v1.PortalService.PasswordlessVerify:input_type -> doota.portal.v1.PasswordlessStartVerify
+	23, // 25: doota.portal.v1.PortalService.OauthAuthorize:input_type -> doota.portal.v1.OauthAuthorizeRequest
+	36, // 26: doota.portal.v1.PortalService.OauthCallback:input_type -> doota.portal.v1.OauthCallbackRequest
+	43, // 27: doota.portal.v1.PortalService.GetIntegrations:input_type -> google.protobuf.Empty
+	14, // 28: doota.portal.v1.PortalService.CreateKeyword:input_type -> doota.portal.v1.CreateKeywordReq
+	10, // 29: doota.portal.v1.PortalService.AddSource:input_type -> doota.portal.v1.AddSourceRequest
+	43, // 30: doota.portal.v1.PortalService.GetSources:input_type -> google.protobuf.Empty
+	12, // 31: doota.portal.v1.PortalService.RemoveSource:input_type -> doota.portal.v1.RemoveSourceRequest
+	8,  // 32: doota.portal.v1.PortalService.GetRelevantLeads:input_type -> doota.portal.v1.GetRelevantLeadsRequest
+	7,  // 33: doota.portal.v1.PortalService.GetLeadsByStatus:input_type -> doota.portal.v1.GetLeadsByStatusRequest
+	6,  // 34: doota.portal.v1.PortalService.UpdateLeadStatus:input_type -> doota.portal.v1.UpdateLeadStatusRequest
+	43, // 35: doota.portal.v1.PortalService.GetProjects:input_type -> google.protobuf.Empty
+	4,  // 36: doota.portal.v1.PortalService.CreateProject:input_type -> doota.portal.v1.CreateProjectRequest
+	17, // 37: doota.portal.v1.PortalService.GetConfig:output_type -> doota.portal.v1.Config
+	22, // 38: doota.portal.v1.PortalService.Self:output_type -> doota.portal.v1.User
+	29, // 39: doota.portal.v1.PortalService.GetIntegration:output_type -> doota.portal.v1.Integration
+	16, // 40: doota.portal.v1.PortalService.Batch:output_type -> doota.portal.v1.BatchResp
+	43, // 41: doota.portal.v1.PortalService.CreateCustomerCase:output_type -> google.protobuf.Empty
+	43, // 42: doota.portal.v1.PortalService.PasswordlessStart:output_type -> google.protobuf.Empty
+	26, // 43: doota.portal.v1.PortalService.PasswordlessVerify:output_type -> doota.portal.v1.JWT
+	24, // 44: doota.portal.v1.PortalService.OauthAuthorize:output_type -> doota.portal.v1.OauthAuthorizeResponse
+	37, // 45: doota.portal.v1.PortalService.OauthCallback:output_type -> doota.portal.v1.OauthCallbackResponse
+	31, // 46: doota.portal.v1.PortalService.GetIntegrations:output_type -> doota.portal.v1.Integrations
+	43, // 47: doota.portal.v1.PortalService.CreateKeyword:output_type -> google.protobuf.Empty
+	43, // 48: doota.portal.v1.PortalService.AddSource:output_type -> google.protobuf.Empty
+	11, // 49: doota.portal.v1.PortalService.GetSources:output_type -> doota.portal.v1.GetSourceResponse
+	43, // 50: doota.portal.v1.PortalService.RemoveSource:output_type -> google.protobuf.Empty
+	9,  // 51: doota.portal.v1.PortalService.GetRelevantLeads:output_type -> doota.portal.v1.GetLeadsResponse
+	9,  // 52: doota.portal.v1.PortalService.GetLeadsByStatus:output_type -> doota.portal.v1.GetLeadsResponse
+	43, // 53: doota.portal.v1.PortalService.UpdateLeadStatus:output_type -> google.protobuf.Empty
+	5,  // 54: doota.portal.v1.PortalService.GetProjects:output_type -> doota.portal.v1.GetProjectsResponse
+	38, // 55: doota.portal.v1.PortalService.CreateProject:output_type -> doota.core.v1.Project
+	37, // [37:56] is the sub-list for method output_type
+	18, // [18:37] is the sub-list for method input_type
 	18, // [18:18] is the sub-list for extension type_name
 	18, // [18:18] is the sub-list for extension extendee
 	0,  // [0:18] is the sub-list for field type_name
@@ -2564,7 +2652,7 @@ func file_doota_portal_v1_portal_proto_init() {
 	}
 	if !protoimpl.UnsafeEnabled {
 		file_doota_portal_v1_portal_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetProjectsResponse); i {
+			switch v := v.(*CreateProjectRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2576,7 +2664,7 @@ func file_doota_portal_v1_portal_proto_init() {
 			}
 		}
 		file_doota_portal_v1_portal_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*UpdateLeadStatusRequest); i {
+			switch v := v.(*GetProjectsResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2588,7 +2676,7 @@ func file_doota_portal_v1_portal_proto_init() {
 			}
 		}
 		file_doota_portal_v1_portal_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetLeadsByStatusRequest); i {
+			switch v := v.(*UpdateLeadStatusRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2600,7 +2688,7 @@ func file_doota_portal_v1_portal_proto_init() {
 			}
 		}
 		file_doota_portal_v1_portal_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetRelevantLeadsRequest); i {
+			switch v := v.(*GetLeadsByStatusRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2612,7 +2700,7 @@ func file_doota_portal_v1_portal_proto_init() {
 			}
 		}
 		file_doota_portal_v1_portal_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetLeadsResponse); i {
+			switch v := v.(*GetRelevantLeadsRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2624,7 +2712,7 @@ func file_doota_portal_v1_portal_proto_init() {
 			}
 		}
 		file_doota_portal_v1_portal_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AddSourceRequest); i {
+			switch v := v.(*GetLeadsResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2636,7 +2724,7 @@ func file_doota_portal_v1_portal_proto_init() {
 			}
 		}
 		file_doota_portal_v1_portal_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetSourceResponse); i {
+			switch v := v.(*AddSourceRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2648,7 +2736,7 @@ func file_doota_portal_v1_portal_proto_init() {
 			}
 		}
 		file_doota_portal_v1_portal_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*RemoveSourceRequest); i {
+			switch v := v.(*GetSourceResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2660,7 +2748,7 @@ func file_doota_portal_v1_portal_proto_init() {
 			}
 		}
 		file_doota_portal_v1_portal_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CreateCustomerCaseReq); i {
+			switch v := v.(*RemoveSourceRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2672,7 +2760,7 @@ func file_doota_portal_v1_portal_proto_init() {
 			}
 		}
 		file_doota_portal_v1_portal_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CreateKeywordReq); i {
+			switch v := v.(*CreateCustomerCaseReq); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2684,7 +2772,7 @@ func file_doota_portal_v1_portal_proto_init() {
 			}
 		}
 		file_doota_portal_v1_portal_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*BatchReq); i {
+			switch v := v.(*CreateKeywordReq); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2696,7 +2784,7 @@ func file_doota_portal_v1_portal_proto_init() {
 			}
 		}
 		file_doota_portal_v1_portal_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*BatchResp); i {
+			switch v := v.(*BatchReq); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2708,7 +2796,7 @@ func file_doota_portal_v1_portal_proto_init() {
 			}
 		}
 		file_doota_portal_v1_portal_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Config); i {
+			switch v := v.(*BatchResp); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2720,7 +2808,7 @@ func file_doota_portal_v1_portal_proto_init() {
 			}
 		}
 		file_doota_portal_v1_portal_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*PasswordlessStartRequest); i {
+			switch v := v.(*Config); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2732,7 +2820,7 @@ func file_doota_portal_v1_portal_proto_init() {
 			}
 		}
 		file_doota_portal_v1_portal_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*PasswordlessStartVerify); i {
+			switch v := v.(*PasswordlessStartRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2744,7 +2832,7 @@ func file_doota_portal_v1_portal_proto_init() {
 			}
 		}
 		file_doota_portal_v1_portal_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AuthStateRequest); i {
+			switch v := v.(*PasswordlessStartVerify); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2756,7 +2844,7 @@ func file_doota_portal_v1_portal_proto_init() {
 			}
 		}
 		file_doota_portal_v1_portal_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*State); i {
+			switch v := v.(*AuthStateRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2768,7 +2856,7 @@ func file_doota_portal_v1_portal_proto_init() {
 			}
 		}
 		file_doota_portal_v1_portal_proto_msgTypes[17].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*User); i {
+			switch v := v.(*State); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2780,7 +2868,7 @@ func file_doota_portal_v1_portal_proto_init() {
 			}
 		}
 		file_doota_portal_v1_portal_proto_msgTypes[18].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*OauthAuthorizeRequest); i {
+			switch v := v.(*User); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2792,7 +2880,7 @@ func file_doota_portal_v1_portal_proto_init() {
 			}
 		}
 		file_doota_portal_v1_portal_proto_msgTypes[19].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*OauthAuthorizeResponse); i {
+			switch v := v.(*OauthAuthorizeRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2804,7 +2892,7 @@ func file_doota_portal_v1_portal_proto_init() {
 			}
 		}
 		file_doota_portal_v1_portal_proto_msgTypes[20].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*IssueRequest); i {
+			switch v := v.(*OauthAuthorizeResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2816,7 +2904,7 @@ func file_doota_portal_v1_portal_proto_init() {
 			}
 		}
 		file_doota_portal_v1_portal_proto_msgTypes[21].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*JWT); i {
+			switch v := v.(*IssueRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2828,7 +2916,7 @@ func file_doota_portal_v1_portal_proto_init() {
 			}
 		}
 		file_doota_portal_v1_portal_proto_msgTypes[22].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Organization); i {
+			switch v := v.(*JWT); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2840,7 +2928,7 @@ func file_doota_portal_v1_portal_proto_init() {
 			}
 		}
 		file_doota_portal_v1_portal_proto_msgTypes[23].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*OrganizationFeatureFlags); i {
+			switch v := v.(*Organization); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2852,7 +2940,7 @@ func file_doota_portal_v1_portal_proto_init() {
 			}
 		}
 		file_doota_portal_v1_portal_proto_msgTypes[24].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Integration); i {
+			switch v := v.(*OrganizationFeatureFlags); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2864,7 +2952,7 @@ func file_doota_portal_v1_portal_proto_init() {
 			}
 		}
 		file_doota_portal_v1_portal_proto_msgTypes[25].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*RedditIntegration); i {
+			switch v := v.(*Integration); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2876,7 +2964,7 @@ func file_doota_portal_v1_portal_proto_init() {
 			}
 		}
 		file_doota_portal_v1_portal_proto_msgTypes[26].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Integrations); i {
+			switch v := v.(*RedditIntegration); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2888,7 +2976,7 @@ func file_doota_portal_v1_portal_proto_init() {
 			}
 		}
 		file_doota_portal_v1_portal_proto_msgTypes[27].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetIntegrationRequest); i {
+			switch v := v.(*Integrations); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2900,7 +2988,7 @@ func file_doota_portal_v1_portal_proto_init() {
 			}
 		}
 		file_doota_portal_v1_portal_proto_msgTypes[28].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AddUserRequest); i {
+			switch v := v.(*GetIntegrationRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2912,7 +3000,7 @@ func file_doota_portal_v1_portal_proto_init() {
 			}
 		}
 		file_doota_portal_v1_portal_proto_msgTypes[29].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*RenewUserRequest); i {
+			switch v := v.(*AddUserRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2924,7 +3012,7 @@ func file_doota_portal_v1_portal_proto_init() {
 			}
 		}
 		file_doota_portal_v1_portal_proto_msgTypes[30].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MessageSourceOptions); i {
+			switch v := v.(*RenewUserRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2936,7 +3024,7 @@ func file_doota_portal_v1_portal_proto_init() {
 			}
 		}
 		file_doota_portal_v1_portal_proto_msgTypes[31].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*OauthCallbackRequest); i {
+			switch v := v.(*MessageSourceOptions); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2948,6 +3036,18 @@ func file_doota_portal_v1_portal_proto_init() {
 			}
 		}
 		file_doota_portal_v1_portal_proto_msgTypes[32].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*OauthCallbackRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_doota_portal_v1_portal_proto_msgTypes[33].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*OauthCallbackResponse); i {
 			case 0:
 				return &v.state
@@ -2960,19 +3060,19 @@ func file_doota_portal_v1_portal_proto_init() {
 			}
 		}
 	}
-	file_doota_portal_v1_portal_proto_msgTypes[3].OneofWrappers = []interface{}{}
-	file_doota_portal_v1_portal_proto_msgTypes[24].OneofWrappers = []interface{}{
+	file_doota_portal_v1_portal_proto_msgTypes[4].OneofWrappers = []interface{}{}
+	file_doota_portal_v1_portal_proto_msgTypes[25].OneofWrappers = []interface{}{
 		(*Integration_Reddit)(nil),
 	}
-	file_doota_portal_v1_portal_proto_msgTypes[28].OneofWrappers = []interface{}{}
-	file_doota_portal_v1_portal_proto_msgTypes[31].OneofWrappers = []interface{}{}
+	file_doota_portal_v1_portal_proto_msgTypes[29].OneofWrappers = []interface{}{}
+	file_doota_portal_v1_portal_proto_msgTypes[32].OneofWrappers = []interface{}{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_doota_portal_v1_portal_proto_rawDesc,
 			NumEnums:      4,
-			NumMessages:   33,
+			NumMessages:   34,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
