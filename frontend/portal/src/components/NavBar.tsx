@@ -448,7 +448,7 @@ const NavBar: FC = () => {
                       color: "white"
                     },
                     "& .MuiListItemSecondaryAction-root": {
-                      right: "26px",
+                      right: "8px",
                     },
                   }}
                   onClick={() => handleSubRedditsClick(ele)}
