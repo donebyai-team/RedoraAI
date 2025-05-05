@@ -30,6 +30,11 @@ service PortalService {
   rpc GetRelevantLeads(GetRelevantLeadsRequest) returns (GetLeadsResponse);
   rpc GetLeadsByStatus(GetLeadsByStatusRequest) returns (GetLeadsResponse);
   rpc UpdateLeadStatus(UpdateLeadStatusRequest) returns (.google.protobuf.Empty);
+  rpc GetProjects(.google.protobuf.Empty) returns (GetProjectsResponse);
+}
+
+message GetProjectsResponse {
+  repeated doota.core.v1.Project projects = 1;
 }
 
 message UpdateLeadStatusRequest {

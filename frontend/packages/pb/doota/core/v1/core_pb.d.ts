@@ -340,6 +340,52 @@ export declare type Keyword = Message<"doota.core.v1.Keyword"> & {
 export declare const KeywordSchema: GenMessage<Keyword>;
 
 /**
+ * @generated from message doota.core.v1.Project
+ */
+export declare type Project = Message<"doota.core.v1.Project"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: string name = 2;
+   */
+  name: string;
+
+  /**
+   * @generated from field: string description = 3;
+   */
+  description: string;
+
+  /**
+   * @generated from field: string website = 4;
+   */
+  website: string;
+
+  /**
+   * @generated from field: string target_persona = 5;
+   */
+  targetPersona: string;
+
+  /**
+   * @generated from field: repeated doota.core.v1.Keyword keywords = 6;
+   */
+  keywords: Keyword[];
+
+  /**
+   * @generated from field: repeated doota.core.v1.Source sources = 7;
+   */
+  sources: Source[];
+};
+
+/**
+ * Describes the message doota.core.v1.Project.
+ * Use `create(ProjectSchema)` to create a new message.
+ */
+export declare const ProjectSchema: GenMessage<Project>;
+
+/**
  * @generated from enum doota.core.v1.PlatformError
  */
 export enum PlatformError {

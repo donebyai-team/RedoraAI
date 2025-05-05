@@ -126,3 +126,13 @@ message Keyword {
   string id = 1;
   string name = 2;
 }
+
+message Project {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  string website = 4;
+  string target_persona = 5;
+  repeated Keyword keywords = 6;
+  repeated Source sources = 7;
+}
