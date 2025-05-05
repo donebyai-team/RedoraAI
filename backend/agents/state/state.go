@@ -13,4 +13,6 @@ type ConversationState interface {
 	KeepAlive(ctx context.Context, organizationID, phone string) error
 
 	Release(ctx context.Context, phone string) error
+
+	Acquire(ctx context.Context, organizationID, uniqueID string) error
 }
