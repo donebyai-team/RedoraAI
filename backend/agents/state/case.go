@@ -64,6 +64,30 @@ func NewCustomerCaseState(redisAddr string, customerCaseTTL time.Duration, logge
 	}
 }
 
+func (r *customerCaseState) Acquire(ctx context.Context, organizationID, uniqueID string) error {
+	key := callRunningKey(r.namespace, r.prefix, uniqueID)
+	value := &CustomerCaseState{
+		Phone:          uniqueID,
+		OrganizationID: organizationID,
+		StartedAt:      time.Now(),
+	}
+	data, err := json.Marshal(value)
+	if err != nil {
+		return fmt.Errorf("marshalling : %w", err)
+	}
+
+	ok, err := r.redisClient.SetNX(ctx, key, data, r.customerCaseRunningTTL).Result()
+	if err != nil {
+		return fmt.Errorf("redis error: %w", err)
+	}
+
+	if !ok {
+		return fmt.Errorf("lock already held")
+	}
+
+	return nil
+}
+
 func (r *customerCaseState) Release(ctx context.Context, phone string) error {
 	key := callRunningKey(r.namespace, r.prefix, phone)
 	if cmd := r.redisClient.Del(ctx, key); cmd.Err() != nil {

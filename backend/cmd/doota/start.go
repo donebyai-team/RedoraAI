@@ -40,7 +40,7 @@ var StartCmd = cli.Command(startCmdE,
 		flags.String("common-langsmith-api-key", "", "Langsmith API key")
 		flags.String("common-langsmith-project", "", "Langsmith project name")
 		flags.Uint64("common-auto-mem-limit-percent", 0, "Automatically sets GOMEMLIMIT to a percentage of memory limit from cgroup (useful for container environments)")
-		flags.Duration("spooler-db-polling-interval", 10*time.Second, "How often the spooler will check the database for new investigation")
+		flags.Duration("spooler-db-polling-interval", 1*time.Hour, "How often the spooler will check the database for new investigation")
 
 		flags.String("portal-reddit-redirect-url", "http://localhost:3000/auth/callback", "Reddit App Client ID")
 		flags.String("portal-reddit-client-id", "", "Reddit App Client ID")

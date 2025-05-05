@@ -66,7 +66,7 @@ func (s *redditKeywordTracker) TrackKeyword(ctx context.Context, tracker *models
 		return fmt.Errorf("failed to create reddit client: %w", err)
 	}
 
-	err = s.searchLeadsFromPosts(ctx, tracker.Keyword, tracker.Project, tracker.Source, redditClient)
+	err = s.searchLeadsFromPosts(ctx, tracker, redditClient)
 	if err != nil {
 		return err
 	}
@@ -103,27 +103,29 @@ func (s *redditKeywordTracker) isTrackingDone(ctx context.Context, projectID str
 }
 
 func (s *redditKeywordTracker) sendAlert(ctx context.Context, project *models.Project) {
-	//isTrackingDoneKey := fmt.Sprintf("daily_tracking_summary:%s", projectID)
-	//// Check if a call is already running across organizations
-	//isRunning, err := s.state.IsRunning(ctx, isTrackingDoneKey)
-	//if err == nil && isRunning {
-	//	return false, nil
-	//}
-	//
-	//if isRunning {
-	//	return false, nil
-	//}
-	//
-	//// Try to acquire the lock
-	//if err := s.state.KeepAlive(ctx, orgID, isTrackingDoneKey); err != nil {
-	//	s.logger.Error("could not acquire lock for keyword tracker summary, skipping", zap.Error(err))
-	//}
-	//
-	//defer func() {
-	//	if err := s.state.Release(ctx, isTrackingDoneKey); err != nil {
-	//		s.logger.Error("failed to release lock on keyword tracker summary", zap.Error(err))
-	//	}
-	//}()
+	isTrackingDoneKey := fmt.Sprintf("daily_tracking_summary:%s", project.ID)
+	// Check if a call is already running across organizations
+	isRunning, err := s.state.IsRunning(ctx, isTrackingDoneKey)
+	if err != nil {
+		s.logger.Error("failed to check if daily tracking summary is running", zap.Error(err))
+		return
+	}
+	if isRunning {
+		return
+	}
+
+	// Try to acquire the lock
+	if err := s.state.Acquire(ctx, project.OrganizationID, isTrackingDoneKey); err != nil {
+		s.logger.Warn("could not acquire lock for daily_tracking_summary, skipped", zap.Error(err))
+		return
+	}
+
+	defer func() {
+		if err := s.state.Release(ctx, isTrackingDoneKey); err != nil {
+			s.logger.Error("failed to release lock on daily_tracking_summary", zap.Error(err))
+		}
+	}()
+
 	done, err := s.isTrackingDone(ctx, project.ID)
 	if err != nil {
 		s.logger.Error("check if tracking is done", zap.Error(err))
@@ -196,10 +198,11 @@ func (s *redditKeywordTracker) sendAlert(ctx context.Context, project *models.Pr
 // Save it into the table sub_reddits_leads (models.Lead)
 func (s *redditKeywordTracker) searchLeadsFromPosts(
 	ctx context.Context,
-	keyword *models.Keyword,
-	project *models.Project,
-	source *models.Source,
+	tracker *models.AugmentedKeywordTracker,
 	redditClient *reddit.Client) error {
+	project := tracker.Project
+	keyword := tracker.Keyword
+	source := tracker.Source
 
 	if ok, err := s.isMaxLeadLimitReached(ctx, project.ID, defaultRelevancyScore); err != nil || ok {
 		return err
@@ -300,6 +303,12 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 			redditLead.LeadMetadata.SuggestedDM = relevanceResponse.SuggestedDM
 			redditLead.LeadMetadata.ChainOfThoughtSuggestedComment = relevanceResponse.ChainOfThoughtSuggestedComment
 			redditLead.LeadMetadata.ChainOfThoughtSuggestedDM = relevanceResponse.ChainOfThoughtSuggestedDM
+
+			// Mark the tracker alive in case the execution taking too much time
+			// Doing it here because that's the only place that takes time
+			if err := s.state.KeepAlive(ctx, project.OrganizationID, tracker.GetID()); err != nil {
+				s.logger.Error("failed to mark tracker alive", zap.Error(err))
+			}
 		} else {
 			countSkippedPosts++
 			s.logger.Info("ignoring reddit post for ai relevancy check",

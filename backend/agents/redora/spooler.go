@@ -101,15 +101,16 @@ func (s *Spooler) processKeywordsTracking(ctx context.Context, tracker *models.A
 	}
 
 	if isRunning {
-		logger.Info("tracker is already in processting state")
+		logger.Debug("tracker is already in processing state")
 		return nil
 	}
 
 	// Async call to TrackKeyword
 	go func() {
-		// Try to acquire the lock
-		if err := s.state.KeepAlive(ctx, tracker.Project.OrganizationID, tracker.GetID()); err != nil {
-			s.logger.Error("could not acquire lock for keyword tracker, skipping", zap.Error(err))
+		// Try to acquire the lock and if fails return
+		if err := s.state.Acquire(ctx, tracker.Project.OrganizationID, tracker.GetID()); err != nil {
+			s.logger.Warn("could not acquire lock for keyword tracker, skipping", zap.Error(err))
+			return
 		}
 
 		defer func() {
