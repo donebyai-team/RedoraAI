@@ -21,25 +21,25 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	PortalService_GetConfig_FullMethodName          = "/doota.portal.v1.PortalService/GetConfig"
-	PortalService_Self_FullMethodName               = "/doota.portal.v1.PortalService/Self"
-	PortalService_GetIntegration_FullMethodName     = "/doota.portal.v1.PortalService/GetIntegration"
-	PortalService_Batch_FullMethodName              = "/doota.portal.v1.PortalService/Batch"
-	PortalService_CreateCustomerCase_FullMethodName = "/doota.portal.v1.PortalService/CreateCustomerCase"
-	PortalService_PasswordlessStart_FullMethodName  = "/doota.portal.v1.PortalService/PasswordlessStart"
-	PortalService_PasswordlessVerify_FullMethodName = "/doota.portal.v1.PortalService/PasswordlessVerify"
-	PortalService_OauthAuthorize_FullMethodName     = "/doota.portal.v1.PortalService/OauthAuthorize"
-	PortalService_OauthCallback_FullMethodName      = "/doota.portal.v1.PortalService/OauthCallback"
-	PortalService_GetIntegrations_FullMethodName    = "/doota.portal.v1.PortalService/GetIntegrations"
-	PortalService_CreateKeyword_FullMethodName      = "/doota.portal.v1.PortalService/CreateKeyword"
-	PortalService_AddSource_FullMethodName          = "/doota.portal.v1.PortalService/AddSource"
-	PortalService_GetSources_FullMethodName         = "/doota.portal.v1.PortalService/GetSources"
-	PortalService_RemoveSource_FullMethodName       = "/doota.portal.v1.PortalService/RemoveSource"
-	PortalService_GetRelevantLeads_FullMethodName   = "/doota.portal.v1.PortalService/GetRelevantLeads"
-	PortalService_GetLeadsByStatus_FullMethodName   = "/doota.portal.v1.PortalService/GetLeadsByStatus"
-	PortalService_UpdateLeadStatus_FullMethodName   = "/doota.portal.v1.PortalService/UpdateLeadStatus"
-	PortalService_GetProjects_FullMethodName        = "/doota.portal.v1.PortalService/GetProjects"
-	PortalService_CreateProject_FullMethodName      = "/doota.portal.v1.PortalService/CreateProject"
+	PortalService_GetConfig_FullMethodName           = "/doota.portal.v1.PortalService/GetConfig"
+	PortalService_Self_FullMethodName                = "/doota.portal.v1.PortalService/Self"
+	PortalService_GetIntegration_FullMethodName      = "/doota.portal.v1.PortalService/GetIntegration"
+	PortalService_Batch_FullMethodName               = "/doota.portal.v1.PortalService/Batch"
+	PortalService_CreateCustomerCase_FullMethodName  = "/doota.portal.v1.PortalService/CreateCustomerCase"
+	PortalService_PasswordlessStart_FullMethodName   = "/doota.portal.v1.PortalService/PasswordlessStart"
+	PortalService_PasswordlessVerify_FullMethodName  = "/doota.portal.v1.PortalService/PasswordlessVerify"
+	PortalService_OauthAuthorize_FullMethodName      = "/doota.portal.v1.PortalService/OauthAuthorize"
+	PortalService_OauthCallback_FullMethodName       = "/doota.portal.v1.PortalService/OauthCallback"
+	PortalService_GetIntegrations_FullMethodName     = "/doota.portal.v1.PortalService/GetIntegrations"
+	PortalService_CreateKeyword_FullMethodName       = "/doota.portal.v1.PortalService/CreateKeyword"
+	PortalService_AddSource_FullMethodName           = "/doota.portal.v1.PortalService/AddSource"
+	PortalService_GetSources_FullMethodName          = "/doota.portal.v1.PortalService/GetSources"
+	PortalService_RemoveSource_FullMethodName        = "/doota.portal.v1.PortalService/RemoveSource"
+	PortalService_GetRelevantLeads_FullMethodName    = "/doota.portal.v1.PortalService/GetRelevantLeads"
+	PortalService_GetLeadsByStatus_FullMethodName    = "/doota.portal.v1.PortalService/GetLeadsByStatus"
+	PortalService_UpdateLeadStatus_FullMethodName    = "/doota.portal.v1.PortalService/UpdateLeadStatus"
+	PortalService_GetProjects_FullMethodName         = "/doota.portal.v1.PortalService/GetProjects"
+	PortalService_CreateOrEditProject_FullMethodName = "/doota.portal.v1.PortalService/CreateOrEditProject"
 )
 
 // PortalServiceClient is the client API for PortalService service.
@@ -67,7 +67,7 @@ type PortalServiceClient interface {
 	GetLeadsByStatus(ctx context.Context, in *GetLeadsByStatusRequest, opts ...grpc.CallOption) (*GetLeadsResponse, error)
 	UpdateLeadStatus(ctx context.Context, in *UpdateLeadStatusRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GetProjects(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetProjectsResponse, error)
-	CreateProject(ctx context.Context, in *CreateProjectRequest, opts ...grpc.CallOption) (*v1.Project, error)
+	CreateOrEditProject(ctx context.Context, in *CreateProjectRequest, opts ...grpc.CallOption) (*v1.Project, error)
 }
 
 type portalServiceClient struct {
@@ -240,9 +240,9 @@ func (c *portalServiceClient) GetProjects(ctx context.Context, in *emptypb.Empty
 	return out, nil
 }
 
-func (c *portalServiceClient) CreateProject(ctx context.Context, in *CreateProjectRequest, opts ...grpc.CallOption) (*v1.Project, error) {
+func (c *portalServiceClient) CreateOrEditProject(ctx context.Context, in *CreateProjectRequest, opts ...grpc.CallOption) (*v1.Project, error) {
 	out := new(v1.Project)
-	err := c.cc.Invoke(ctx, PortalService_CreateProject_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, PortalService_CreateOrEditProject_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -274,7 +274,7 @@ type PortalServiceServer interface {
 	GetLeadsByStatus(context.Context, *GetLeadsByStatusRequest) (*GetLeadsResponse, error)
 	UpdateLeadStatus(context.Context, *UpdateLeadStatusRequest) (*emptypb.Empty, error)
 	GetProjects(context.Context, *emptypb.Empty) (*GetProjectsResponse, error)
-	CreateProject(context.Context, *CreateProjectRequest) (*v1.Project, error)
+	CreateOrEditProject(context.Context, *CreateProjectRequest) (*v1.Project, error)
 	mustEmbedUnimplementedPortalServiceServer()
 }
 
@@ -336,8 +336,8 @@ func (UnimplementedPortalServiceServer) UpdateLeadStatus(context.Context, *Updat
 func (UnimplementedPortalServiceServer) GetProjects(context.Context, *emptypb.Empty) (*GetProjectsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetProjects not implemented")
 }
-func (UnimplementedPortalServiceServer) CreateProject(context.Context, *CreateProjectRequest) (*v1.Project, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateProject not implemented")
+func (UnimplementedPortalServiceServer) CreateOrEditProject(context.Context, *CreateProjectRequest) (*v1.Project, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateOrEditProject not implemented")
 }
 func (UnimplementedPortalServiceServer) mustEmbedUnimplementedPortalServiceServer() {}
 
@@ -676,20 +676,20 @@ func _PortalService_GetProjects_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
-func _PortalService_CreateProject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _PortalService_CreateOrEditProject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateProjectRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(PortalServiceServer).CreateProject(ctx, in)
+		return srv.(PortalServiceServer).CreateOrEditProject(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: PortalService_CreateProject_FullMethodName,
+		FullMethod: PortalService_CreateOrEditProject_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PortalServiceServer).CreateProject(ctx, req.(*CreateProjectRequest))
+		return srv.(PortalServiceServer).CreateOrEditProject(ctx, req.(*CreateProjectRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -774,8 +774,8 @@ var PortalService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _PortalService_GetProjects_Handler,
 		},
 		{
-			MethodName: "CreateProject",
-			Handler:    _PortalService_CreateProject_Handler,
+			MethodName: "CreateOrEditProject",
+			Handler:    _PortalService_CreateOrEditProject_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

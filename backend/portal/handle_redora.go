@@ -42,7 +42,7 @@ func (p *Portal) getProject(ctx context.Context, headers http.Header, orgID stri
 	return projectID, nil
 }
 
-func (p *Portal) CreateProject(ctx context.Context, c *connect.Request[pbportal.CreateProjectRequest]) (*connect.Response[pbcore.Project], error) {
+func (p *Portal) CreateOrEditProject(ctx context.Context, c *connect.Request[pbportal.CreateProjectRequest]) (*connect.Response[pbcore.Project], error) {
 	actor, err := p.gethAuthContext(ctx)
 	if err != nil {
 		return nil, err
@@ -66,32 +66,67 @@ func (p *Portal) CreateProject(ctx context.Context, c *connect.Request[pbportal.
 		return nil, status.New(codes.InvalidArgument, "invalid website URL").Err()
 	}
 
-	project, err := p.db.GetProjectByName(ctx, c.Msg.Name, actor.OrganizationID)
-	if err != nil && !errors.Is(err, datastore.NotFound) {
-		return nil, err
-	}
+	var project *models.Project
 
-	if project != nil {
-		return nil, status.New(codes.AlreadyExists, "project already exists").Err()
-	}
+	if c.Msg.Id != "" {
+		existingProject, err := p.db.GetProject(ctx, c.Msg.Id)
+		if err != nil {
+			return nil, status.New(codes.NotFound, err.Error()).Err()
+		}
 
-	createProject, err := p.db.CreateProject(ctx, &models.Project{
-		OrganizationID:     actor.OrganizationID,
-		Name:               c.Msg.Name,
-		ProductDescription: c.Msg.Description,
-		CustomerPersona:    c.Msg.TargetPersona,
-		WebsiteURL:         c.Msg.Website,
-	})
-	if err != nil {
-		return nil, err
+		// Are we changing the name?
+		if existingProject.Name != c.Msg.Name {
+			existingProjectName, err := p.db.GetProjectByName(ctx, c.Msg.Name, actor.OrganizationID)
+			if err != nil && !errors.Is(err, datastore.NotFound) {
+				return nil, err
+			}
+
+			if existingProjectName != nil {
+				return nil, status.New(codes.AlreadyExists, "a project with same name already exists").Err()
+			}
+		}
+
+		project, err = p.db.UpdateProject(ctx, &models.Project{
+			OrganizationID:     actor.OrganizationID,
+			Name:               c.Msg.Name,
+			ProductDescription: c.Msg.Description,
+			CustomerPersona:    c.Msg.TargetPersona,
+			WebsiteURL:         c.Msg.Website,
+			ID:                 existingProject.ID,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+	} else {
+		project, err = p.db.GetProjectByName(ctx, c.Msg.Name, actor.OrganizationID)
+		if err != nil && !errors.Is(err, datastore.NotFound) {
+			return nil, err
+		}
+
+		if project != nil {
+			return nil, status.New(codes.AlreadyExists, "project already exists").Err()
+		}
+
+		project, err = p.db.CreateProject(ctx, &models.Project{
+			OrganizationID:     actor.OrganizationID,
+			Name:               c.Msg.Name,
+			ProductDescription: c.Msg.Description,
+			CustomerPersona:    c.Msg.TargetPersona,
+			WebsiteURL:         c.Msg.Website,
+		})
+
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return connect.NewResponse(&pbcore.Project{
-		Id:            createProject.ID,
-		Name:          createProject.Name,
-		Description:   createProject.ProductDescription,
-		Website:       createProject.WebsiteURL,
-		TargetPersona: createProject.CustomerPersona,
+		Id:            project.ID,
+		Name:          project.Name,
+		Description:   project.ProductDescription,
+		Website:       project.WebsiteURL,
+		TargetPersona: project.CustomerPersona,
 	}), nil
 }
 
@@ -107,7 +142,7 @@ func (p *Portal) GetProjects(ctx context.Context, c *connect.Request[emptypb.Emp
 	}
 
 	projectsProto := make([]*pbcore.Project, 0, len(projects))
-
+	isOnboardingDone := false
 	for _, project := range projects {
 		keywords, err := p.db.GetKeywords(ctx, project.ID)
 		if err != nil {
@@ -135,6 +170,10 @@ func (p *Portal) GetProjects(ctx context.Context, c *connect.Request[emptypb.Emp
 			})
 		}
 
+		if len(sources) > 0 && len(keywords) > 0 {
+			isOnboardingDone = true
+		}
+
 		projectsProto = append(projectsProto, &pbcore.Project{
 			Id:            project.ID,
 			Name:          project.Name,
@@ -147,7 +186,8 @@ func (p *Portal) GetProjects(ctx context.Context, c *connect.Request[emptypb.Emp
 	}
 
 	return connect.NewResponse(&pbportal.GetProjectsResponse{
-		Projects: projectsProto,
+		Projects:         projectsProto,
+		IsOnboardingDone: isOnboardingDone,
 	}), nil
 }
 

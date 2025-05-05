@@ -85,33 +85,33 @@ const (
 	// PortalServiceGetProjectsProcedure is the fully-qualified name of the PortalService's GetProjects
 	// RPC.
 	PortalServiceGetProjectsProcedure = "/doota.portal.v1.PortalService/GetProjects"
-	// PortalServiceCreateProjectProcedure is the fully-qualified name of the PortalService's
-	// CreateProject RPC.
-	PortalServiceCreateProjectProcedure = "/doota.portal.v1.PortalService/CreateProject"
+	// PortalServiceCreateOrEditProjectProcedure is the fully-qualified name of the PortalService's
+	// CreateOrEditProject RPC.
+	PortalServiceCreateOrEditProjectProcedure = "/doota.portal.v1.PortalService/CreateOrEditProject"
 )
 
 // These variables are the protoreflect.Descriptor objects for the RPCs defined in this package.
 var (
-	portalServiceServiceDescriptor                  = v1.File_doota_portal_v1_portal_proto.Services().ByName("PortalService")
-	portalServiceGetConfigMethodDescriptor          = portalServiceServiceDescriptor.Methods().ByName("GetConfig")
-	portalServiceSelfMethodDescriptor               = portalServiceServiceDescriptor.Methods().ByName("Self")
-	portalServiceGetIntegrationMethodDescriptor     = portalServiceServiceDescriptor.Methods().ByName("GetIntegration")
-	portalServiceBatchMethodDescriptor              = portalServiceServiceDescriptor.Methods().ByName("Batch")
-	portalServiceCreateCustomerCaseMethodDescriptor = portalServiceServiceDescriptor.Methods().ByName("CreateCustomerCase")
-	portalServicePasswordlessStartMethodDescriptor  = portalServiceServiceDescriptor.Methods().ByName("PasswordlessStart")
-	portalServicePasswordlessVerifyMethodDescriptor = portalServiceServiceDescriptor.Methods().ByName("PasswordlessVerify")
-	portalServiceOauthAuthorizeMethodDescriptor     = portalServiceServiceDescriptor.Methods().ByName("OauthAuthorize")
-	portalServiceOauthCallbackMethodDescriptor      = portalServiceServiceDescriptor.Methods().ByName("OauthCallback")
-	portalServiceGetIntegrationsMethodDescriptor    = portalServiceServiceDescriptor.Methods().ByName("GetIntegrations")
-	portalServiceCreateKeywordMethodDescriptor      = portalServiceServiceDescriptor.Methods().ByName("CreateKeyword")
-	portalServiceAddSourceMethodDescriptor          = portalServiceServiceDescriptor.Methods().ByName("AddSource")
-	portalServiceGetSourcesMethodDescriptor         = portalServiceServiceDescriptor.Methods().ByName("GetSources")
-	portalServiceRemoveSourceMethodDescriptor       = portalServiceServiceDescriptor.Methods().ByName("RemoveSource")
-	portalServiceGetRelevantLeadsMethodDescriptor   = portalServiceServiceDescriptor.Methods().ByName("GetRelevantLeads")
-	portalServiceGetLeadsByStatusMethodDescriptor   = portalServiceServiceDescriptor.Methods().ByName("GetLeadsByStatus")
-	portalServiceUpdateLeadStatusMethodDescriptor   = portalServiceServiceDescriptor.Methods().ByName("UpdateLeadStatus")
-	portalServiceGetProjectsMethodDescriptor        = portalServiceServiceDescriptor.Methods().ByName("GetProjects")
-	portalServiceCreateProjectMethodDescriptor      = portalServiceServiceDescriptor.Methods().ByName("CreateProject")
+	portalServiceServiceDescriptor                   = v1.File_doota_portal_v1_portal_proto.Services().ByName("PortalService")
+	portalServiceGetConfigMethodDescriptor           = portalServiceServiceDescriptor.Methods().ByName("GetConfig")
+	portalServiceSelfMethodDescriptor                = portalServiceServiceDescriptor.Methods().ByName("Self")
+	portalServiceGetIntegrationMethodDescriptor      = portalServiceServiceDescriptor.Methods().ByName("GetIntegration")
+	portalServiceBatchMethodDescriptor               = portalServiceServiceDescriptor.Methods().ByName("Batch")
+	portalServiceCreateCustomerCaseMethodDescriptor  = portalServiceServiceDescriptor.Methods().ByName("CreateCustomerCase")
+	portalServicePasswordlessStartMethodDescriptor   = portalServiceServiceDescriptor.Methods().ByName("PasswordlessStart")
+	portalServicePasswordlessVerifyMethodDescriptor  = portalServiceServiceDescriptor.Methods().ByName("PasswordlessVerify")
+	portalServiceOauthAuthorizeMethodDescriptor      = portalServiceServiceDescriptor.Methods().ByName("OauthAuthorize")
+	portalServiceOauthCallbackMethodDescriptor       = portalServiceServiceDescriptor.Methods().ByName("OauthCallback")
+	portalServiceGetIntegrationsMethodDescriptor     = portalServiceServiceDescriptor.Methods().ByName("GetIntegrations")
+	portalServiceCreateKeywordMethodDescriptor       = portalServiceServiceDescriptor.Methods().ByName("CreateKeyword")
+	portalServiceAddSourceMethodDescriptor           = portalServiceServiceDescriptor.Methods().ByName("AddSource")
+	portalServiceGetSourcesMethodDescriptor          = portalServiceServiceDescriptor.Methods().ByName("GetSources")
+	portalServiceRemoveSourceMethodDescriptor        = portalServiceServiceDescriptor.Methods().ByName("RemoveSource")
+	portalServiceGetRelevantLeadsMethodDescriptor    = portalServiceServiceDescriptor.Methods().ByName("GetRelevantLeads")
+	portalServiceGetLeadsByStatusMethodDescriptor    = portalServiceServiceDescriptor.Methods().ByName("GetLeadsByStatus")
+	portalServiceUpdateLeadStatusMethodDescriptor    = portalServiceServiceDescriptor.Methods().ByName("UpdateLeadStatus")
+	portalServiceGetProjectsMethodDescriptor         = portalServiceServiceDescriptor.Methods().ByName("GetProjects")
+	portalServiceCreateOrEditProjectMethodDescriptor = portalServiceServiceDescriptor.Methods().ByName("CreateOrEditProject")
 )
 
 // PortalServiceClient is a client for the doota.portal.v1.PortalService service.
@@ -137,7 +137,7 @@ type PortalServiceClient interface {
 	GetLeadsByStatus(context.Context, *connect.Request[v1.GetLeadsByStatusRequest]) (*connect.Response[v1.GetLeadsResponse], error)
 	UpdateLeadStatus(context.Context, *connect.Request[v1.UpdateLeadStatusRequest]) (*connect.Response[emptypb.Empty], error)
 	GetProjects(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetProjectsResponse], error)
-	CreateProject(context.Context, *connect.Request[v1.CreateProjectRequest]) (*connect.Response[v11.Project], error)
+	CreateOrEditProject(context.Context, *connect.Request[v1.CreateProjectRequest]) (*connect.Response[v11.Project], error)
 }
 
 // NewPortalServiceClient constructs a client for the doota.portal.v1.PortalService service. By
@@ -258,10 +258,10 @@ func NewPortalServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(portalServiceGetProjectsMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
-		createProject: connect.NewClient[v1.CreateProjectRequest, v11.Project](
+		createOrEditProject: connect.NewClient[v1.CreateProjectRequest, v11.Project](
 			httpClient,
-			baseURL+PortalServiceCreateProjectProcedure,
-			connect.WithSchema(portalServiceCreateProjectMethodDescriptor),
+			baseURL+PortalServiceCreateOrEditProjectProcedure,
+			connect.WithSchema(portalServiceCreateOrEditProjectMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
 	}
@@ -269,25 +269,25 @@ func NewPortalServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 
 // portalServiceClient implements PortalServiceClient.
 type portalServiceClient struct {
-	getConfig          *connect.Client[emptypb.Empty, v1.Config]
-	self               *connect.Client[emptypb.Empty, v1.User]
-	getIntegration     *connect.Client[v1.GetIntegrationRequest, v1.Integration]
-	batch              *connect.Client[v1.BatchReq, v1.BatchResp]
-	createCustomerCase *connect.Client[v1.CreateCustomerCaseReq, emptypb.Empty]
-	passwordlessStart  *connect.Client[v1.PasswordlessStartRequest, emptypb.Empty]
-	passwordlessVerify *connect.Client[v1.PasswordlessStartVerify, v1.JWT]
-	oauthAuthorize     *connect.Client[v1.OauthAuthorizeRequest, v1.OauthAuthorizeResponse]
-	oauthCallback      *connect.Client[v1.OauthCallbackRequest, v1.OauthCallbackResponse]
-	getIntegrations    *connect.Client[emptypb.Empty, v1.Integrations]
-	createKeyword      *connect.Client[v1.CreateKeywordReq, emptypb.Empty]
-	addSource          *connect.Client[v1.AddSourceRequest, emptypb.Empty]
-	getSources         *connect.Client[emptypb.Empty, v1.GetSourceResponse]
-	removeSource       *connect.Client[v1.RemoveSourceRequest, emptypb.Empty]
-	getRelevantLeads   *connect.Client[v1.GetRelevantLeadsRequest, v1.GetLeadsResponse]
-	getLeadsByStatus   *connect.Client[v1.GetLeadsByStatusRequest, v1.GetLeadsResponse]
-	updateLeadStatus   *connect.Client[v1.UpdateLeadStatusRequest, emptypb.Empty]
-	getProjects        *connect.Client[emptypb.Empty, v1.GetProjectsResponse]
-	createProject      *connect.Client[v1.CreateProjectRequest, v11.Project]
+	getConfig           *connect.Client[emptypb.Empty, v1.Config]
+	self                *connect.Client[emptypb.Empty, v1.User]
+	getIntegration      *connect.Client[v1.GetIntegrationRequest, v1.Integration]
+	batch               *connect.Client[v1.BatchReq, v1.BatchResp]
+	createCustomerCase  *connect.Client[v1.CreateCustomerCaseReq, emptypb.Empty]
+	passwordlessStart   *connect.Client[v1.PasswordlessStartRequest, emptypb.Empty]
+	passwordlessVerify  *connect.Client[v1.PasswordlessStartVerify, v1.JWT]
+	oauthAuthorize      *connect.Client[v1.OauthAuthorizeRequest, v1.OauthAuthorizeResponse]
+	oauthCallback       *connect.Client[v1.OauthCallbackRequest, v1.OauthCallbackResponse]
+	getIntegrations     *connect.Client[emptypb.Empty, v1.Integrations]
+	createKeyword       *connect.Client[v1.CreateKeywordReq, emptypb.Empty]
+	addSource           *connect.Client[v1.AddSourceRequest, emptypb.Empty]
+	getSources          *connect.Client[emptypb.Empty, v1.GetSourceResponse]
+	removeSource        *connect.Client[v1.RemoveSourceRequest, emptypb.Empty]
+	getRelevantLeads    *connect.Client[v1.GetRelevantLeadsRequest, v1.GetLeadsResponse]
+	getLeadsByStatus    *connect.Client[v1.GetLeadsByStatusRequest, v1.GetLeadsResponse]
+	updateLeadStatus    *connect.Client[v1.UpdateLeadStatusRequest, emptypb.Empty]
+	getProjects         *connect.Client[emptypb.Empty, v1.GetProjectsResponse]
+	createOrEditProject *connect.Client[v1.CreateProjectRequest, v11.Project]
 }
 
 // GetConfig calls doota.portal.v1.PortalService.GetConfig.
@@ -380,9 +380,9 @@ func (c *portalServiceClient) GetProjects(ctx context.Context, req *connect.Requ
 	return c.getProjects.CallUnary(ctx, req)
 }
 
-// CreateProject calls doota.portal.v1.PortalService.CreateProject.
-func (c *portalServiceClient) CreateProject(ctx context.Context, req *connect.Request[v1.CreateProjectRequest]) (*connect.Response[v11.Project], error) {
-	return c.createProject.CallUnary(ctx, req)
+// CreateOrEditProject calls doota.portal.v1.PortalService.CreateOrEditProject.
+func (c *portalServiceClient) CreateOrEditProject(ctx context.Context, req *connect.Request[v1.CreateProjectRequest]) (*connect.Response[v11.Project], error) {
+	return c.createOrEditProject.CallUnary(ctx, req)
 }
 
 // PortalServiceHandler is an implementation of the doota.portal.v1.PortalService service.
@@ -408,7 +408,7 @@ type PortalServiceHandler interface {
 	GetLeadsByStatus(context.Context, *connect.Request[v1.GetLeadsByStatusRequest]) (*connect.Response[v1.GetLeadsResponse], error)
 	UpdateLeadStatus(context.Context, *connect.Request[v1.UpdateLeadStatusRequest]) (*connect.Response[emptypb.Empty], error)
 	GetProjects(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetProjectsResponse], error)
-	CreateProject(context.Context, *connect.Request[v1.CreateProjectRequest]) (*connect.Response[v11.Project], error)
+	CreateOrEditProject(context.Context, *connect.Request[v1.CreateProjectRequest]) (*connect.Response[v11.Project], error)
 }
 
 // NewPortalServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -525,10 +525,10 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(portalServiceGetProjectsMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
-	portalServiceCreateProjectHandler := connect.NewUnaryHandler(
-		PortalServiceCreateProjectProcedure,
-		svc.CreateProject,
-		connect.WithSchema(portalServiceCreateProjectMethodDescriptor),
+	portalServiceCreateOrEditProjectHandler := connect.NewUnaryHandler(
+		PortalServiceCreateOrEditProjectProcedure,
+		svc.CreateOrEditProject,
+		connect.WithSchema(portalServiceCreateOrEditProjectMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
 	return "/doota.portal.v1.PortalService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -569,8 +569,8 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 			portalServiceUpdateLeadStatusHandler.ServeHTTP(w, r)
 		case PortalServiceGetProjectsProcedure:
 			portalServiceGetProjectsHandler.ServeHTTP(w, r)
-		case PortalServiceCreateProjectProcedure:
-			portalServiceCreateProjectHandler.ServeHTTP(w, r)
+		case PortalServiceCreateOrEditProjectProcedure:
+			portalServiceCreateOrEditProjectHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -652,6 +652,6 @@ func (UnimplementedPortalServiceHandler) GetProjects(context.Context, *connect.R
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.GetProjects is not implemented"))
 }
 
-func (UnimplementedPortalServiceHandler) CreateProject(context.Context, *connect.Request[v1.CreateProjectRequest]) (*connect.Response[v11.Project], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.CreateProject is not implemented"))
+func (UnimplementedPortalServiceHandler) CreateOrEditProject(context.Context, *connect.Request[v1.CreateProjectRequest]) (*connect.Response[v11.Project], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.CreateOrEditProject is not implemented"))
 }

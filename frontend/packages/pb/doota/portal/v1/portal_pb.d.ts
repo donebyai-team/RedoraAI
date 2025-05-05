@@ -17,22 +17,27 @@ export declare const file_doota_portal_v1_portal: GenFile;
  */
 export declare type CreateProjectRequest = Message<"doota.portal.v1.CreateProjectRequest"> & {
   /**
-   * @generated from field: string name = 1;
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: string name = 2;
    */
   name: string;
 
   /**
-   * @generated from field: string description = 2;
+   * @generated from field: string description = 3;
    */
   description: string;
 
   /**
-   * @generated from field: string website = 3;
+   * @generated from field: string website = 4;
    */
   website: string;
 
   /**
-   * @generated from field: string target_persona = 4;
+   * @generated from field: string target_persona = 5;
    */
   targetPersona: string;
 };
@@ -51,6 +56,11 @@ export declare type GetProjectsResponse = Message<"doota.portal.v1.GetProjectsRe
    * @generated from field: repeated doota.core.v1.Project projects = 1;
    */
   projects: Project[];
+
+  /**
+   * @generated from field: bool is_onboarding_done = 2;
+   */
+  isOnboardingDone: boolean;
 };
 
 /**
@@ -1023,9 +1033,9 @@ export declare const PortalService: GenService<{
     output: typeof GetProjectsResponseSchema;
   },
   /**
-   * @generated from rpc doota.portal.v1.PortalService.CreateProject
+   * @generated from rpc doota.portal.v1.PortalService.CreateOrEditProject
    */
-  createProject: {
+  createOrEditProject: {
     methodKind: "unary";
     input: typeof CreateProjectRequestSchema;
     output: typeof ProjectSchema;

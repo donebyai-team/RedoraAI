@@ -31,18 +31,20 @@ service PortalService {
   rpc GetLeadsByStatus(GetLeadsByStatusRequest) returns (GetLeadsResponse);
   rpc UpdateLeadStatus(UpdateLeadStatusRequest) returns (.google.protobuf.Empty);
   rpc GetProjects(.google.protobuf.Empty) returns (GetProjectsResponse);
-  rpc CreateProject(CreateProjectRequest) returns (doota.core.v1.Project);
+  rpc CreateOrEditProject(CreateProjectRequest) returns (doota.core.v1.Project);
 }
 
 message CreateProjectRequest {
-  string name = 1;
-  string description = 2;
-  string website = 3;
-  string target_persona = 4;
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  string website = 4;
+  string target_persona = 5;
 }
 
 message GetProjectsResponse {
   repeated doota.core.v1.Project projects = 1;
+  bool is_onboarding_done = 2;
 }
 
 message UpdateLeadStatusRequest {

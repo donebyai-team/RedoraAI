@@ -12,6 +12,7 @@ func init() {
 		"project/query_project_by_org.sql",
 		"project/query_project_by_id.sql",
 		"project/query_project_by_name.sql",
+		"project/update_project.sql",
 	})
 }
 
@@ -40,6 +41,25 @@ func (r *Database) CreateProject(ctx context.Context, project *models.Project) (
 	}
 
 	project.ID = id
+	return project, nil
+}
+
+func (r *Database) UpdateProject(ctx context.Context, project *models.Project) (*models.Project, error) {
+	stmt := r.mustGetStmt("project/update_project.sql")
+
+	_, err := stmt.ExecContext(ctx, map[string]interface{}{
+		"name":             project.Name,
+		"description":      project.ProductDescription,
+		"organization_id":  project.OrganizationID,
+		"customer_persona": project.CustomerPersona,
+		"id":               project.ID,
+		"website":          project.WebsiteURL,
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to update project organization: %w", err)
+	}
+
 	return project, nil
 }
 
