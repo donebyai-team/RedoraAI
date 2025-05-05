@@ -42,7 +42,7 @@ func (p *Portal) protoIntegration(integration *models.Integration) *pbportal.Int
 			Status:         mapIntegrationState(integration.State),
 			Details: &pbportal.Integration_Reddit{
 				Reddit: &pbportal.RedditIntegration{
-					UserName: redditConfig.UserName,
+					UserName: redditConfig.Name,
 				},
 			},
 		}

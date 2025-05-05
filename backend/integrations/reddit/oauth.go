@@ -143,7 +143,22 @@ func (r *OauthClient) Authorize(ctx context.Context, code string) (*models.Reddi
 
 	// Step 4: Parse JSON response
 	var userInfo struct {
-		Name string `json:"name"`
+		Verified         bool    `json:"verified"`
+		Coins            float64 `json:"coins"`
+		Id               string  `json:"id"`
+		OauthClientId    string  `json:"oauth_client_id"`
+		IsMod            bool    `json:"is_mod"`
+		AwarderKarma     float64 `json:"awarder_karma"`
+		HasVerifiedEmail bool    `json:"has_verified_email"`
+		IsSuspended      bool    `json:"is_suspended"`
+		AwardeeKarma     float64 `json:"awardee_karma"`
+		LinkKarma        float64 `json:"link_karma"`
+		TotalKarma       float64 `json:"total_karma"`
+		InboxCount       int     `json:"inbox_count"`
+		Name             string  `json:"name"`
+		Created          float64 `json:"created"`
+		CreatedUtc       float64 `json:"created_utc"`
+		CommentKarma     float64 `json:"comment_karma"`
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&userInfo); err != nil {
@@ -151,9 +166,24 @@ func (r *OauthClient) Authorize(ctx context.Context, code string) (*models.Reddi
 	}
 
 	return &models.RedditConfig{
-		AccessToken:  token.AccessToken,
-		RefreshToken: token.RefreshToken,
-		ExpiresAt:    token.Expiry,
-		UserName:     userInfo.Name,
+		AccessToken:      token.AccessToken,
+		RefreshToken:     token.RefreshToken,
+		Verified:         userInfo.Verified,
+		Coins:            userInfo.Coins,
+		Id:               userInfo.Id,
+		OauthClientId:    userInfo.OauthClientId,
+		IsMod:            userInfo.IsMod,
+		AwarderKarma:     userInfo.AwarderKarma,
+		HasVerifiedEmail: userInfo.HasVerifiedEmail,
+		IsSuspended:      userInfo.IsSuspended,
+		AwardeeKarma:     userInfo.AwardeeKarma,
+		LinkKarma:        userInfo.LinkKarma,
+		TotalKarma:       userInfo.TotalKarma,
+		InboxCount:       userInfo.InboxCount,
+		Name:             userInfo.Name,
+		Created:          userInfo.Created,
+		CreatedUtc:       userInfo.CreatedUtc,
+		CommentKarma:     userInfo.CommentKarma,
+		ExpiresAt:        token.Expiry,
 	}, nil
 }

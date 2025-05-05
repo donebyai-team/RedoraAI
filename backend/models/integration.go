@@ -42,10 +42,25 @@ var _ Serializable = (*VAPIConfig)(nil)
 var _ Serializable = (*RedditConfig)(nil)
 
 type RedditConfig struct {
-	AccessToken  string    `json:"-"`
-	RefreshToken string    `json:"-"`
-	UserName     string    `json:"user_name"`
-	ExpiresAt    time.Time `json:"expires_at"`
+	AccessToken      string    `json:"-"`
+	RefreshToken     string    `json:"-"`
+	Verified         bool      `json:"verified"`
+	Coins            float64   `json:"coins"`
+	Id               string    `json:"id"`
+	OauthClientId    string    `json:"oauth_client_id"`
+	IsMod            bool      `json:"is_mod"`
+	AwarderKarma     float64   `json:"awarder_karma"`
+	HasVerifiedEmail bool      `json:"has_verified_email"`
+	IsSuspended      bool      `json:"is_suspended"`
+	AwardeeKarma     float64   `json:"awardee_karma"`
+	LinkKarma        float64   `json:"link_karma"`
+	TotalKarma       float64   `json:"total_karma"`
+	InboxCount       int       `json:"inbox_count"`
+	Name             string    `json:"name"`
+	Created          float64   `json:"created"`
+	CreatedUtc       float64   `json:"created_utc"`
+	CommentKarma     float64   `json:"comment_karma"`
+	ExpiresAt        time.Time `json:"expires_at"`
 }
 
 func (i *RedditConfig) EncryptedData() []byte {

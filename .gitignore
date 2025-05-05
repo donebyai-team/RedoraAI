@@ -13,6 +13,7 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 data/debugstore
+data/reddit_sessions
 
 frontend/extension/chrome/loadlogic-chrome-extension.zip
 frontend/extension/chrome/loadlogic-chrome-extension.*.zip

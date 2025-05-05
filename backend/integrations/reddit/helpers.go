@@ -43,7 +43,7 @@ func (r *Client) buildRequest(ctx context.Context, method, url string) (*retryab
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", r.config.AccessToken))
-	req.Header.Set("User-Agent", fmt.Sprintf("linux:com.reddit.scraper:v0.1 by (/u/%s)", r.config.UserName))
+	req.Header.Set("User-Agent", fmt.Sprintf("linux:com.reddit.scraper:v0.1 by (/u/%s)", r.config.Name))
 	return req, nil
 }
 
