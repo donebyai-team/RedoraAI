@@ -91,7 +91,10 @@ func (s *Spooler) runLoop(ctx context.Context) {
 }
 
 func (s *Spooler) processKeywordsTracking(ctx context.Context, tracker *models.AugmentedKeywordTracker) error {
-	logger := s.logger.With(zap.String("tracker_id", tracker.GetID()))
+	logger := s.logger.With(
+		zap.String("project_id", tracker.Project.ID),
+		zap.String("tracker_id", tracker.GetID()))
+
 	logger.Debug("processing tracker", zap.Int("queue_size", len(s.queue)))
 
 	// Check if a call is already running across organizations
