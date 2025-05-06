@@ -364,6 +364,7 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 			}
 			if leadInteraction != nil && leadInteraction.Metadata.ReferenceID != "" {
 				redditLead.LeadMetadata.AutomatedCommentURL = fmt.Sprintf("https://www.reddit.com/%s", leadInteraction.Metadata.Permalink)
+				redditLead.Status = models.LeadStatusCOMPLETED
 				err := s.db.UpdateLeadStatus(ctx, redditLead)
 				if err != nil {
 					s.logger.Warn("failed to update lead status for automated comment", zap.Error(err))
