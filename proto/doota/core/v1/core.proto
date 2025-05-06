@@ -91,6 +91,7 @@ message LeadMetadata {
   int64 ups = 10;
   string author_url = 11;
   string dm_url = 12;
+  string automated_comment_url = 13;
 }
 
 message Lead {

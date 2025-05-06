@@ -224,6 +224,11 @@ export declare type LeadMetadata = Message<"doota.core.v1.LeadMetadata"> & {
    * @generated from field: string dm_url = 12;
    */
   dmUrl: string;
+
+  /**
+   * @generated from field: string automated_comment_url = 13;
+   */
+  automatedCommentUrl: string;
 };
 
 /**

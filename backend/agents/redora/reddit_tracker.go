@@ -4,12 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/shank318/doota/agents/redora/interactions"
 	"github.com/shank318/doota/agents/state"
 	"github.com/shank318/doota/ai"
 	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/integrations/reddit"
 	"github.com/shank318/doota/models"
 	"github.com/shank318/doota/notifiers/alerts"
+	pbcore "github.com/shank318/doota/pb/doota/core/v1"
 	"github.com/shank318/doota/utils"
 	"go.uber.org/zap"
 	"sort"
@@ -147,16 +149,24 @@ func (s *redditKeywordTracker) sendAlert(ctx context.Context, project *models.Pr
 			return
 		}
 
+		totalCommentsSent, err := s.getLeadInteractionCountOfTheDay(ctx, project.ID)
+		if err != nil {
+			s.logger.Error("failed to get leads interaction count", zap.Error(err))
+			return
+		}
+
 		leadsURL := "https://app.redoraai.com/dashboard/leads"
 
 		msg := fmt.Sprintf(
 			"*📊 Daily Lead Summary — RedoraAI*\n"+
 				"*Product:* %s\n"+
 				"*Posts Analyzed:* %d\n"+
+				"*Automated Comments Posted:* %d\n"+
 				"*Leads Found:* *%d*\n\n"+
 				"🔗 <%s|View all leads in your dashboard>",
 			project.Name,
 			totalPostsAnalysed,
+			totalCommentsSent,
 			dailyCount,
 			leadsURL,
 		)
@@ -203,6 +213,8 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 	project := tracker.Project
 	keyword := tracker.Keyword
 	source := tracker.Source
+
+	automatedInteractionService := interactions.NewRedditInteractions(redditClient, s.db, s.logger)
 
 	if ok, err := s.isMaxLeadLimitReached(ctx, project.ID, defaultRelevancyScore); err != nil || ok {
 		return err
@@ -321,7 +333,7 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 			redditLead.LeadMetadata.ChainOfThought = reason
 		}
 
-		err = s.db.CreateLead(ctx, redditLead)
+		_, err = s.db.CreateLead(ctx, redditLead)
 		if err != nil {
 			if datastore.IsUniqueViolation(err) {
 				s.logger.Warn(
@@ -330,6 +342,31 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 					zap.String("post_id", post.ID))
 			} else {
 				return fmt.Errorf("unable to create reddit lead: %w", err)
+			}
+		}
+
+		// Send automated comment
+		if tracker.Organization.FeatureFlags.EnableAutoComment &&
+			pbcore.IsGoodForEngagement(redditLead.Intents) &&
+			redditLead.RelevancyScore >= defaultRelevancyScore &&
+			len(strings.TrimSpace(redditLead.LeadMetadata.SuggestedComment)) > 0 {
+			leadInteraction, err := automatedInteractionService.SendComment(ctx, &interactions.SendCommentInfo{
+				LeadID:        redditLead.ID,
+				ProjectID:     redditLead.ProjectID,
+				SubredditName: redditLead.LeadMetadata.SubRedditPrefixed,
+				Comment:       redditLead.LeadMetadata.SuggestedComment,
+				UserName:      redditClient.GetConfig().Name,
+				ThingID:       redditLead.PostID,
+			})
+			if err != nil {
+				s.logger.Warn("failed to send automated comment", zap.Error(err))
+			}
+			if leadInteraction != nil && leadInteraction.Metadata.ReferenceID != "" {
+				redditLead.LeadMetadata.AutomatedCommentURL = fmt.Sprintf("https://www.reddit.com/%s", leadInteraction.Metadata.Permalink)
+				err := s.db.UpdateLeadStatus(ctx, redditLead)
+				if err != nil {
+					s.logger.Warn("failed to update lead status for automated comment", zap.Error(err))
+				}
 			}
 		}
 
@@ -380,6 +417,16 @@ func (s *redditKeywordTracker) getLeadsCountOfTheDay(ctx context.Context, projec
 		return 0, err
 	}
 	return leadsData.Count, nil
+}
+
+func (s *redditKeywordTracker) getLeadInteractionCountOfTheDay(ctx context.Context, projectID string) (uint32, error) {
+	today := time.Now().Truncate(24 * time.Hour)
+	tomorrow := today.Add(24 * time.Hour)
+	leadsData, err := s.db.GetLeadInteractions(ctx, projectID, today, tomorrow)
+	if err != nil {
+		return 0, err
+	}
+	return uint32(len(leadsData)), nil
 }
 
 const (
