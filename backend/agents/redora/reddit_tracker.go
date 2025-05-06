@@ -284,6 +284,7 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 			Description:   post.Selftext,
 			KeywordID:     keyword.ID,
 			PostCreatedAt: time.Unix(int64(post.CreatedAt), 0),
+			Status:        models.LeadStatusNEW, // need it for calling update below
 			LeadMetadata: models.LeadMetadata{
 				PostURL:           post.URL,
 				AuthorURL:         fmt.Sprintf("https://www.reddit.com/user/%s/", post.Author),
