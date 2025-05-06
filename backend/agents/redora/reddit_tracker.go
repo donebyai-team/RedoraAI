@@ -472,28 +472,29 @@ func isValidPostDescription(selfText string) (bool, string) {
 
 func (s *redditKeywordTracker) isValidPost(post *reddit.Post) (bool, string) {
 	sixMonthsAgo := time.Now().AddDate(0, -maxPostAgeInMonths, 0).Unix()
-
-	var reason string
 	author := strings.TrimSpace(post.Author)
 
 	if !isValidAuthor(author) {
-		reason = "invalid or system author"
+		return false, "invalid or system author"
+	}
+
+	if post.SubRedditType == "user" || post.SubRedditType == "private" {
+		return false, "not a public subreddit"
+	}
+
+	if (post.SubRedditType != "public" && post.SubRedditType != "restricted") || !strings.HasPrefix(post.SubRedditPrefixed, "r/") {
+		return false, "not a visible subreddit post"
 	}
 
 	if len(strings.TrimSpace(post.Selftext)) < minSelftextLength || len(strings.TrimSpace(post.Title)) < minTitleLength {
-		reason = "title or selftext is not big enough"
+		return false, "title or selftext is not big enough"
 	}
 
 	if int64(post.CreatedAt) < sixMonthsAgo || post.Archived {
-		reason = fmt.Sprintf("post is older than %d months or has been archived", maxPostAgeInMonths)
+		return false, fmt.Sprintf("post is older than %d months or has been archived", maxPostAgeInMonths)
 	}
 
-	isValid, rsn := isValidPostDescription(post.Selftext)
-	if !isValid {
-		reason = rsn
-	}
-
-	if reason != "" {
+	if isValid, reason := isValidPostDescription(post.Selftext); !isValid {
 		return false, reason
 	}
 

@@ -29,6 +29,7 @@ type Post struct {
 	Selftext          string  `json:"selftext"`
 	SelftextHTML      string  `json:"selftext_html"`
 	SubRedditPrefixed string  `json:"subreddit_name_prefixed"`
+	SubRedditType     string  `json:"subreddit_type"`
 	IsSelf            bool    `json:"is_self"`
 	Subreddit         string  `json:"subreddit"`
 	Archived          bool    `json:"archived"`
