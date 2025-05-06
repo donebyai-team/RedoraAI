@@ -25,8 +25,12 @@ const steps = [
         description: 'Choose keywords to track across Reddit.'
     },
     {
-        label: 'Select Subreddits',
-        description: 'Select subreddits to monitor for your keywords.'
+        label: 'Select Sources',
+        description: 'Select sources to monitor for your keywords.'
+    },
+    {
+        label: 'Connect Reddit',
+        description: 'Connect your Reddit account to start tracking.'
     }
 ];
 
@@ -67,11 +71,14 @@ export default function ManinForm() {
                 <Paper
                     elevation={3}
                     sx={{
-                        p: 4,
-                        borderRadius: 3,
                         minHeight: '400px',
                         display: 'flex',
-                        flexDirection: 'column'
+                        flexDirection: 'column',
+                        padding: 10,
+                        borderRadius: 7,
+                        boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
+                        overflow: "hidden",
+                        position: "relative",
                     }}
                 >
                     <Grid container spacing={4}>
@@ -147,7 +154,7 @@ export default function ManinForm() {
                                 borderLeft: { md: '1px solid rgba(0, 0, 0, 0.08)' }
                             }}>
                                 <Box sx={{ flex: 1 }}>
-                                    <StepContent step={activeStep} />
+                                    <StepContent step={activeStep} stepLength={steps.length} />
                                 </Box>
 
                                 <StepperControls

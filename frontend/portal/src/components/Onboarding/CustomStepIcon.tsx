@@ -1,6 +1,7 @@
 import React from 'react';
 import { styled } from '@mui/material/styles';
-import { Mail, ShieldCheck, SendHorizonal, FileText } from 'lucide-react';
+import { Mail, ShieldCheck, SendHorizonal } from 'lucide-react';
+import { Reddit as RedditIcon } from "@mui/icons-material"
 import { StepIconProps } from '@mui/material';
 
 // Create a styled component for the icon container
@@ -29,13 +30,6 @@ const IconContainer = styled('div')<{
   }),
 }));
 
-// interface CustomStepIconProps extends StepIconProps {
-//   active?: boolean;
-//   completed?: boolean;
-//   error?: boolean;
-//   icon: number;
-// }
-
 const CustomStepIcon: React.ElementType<StepIconProps> = (props) => {
   const { active, completed, icon } = props;
   const ownerState = { active, completed };
@@ -44,7 +38,7 @@ const CustomStepIcon: React.ElementType<StepIconProps> = (props) => {
     1: <Mail size={20} />,
     2: <ShieldCheck size={20} />,
     3: <SendHorizonal size={20} />,
-    4: <FileText size={20} />,
+    4: <RedditIcon sx={{ fontSize: 20 }} />,
   };
 
   return (

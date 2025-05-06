@@ -11,12 +11,14 @@ import {
     Paper,
 } from '@mui/material';
 import { Search, Plus, X } from 'lucide-react';
+import ConnectRedditStep from './ConnectRedditStep';
 
 interface StepContentProps {
     step: number;
+    stepLength?: number
 }
 
-const StepContent: React.FC<StepContentProps> = ({ step }) => {
+const StepContent: React.FC<StepContentProps> = ({ step, stepLength }) => {
     const [keywords, setKeywords] = useState<string[]>([]);
     const [newKeyword, setNewKeyword] = useState('');
     const [selectedSubreddits, setSelectedSubreddits] = useState<string[]>([]);
@@ -31,7 +33,7 @@ const StepContent: React.FC<StepContentProps> = ({ step }) => {
                 display: 'block'
             }}
         >
-            Step {step + 1} of 3
+            Step {step + 1} of {stepLength}
         </Typography>
     );
 
@@ -234,6 +236,9 @@ const StepContent: React.FC<StepContentProps> = ({ step }) => {
                     </Stack>
                 </Box>
             );
+
+        case 3:
+            return <ConnectRedditStep />;
 
         default:
             return null;

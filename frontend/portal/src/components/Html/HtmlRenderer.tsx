@@ -25,7 +25,7 @@ const HtmlBodyRenderer = ({ htmlString }: { htmlString: string }) => {
       if (doc) {
         doc.open();
         doc.write(`
-          <style>body { margin: 0; }</style>
+          <style>body { margin-left: 0px; margin-right: 0px; }</style>
           ${decodedHtml}
         `);
         doc.close();

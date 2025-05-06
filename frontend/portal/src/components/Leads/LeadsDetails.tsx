@@ -233,7 +233,7 @@ const LeadsPostDetails = () => {
 
           {/* Body */}
           <Box sx={{ width: "100%", pb: 2 }}>
-            <Box sx={{ px: 2, pt: 2, height: "42dvh", maxHeight: "100%", overflowY: "scroll" }}>
+            <Box sx={{ px: 2, pt: 2,mb: 2, height: "40dvh", maxHeight: "100%", overflowY: "scroll" }}>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                 <Link href={selectedleadData.metadata?.authorUrl || "#"} target="_blank">
                   {selectedleadData.author}
