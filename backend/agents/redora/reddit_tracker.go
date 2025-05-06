@@ -19,8 +19,6 @@ import (
 	"time"
 )
 
-const redoraChannel = "https://hooks.slack.com/services/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"
-
 type redditKeywordTracker struct {
 	gptModel          ai.GPTModel
 	db                datastore.Repository
@@ -29,6 +27,8 @@ type redditKeywordTracker struct {
 	state             state.ConversationState
 	redditOauthClient *reddit.OauthClient
 	isDev             bool
+	slackNotifier     alerts.AlertNotifier
+	emailNotifier     alerts.AlertNotifier
 }
 
 func newRedditKeywordTracker(
@@ -38,7 +38,9 @@ func newRedditKeywordTracker(
 	db datastore.Repository,
 	aiClient *ai.Client,
 	logger *zap.Logger,
-	state state.ConversationState) KeywordTracker {
+	state state.ConversationState,
+	slackNotifier alerts.AlertNotifier,
+	emailNotifier alerts.AlertNotifier) KeywordTracker {
 	return &redditKeywordTracker{
 		gptModel:          gptModel,
 		db:                db,
@@ -47,6 +49,8 @@ func newRedditKeywordTracker(
 		state:             state,
 		redditOauthClient: redditOauthClient,
 		isDev:             isDev,
+		slackNotifier:     slackNotifier,
+		emailNotifier:     emailNotifier,
 	}
 }
 
@@ -59,6 +63,8 @@ func (s *redditKeywordTracker) WithLogger(logger *zap.Logger) KeywordTracker {
 		state:             s.state,
 		redditOauthClient: s.redditOauthClient,
 		isDev:             s.isDev,
+		slackNotifier:     s.slackNotifier,
+		emailNotifier:     s.emailNotifier,
 	}
 }
 
@@ -155,36 +161,27 @@ func (s *redditKeywordTracker) sendAlert(ctx context.Context, project *models.Pr
 			return
 		}
 
-		leadsURL := "https://app.redoraai.com/dashboard/leads"
-
-		msg := fmt.Sprintf(
-			"*📊 Daily Lead Summary — RedoraAI*\n"+
-				"*Product:* %s\n"+
-				"*Posts Analyzed:* %d\n"+
-				"*Automated Comments Posted:* %d\n"+
-				"*Leads Found:* *%d*\n\n"+
-				"🔗 <%s|View all leads in your dashboard>",
-			project.Name,
-			totalPostsAnalysed,
-			totalCommentsSent,
-			dailyCount,
-			leadsURL,
-		)
-
 		// Send alert on redora
-		err = alerts.NewSlackNotifier(redoraChannel).Send(ctx, msg)
+		err = s.slackNotifier.SendLeadsSummary(ctx, alerts.LeadSummary{
+			OrgID:              project.OrganizationID,
+			ProjectName:        project.Name,
+			TotalPostsAnalysed: totalPostsAnalysed,
+			TotalCommentsSent:  totalCommentsSent,
+			DailyCount:         dailyCount,
+		})
 		if err != nil {
 			s.logger.Error("failed to send slack notification", zap.Error(err))
 		}
 
-		integration, err := s.db.GetIntegrationByOrgAndType(ctx, project.OrganizationID, models.IntegrationTypeSLACKWEBHOOK)
-		if err != nil && errors.Is(err, datastore.NotFound) {
-			s.logger.Info("no integration configured for alerts, skipped")
-			return
-		}
-		err = alerts.NewSlackNotifier(integration.GetSlackWebhook().Webhook).Send(ctx, msg)
+		err = s.emailNotifier.SendLeadsSummary(ctx, alerts.LeadSummary{
+			OrgID:              project.OrganizationID,
+			ProjectName:        project.Name,
+			TotalPostsAnalysed: totalPostsAnalysed,
+			TotalCommentsSent:  totalCommentsSent,
+			DailyCount:         dailyCount,
+		})
 		if err != nil {
-			s.logger.Error("failed to send slack notification", zap.Error(err))
+			s.logger.Error("failed to send email notification", zap.Error(err))
 		}
 	}
 }

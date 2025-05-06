@@ -9,6 +9,7 @@ import (
 	"github.com/shank318/doota/auth"
 	"github.com/shank318/doota/integrations"
 	"github.com/shank318/doota/integrations/reddit"
+	"github.com/shank318/doota/notifiers/alerts"
 	pbportal "github.com/shank318/doota/pb/doota/portal/v1"
 	"github.com/shank318/doota/portal"
 	"github.com/shank318/doota/portal/state"
@@ -34,6 +35,7 @@ var StartCmd = cli.Command(startCmdE,
 		flags.Duration("common-phone-call-ttl", 5*time.Minute, cli.FlagDescription(`TTL to set in redis for a phone call`))
 		flags.String("common-pubsub-project", "doota-local", "Google GCP Project")
 		flags.String("common-gpt-model", "redora-dev-gpt-4o-2024-08-06", "GPT Model to use for message creator and categorization")
+		flags.String("common-resend-api-key", "", "Resend email api key")
 		flags.String("common-openai-api-key", "", "OpenAI API key")
 		flags.String("common-openai-debug-store", "data/debugstore", "OpenAI debug store")
 		flags.String("common-openai-organization", "", "OpenAI Organization")
@@ -180,7 +182,17 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		isDev = true
 	}
 
-	tracker := redora.NewKeywordTrackerFactory(isDev, gptModel, redditOauthClient, deps.DataStore, deps.AIClient, logger, deps.ConversationState)
+	tracker := redora.NewKeywordTrackerFactory(
+		isDev,
+		gptModel,
+		redditOauthClient,
+		deps.DataStore,
+		deps.AIClient,
+		logger,
+		deps.ConversationState,
+		alerts.NewSlackNotifier(deps.DataStore, logger),
+		alerts.NewResendNotifier(sflags.MustGetString(cmd, "common-resend-api-key"), deps.DataStore, logger),
+	)
 
 	return redora.New(
 		deps.DataStore,

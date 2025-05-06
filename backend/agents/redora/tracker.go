@@ -7,6 +7,7 @@ import (
 	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/integrations/reddit"
 	"github.com/shank318/doota/models"
+	"github.com/shank318/doota/notifiers/alerts"
 	"go.uber.org/zap"
 )
 
@@ -23,6 +24,8 @@ type KeywordTrackerFactory struct {
 	state             state.ConversationState
 	redditOauthClient *reddit.OauthClient
 	isDev             bool
+	slackNotifier     alerts.AlertNotifier
+	emailNotifier     alerts.AlertNotifier
 }
 
 func NewKeywordTrackerFactory(
@@ -32,7 +35,9 @@ func NewKeywordTrackerFactory(
 	db datastore.Repository,
 	aiClient *ai.Client,
 	logger *zap.Logger,
-	state state.ConversationState) *KeywordTrackerFactory {
+	state state.ConversationState,
+	slackNotifier alerts.AlertNotifier,
+	emailNotifier alerts.AlertNotifier) *KeywordTrackerFactory {
 	return &KeywordTrackerFactory{
 		gptModel:          gptModel,
 		db:                db,
@@ -41,6 +46,8 @@ func NewKeywordTrackerFactory(
 		state:             state,
 		redditOauthClient: redditOauthClient,
 		isDev:             isDev,
+		slackNotifier:     slackNotifier,
+		emailNotifier:     emailNotifier,
 	}
 }
 
@@ -52,5 +59,5 @@ func (f *KeywordTrackerFactory) GetKeywordTrackerBySource(sourceType models.Sour
 		f.db,
 		f.aiClient,
 		f.logger,
-		f.state)
+		f.state, f.slackNotifier, f.emailNotifier)
 }

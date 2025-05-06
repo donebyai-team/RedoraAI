@@ -1,0 +1,1 @@
+SELECT * FROM users WHERE organization_id = :organization_id

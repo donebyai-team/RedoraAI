@@ -55,6 +55,7 @@ type UserRepository interface {
 	GetUserById(ctx context.Context, userID string) (*models.User, error)
 	GetUserByAuth0Id(ctx context.Context, auth0ID string) (*models.User, error)
 	GetUserByEmail(ctx context.Context, email string) (*models.User, error)
+	GetUsersByOrgID(ctx context.Context, orgID string) ([]*models.User, error)
 }
 
 type CustomerRepository interface {
