@@ -31,6 +31,7 @@ type Repository interface {
 	LeadRepository
 	KeywordRepository
 	ProjectRepository
+	LeadInteractionRepository
 }
 
 type OrganizationRepository interface {
@@ -84,12 +85,18 @@ type SourceRepository interface {
 	GetSourcesByProject(ctx context.Context, projectID string) ([]*models.Source, error)
 }
 
+type LeadInteractionRepository interface {
+	CreateLeadInteraction(ctx context.Context, reddit *models.LeadInteraction) (*models.LeadInteraction, error)
+	UpdateLeadInteraction(ctx context.Context, reddit *models.LeadInteraction) error
+	GetLeadInteractions(ctx context.Context, projectID string, start, end time.Time) ([]*models.LeadInteraction, error)
+}
+
 type LeadRepository interface {
 	GetLeadsByStatus(ctx context.Context, projectID string, status models.LeadStatus) ([]*models.AugmentedLead, error)
 	GetLeadsByRelevancy(ctx context.Context, projectID string, relevancy float32, sources []string) ([]*models.AugmentedLead, error)
 	GetLeadByPostID(ctx context.Context, projectID, postID string) (*models.Lead, error)
 	GetLeadByCommentID(ctx context.Context, projectID, commentID string) (*models.Lead, error)
-	CreateLead(ctx context.Context, reddit *models.Lead) error
+	CreateLead(ctx context.Context, reddit *models.Lead) (*models.Lead, error)
 	UpdateLeadStatus(ctx context.Context, lead *models.Lead) error
 	GetLeadByID(ctx context.Context, projectID, id string) (*models.Lead, error)
 	CountLeadByCreatedAt(ctx context.Context, projectID string, relevancyScore int, start, end time.Time) (*models.LeadsData, error)

@@ -22,7 +22,9 @@ func (o *Organization) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
 }
 
 // TODO: Move it to a better place
-type OrganizationFeatureFlags struct{}
+type OrganizationFeatureFlags struct {
+	EnableAutoComment bool `json:"enable_auto_comment"`
+}
 
 func (b OrganizationFeatureFlags) Value() (driver.Value, error) {
 	return valueAsJSON(b, "organization feature flags")

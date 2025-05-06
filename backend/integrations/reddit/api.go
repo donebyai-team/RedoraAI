@@ -3,7 +3,9 @@ package reddit
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/shank318/doota/models"
 	"golang.org/x/oauth2"
 	"net/http"
 	"net/url"
@@ -13,7 +15,7 @@ import (
 
 func (r *Client) GetUser(ctx context.Context, userID string) (*User, error) {
 	reqURL := fmt.Sprintf("%s/user/%s/about.json", r.baseURL, userID)
-	resp, err := r.doRequest(ctx, http.MethodGet, reqURL)
+	resp, err := r.doRequest(ctx, http.MethodGet, reqURL, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -30,6 +32,87 @@ func (r *Client) GetUser(ctx context.Context, userID string) (*User, error) {
 	return &response.Data, nil
 }
 
+func (r *Client) PostComment(ctx context.Context, thingID, text string) (*Comment, error) {
+	form := url.Values{}
+	form.Set("api_type", "json")
+	form.Set("thing_id", thingID) // e.g. t3_abc123
+	form.Set("text", text)
+
+	reqURL := fmt.Sprintf("%s/api/comment", r.baseURL)
+	resp, err := r.doRequest(ctx, http.MethodPost, reqURL, strings.NewReader(form.Encode()))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to post comment: %s", resp.Status)
+	}
+
+	// Parse Reddit's response JSON
+	var result struct {
+		JSON struct {
+			Errors [][]interface{} `json:"errors"`
+			Data   struct {
+				Things []struct {
+					Kind string  `json:"kind"`
+					Data Comment `json:"data"`
+				} `json:"things"`
+			} `json:"data"`
+		} `json:"json"`
+	}
+
+	if err := decodeJSON(resp.Body, &result); err != nil {
+		return nil, fmt.Errorf("error decoding comment response: %w", err)
+	}
+
+	if len(result.JSON.Errors) > 0 {
+		return nil, fmt.Errorf("reddit API error: %v", result.JSON.Errors)
+	}
+
+	if len(result.JSON.Data.Things) == 0 {
+		return nil, errors.New("no comment returned")
+	}
+
+	return &result.JSON.Data.Things[0].Data, nil
+}
+
+func (r *Client) JoinSubreddit(ctx context.Context, subreddit string) error {
+	form := url.Values{}
+	form.Set("action", "sub")
+	form.Set("sr_name", subreddit)
+
+	reqURL := fmt.Sprintf("%s/api/subscribe", r.baseURL)
+	resp, err := r.doRequest(ctx, http.MethodPost, reqURL, strings.NewReader(form.Encode()))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to join subreddit: %s", resp.Status)
+	}
+	var result struct {
+		JSON struct {
+			Errors [][]interface{} `json:"errors"`
+		} `json:"json"`
+	}
+
+	// Try to decode if content-type is JSON
+	contentType := resp.Header.Get("Content-Type")
+	if strings.Contains(contentType, "application/json") {
+		if err := decodeJSON(resp.Body, &result); err != nil {
+			return fmt.Errorf("error decoding join response: %w", err)
+		}
+		if len(result.JSON.Errors) > 0 {
+			return fmt.Errorf("reddit API error joining subreddit: %v", result.JSON.Errors)
+		}
+	}
+
+	// If no errors and no JSON, assume success
+	return nil
+}
+
 func (r *Client) GetSubRedditByName(ctx context.Context, name string) (*SubReddit, error) {
 	if strings.ToLower(strings.TrimSpace(name)) == "all" {
 		return &SubReddit{
@@ -40,7 +123,7 @@ func (r *Client) GetSubRedditByName(ctx context.Context, name string) (*SubReddi
 	}
 
 	reqURL := fmt.Sprintf("%s/r/%s/about.json", r.baseURL, name)
-	resp, err := r.doRequest(ctx, http.MethodGet, reqURL)
+	resp, err := r.doRequest(ctx, http.MethodGet, reqURL, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -74,6 +157,10 @@ type PostFilters struct {
 	Limit    int
 }
 
+func (r *Client) GetConfig() *models.RedditConfig {
+	return r.config
+}
+
 func (r *Client) GetPosts(ctx context.Context, subRedditName string, filters PostFilters) ([]*Post, error) {
 	v := url.Values{}
 	if len(filters.Keywords) > 0 {
@@ -99,7 +186,7 @@ func (r *Client) GetPosts(ctx context.Context, subRedditName string, filters Pos
 
 	v.Set("restrict_sr", "1")
 	reqURL := fmt.Sprintf("%s/r/%s/search.json?%s", r.baseURL, subRedditName, v.Encode())
-	resp, err := r.doRequest(ctx, http.MethodGet, reqURL)
+	resp, err := r.doRequest(ctx, http.MethodGet, reqURL, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +214,7 @@ func (r *Client) GetPosts(ctx context.Context, subRedditName string, filters Pos
 
 func (r *Client) GetPostByID(ctx context.Context, postID string) (*Post, error) {
 	reqURL := fmt.Sprintf("%s/comments/%s.json", r.baseURL, postID)
-	resp, err := r.doRequest(ctx, http.MethodGet, reqURL)
+	resp, err := r.doRequest(ctx, http.MethodGet, reqURL, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -154,7 +241,7 @@ func (r *Client) GetPostByID(ctx context.Context, postID string) (*Post, error) 
 
 func (r *Client) GetPostWithAllComments(ctx context.Context, postID string) (*Post, error) {
 	reqURL := fmt.Sprintf("%s/comments/%s.json?raw_json=1&sort=new", r.baseURL, postID)
-	resp, err := r.doRequest(ctx, http.MethodGet, reqURL)
+	resp, err := r.doRequest(ctx, http.MethodGet, reqURL, nil)
 	if err != nil {
 		return nil, err
 	}

@@ -66,10 +66,11 @@ func (b *SubRedditMetadata) Scan(value interface{}) error {
 //}
 
 type AugmentedKeywordTracker struct {
-	Tracker *KeywordTracker
-	Source  *Source
-	Keyword *Keyword
-	Project *Project
+	Tracker      *KeywordTracker
+	Source       *Source
+	Keyword      *Keyword
+	Project      *Project
+	Organization *Organization
 }
 
 func (a *AugmentedKeywordTracker) GetID() string {
@@ -215,6 +216,7 @@ type LeadMetadata struct {
 	DmURL                          string `json:"dm_url"`
 	SelfTextHTML                   string `json:"description_html"`
 	SubRedditPrefixed              string `json:"subreddit_prefixed"`
+	AutomatedCommentURL            string `json:"automated_comment_url"`
 }
 
 func (b LeadMetadata) Value() (driver.Value, error) {
@@ -223,4 +225,37 @@ func (b LeadMetadata) Value() (driver.Value, error) {
 
 func (b *LeadMetadata) Scan(value interface{}) error {
 	return scanFromJSON(value, b, "reddit_lead metadata")
+}
+
+// ENUM(DM, COMMENT, LIKE)
+type LeadInteractionType string
+
+// ENUM(CREATED, SENT, FAILED, REMOVED)
+type LeadInteractionStatus string
+
+type LeadInteraction struct {
+	ID        string                   `db:"id"`
+	ProjectID string                   `db:"project_id"`
+	LeadID    string                   `db:"lead_id"`
+	Type      LeadInteractionType      `db:"type"`
+	From      string                   `db:"from_user"`
+	To        string                   `db:"to_user"`
+	Status    LeadInteractionStatus    `db:"status"`
+	Reason    string                   `db:"reason"`
+	Metadata  LeadInteractionsMetadata `db:"metadata"`
+	CreatedAt time.Time                `db:"created_at"`
+	UpdatedAt *time.Time               `db:"updated_at"`
+}
+
+type LeadInteractionsMetadata struct {
+	Permalink   string `json:"permalink"`
+	ReferenceID string `json:"referenceID"`
+}
+
+func (b LeadInteractionsMetadata) Value() (driver.Value, error) {
+	return valueAsJSON(b, "lead integration metadata")
+}
+
+func (b *LeadInteractionsMetadata) Scan(value interface{}) error {
+	return scanFromJSON(value, b, "lead integration metadata")
 }

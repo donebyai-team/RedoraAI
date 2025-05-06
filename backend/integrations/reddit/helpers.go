@@ -15,8 +15,8 @@ import (
 var ErrNotFound = errors.New("not found")
 var ErrUnAuthorized = errors.New("unauthorized")
 
-func (r *Client) doRequest(ctx context.Context, method, url string) (*http.Response, error) {
-	req, err := r.buildRequest(ctx, method, url)
+func (r *Client) doRequest(ctx context.Context, method, url string, rawBody interface{}) (*http.Response, error) {
+	req, err := r.buildRequest(ctx, rawBody, method, url)
 	if err != nil {
 		return nil, err
 	}
@@ -37,8 +37,8 @@ func (r *Client) doRequest(ctx context.Context, method, url string) (*http.Respo
 	return resp, nil
 }
 
-func (r *Client) buildRequest(ctx context.Context, method, url string) (*retryablehttp.Request, error) {
-	req, err := retryablehttp.NewRequestWithContext(ctx, method, url, nil)
+func (r *Client) buildRequest(ctx context.Context, rawBody interface{}, method, url string) (*retryablehttp.Request, error) {
+	req, err := retryablehttp.NewRequestWithContext(ctx, method, url, rawBody)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
