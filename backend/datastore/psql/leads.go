@@ -44,6 +44,10 @@ func (r *Database) GetLeadByID(ctx context.Context, projectID, id string) (*mode
 }
 
 func (r *Database) UpdateLeadStatus(ctx context.Context, lead *models.Lead) error {
+	if lead.Status == "" {
+		return fmt.Errorf("status cannot be empty")
+	}
+
 	stmt := r.mustGetStmt("leads/update_lead_status.sql")
 	_, err := stmt.ExecContext(ctx, map[string]interface{}{
 		"status":     lead.Status,
