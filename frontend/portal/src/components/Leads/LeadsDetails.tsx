@@ -234,83 +234,110 @@ const LeadsPostDetails = () => {
           {/* Body */}
           <Box sx={{ width: "100%", pb: 2 }}>
             <Box sx={{ px: 2, pt: 2, height: "42dvh", maxHeight: "100%", overflowY: "scroll" }}>
+              {/* Metadata line */}
               <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                 <Link href={selectedleadData.metadata?.authorUrl || "#"} target="_blank">
                   {selectedleadData.author}
                 </Link>{" "}
                 • {subredditName} • {formattedDate}
               </Typography>
+
+              {/* Title */}
               <Typography
-                variant="h5"
-                component={Link}
-                href={selectedleadData.metadata?.postUrl || "#"}
-                target="_blank"
-                sx={{ fontWeight: "bold", mb: 2 }}
+                  variant="h5"
+                  component={Link}
+                  href={selectedleadData.metadata?.postUrl || "#"}
+                  target="_blank"
+                  sx={{ fontWeight: "bold", mb: 2, display: "block", textDecoration: "none" }}
               >
                 <MemoizedHtmlTitleRenderer htmlString={selectedleadData.title || ""} />
               </Typography>
-              <MemoizedHtmlBodyRenderer htmlString={selectedleadData.metadata?.descriptionHtml || ""} />
+
+              {/* Description with improved styling */}
+              <Box sx={{ typography: "body1", lineHeight: 1.7, "& p": { mb: 2 }, "& li": { mb: 1, ml: 3 } }}>
+                <MemoizedHtmlBodyRenderer htmlString={selectedleadData.metadata?.descriptionHtml || ""} />
+              </Box>
             </Box>
+            {(selectedleadData.metadata?.suggestedComment || selectedleadData.metadata?.suggestedDm) && (
+  <Stack direction={{ xs: "column", md: "row" }} spacing={2} sx={{ mx: 2, my: 2 }}>
+    {/* Suggested Comment */}
+    {selectedleadData.metadata?.suggestedComment && (
+      <Card sx={{ flex: 1, borderRadius: 2, bgcolor: "#f3f4f6" }}>
+        <CardContent sx={{ p: 1.5, "&:last-child": { pb: 1.5 } }}>
+          <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+            <Star sx={{ color: "#e25a9e", mr: 1 }} />
+            <Typography color="#e25a9e" fontWeight="medium">Suggested comment</Typography>
+          </Box>
+          <Typography variant="body1" sx={{ mb: 2 }}>
+            {selectedleadData.metadata.suggestedComment}
+          </Typography>
+          <Stack direction="row" justifyContent="end">
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<Send />}
+              sx={{
+                bgcolor: "#000",
+                color: "#fff",
+                "&:hover": { bgcolor: "#333" },
+                borderRadius: "20px",
+                textTransform: "none",
+              }}
+              onClick={() =>
+                copyTextAndOpenLink(
+                  selectedleadData.metadata?.suggestedComment ?? "",
+                  selectedleadData.metadata?.postUrl ?? "#"
+                )
+              }
+            >
+              Copy & open post
+            </Button>
+          </Stack>
+        </CardContent>
+      </Card>
+    )}
 
-            {/* Suggested Comment */}
-            {selectedleadData.metadata?.suggestedComment && (
-              <Card sx={{ mb: 1.5, borderRadius: 2, mx: 2, bgcolor: "#f3f4f6" }}>
-                <CardContent sx={{ p: 1.5, "&:last-child": { pb: 1.5 } }}>
-                  <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                    <Star sx={{ color: "#e25a9e", mr: 1 }} />
-                    <Typography color="#e25a9e" fontWeight="medium">Suggested comment</Typography>
-                  </Box>
-                  <Typography variant="body1" sx={{ mb: 2 }}>{selectedleadData.metadata.suggestedComment}</Typography>
-                  <Stack direction="row" justifyContent="end">
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      startIcon={<Send />}
-                      sx={{
-                        bgcolor: "#000",
-                        color: "#fff",
-                        "&:hover": { bgcolor: "#333" },
-                        borderRadius: "20px",
-                        textTransform: "none",
-                      }}
-                      onClick={() => copyTextAndOpenLink(selectedleadData.metadata?.suggestedComment ?? "", selectedleadData.metadata?.postUrl ?? "#")}
-                    >
-                      Copy & open post
-                    </Button>
-                  </Stack>
-                </CardContent>
-              </Card>
-            )}
+    {/* Suggested DM */}
+    {selectedleadData.metadata?.suggestedDm && (
+      <Card sx={{ flex: 1, borderRadius: 2, bgcolor: "#f3f4f6" }}>
+        <CardContent sx={{ p: 1.5, "&:last-child": { pb: 1.5 } }}>
+          <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+            <Star sx={{ color: "#e25a9e", mr: 1 }} />
+            <Typography color="#e25a9e" fontWeight="medium">Suggested DM</Typography>
+          </Box>
+          <Typography variant="body1" sx={{ mb: 2 }}>
+            {selectedleadData.metadata.suggestedDm}
+          </Typography>
+          <Stack direction="row" justifyContent="end">
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<Send />}
+              sx={{
+                bgcolor: "#000",
+                color: "#fff",
+                "&:hover": { bgcolor: "#333" },
+                borderRadius: "20px",
+                textTransform: "none",
+              }}
+              onClick={() =>
+                copyTextAndOpenLink(
+                  selectedleadData.metadata?.suggestedDm ?? "",
+                  selectedleadData.metadata?.dmUrl ?? "#"
+                )
+              }
+            >
+              Copy & open DMs
+            </Button>
+          </Stack>
+        </CardContent>
+      </Card>
+    )}
+  </Stack>
+)}
 
-            {/* Suggested DM */}
-            {selectedleadData.metadata?.suggestedDm && (
-              <Card sx={{ borderRadius: 2, mx: 2, bgcolor: "#f3f4f6" }}>
-                <CardContent sx={{ p: 1.5, "&:last-child": { pb: 1.5 } }}>
-                  <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                    <Star sx={{ color: "#e25a9e", mr: 1 }} />
-                    <Typography color="#e25a9e" fontWeight="medium">Suggested DM</Typography>
-                  </Box>
-                  <Typography variant="body1" paragraph>{selectedleadData.metadata.suggestedDm}</Typography>
-                  <Stack direction="row" justifyContent="end">
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      startIcon={<Send />}
-                      sx={{
-                        bgcolor: "#000",
-                        color: "#fff",
-                        "&:hover": { bgcolor: "#333" },
-                        borderRadius: "20px",
-                        textTransform: "none",
-                      }}
-                      onClick={() => copyTextAndOpenLink(selectedleadData.metadata?.suggestedDm ?? "", selectedleadData.metadata?.dmUrl ?? "#")}
-                    >
-                      Copy & open DMs
-                    </Button>
-                  </Stack>
-                </CardContent>
-              </Card>
-            )}
+
+              
           </Box>
         </Paper>
       </Box>
