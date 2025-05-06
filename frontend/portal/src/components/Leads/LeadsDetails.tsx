@@ -61,7 +61,7 @@ const LeadsPostDetails = () => {
   const discardedTabList = useAppSelector((state: RootState) => state.lead.discardedTabList);
   const subredditList = useAppSelector((state: RootState) => state.source.subredditList);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-
+  
   const subredditName = useMemo(() => {
     return getSubredditName(subredditList, selectedleadData?.sourceId ?? "");
   }, [subredditList, selectedleadData?.sourceId]);
@@ -124,7 +124,6 @@ const LeadsPostDetails = () => {
         });
     }
   }, []);
-
 
   const handleLeadStatusUpdate = useCallback(async (status: LeadStatus) => {
     if (!selectedleadData) return;
@@ -262,40 +261,54 @@ const LeadsPostDetails = () => {
   <Stack direction={{ xs: "column", md: "row" }} spacing={2} sx={{ mx: 2, my: 2 }}>
     {/* Suggested Comment */}
     {selectedleadData.metadata?.suggestedComment && (
-      <Card sx={{ flex: 1, borderRadius: 2, bgcolor: "#f3f4f6" }}>
-        <CardContent sx={{ p: 1.5, "&:last-child": { pb: 1.5 } }}>
-          <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-            <Star sx={{ color: "#e25a9e", mr: 1 }} />
-            <Typography color="#e25a9e" fontWeight="medium">Suggested comment</Typography>
-          </Box>
-          <Typography variant="body1" sx={{ mb: 2 }}>
-            {selectedleadData.metadata.suggestedComment}
-          </Typography>
-          <Stack direction="row" justifyContent="end">
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<Send />}
-              sx={{
-                bgcolor: "#000",
-                color: "#fff",
-                "&:hover": { bgcolor: "#333" },
-                borderRadius: "20px",
-                textTransform: "none",
-              }}
-              onClick={() =>
-                copyTextAndOpenLink(
-                  selectedleadData.metadata?.suggestedComment ?? "",
-                  selectedleadData.metadata?.postUrl ?? "#"
-                )
-              }
-            >
-              Copy & open post
-            </Button>
-          </Stack>
-        </CardContent>
-      </Card>
-    )}
+      <Card sx={{ flex: 1, borderRadius: 2, bgcolor: "#f3f4f6", display: "flex", flexDirection: "column" }}>
+      <CardContent
+        sx={{
+          flexGrow: 1,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+          p: 1.5,
+          "&:last-child": { pb: 1.5 },
+        }}
+      >
+      <Box>
+        <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+          <Star sx={{ color: "#e25a9e", mr: 1 }} />
+          <Typography color="#e25a9e" fontWeight="medium">Suggested comment</Typography>
+        </Box>
+        <Typography variant="body1" sx={{ mb: 2 }}>
+          {selectedleadData.metadata.suggestedComment}
+        </Typography>
+      </Box>
+
+      <Stack direction="row" justifyContent="flex-start">
+        <Button
+          variant="contained"
+          startIcon={<Send />}
+          sx={{
+            bgcolor: selectedleadData.metadata?.automatedCommentUrl ? "green" : "#000",
+            color: "#fff",
+            "&:hover": {
+              bgcolor: selectedleadData.metadata?.automatedCommentUrl ? "darkgreen" : "#333",
+            },
+            borderRadius: "20px",
+            textTransform: "none",
+          }}
+          onClick={() =>
+            copyTextAndOpenLink(
+              selectedleadData.metadata?.suggestedComment ?? "",
+              selectedleadData.metadata?.automatedCommentUrl || selectedleadData.metadata?.postUrl || "#"
+            )
+          }
+        >
+          {selectedleadData.metadata?.automatedCommentUrl ? "Commented by AI" : "Copy & open post"}
+        </Button>
+      </Stack>
+      </CardContent>
+    </Card>
+  )}
+
 
     {/* Suggested DM */}
     {selectedleadData.metadata?.suggestedDm && (
