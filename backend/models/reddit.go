@@ -209,6 +209,7 @@ type LeadMetadata struct {
 	SuggestedDM                    string   `json:"suggested_dm"`
 	ChainOfThoughtSuggestedComment string   `json:"chain_of_thought_suggested_comment"`
 	ChainOfThoughtSuggestedDM      string   `json:"chain_of_thought_dm"`
+	AppliedRules                   []string `json:"applied_rules"`
 	Ups                            int64    `json:"ups"`
 	NoOfComments                   int64    `json:"no_of_comments"`
 	PostURL                        string   `json:"post_url"`

@@ -8,7 +8,7 @@
       "properties": {
         "chain_of_thought": {
           "type": "string",
-          "description": "Explanation of the chain of thought leading to the relevant_confidence_score"
+          "description": "Explanation of the chain of thought leading to the relevant_confidence_score. Explicitly include which rules (e.g. R1, C2, X3, etc.) were applied or triggered."
         },
         "relevant_confidence_score": {
           "type": "number",
@@ -41,7 +41,7 @@
         },
         "chain_of_thought_suggested_dm": {
           "type": "string",
-          "description": "Explanation of the chain of thought leading to the suggested_dm if it is relevant or return empty"
+          "description": "Explanation of the chain of thought leading to the suggested_dm. Explicitly include which rules (e.g. R1, C2, X3, etc.) were applied or triggered."
         },
         "suggested_comment": {
           "type": "string",
@@ -49,7 +49,12 @@
         },
         "chain_of_thought_suggested_comment": {
           "type": "string",
-          "description": "Explanation of the chain of thought leading to the suggested_comment if it is relevant or return empty"
+          "description": "Explanation of the chain of thought leading to the suggested_comment. Explicitly include which rules (e.g. R1, C2, X3, etc.) were applied or triggered."
+        },
+        "applied_rules": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of rule identifiers applied when scoring, suggesting comment or DM this post (e.g. R1, C2, X3)"
         }
       },
       "required": [
@@ -59,6 +64,7 @@
         "suggested_dm",
         "chain_of_thought_suggested_dm",
         "suggested_comment",
+        "applied_rules",
         "chain_of_thought_suggested_comment"
       ],
       "additionalProperties": false

@@ -20,6 +20,7 @@ type RedditPostRelevanceResponse struct {
 	ChainOfThoughtSuggestedDM      string       `json:"chain_of_thought_suggested_dm"`
 	SuggestedComment               string       `json:"suggested_comment"`
 	ChainOfThoughtSuggestedComment string       `json:"chain_of_thought_suggested_comment"`
+	AppliedRules                   []string     `json:"applied_rules"`
 }
 
 type CaseDecisionResponse struct {

@@ -22,7 +22,9 @@ func TestRelevancyOutputFormating(t *testing.T) {
 	if err != nil {
 		t.FailNow()
 	}
-	ai, err := NewOpenAI(utils.GetEnvTestReq(t, "OPENAI_API_KEY_DEV"), "", LangsmithConfig{}, debugStore)
+	//defaultModel := models.LLMModel("redora-dev-gpt-4.1-2025-04-14")
+	defaultModel := models.LLMModel("redora-dev-gpt-4.1-mini-2025-04-14")
+	ai, err := NewOpenAI(utils.GetEnvTestReq(t, "OPENAI_API_KEY_DEV"), defaultModel, LangsmithConfig{}, debugStore)
 	if err != nil {
 		t.FailNow()
 	}
@@ -41,13 +43,16 @@ func TestRelevancyOutputFormating(t *testing.T) {
 		Description: "Hello, hi! It is my first post here. English my second language and I am still in process, so.. don't shame me please We’re small content agency and we trying to expand into english speaking markets. Our team is small, we don’t have big budgets — but we do have lots of enthusiasm and decent portfolio. Right now, I’m looking into listing us in directories and databases (ideally free or low-cost just to be present). Do you think this is a smart move for an agency like ours? Any tips on where to list ourselves besides Clutch, SE Ranking, and UpWork? Any advice would mean a lot, thank you in advance!",
 	}
 
-	relevant, err := ai.IsRedditPostRelevant(context.Background(), project, post, GPTModelRedoraDevGpt4120250414, logger)
+	org := &models.Organization{}
+
+	relevant, usage, err := ai.IsRedditPostRelevant(context.Background(), org, project, post, logger)
 	if err != nil {
 		t.FailNow()
 	}
 
 	comment := utils.FormatComment(relevant.SuggestedComment)
 	assert.NotEmpty(t, comment)
+	assert.Equal(t, usage.Model, defaultModel)
 }
 
 //func Test2(t *testing.T) {
