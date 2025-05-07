@@ -14,6 +14,8 @@ import { useDispatch } from "react-redux";
 import { nextStep, prevStep, resetStepper } from "../../../store/Onboarding/OnboardingSlice";
 import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
+// import { useClientsContext } from "@doota/ui-core/context/ClientContext";
+import toast from "react-hot-toast";
 
 interface ProductFormValues {
     website: string;
@@ -25,10 +27,12 @@ interface ProductFormValues {
 export default function ProductInformationStep() {
     const dispatch = useDispatch();
     const activeStep = useAppSelector((state: RootState) => state.stepper.activeStep);
+    // const { portalClient } = useClientsContext()
     const {
         control,
         handleSubmit,
         setValue,
+        clearErrors,
         formState: { errors },
         watch,
     } = useForm<ProductFormValues>({
@@ -42,6 +46,7 @@ export default function ProductInformationStep() {
 
     const website = watch("website");
     const [loadingMeta, setLoadingMeta] = useState(false);
+    const [isLoading, setIsLoading] = useState(false)
 
     // 🔁 Debounce metadata fetch
     useEffect(() => {
@@ -56,18 +61,42 @@ export default function ProductInformationStep() {
                 .then(data => {
                     setValue("name", data.title || "");
                     setValue("description", data.description || "");
+
+                    // ✅ Clear errors only if value is not empty
+                    if (data.title) {
+                        clearErrors("name");
+                    }
+                    if (data.description) {
+                        clearErrors("description");
+                    }
                 })
                 .catch(() => { })
                 .finally(() => setLoadingMeta(false));
         }, 700); // 700ms debounce
 
         return () => clearTimeout(timer);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [website, setValue]);
 
-    const onSubmit = (data: ProductFormValues) => {
+    const onSubmit = async (data: ProductFormValues) => {
         // You can post `data` here if this is the final step
         console.log("###_debug_data ", data);
-        dispatch(nextStep());
+
+        setIsLoading(true)
+
+        try {
+            // await portalClient.createOrEditProject({  })
+            await new Promise(resolve => setTimeout(resolve, 2300));
+
+            const msg = "Product Information saved successfully";
+            toast.success(msg)
+            dispatch(nextStep());
+        } catch (err: any) {
+            const message = err?.response?.data?.message || err.message || "Something went wrong"
+            toast.error(message)
+        } finally {
+            setIsLoading(false)
+        }
     };
 
     const handleBack = () => {
@@ -93,6 +122,7 @@ export default function ProductInformationStep() {
                             placeholder="https://example.com"
                             error={!!errors.website}
                             helperText={errors.website?.message}
+                            disabled={isLoading}
                         />
                     )}
                 />
@@ -116,6 +146,7 @@ export default function ProductInformationStep() {
                             placeholder="e.g., My Awesome Product"
                             error={!!errors.name}
                             helperText={errors.name?.message}
+                            disabled={isLoading}
                         />
                     )}
                 />
@@ -134,6 +165,7 @@ export default function ProductInformationStep() {
                             placeholder="Describe your product and its key features..."
                             error={!!errors.description}
                             helperText={errors.description?.message}
+                            disabled={isLoading}
                         />
                     )}
                 />
@@ -150,6 +182,7 @@ export default function ProductInformationStep() {
                             placeholder="e.g., Developers, Marketers, Small Business Owners"
                             error={!!errors.targetPersona}
                             helperText={errors.targetPersona?.message}
+                            disabled={isLoading}
                         />
                     )}
                 />
@@ -161,6 +194,7 @@ export default function ProductInformationStep() {
                 handleNext={handleSubmit(onSubmit)}
                 handleReset={handleReset}
                 steps={steps}
+                btnDisabled={isLoading}
             />
         </form>
     </>);

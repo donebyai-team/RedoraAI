@@ -6,7 +6,7 @@ interface StepperState {
 }
 
 const initialState: StepperState = {
-    activeStep: 0,
+    activeStep: 3,
     skipped: [],
 };
 
