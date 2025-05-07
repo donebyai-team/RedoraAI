@@ -7,18 +7,20 @@ import {
     Chip,
     Autocomplete,
     InputAdornment,
-    IconButton,
     Paper,
 } from '@mui/material';
-import { Search, Plus, X } from 'lucide-react';
+import { Search, X } from 'lucide-react';
+import ConnectRedditStep from './ConnectRedditStep';
+import ProductInformationStep from './ProductInformationStep';
+import TrackKeywordStep from './TrackKeywordStep';
 
 interface StepContentProps {
     step: number;
+    stepLength?: number
 }
 
-const StepContent: React.FC<StepContentProps> = ({ step }) => {
-    const [keywords, setKeywords] = useState<string[]>([]);
-    const [newKeyword, setNewKeyword] = useState('');
+const StepContent: React.FC<StepContentProps> = ({ step, stepLength }) => {
+    
     const [selectedSubreddits, setSelectedSubreddits] = useState<string[]>([]);
 
     const StepCounter = () => (
@@ -31,20 +33,11 @@ const StepContent: React.FC<StepContentProps> = ({ step }) => {
                 display: 'block'
             }}
         >
-            Step {step + 1} of 3
+            Step {step + 1} of {stepLength}
         </Typography>
     );
 
-    const handleAddKeyword = () => {
-        if (newKeyword && !keywords.includes(newKeyword)) {
-            setKeywords([...keywords, newKeyword]);
-            setNewKeyword('');
-        }
-    };
-
-    const handleDeleteKeyword = (keywordToDelete: string) => {
-        setKeywords(keywords.filter(keyword => keyword !== keywordToDelete));
-    };
+    
 
     const popularSubreddits = [
         'technology', 'programming', 'webdev', 'startup',
@@ -63,37 +56,7 @@ const StepContent: React.FC<StepContentProps> = ({ step }) => {
                         Tell us about your product to help us track relevant discussions.
                     </Typography>
 
-                    <Stack spacing={3}>
-                        <TextField
-                            fullWidth
-                            label="Product Name"
-                            placeholder="e.g., My Awesome Product"
-                            variant="outlined"
-                        />
-
-                        <TextField
-                            fullWidth
-                            multiline
-                            rows={3}
-                            label="Product Description"
-                            placeholder="Describe your product and its key features..."
-                            variant="outlined"
-                        />
-
-                        <TextField
-                            fullWidth
-                            label="Product Website"
-                            placeholder="https://example.com"
-                            variant="outlined"
-                        />
-
-                        <TextField
-                            fullWidth
-                            label="Target Audience"
-                            placeholder="e.g., Developers, Marketers, Small Business Owners"
-                            variant="outlined"
-                        />
-                    </Stack>
+                    <ProductInformationStep />
                 </Box>
             );
 
@@ -108,52 +71,7 @@ const StepContent: React.FC<StepContentProps> = ({ step }) => {
                         Add keywords related to your product that you want to track on Reddit.
                     </Typography>
 
-                    <Stack spacing={3}>
-                        <TextField
-                            fullWidth
-                            label="Add Keyword"
-                            value={newKeyword}
-                            onChange={(e) => setNewKeyword(e.target.value)}
-                            onKeyPress={(e) => e.key === 'Enter' && handleAddKeyword()}
-                            InputProps={{
-                                endAdornment: (
-                                    <InputAdornment position="end">
-                                        <IconButton onClick={handleAddKeyword} edge="end">
-                                            <Plus size={20} />
-                                        </IconButton>
-                                    </InputAdornment>
-                                ),
-                            }}
-                        />
-
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                            {keywords.map((keyword) => (
-                                <Chip
-                                    key={keyword}
-                                    label={keyword}
-                                    onDelete={() => handleDeleteKeyword(keyword)}
-                                    color="primary"
-                                    variant="outlined"
-                                />
-                            ))}
-                        </Box>
-
-                        <Paper variant="outlined" sx={{ p: 2, bgcolor: 'background.default' }}>
-                            <Typography variant="subtitle2" gutterBottom>
-                                Suggested Keywords
-                            </Typography>
-                            <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
-                                {['competitor', 'alternative', 'vs', 'review', 'help'].map((suggestion, index) => (
-                                    <Chip
-                                        key={index}
-                                        label={suggestion}
-                                        onClick={() => setNewKeyword(suggestion)}
-                                        size="small"
-                                    />
-                                ))}
-                            </Stack>
-                        </Paper>
-                    </Stack>
+                    <TrackKeywordStep />
                 </Box>
             );
 
@@ -234,6 +152,9 @@ const StepContent: React.FC<StepContentProps> = ({ step }) => {
                     </Stack>
                 </Box>
             );
+
+        case 3:
+            return <ConnectRedditStep />;
 
         default:
             return null;
