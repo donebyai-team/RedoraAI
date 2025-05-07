@@ -7,7 +7,6 @@ interface HtmlRendererProps {
 
 const HtmlTitleRenderer: React.FC<HtmlRendererProps> = ({ htmlString }) => {
   const decodedHtml = he.decode(htmlString);
-  console.log("###_debug_decodedHtml ", decodedHtml);
 
   return (<div style={{ all: "revert" }} dangerouslySetInnerHTML={{ __html: decodedHtml }} />);
 };
