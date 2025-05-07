@@ -12,12 +12,16 @@ import (
 )
 
 const (
-	// GPTModelRedoraDevGpt4O20240806 is a GPTModel of type redora-dev-gpt-4o-2024-08-06.
-	GPTModelRedoraDevGpt4O20240806 GPTModel = "redora-dev-gpt-4o-2024-08-06"
-	// GPTModelRedoraProdGpt4O20240806 is a GPTModel of type redora-prod-gpt-4o-2024-08-06.
-	GPTModelRedoraProdGpt4O20240806 GPTModel = "redora-prod-gpt-4o-2024-08-06"
 	// GPTModelGpt4O20240806 is a GPTModel of type gpt-4o-2024-08-06.
 	GPTModelGpt4O20240806 GPTModel = "gpt-4o-2024-08-06"
+	// GPTModelRedoraDevGpt41Mini20250414 is a GPTModel of type redora-dev-gpt-4.1-mini-2025-04-14.
+	GPTModelRedoraDevGpt41Mini20250414 GPTModel = "redora-dev-gpt-4.1-mini-2025-04-14"
+	// GPTModelRedoraProdGpt41Mini20250414 is a GPTModel of type redora-prod-gpt-4.1-mini-2025-04-14.
+	GPTModelRedoraProdGpt41Mini20250414 GPTModel = "redora-prod-gpt-4.1-mini-2025-04-14"
+	// GPTModelRedoraDevGpt4120250414 is a GPTModel of type redora-dev-gpt-4.1-2025-04-14.
+	GPTModelRedoraDevGpt4120250414 GPTModel = "redora-dev-gpt-4.1-2025-04-14"
+	// GPTModelRedoraProdGpt4120250414 is a GPTModel of type redora-prod-gpt-4.1-2025-04-14.
+	GPTModelRedoraProdGpt4120250414 GPTModel = "redora-prod-gpt-4.1-2025-04-14"
 )
 
 var ErrInvalidGPTModel = errors.New("not a valid GPTModel")
@@ -35,9 +39,11 @@ func (x GPTModel) IsValid() bool {
 }
 
 var _GPTModelValue = map[string]GPTModel{
-	"redora-dev-gpt-4o-2024-08-06":  GPTModelRedoraDevGpt4O20240806,
-	"redora-prod-gpt-4o-2024-08-06": GPTModelRedoraProdGpt4O20240806,
-	"gpt-4o-2024-08-06":             GPTModelGpt4O20240806,
+	"gpt-4o-2024-08-06":                   GPTModelGpt4O20240806,
+	"redora-dev-gpt-4.1-mini-2025-04-14":  GPTModelRedoraDevGpt41Mini20250414,
+	"redora-prod-gpt-4.1-mini-2025-04-14": GPTModelRedoraProdGpt41Mini20250414,
+	"redora-dev-gpt-4.1-2025-04-14":       GPTModelRedoraDevGpt4120250414,
+	"redora-prod-gpt-4.1-2025-04-14":      GPTModelRedoraProdGpt4120250414,
 }
 
 // ParseGPTModel attempts to convert a string to a GPTModel.
