@@ -3,6 +3,7 @@ package pbcore
 import (
 	"fmt"
 	"github.com/shank318/doota/models"
+	"github.com/shank318/doota/utils"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"strings"
 )
@@ -52,11 +53,11 @@ func (u *Keyword) FromModel(lead *models.Keyword) *Keyword {
 }
 
 func (u *LeadMetadata) FromModel(metadata models.LeadMetadata) *LeadMetadata {
-	u.ChainOfThought = metadata.ChainOfThought
-	u.SuggestedComment = metadata.SuggestedComment
-	u.SuggestedDm = metadata.SuggestedDM
-	u.ChainOfThoughtSuggestedComment = metadata.ChainOfThoughtSuggestedComment
-	u.ChainOfThoughtSuggestedDm = metadata.ChainOfThoughtSuggestedDM
+	u.ChainOfThought = utils.FormatComment(metadata.ChainOfThought)
+	u.SuggestedComment = utils.FormatComment(metadata.SuggestedComment)
+	u.SuggestedDm = utils.FormatComment(metadata.SuggestedDM)
+	u.ChainOfThoughtSuggestedComment = utils.FormatComment(metadata.ChainOfThoughtSuggestedComment)
+	u.ChainOfThoughtSuggestedDm = utils.FormatComment(metadata.ChainOfThoughtSuggestedDM)
 	u.PostUrl = metadata.PostURL
 	u.NoOfComments = metadata.NoOfComments
 	u.Ups = metadata.Ups
