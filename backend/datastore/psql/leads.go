@@ -44,10 +44,15 @@ func (r *Database) GetLeadByID(ctx context.Context, projectID, id string) (*mode
 }
 
 func (r *Database) UpdateLeadStatus(ctx context.Context, lead *models.Lead) error {
+	if lead.Status == "" {
+		return fmt.Errorf("status cannot be empty")
+	}
+
 	stmt := r.mustGetStmt("leads/update_lead_status.sql")
 	_, err := stmt.ExecContext(ctx, map[string]interface{}{
 		"status":     lead.Status,
 		"project_id": lead.ProjectID,
+		"metadata":   lead.LeadMetadata,
 		"id":         lead.ID,
 	})
 	if err != nil {
@@ -76,7 +81,7 @@ func (r *Database) GetLeadByCommentID(ctx context.Context, projectID, commentID 
 	panic("implement me")
 }
 
-func (r *Database) CreateLead(ctx context.Context, reddit *models.Lead) error {
+func (r *Database) CreateLead(ctx context.Context, reddit *models.Lead) (*models.Lead, error) {
 	stmt := r.mustGetStmt("leads/create_lead.sql")
 	var id string
 	err := stmt.GetContext(ctx, &id, map[string]interface{}{
@@ -93,5 +98,6 @@ func (r *Database) CreateLead(ctx context.Context, reddit *models.Lead) error {
 		"description":     reddit.Description,
 		"title":           reddit.Title,
 	})
-	return err
+	reddit.ID = id
+	return reddit, err
 }

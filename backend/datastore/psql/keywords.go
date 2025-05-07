@@ -94,11 +94,17 @@ func (r *Database) GetKeywordTrackers(ctx context.Context) ([]*models.AugmentedK
 			return nil, fmt.Errorf("failed to get project %q: %w", keyword.ProjectID, err)
 		}
 
+		org, err := r.GetOrganizationById(ctx, project.OrganizationID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get organization %q: %w", keyword.ProjectID, err)
+		}
+
 		results = append(results, &models.AugmentedKeywordTracker{
-			Tracker: tracker,
-			Source:  source,
-			Keyword: keyword,
-			Project: project,
+			Tracker:      tracker,
+			Source:       source,
+			Keyword:      keyword,
+			Project:      project,
+			Organization: org,
 		})
 	}
 

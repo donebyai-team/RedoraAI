@@ -12,6 +12,83 @@ import (
 )
 
 const (
+	// LeadInteractionStatusCREATED is a LeadInteractionStatus of type CREATED.
+	LeadInteractionStatusCREATED LeadInteractionStatus = "CREATED"
+	// LeadInteractionStatusSENT is a LeadInteractionStatus of type SENT.
+	LeadInteractionStatusSENT LeadInteractionStatus = "SENT"
+	// LeadInteractionStatusFAILED is a LeadInteractionStatus of type FAILED.
+	LeadInteractionStatusFAILED LeadInteractionStatus = "FAILED"
+	// LeadInteractionStatusREMOVED is a LeadInteractionStatus of type REMOVED.
+	LeadInteractionStatusREMOVED LeadInteractionStatus = "REMOVED"
+)
+
+var ErrInvalidLeadInteractionStatus = errors.New("not a valid LeadInteractionStatus")
+
+// String implements the Stringer interface.
+func (x LeadInteractionStatus) String() string {
+	return string(x)
+}
+
+// IsValid provides a quick way to determine if the typed value is
+// part of the allowed enumerated values
+func (x LeadInteractionStatus) IsValid() bool {
+	_, err := ParseLeadInteractionStatus(string(x))
+	return err == nil
+}
+
+var _LeadInteractionStatusValue = map[string]LeadInteractionStatus{
+	"CREATED": LeadInteractionStatusCREATED,
+	"SENT":    LeadInteractionStatusSENT,
+	"FAILED":  LeadInteractionStatusFAILED,
+	"REMOVED": LeadInteractionStatusREMOVED,
+}
+
+// ParseLeadInteractionStatus attempts to convert a string to a LeadInteractionStatus.
+func ParseLeadInteractionStatus(name string) (LeadInteractionStatus, error) {
+	if x, ok := _LeadInteractionStatusValue[name]; ok {
+		return x, nil
+	}
+	return LeadInteractionStatus(""), fmt.Errorf("%s is %w", name, ErrInvalidLeadInteractionStatus)
+}
+
+const (
+	// LeadInteractionTypeDM is a LeadInteractionType of type DM.
+	LeadInteractionTypeDM LeadInteractionType = "DM"
+	// LeadInteractionTypeCOMMENT is a LeadInteractionType of type COMMENT.
+	LeadInteractionTypeCOMMENT LeadInteractionType = "COMMENT"
+	// LeadInteractionTypeLIKE is a LeadInteractionType of type LIKE.
+	LeadInteractionTypeLIKE LeadInteractionType = "LIKE"
+)
+
+var ErrInvalidLeadInteractionType = errors.New("not a valid LeadInteractionType")
+
+// String implements the Stringer interface.
+func (x LeadInteractionType) String() string {
+	return string(x)
+}
+
+// IsValid provides a quick way to determine if the typed value is
+// part of the allowed enumerated values
+func (x LeadInteractionType) IsValid() bool {
+	_, err := ParseLeadInteractionType(string(x))
+	return err == nil
+}
+
+var _LeadInteractionTypeValue = map[string]LeadInteractionType{
+	"DM":      LeadInteractionTypeDM,
+	"COMMENT": LeadInteractionTypeCOMMENT,
+	"LIKE":    LeadInteractionTypeLIKE,
+}
+
+// ParseLeadInteractionType attempts to convert a string to a LeadInteractionType.
+func ParseLeadInteractionType(name string) (LeadInteractionType, error) {
+	if x, ok := _LeadInteractionTypeValue[name]; ok {
+		return x, nil
+	}
+	return LeadInteractionType(""), fmt.Errorf("%s is %w", name, ErrInvalidLeadInteractionType)
+}
+
+const (
 	// LeadStatusNEW is a LeadStatus of type NEW.
 	LeadStatusNEW LeadStatus = "NEW"
 	// LeadStatusCOMPLETED is a LeadStatus of type COMPLETED.

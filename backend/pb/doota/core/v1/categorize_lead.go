@@ -27,6 +27,21 @@ var outcomeIntentMap = map[OutcomeTag][]models.PostIntent{
 	},
 }
 
+func IsGoodForEngagement(intents []models.PostIntent) bool {
+	categories := CategorizePost(intents)
+	if len(categories) == 0 {
+		return false
+	}
+
+	for _, category := range categories {
+		if category == BestForEngagement {
+			return true
+		}
+	}
+
+	return false
+}
+
 // CategorizePost maps post intents to their corresponding high-level outcome tags
 func CategorizePost(intents []models.PostIntent) []OutcomeTag {
 	if containsUnknown(intents) {

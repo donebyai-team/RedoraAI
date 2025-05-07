@@ -1,14 +1,12 @@
-'use client'
-
-import React from 'react'
-import { Box } from '@mui/material'
 import ManinForm from '../../../../components/Onboarding/MainForm'
+// import OnboardingGuard from '../../../../components/guard/OnboardingGuard'
+// import { AuthLoading } from '../../dashboard/layout'
 
 export default function Page() {
 
   return (
-    <Box sx={{ width: "100%", height: "100%" }}>
+    // <OnboardingGuard fallback={<AuthLoading />}>
       <ManinForm />
-    </Box>
+    // </OnboardingGuard>
   )
 }

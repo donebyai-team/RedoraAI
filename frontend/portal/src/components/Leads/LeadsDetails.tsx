@@ -125,7 +125,6 @@ const LeadsPostDetails = () => {
     }
   }, []);
 
-
   const handleLeadStatusUpdate = useCallback(async (status: LeadStatus) => {
     if (!selectedleadData) return;
     setIsLoading(true);
@@ -233,7 +232,8 @@ const LeadsPostDetails = () => {
 
           {/* Body */}
           <Box sx={{ width: "100%", pb: 2 }}>
-            <Box sx={{ px: 2, pt: 2, mb: 2, height: "40dvh", maxHeight: "100%", overflowY: "scroll" }}>
+            <Box sx={{ px: 2, pt: 2, height: "42dvh", maxHeight: "100%", overflowY: "scroll" }}>
+              {/* Metadata line */}
               <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                 <Link href={selectedleadData.metadata?.authorUrl || "#"} target="_blank">
                   {selectedleadData.author}
@@ -261,35 +261,48 @@ const LeadsPostDetails = () => {
               <Stack direction={{ xs: "column", md: "row" }} spacing={2} sx={{ mx: 2, my: 2 }}>
                 {/* Suggested Comment */}
                 {selectedleadData.metadata?.suggestedComment && (
-                  <Card sx={{ flex: 1, borderRadius: 2, bgcolor: "#f3f4f6" }}>
-                    <CardContent sx={{ p: 1.5, "&:last-child": { pb: 1.5 } }}>
-                      <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                        <Star sx={{ color: "#e25a9e", mr: 1 }} />
-                        <Typography color="#e25a9e" fontWeight="medium">Suggested comment</Typography>
+                  <Card sx={{ flex: 1, borderRadius: 2, bgcolor: "#f3f4f6", display: "flex", flexDirection: "column" }}>
+                    <CardContent
+                      sx={{
+                        flexGrow: 1,
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "space-between",
+                        p: 1.5,
+                        "&:last-child": { pb: 1.5 },
+                      }}
+                    >
+                      <Box>
+                        <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                          <Star sx={{ color: "#e25a9e", mr: 1 }} />
+                          <Typography color="#e25a9e" fontWeight="medium">Suggested comment</Typography>
+                        </Box>
+                        <Typography variant="body1" sx={{ mb: 2 }}>
+                          {selectedleadData.metadata.suggestedComment}
+                        </Typography>
                       </Box>
-                      <Typography variant="body1" sx={{ mb: 2 }}>
-                        {selectedleadData.metadata.suggestedComment}
-                      </Typography>
-                      <Stack direction="row" justifyContent="end">
+
+                      <Stack direction="row" justifyContent="flex-start">
                         <Button
                           variant="contained"
-                          color="primary"
                           startIcon={<Send />}
                           sx={{
-                            bgcolor: "#000",
+                            bgcolor: selectedleadData.metadata?.automatedCommentUrl ? "green" : "#000",
                             color: "#fff",
-                            "&:hover": { bgcolor: "#333" },
+                            "&:hover": {
+                              bgcolor: selectedleadData.metadata?.automatedCommentUrl ? "darkgreen" : "#333",
+                            },
                             borderRadius: "20px",
                             textTransform: "none",
                           }}
                           onClick={() =>
                             copyTextAndOpenLink(
                               selectedleadData.metadata?.suggestedComment ?? "",
-                              selectedleadData.metadata?.postUrl ?? "#"
+                              selectedleadData.metadata?.automatedCommentUrl || selectedleadData.metadata?.postUrl || "#"
                             )
                           }
                         >
-                          Copy & open post
+                          {selectedleadData.metadata?.automatedCommentUrl ? "Commented by AI" : "Copy & open post"}
                         </Button>
                       </Stack>
                     </CardContent>
@@ -334,8 +347,6 @@ const LeadsPostDetails = () => {
                 )}
               </Stack>
             )}
-
-
 
           </Box>
         </Paper>

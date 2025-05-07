@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import { Search, Plus, X } from 'lucide-react';
 import ConnectRedditStep from './ConnectRedditStep';
+import ProductInformationStep from './ProductInformationStep';
 
 interface StepContentProps {
     step: number;
@@ -65,37 +66,7 @@ const StepContent: React.FC<StepContentProps> = ({ step, stepLength }) => {
                         Tell us about your product to help us track relevant discussions.
                     </Typography>
 
-                    <Stack spacing={3}>
-                        <TextField
-                            fullWidth
-                            label="Product Name"
-                            placeholder="e.g., My Awesome Product"
-                            variant="outlined"
-                        />
-
-                        <TextField
-                            fullWidth
-                            multiline
-                            rows={3}
-                            label="Product Description"
-                            placeholder="Describe your product and its key features..."
-                            variant="outlined"
-                        />
-
-                        <TextField
-                            fullWidth
-                            label="Product Website"
-                            placeholder="https://example.com"
-                            variant="outlined"
-                        />
-
-                        <TextField
-                            fullWidth
-                            label="Target Audience"
-                            placeholder="e.g., Developers, Marketers, Small Business Owners"
-                            variant="outlined"
-                        />
-                    </Stack>
+                    <ProductInformationStep />
                 </Box>
             );
 

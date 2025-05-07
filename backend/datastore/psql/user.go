@@ -12,13 +12,18 @@ func init() {
 		"user/create_user.sql",
 		"user/update_user.sql",
 		"user/query_user_by_id.sql",
+		"user/query_user_by_org.sql",
 		"user/query_user_by_email.sql",
 		"user/query_user_by_auth0_id.sql",
 	})
 
 }
 
-var usersStmt = map[string]string{}
+func (r *Database) GetUsersByOrgID(ctx context.Context, orgID string) ([]*models.User, error) {
+	return getMany[models.User](ctx, r, "user/query_user_by_org.sql", map[string]any{
+		"organization_id": orgID,
+	})
+}
 
 func (r *Database) CreateUser(ctx context.Context, user *models.User) (*models.User, error) {
 	stmt := r.mustGetStmt("user/create_user.sql")

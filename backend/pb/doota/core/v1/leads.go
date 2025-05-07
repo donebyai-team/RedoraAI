@@ -64,6 +64,7 @@ func (u *LeadMetadata) FromModel(metadata models.LeadMetadata) *LeadMetadata {
 	u.DmUrl = metadata.DmURL
 	u.SubredditPrefixed = metadata.SubRedditPrefixed
 	u.DescriptionHtml = metadata.SelfTextHTML
+	u.AutomatedCommentUrl = metadata.AutomatedCommentURL
 	return u
 }
 

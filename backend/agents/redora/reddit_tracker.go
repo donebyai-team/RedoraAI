@@ -4,20 +4,20 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/shank318/doota/agents/redora/interactions"
 	"github.com/shank318/doota/agents/state"
 	"github.com/shank318/doota/ai"
 	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/integrations/reddit"
 	"github.com/shank318/doota/models"
 	"github.com/shank318/doota/notifiers/alerts"
+	pbcore "github.com/shank318/doota/pb/doota/core/v1"
 	"github.com/shank318/doota/utils"
 	"go.uber.org/zap"
 	"sort"
 	"strings"
 	"time"
 )
-
-const redoraChannel = "https://hooks.slack.com/services/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"
 
 type redditKeywordTracker struct {
 	gptModel          ai.GPTModel
@@ -27,6 +27,8 @@ type redditKeywordTracker struct {
 	state             state.ConversationState
 	redditOauthClient *reddit.OauthClient
 	isDev             bool
+	slackNotifier     alerts.AlertNotifier
+	emailNotifier     alerts.AlertNotifier
 }
 
 func newRedditKeywordTracker(
@@ -36,7 +38,9 @@ func newRedditKeywordTracker(
 	db datastore.Repository,
 	aiClient *ai.Client,
 	logger *zap.Logger,
-	state state.ConversationState) KeywordTracker {
+	state state.ConversationState,
+	slackNotifier alerts.AlertNotifier,
+	emailNotifier alerts.AlertNotifier) KeywordTracker {
 	return &redditKeywordTracker{
 		gptModel:          gptModel,
 		db:                db,
@@ -45,6 +49,8 @@ func newRedditKeywordTracker(
 		state:             state,
 		redditOauthClient: redditOauthClient,
 		isDev:             isDev,
+		slackNotifier:     slackNotifier,
+		emailNotifier:     emailNotifier,
 	}
 }
 
@@ -57,6 +63,8 @@ func (s *redditKeywordTracker) WithLogger(logger *zap.Logger) KeywordTracker {
 		state:             s.state,
 		redditOauthClient: s.redditOauthClient,
 		isDev:             s.isDev,
+		slackNotifier:     s.slackNotifier,
+		emailNotifier:     s.emailNotifier,
 	}
 }
 
@@ -147,34 +155,33 @@ func (s *redditKeywordTracker) sendAlert(ctx context.Context, project *models.Pr
 			return
 		}
 
-		leadsURL := "https://app.redoraai.com/dashboard/leads"
-
-		msg := fmt.Sprintf(
-			"*📊 Daily Lead Summary — RedoraAI*\n"+
-				"*Product:* %s\n"+
-				"*Posts Analyzed:* %d\n"+
-				"*Leads Found:* *%d*\n\n"+
-				"🔗 <%s|View all leads in your dashboard>",
-			project.Name,
-			totalPostsAnalysed,
-			dailyCount,
-			leadsURL,
-		)
-
-		// Send alert on redora
-		err = alerts.NewSlackNotifier(redoraChannel).Send(ctx, msg)
+		totalCommentsSent, err := s.getLeadInteractionCountOfTheDay(ctx, project.ID)
 		if err != nil {
-			s.logger.Error("failed to send slack notification", zap.Error(err))
-		}
-
-		integration, err := s.db.GetIntegrationByOrgAndType(ctx, project.OrganizationID, models.IntegrationTypeSLACKWEBHOOK)
-		if err != nil && errors.Is(err, datastore.NotFound) {
-			s.logger.Info("no integration configured for alerts, skipped")
+			s.logger.Error("failed to get leads interaction count", zap.Error(err))
 			return
 		}
-		err = alerts.NewSlackNotifier(integration.GetSlackWebhook().Webhook).Send(ctx, msg)
+
+		// Send alert on redora
+		err = s.slackNotifier.SendLeadsSummary(ctx, alerts.LeadSummary{
+			OrgID:              project.OrganizationID,
+			ProjectName:        project.Name,
+			TotalPostsAnalysed: totalPostsAnalysed,
+			TotalCommentsSent:  totalCommentsSent,
+			DailyCount:         dailyCount,
+		})
 		if err != nil {
 			s.logger.Error("failed to send slack notification", zap.Error(err))
+		}
+
+		err = s.emailNotifier.SendLeadsSummary(ctx, alerts.LeadSummary{
+			OrgID:              project.OrganizationID,
+			ProjectName:        project.Name,
+			TotalPostsAnalysed: totalPostsAnalysed,
+			TotalCommentsSent:  totalCommentsSent,
+			DailyCount:         dailyCount,
+		})
+		if err != nil {
+			s.logger.Error("failed to send email notification", zap.Error(err))
 		}
 	}
 }
@@ -203,6 +210,8 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 	project := tracker.Project
 	keyword := tracker.Keyword
 	source := tracker.Source
+
+	automatedInteractionService := interactions.NewRedditInteractions(redditClient, s.db, s.logger)
 
 	if ok, err := s.isMaxLeadLimitReached(ctx, project.ID, defaultRelevancyScore); err != nil || ok {
 		return err
@@ -272,6 +281,7 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 			Description:   post.Selftext,
 			KeywordID:     keyword.ID,
 			PostCreatedAt: time.Unix(int64(post.CreatedAt), 0),
+			Status:        models.LeadStatusNEW, // need it for calling update below
 			LeadMetadata: models.LeadMetadata{
 				PostURL:           post.URL,
 				AuthorURL:         fmt.Sprintf("https://www.reddit.com/user/%s/", post.Author),
@@ -321,7 +331,7 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 			redditLead.LeadMetadata.ChainOfThought = reason
 		}
 
-		err = s.db.CreateLead(ctx, redditLead)
+		_, err = s.db.CreateLead(ctx, redditLead)
 		if err != nil {
 			if datastore.IsUniqueViolation(err) {
 				s.logger.Warn(
@@ -330,6 +340,32 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 					zap.String("post_id", post.ID))
 			} else {
 				return fmt.Errorf("unable to create reddit lead: %w", err)
+			}
+		}
+
+		// Send automated comment
+		if tracker.Organization.FeatureFlags.EnableAutoComment &&
+			pbcore.IsGoodForEngagement(redditLead.Intents) &&
+			redditLead.RelevancyScore >= defaultRelevancyScore &&
+			len(strings.TrimSpace(redditLead.LeadMetadata.SuggestedComment)) > 0 {
+			leadInteraction, err := automatedInteractionService.SendComment(ctx, &interactions.SendCommentInfo{
+				LeadID:        redditLead.ID,
+				ProjectID:     redditLead.ProjectID,
+				SubredditName: redditLead.LeadMetadata.SubRedditPrefixed,
+				Comment:       redditLead.LeadMetadata.SuggestedComment,
+				UserName:      redditClient.GetConfig().Name,
+				ThingID:       redditLead.PostID,
+			})
+			if err != nil {
+				s.logger.Warn("failed to send automated comment", zap.Error(err))
+			}
+			if leadInteraction != nil && leadInteraction.Metadata.ReferenceID != "" {
+				redditLead.LeadMetadata.AutomatedCommentURL = fmt.Sprintf("https://www.reddit.com/%s", leadInteraction.Metadata.Permalink)
+				redditLead.Status = models.LeadStatusCOMPLETED
+				err := s.db.UpdateLeadStatus(ctx, redditLead)
+				if err != nil {
+					s.logger.Warn("failed to update lead status for automated comment", zap.Error(err))
+				}
 			}
 		}
 
@@ -382,6 +418,16 @@ func (s *redditKeywordTracker) getLeadsCountOfTheDay(ctx context.Context, projec
 	return leadsData.Count, nil
 }
 
+func (s *redditKeywordTracker) getLeadInteractionCountOfTheDay(ctx context.Context, projectID string) (uint32, error) {
+	today := time.Now().Truncate(24 * time.Hour)
+	tomorrow := today.Add(24 * time.Hour)
+	leadsData, err := s.db.GetLeadInteractions(ctx, projectID, today, tomorrow)
+	if err != nil {
+		return 0, err
+	}
+	return uint32(len(leadsData)), nil
+}
+
 const (
 	minSelftextLength     = 30
 	minTitleLength        = 5
@@ -424,28 +470,29 @@ func isValidPostDescription(selfText string) (bool, string) {
 
 func (s *redditKeywordTracker) isValidPost(post *reddit.Post) (bool, string) {
 	sixMonthsAgo := time.Now().AddDate(0, -maxPostAgeInMonths, 0).Unix()
-
-	var reason string
 	author := strings.TrimSpace(post.Author)
 
 	if !isValidAuthor(author) {
-		reason = "invalid or system author"
+		return false, "invalid or system author"
+	}
+
+	if post.SubRedditType == "user" || post.SubRedditType == "private" {
+		return false, "not a public subreddit"
+	}
+
+	if (post.SubRedditType != "public" && post.SubRedditType != "restricted") || !strings.HasPrefix(post.SubRedditPrefixed, "r/") {
+		return false, "not a visible subreddit post"
 	}
 
 	if len(strings.TrimSpace(post.Selftext)) < minSelftextLength || len(strings.TrimSpace(post.Title)) < minTitleLength {
-		reason = "title or selftext is not big enough"
+		return false, "title or selftext is not big enough"
 	}
 
 	if int64(post.CreatedAt) < sixMonthsAgo || post.Archived {
-		reason = fmt.Sprintf("post is older than %d months or has been archived", maxPostAgeInMonths)
+		return false, fmt.Sprintf("post is older than %d months or has been archived", maxPostAgeInMonths)
 	}
 
-	isValid, rsn := isValidPostDescription(post.Selftext)
-	if !isValid {
-		reason = rsn
-	}
-
-	if reason != "" {
+	if isValid, reason := isValidPostDescription(post.Selftext); !isValid {
 		return false, reason
 	}
 
