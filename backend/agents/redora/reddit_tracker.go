@@ -312,6 +312,7 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 			redditLead.LeadMetadata.SuggestedDM = relevanceResponse.SuggestedDM
 			redditLead.LeadMetadata.ChainOfThoughtSuggestedComment = relevanceResponse.ChainOfThoughtSuggestedComment
 			redditLead.LeadMetadata.ChainOfThoughtSuggestedDM = relevanceResponse.ChainOfThoughtSuggestedDM
+			redditLead.LeadMetadata.LLMModel = s.gptModel.String()
 
 			// Mark the tracker alive in case the execution taking too much time
 			// Doing it here because that's the only place that takes time

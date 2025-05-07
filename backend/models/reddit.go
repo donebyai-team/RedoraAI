@@ -217,6 +217,7 @@ type LeadMetadata struct {
 	SelfTextHTML                   string `json:"description_html"`
 	SubRedditPrefixed              string `json:"subreddit_prefixed"`
 	AutomatedCommentURL            string `json:"automated_comment_url"`
+	LLMModel                       string `json:"llm_model"`
 }
 
 func (b LeadMetadata) Value() (driver.Value, error) {
