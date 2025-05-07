@@ -20,8 +20,8 @@ import (
 const SEED = 42
 
 type Client struct {
-	model           openai.Client
-	langsmithConfig LangsmithConfig
+	model               openai.Client
+	langsmithConfig     LangsmithConfig
 	/**/ debugFileStore dstore.Store
 }
 
@@ -155,6 +155,8 @@ func (c *Client) runChatCompletion(
 	}
 
 	output := chatCompletion.Choices[0].Message.Content
+	output = strings.ReplaceAll(output, `\"`, `"`)
+
 	c.saveOutput(ctx, runID, outputFile, []byte(output), logger)
 
 	return []byte(output), nil
