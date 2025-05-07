@@ -8,6 +8,7 @@ import (
 	"github.com/shank318/doota/auth"
 	"github.com/shank318/doota/auth/crypto"
 	"github.com/shank318/doota/datastore"
+	"github.com/shank318/doota/models"
 	"github.com/streamingfast/dstore"
 	"regexp"
 	"time"
@@ -48,6 +49,7 @@ type AIConfig struct {
 	OpenAIDebugLogsStore string
 	LangsmithApiKey      string
 	LangsmithProject     string
+	DefaultLLMModel      models.LLMModel
 }
 
 func (b *DependenciesBuilder) mustProvide(constructor interface{}) {
@@ -71,13 +73,13 @@ func (b *DependenciesBuilder) WithConversationState(phoneCallStateTTL time.Durat
 	return b
 }
 
-func (b *DependenciesBuilder) WithAI(openAIKey string, openAIOrganization string, openAIDebugLogsStore string, langsmithApiKey string, langsmithProject string) *DependenciesBuilder {
+func (b *DependenciesBuilder) WithAI(defaultLLMModel models.LLMModel, openAIKey string, openAIDebugLogsStore string, langsmithApiKey string, langsmithProject string) *DependenciesBuilder {
 	b.AIConfig = &AIConfig{
 		OpenAIKey:            openAIKey,
-		OpenAIOrganization:   openAIOrganization,
 		OpenAIDebugLogsStore: openAIDebugLogsStore,
 		LangsmithApiKey:      langsmithApiKey,
 		LangsmithProject:     langsmithProject,
+		DefaultLLMModel:      defaultLLMModel,
 	}
 	return b
 }
@@ -144,7 +146,7 @@ func (b *DependenciesBuilder) Build(ctx context.Context, logger *zap.Logger, tra
 
 		out.AIClient, err = ai.NewOpenAI(
 			b.AIConfig.OpenAIKey,
-			b.AIConfig.OpenAIOrganization,
+			b.AIConfig.DefaultLLMModel,
 			ai.LangsmithConfig{
 				ApiKey:      b.AIConfig.LangsmithApiKey,
 				ProjectName: b.AIConfig.LangsmithProject,

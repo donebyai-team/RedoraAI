@@ -227,6 +227,8 @@ ulimit -Sn 1000000 # to change it to 1000000
 **SQL adding organization feature flag**
 ```sql
 UPDATE organizations SET feature_flags = jsonb_set(feature_flags, '{enable_load_diff_email}', 'true') WHERE id='xx'
+UPDATE organizations SET feature_flags = jsonb_set(feature_flags, '{enable_auto_comment}', 'true') WHERE id='e250ced8-7441-4805-b9dd-2686d9492c4f'
+UPDATE organizations SET feature_flags = jsonb_set(feature_flags, '{relevancy_llm_model}', '"redora-dev-claude-thinking"') WHERE id='e250ced8-7441-4805-b9dd-2686d9492c4f'
 ```
 
 ## Seed DB

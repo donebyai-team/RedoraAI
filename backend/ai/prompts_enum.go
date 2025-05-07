@@ -12,55 +12,6 @@ import (
 )
 
 const (
-	// GPTModelGpt4O20240806 is a GPTModel of type gpt-4o-2024-08-06.
-	GPTModelGpt4O20240806 GPTModel = "gpt-4o-2024-08-06"
-	// GPTModelRedoraDevGpt41Mini20250414 is a GPTModel of type redora-dev-gpt-4.1-mini-2025-04-14.
-	GPTModelRedoraDevGpt41Mini20250414 GPTModel = "redora-dev-gpt-4.1-mini-2025-04-14"
-	// GPTModelRedoraProdGpt41Mini20250414 is a GPTModel of type redora-prod-gpt-4.1-mini-2025-04-14.
-	GPTModelRedoraProdGpt41Mini20250414 GPTModel = "redora-prod-gpt-4.1-mini-2025-04-14"
-	// GPTModelRedoraDevGpt4120250414 is a GPTModel of type redora-dev-gpt-4.1-2025-04-14.
-	GPTModelRedoraDevGpt4120250414 GPTModel = "redora-dev-gpt-4.1-2025-04-14"
-	// GPTModelRedoraProdGpt4120250414 is a GPTModel of type redora-prod-gpt-4.1-2025-04-14.
-	GPTModelRedoraProdGpt4120250414 GPTModel = "redora-prod-gpt-4.1-2025-04-14"
-	// GPTModelRedoraProdClaudeThinking is a GPTModel of type redora-prod-claude-thinking.
-	GPTModelRedoraProdClaudeThinking GPTModel = "redora-prod-claude-thinking"
-	// GPTModelRedoraDevClaudeThinking is a GPTModel of type redora-dev-claude-thinking.
-	GPTModelRedoraDevClaudeThinking GPTModel = "redora-dev-claude-thinking"
-)
-
-var ErrInvalidGPTModel = errors.New("not a valid GPTModel")
-
-// String implements the Stringer interface.
-func (x GPTModel) String() string {
-	return string(x)
-}
-
-// IsValid provides a quick way to determine if the typed value is
-// part of the allowed enumerated values
-func (x GPTModel) IsValid() bool {
-	_, err := ParseGPTModel(string(x))
-	return err == nil
-}
-
-var _GPTModelValue = map[string]GPTModel{
-	"gpt-4o-2024-08-06":                   GPTModelGpt4O20240806,
-	"redora-dev-gpt-4.1-mini-2025-04-14":  GPTModelRedoraDevGpt41Mini20250414,
-	"redora-prod-gpt-4.1-mini-2025-04-14": GPTModelRedoraProdGpt41Mini20250414,
-	"redora-dev-gpt-4.1-2025-04-14":       GPTModelRedoraDevGpt4120250414,
-	"redora-prod-gpt-4.1-2025-04-14":      GPTModelRedoraProdGpt4120250414,
-	"redora-prod-claude-thinking":         GPTModelRedoraProdClaudeThinking,
-	"redora-dev-claude-thinking":          GPTModelRedoraDevClaudeThinking,
-}
-
-// ParseGPTModel attempts to convert a string to a GPTModel.
-func ParseGPTModel(name string) (GPTModel, error) {
-	if x, ok := _GPTModelValue[name]; ok {
-		return x, nil
-	}
-	return GPTModel(""), fmt.Errorf("%s is %w", name, ErrInvalidGPTModel)
-}
-
-const (
 	// PromptFeatureIMAGEONLY is a PromptFeature of type IMAGE_ONLY.
 	PromptFeatureIMAGEONLY PromptFeature = "IMAGE_ONLY"
 	// PromptFeatureTEXTONLY is a PromptFeature of type TEXT_ONLY.

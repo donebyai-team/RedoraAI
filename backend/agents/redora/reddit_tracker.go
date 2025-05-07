@@ -20,7 +20,6 @@ import (
 )
 
 type redditKeywordTracker struct {
-	gptModel          ai.GPTModel
 	db                datastore.Repository
 	aiClient          *ai.Client
 	logger            *zap.Logger
@@ -33,7 +32,6 @@ type redditKeywordTracker struct {
 
 func newRedditKeywordTracker(
 	isDev bool,
-	gptModel ai.GPTModel,
 	redditOauthClient *reddit.OauthClient,
 	db datastore.Repository,
 	aiClient *ai.Client,
@@ -42,7 +40,6 @@ func newRedditKeywordTracker(
 	slackNotifier alerts.AlertNotifier,
 	emailNotifier alerts.AlertNotifier) KeywordTracker {
 	return &redditKeywordTracker{
-		gptModel:          gptModel,
 		db:                db,
 		aiClient:          aiClient,
 		logger:            logger,
@@ -56,7 +53,6 @@ func newRedditKeywordTracker(
 
 func (s *redditKeywordTracker) WithLogger(logger *zap.Logger) KeywordTracker {
 	return &redditKeywordTracker{
-		gptModel:          s.gptModel,
 		db:                s.db,
 		aiClient:          s.aiClient,
 		logger:            logger,
@@ -296,7 +292,7 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 		isValid, reason := s.isValidPost(post)
 		if isValid {
 			countTestPosts++
-			relevanceResponse, err := s.aiClient.IsRedditPostRelevant(ctx, project, redditLead, s.gptModel, s.logger)
+			relevanceResponse, usage, err := s.aiClient.IsRedditPostRelevant(ctx, tracker.Organization, project, redditLead, s.logger)
 			if err != nil {
 				s.logger.Error("failed to get relevance response", zap.Error(err), zap.String("post_id", post.ID))
 				continue
@@ -312,7 +308,7 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 			redditLead.LeadMetadata.SuggestedDM = relevanceResponse.SuggestedDM
 			redditLead.LeadMetadata.ChainOfThoughtSuggestedComment = relevanceResponse.ChainOfThoughtSuggestedComment
 			redditLead.LeadMetadata.ChainOfThoughtSuggestedDM = relevanceResponse.ChainOfThoughtSuggestedDM
-			redditLead.LeadMetadata.LLMModel = s.gptModel.String()
+			redditLead.LeadMetadata.RelevancyLLMModel = usage.Model
 
 			// Mark the tracker alive in case the execution taking too much time
 			// Doing it here because that's the only place that takes time
