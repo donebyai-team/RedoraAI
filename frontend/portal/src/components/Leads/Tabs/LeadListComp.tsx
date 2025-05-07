@@ -13,6 +13,7 @@ import { useAppDispatch, useAppSelector } from "../../../../store/hooks";
 import { formateDate, setLeadActive } from "./NewTab";
 import { RootState } from "../../../../store/store";
 import { LoadigSkeletons } from "../../NavBar";
+import { MarkdownRenderer } from "../../Html/HtmlRenderer";
 
 interface ListRenderCompProps {
     list: LeadTyeps[];
@@ -111,7 +112,7 @@ const ListRenderComp: React.FC<ListRenderCompProps> = ({ isLoading, list }) => {
                                         </Stack>
 
                                         <Typography variant="body1" sx={{ fontWeight: "medium" }}>
-                                            {post.title}
+                                            <MarkdownRenderer data={post.title ?? ""} />
                                         </Typography>
 
                                         {/* Scraped On line */}
