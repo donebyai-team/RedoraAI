@@ -1,8 +1,13 @@
 import React from "react";
 import he from "he";
+import ReactMarkdown from 'react-markdown';
 
 interface HtmlRendererProps {
   htmlString: string;
+}
+
+interface MarkdownRendererProps {
+  data: string;
 }
 
 const HtmlTitleRenderer: React.FC<HtmlRendererProps> = ({ htmlString }) => {
@@ -64,4 +69,19 @@ const HtmlBodyRenderer = ({ htmlString }: { htmlString: string }) => {
   );
 };
 
-export { HtmlTitleRenderer, HtmlBodyRenderer };
+const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ data }) => {
+  return (
+    <ReactMarkdown
+      components={{
+        p: ({ ...props }) => (
+          <p style={{ all: "revert" }} {...props} />
+        ),
+      }}
+    >
+      {data}
+    </ReactMarkdown>
+  );
+}
+
+
+export { HtmlTitleRenderer, HtmlBodyRenderer, MarkdownRenderer };
