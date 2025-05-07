@@ -298,7 +298,7 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 			countTestPosts++
 			relevanceResponse, err := s.aiClient.IsRedditPostRelevant(ctx, project, redditLead, s.gptModel, s.logger)
 			if err != nil {
-				s.logger.Error("failed to get relevance response", zap.Error(err))
+				s.logger.Error("failed to get relevance response", zap.Error(err), zap.String("post_id", post.ID))
 				continue
 			}
 
@@ -357,14 +357,14 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 				ThingID:       redditLead.PostID,
 			})
 			if err != nil {
-				s.logger.Warn("failed to send automated comment", zap.Error(err))
+				s.logger.Warn("failed to send automated comment", zap.Error(err), zap.String("post_id", post.ID))
 			}
 			if leadInteraction != nil && leadInteraction.Metadata.ReferenceID != "" {
 				redditLead.LeadMetadata.AutomatedCommentURL = fmt.Sprintf("https://www.reddit.com/%s", leadInteraction.Metadata.Permalink)
 				redditLead.Status = models.LeadStatusCOMPLETED
 				err := s.db.UpdateLeadStatus(ctx, redditLead)
 				if err != nil {
-					s.logger.Warn("failed to update lead status for automated comment", zap.Error(err))
+					s.logger.Warn("failed to update lead status for automated comment", zap.Error(err), zap.String("post_id", post.ID))
 				}
 			}
 		}
