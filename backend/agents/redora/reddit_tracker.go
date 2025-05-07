@@ -301,7 +301,6 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 				s.logger.Error("failed to get relevance response", zap.Error(err), zap.String("post_id", post.ID))
 				continue
 			}
-
 			redditLead.RelevancyScore = relevanceResponse.IsRelevantConfidenceScore
 			if redditLead.RelevancyScore >= defaultRelevancyScore {
 				countPostsWithHighRelevancy++

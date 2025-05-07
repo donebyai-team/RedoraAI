@@ -157,7 +157,7 @@ func (c *Client) runChatCompletion(
 	output := chatCompletion.Choices[0].Message.Content
 	c.saveOutput(ctx, runID, outputFile, []byte(output), logger)
 
-	output = strings.ReplaceAll(output, `\"`, `"`)
+	//output = strings.ReplaceAll(output, `\"`, `"`)
 
 	return []byte(output), nil
 }
