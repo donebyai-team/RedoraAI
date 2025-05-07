@@ -69,6 +69,19 @@ func FormatComment(input string) string {
 	// Replace \n with actual single newlines (line breaks)
 	input = strings.ReplaceAll(input, `\n`, "\n")
 
+	re := regexp.MustCompile(`\n{2,}`)
+	input = re.ReplaceAllString(input, "\n")
+
+	return input
+}
+
+func FormatDM(input string) string {
+	// Replace \n\n with actual newlines (i.e., two newlines for paragraph breaks)
+	input = strings.ReplaceAll(input, `\n\n`, "\n\n")
+
+	// Replace \n with actual single newlines (line breaks)
+	input = strings.ReplaceAll(input, `\n`, "\n")
+
 	return input
 }
 

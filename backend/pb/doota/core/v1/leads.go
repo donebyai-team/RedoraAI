@@ -55,7 +55,7 @@ func (u *Keyword) FromModel(lead *models.Keyword) *Keyword {
 func (u *LeadMetadata) FromModel(metadata models.LeadMetadata) *LeadMetadata {
 	u.ChainOfThought = utils.FormatComment(metadata.ChainOfThought)
 	u.SuggestedComment = utils.FormatComment(metadata.SuggestedComment)
-	u.SuggestedDm = utils.FormatComment(metadata.SuggestedDM)
+	u.SuggestedDm = utils.FormatDM(metadata.SuggestedDM)
 	u.ChainOfThoughtSuggestedComment = utils.FormatComment(metadata.ChainOfThoughtSuggestedComment)
 	u.ChainOfThoughtSuggestedDm = utils.FormatComment(metadata.ChainOfThoughtSuggestedDM)
 	u.PostUrl = metadata.PostURL
