@@ -70,7 +70,7 @@ func (r redditInteractions) SendComment(ctx context.Context, info *SendCommentIn
 	}
 
 	var comment *reddit.Comment
-	if comment, err = r.redditClient.PostComment(ctx, fmt.Sprintf("t3_%s", info.ThingID), info.Comment); err != nil {
+	if comment, err = r.redditClient.PostComment(ctx, fmt.Sprintf("t3_%s", info.ThingID), utils.FormatComment(info.Comment)); err != nil {
 		interaction.Reason = fmt.Sprintf("failed to post comment: %v", err)
 		interaction.Status = models.LeadInteractionStatusFAILED
 		return intr, err
