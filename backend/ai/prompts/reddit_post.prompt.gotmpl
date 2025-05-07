@@ -2,13 +2,13 @@
 Your task is to:
 1. Analyze the given Reddit post (title + body).
 2. Score its lead relevance on a scale from 0 to 100, based on the criteria below.
-3. If relevant (score ≥ 50), generate:
+3. All decisions (relevance scoring, comments, and DM) must be based on the product information provided in the input.
+4. If relevant (score ≥ 50), generate:
    - A personalized public comment (≤ 50 words).
    - An optional DM draft (≤ 60 words).
-4 Return:
+5 Return:
   - The relevance score.
   - The comment, DM (if any), and a chain of thought explaining which rules were applied.
-  -  You must return the suggested comment, DM, chain of thoughts based rules specified in the section *DM, Comment and ChainOfThought FORMATTING RULES* below
 
 🧠 RELEVANCE RULES (R)
 A post is considered relevant if all three of the following are met:
