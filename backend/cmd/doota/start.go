@@ -34,7 +34,7 @@ var StartCmd = cli.Command(startCmdE,
 	cli.Flags(func(flags *pflag.FlagSet) {
 		flags.Duration("common-phone-call-ttl", 5*time.Minute, cli.FlagDescription(`TTL to set in redis for a phone call`))
 		flags.String("common-pubsub-project", "doota-local", "Google GCP Project")
-		flags.String("common-gpt-model", "redora-dev-gpt-4o-2024-08-06", "GPT Model to use for message creator and categorization")
+		flags.String("common-gpt-model", "redora-dev-gpt-4.1-mini-2025-04-14", "GPT Model to use for message creator and categorization")
 		flags.String("common-resend-api-key", "", "Resend email api key")
 		flags.String("common-openai-api-key", "", "OpenAI API key")
 		flags.String("common-openai-debug-store", "data/debugstore", "OpenAI debug store")
@@ -42,7 +42,7 @@ var StartCmd = cli.Command(startCmdE,
 		flags.String("common-langsmith-api-key", "", "Langsmith API key")
 		flags.String("common-langsmith-project", "", "Langsmith project name")
 		flags.Uint64("common-auto-mem-limit-percent", 0, "Automatically sets GOMEMLIMIT to a percentage of memory limit from cgroup (useful for container environments)")
-		flags.Duration("spooler-db-polling-interval", 1*time.Hour, "How often the spooler will check the database for new investigation")
+		flags.Duration("spooler-db-polling-interval", 15*time.Minute, "How often the spooler will check the database for new investigation")
 
 		flags.String("portal-reddit-redirect-url", "http://localhost:3000/auth/callback", "Reddit App Client ID")
 		flags.String("portal-reddit-client-id", "", "Reddit App Client ID")

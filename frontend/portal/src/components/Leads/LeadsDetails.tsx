@@ -31,7 +31,7 @@ import {
   setSelectedLeadData,
 } from "../../../store/Lead/leadSlice";
 import { LeadStatus } from "@doota/pb/doota/core/v1/core_pb";
-import { HtmlTitleRenderer, HtmlBodyRenderer } from "../Html/HtmlRenderer";
+import { HtmlTitleRenderer, HtmlBodyRenderer, MarkdownRenderer } from "../Html/HtmlRenderer";
 import { formateDate, getSubredditName } from "./Tabs/NewTab";
 
 // Memoized renderers
@@ -167,7 +167,7 @@ const LeadsPostDetails = () => {
               <Tooltip
                 title={
                   <Box>
-                    <MemoizedHtmlBodyRenderer htmlString={selectedleadData.metadata?.chainOfThought || ""} />
+                    <MarkdownRenderer data={selectedleadData.metadata?.chainOfThought || ""} />
                   </Box>
                 }
                 placement="bottom-start"
@@ -278,7 +278,7 @@ const LeadsPostDetails = () => {
                           <Typography color="#e25a9e" fontWeight="medium">Suggested comment</Typography>
                         </Box>
                         <Typography variant="body1" sx={{ mb: 2 }}>
-                          {selectedleadData.metadata.suggestedComment}
+                          <MarkdownRenderer data={selectedleadData.metadata?.suggestedComment || ""} />
                         </Typography>
                       </Box>
 
@@ -318,7 +318,7 @@ const LeadsPostDetails = () => {
                         <Typography color="#e25a9e" fontWeight="medium">Suggested DM</Typography>
                       </Box>
                       <Typography variant="body1" sx={{ mb: 2 }}>
-                        {selectedleadData.metadata.suggestedDm}
+                        <MarkdownRenderer data={selectedleadData.metadata?.suggestedDm || ""} />
                       </Typography>
                       <Stack direction="row" justifyContent="end">
                         <Button
@@ -347,7 +347,6 @@ const LeadsPostDetails = () => {
                 )}
               </Stack>
             )}
-
           </Box>
         </Paper>
       </Box>
