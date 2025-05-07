@@ -66,3 +66,43 @@ func TestService_isEmpty(t *testing.T) {
 	}
 
 }
+
+func TestFormatComment(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{
+			// Test with multiple paragraphs
+			input: `I haven’t tried those browsers myself, but I’m super curious to hear what others think.\n\nIf you come across someone who’s used **BrowserBase**, **Airtop.ai**, **Browser Use**, **Hyperbrowser**, or **Anchor Browser**, tag me — I’d love to join the convo!\n\nI’m planning to test them out myself soon too.`,
+			expected: `I haven’t tried those browsers myself, but I’m super curious to hear what others think.
+
+If you come across someone who’s used **BrowserBase**, **Airtop.ai**, **Browser Use**, **Hyperbrowser**, or **Anchor Browser**, tag me — I’d love to join the convo!
+
+I’m planning to test them out myself soon too.`,
+		},
+		{
+			// Test with only one paragraph (no paragraph breaks)
+			input: `I haven’t tried those browsers myself, but I’m super curious to hear what others think.\nI’m planning to test them out myself soon too.`,
+			expected: `I haven’t tried those browsers myself, but I’m super curious to hear what others think.
+I’m planning to test them out myself soon too.`,
+		},
+		{
+			// Test with no placeholders, input should remain unchanged
+			input:    `I haven’t tried those browsers myself, but I’m super curious to hear what others think.`,
+			expected: `I haven’t tried those browsers myself, but I’m super curious to hear what others think.`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			// Format the input comment
+			actual := FormatComment(tt.input)
+
+			// Check if the actual output matches the expected result
+			if actual != tt.expected {
+				t.Errorf("FormatComment() = %v; expected %v", actual, tt.expected)
+			}
+		})
+	}
+}

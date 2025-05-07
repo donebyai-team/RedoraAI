@@ -62,6 +62,16 @@ func CleanSubredditName(input string) string {
 	return input
 }
 
+func FormatComment(input string) string {
+	// Replace \n\n with actual newlines (i.e., two newlines for paragraph breaks)
+	input = strings.ReplaceAll(input, `\n\n`, "\n\n")
+
+	// Replace \n with actual single newlines (line breaks)
+	input = strings.ReplaceAll(input, `\n`, "\n")
+
+	return input
+}
+
 func SanitizeKeyword(input string) string {
 	// Trim leading/trailing whitespace
 	input = strings.TrimSpace(input)
