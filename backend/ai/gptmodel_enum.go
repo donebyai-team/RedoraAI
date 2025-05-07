@@ -22,6 +22,10 @@ const (
 	GPTModelRedoraDevGpt4120250414 GPTModel = "redora-dev-gpt-4.1-2025-04-14"
 	// GPTModelRedoraProdGpt4120250414 is a GPTModel of type redora-prod-gpt-4.1-2025-04-14.
 	GPTModelRedoraProdGpt4120250414 GPTModel = "redora-prod-gpt-4.1-2025-04-14"
+	// GPTModelRedoraProdClaudeThinking is a GPTModel of type redora-prod-claude-thinking.
+	GPTModelRedoraProdClaudeThinking GPTModel = "redora-prod-claude-thinking"
+	// GPTModelRedoraDevClaudeThinking is a GPTModel of type redora-dev-claude-thinking.
+	GPTModelRedoraDevClaudeThinking GPTModel = "redora-dev-claude-thinking"
 )
 
 var ErrInvalidGPTModel = errors.New("not a valid GPTModel")
@@ -44,6 +48,8 @@ var _GPTModelValue = map[string]GPTModel{
 	"redora-prod-gpt-4.1-mini-2025-04-14": GPTModelRedoraProdGpt41Mini20250414,
 	"redora-dev-gpt-4.1-2025-04-14":       GPTModelRedoraDevGpt4120250414,
 	"redora-prod-gpt-4.1-2025-04-14":      GPTModelRedoraProdGpt4120250414,
+	"redora-prod-claude-thinking":         GPTModelRedoraProdClaudeThinking,
+	"redora-dev-claude-thinking":          GPTModelRedoraDevClaudeThinking,
 }
 
 // ParseGPTModel attempts to convert a string to a GPTModel.

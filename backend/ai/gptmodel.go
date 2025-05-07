@@ -19,7 +19,7 @@ var redditPostRelevancyTemplates = []Template{
 	{path: "reddit_post.human.gotmpl", promptType: PromptTypeSYSTEM, promptFeature: PromptFeatureBOTH},
 }
 
-// ENUM(gpt-4o-2024-08-06, redora-dev-gpt-4.1-mini-2025-04-14, redora-prod-gpt-4.1-mini-2025-04-14, redora-dev-gpt-4.1-2025-04-14, redora-prod-gpt-4.1-2025-04-14)
+// ENUM(gpt-4o-2024-08-06, redora-dev-gpt-4.1-mini-2025-04-14, redora-prod-gpt-4.1-mini-2025-04-14, redora-dev-gpt-4.1-2025-04-14, redora-prod-gpt-4.1-2025-04-14, redora-prod-claude-thinking, redora-dev-claude-thinking)
 type GPTModel string
 
 func (g GPTModel) GetVars(customerCase *models.AugmentedCustomerCase, currentTime time.Time) Variable {
