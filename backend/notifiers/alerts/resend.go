@@ -23,6 +23,10 @@ func (r ResendNotifier) SendLeadsSummary(ctx context.Context, summary LeadSummar
 		return err
 	}
 
+	if len(users) == 0 {
+		return nil
+	}
+
 	to := make([]string, 0, len(users))
 
 	for _, user := range users {
