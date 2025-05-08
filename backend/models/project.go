@@ -10,6 +10,7 @@ type Project struct {
 	CustomerPersona    string     `db:"customer_persona"`
 	EngagementGoals    string     `db:"goals"`
 	WebsiteURL         string     `db:"website"`
+	IsActive           bool       `db:"is_active"`
 	CreatedAt          time.Time  `db:"created_at"`
 	UpdatedAt          *time.Time `db:"updated_at"`
 }
