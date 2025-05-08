@@ -54,6 +54,7 @@ var llmModels = []string{
 }
 
 func TestRedoraCase(t *testing.T) {
+	t.Log("Running Redora Case Tests")
 	file, err := os.Open("testdata/redora_tests.csv")
 	if err != nil {
 		log.Fatal("Failed to open CSV:", err)
@@ -77,7 +78,7 @@ func TestRedoraCase(t *testing.T) {
 	modelStats := map[string]*ModelStats{}
 	var outputRows []OutputRow
 
-	for _, row := range rows {
+	for index, row := range rows {
 		input := parseRow(headers, row)
 		isRelevantColumn := strings.ToLower(input.IsRelevant)
 		if isRelevantColumn != "yes" && isRelevantColumn != "no" {
@@ -87,6 +88,7 @@ func TestRedoraCase(t *testing.T) {
 		isRelevant := isRelevantColumn == "yes"
 
 		for _, model := range llmModels {
+			t.Logf("Testing model: %s for row %d", model, index)
 			project := &models.Project{
 				ID:                 "XXX",
 				OrganizationID:     "XXXXX",
@@ -140,11 +142,11 @@ func TestRedoraCase(t *testing.T) {
 	}
 
 	// Print summary
-	log.Println("Model Summary:")
+	t.Log("Model Summary:")
 	for model, stats := range modelStats {
 		accuracy := float64(stats.Correct) / float64(stats.Total) * 100
 		avgTime := stats.TotalDuration / time.Duration(stats.Total)
-		log.Printf("Model: %s | Accuracy: %.2f%% | Errors: %d | Avg Response Time: %s",
+		t.Logf("Model: %s | Accuracy: %.2f%% | Errors: %d | Avg Response Time: %s",
 			model, accuracy, stats.Errors, avgTime)
 	}
 
