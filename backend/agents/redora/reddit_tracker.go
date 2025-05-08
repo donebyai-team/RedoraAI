@@ -331,6 +331,8 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 				zap.String("reason", reason),
 			)
 
+			redditLead.Title = utils.Ptr("[Redacted]")
+			redditLead.Description = "[Redacted]"
 			redditLead.RelevancyScore = 0
 			redditLead.LeadMetadata.ChainOfThought = reason
 		}
