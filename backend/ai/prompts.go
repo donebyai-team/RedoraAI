@@ -9,13 +9,13 @@ import (
 var caseDecisionTemplates = []Template{
 	{path: "case_decision.prompt.gotmpl", promptType: PromptTypeSYSTEM, promptFeature: PromptFeatureTEXTONLY},
 	{path: "case_decision.schema.gotmpl", promptType: PromptTypeRESPONSESCHEMA, promptFeature: PromptFeatureBOTH},
-	{path: "case_decision.human.gotmpl", promptType: PromptTypeSYSTEM, promptFeature: PromptFeatureBOTH},
+	{path: "case_decision.human.gotmpl", promptType: PromptTypeHUMAN, promptFeature: PromptFeatureBOTH},
 }
 
 var redditPostRelevancyTemplates = []Template{
 	{path: "reddit_post.prompt.gotmpl", promptType: PromptTypeSYSTEM, promptFeature: PromptFeatureTEXTONLY},
 	{path: "reddit_post.schema.gotmpl", promptType: PromptTypeRESPONSESCHEMA, promptFeature: PromptFeatureBOTH},
-	{path: "reddit_post.human.gotmpl", promptType: PromptTypeSYSTEM, promptFeature: PromptFeatureBOTH},
+	{path: "reddit_post.human.gotmpl", promptType: PromptTypeHUMAN, promptFeature: PromptFeatureBOTH},
 }
 
 //go:generate go-enum -f=$GOFILE
