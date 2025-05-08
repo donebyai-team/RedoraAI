@@ -72,6 +72,7 @@ func (s *redditKeywordTracker) TrackKeyword(ctx context.Context, tracker *models
 
 	err = s.searchLeadsFromPosts(ctx, tracker, redditClient)
 	if err != nil {
+		s.slackNotifier.SendTrackingError(ctx, tracker.GetID(), tracker.Project.Name, err)
 		return err
 	}
 
@@ -257,6 +258,7 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 	countPostsWithHighRelevancy := 0
 	countSkippedPosts := 0
 	countTestPosts := 0
+	aiErrorsCount := 0
 
 	s.logger.Info("posts to be evaluated on relevancy via ai", zap.Int("total_posts", len(newPosts)))
 	// Filter by AI
@@ -265,6 +267,10 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 		if countTestPosts >= 5 && s.isDev {
 			s.logger.Info("dev mode is on, max 5 posts extracted via openai")
 			break
+		}
+
+		if aiErrorsCount >= defaultLLMFailedCount {
+			return fmt.Errorf("more than %d llm called failed, skipped processing", defaultLLMFailedCount)
 		}
 
 		redditLead := &models.Lead{
@@ -295,6 +301,7 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 			relevanceResponse, usage, err := s.aiClient.IsRedditPostRelevant(ctx, tracker.Organization, project, redditLead, s.logger)
 			if err != nil {
 				s.logger.Error("failed to get relevance response", zap.Error(err), zap.String("post_id", post.ID))
+				aiErrorsCount++
 				continue
 			}
 			redditLead.RelevancyScore = relevanceResponse.IsRelevantConfidenceScore
@@ -432,6 +439,7 @@ const (
 	minCommentThreshold   = 5
 	maxLeadsPerDay        = 25
 	defaultRelevancyScore = 90
+	defaultLLMFailedCount = 3
 )
 
 var systemAuthors = []string{"[deleted]", "AutoModerator"}

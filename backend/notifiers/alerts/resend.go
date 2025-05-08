@@ -13,7 +13,12 @@ type ResendNotifier struct {
 	db     datastore.Repository
 }
 
-func NewResendNotifier(apiKey string, db datastore.Repository, logger *zap.Logger) *ResendNotifier {
+func (r ResendNotifier) SendTrackingError(ctx context.Context, trackingID, project string, err error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func NewResendNotifier(apiKey string, db datastore.Repository, logger *zap.Logger) AlertNotifier {
 	return &ResendNotifier{Client: resend.NewClient(apiKey), db: db}
 }
 
