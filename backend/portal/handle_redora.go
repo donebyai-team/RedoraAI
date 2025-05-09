@@ -308,10 +308,19 @@ func (p *Portal) GetRelevantLeads(ctx context.Context, c *connect.Request[pbport
 
 	leadsProto := make([]*pbcore.Lead, 0, len(leads))
 	for _, lead := range leads {
-		leadsProto = append(leadsProto, new(pbcore.Lead).FromModel(lead))
+		leadsProto = append(leadsProto, new(pbcore.Lead).FromModel(redactPlatformOnlyMetadata(actor.Role, lead)))
 	}
 
 	return connect.NewResponse(&pbportal.GetLeadsResponse{Leads: leadsProto}), nil
+}
+
+func redactPlatformOnlyMetadata(role models.UserRole, lead *models.AugmentedLead) *models.AugmentedLead {
+	if role != models.UserRolePLATFORMADMIN {
+		lead.LeadMetadata.RelevancyLLMModel = ""
+		lead.LeadMetadata.CommentLLMModel = ""
+		lead.LeadMetadata.DMLLMModel = ""
+	}
+	return lead
 }
 
 func (p *Portal) GetLeadsByStatus(ctx context.Context, c *connect.Request[pbportal.GetLeadsByStatusRequest]) (*connect.Response[pbportal.GetLeadsResponse], error) {
@@ -337,7 +346,7 @@ func (p *Portal) GetLeadsByStatus(ctx context.Context, c *connect.Request[pbport
 
 	leadsProto := make([]*pbcore.Lead, 0, len(leads))
 	for _, lead := range leads {
-		leadsProto = append(leadsProto, new(pbcore.Lead).FromModel(lead))
+		leadsProto = append(leadsProto, new(pbcore.Lead).FromModel(redactPlatformOnlyMetadata(actor.Role, lead)))
 	}
 
 	return connect.NewResponse(&pbportal.GetLeadsResponse{Leads: leadsProto}), nil

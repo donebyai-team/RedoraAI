@@ -162,7 +162,7 @@ func transformCallToCallResponse(call *api.Call) *models.CallResponse {
 }
 
 func (m *VAPIVoiceProvider) CreateCall(ctx context.Context, req models.CallRequest) (*models.CallResponse, error) {
-	model, err := api.NewOpenAiModelModelFromString(req.GPTModel)
+	model, err := api.NewOpenAiModelModelFromString(string(req.LLMModel))
 	if err != nil {
 		return nil, err
 	}

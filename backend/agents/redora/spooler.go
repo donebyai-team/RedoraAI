@@ -16,7 +16,6 @@ import (
 type Spooler struct {
 	*shutter.Shutter
 	dbPollingInterval time.Duration
-	gptModel          ai.GPTModel
 	db                datastore.Repository
 	aiClient          *ai.Client
 	queue             chan *models.AugmentedKeywordTracker
@@ -31,7 +30,6 @@ type Spooler struct {
 func New(
 	db datastore.Repository,
 	aiClient *ai.Client,
-	gptModel ai.GPTModel,
 	state state.ConversationState,
 	bufferSize int,
 	maxParallelCalls uint64,
@@ -43,7 +41,6 @@ func New(
 	return &Spooler{
 		Shutter:           shutter.New(),
 		db:                db,
-		gptModel:          gptModel,
 		state:             state,
 		maxParallelCalls:  maxParallelCalls,
 		aiClient:          aiClient,

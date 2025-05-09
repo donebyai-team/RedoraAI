@@ -164,6 +164,20 @@ const LeadsPostDetails = () => {
                   fontWeight: "bold",
                 }}
               />
+
+
+              {selectedleadData.metadata?.relevancyLlmModel && (
+                <Chip
+                  label={`${selectedleadData.metadata?.relevancyLlmModel}`}
+                  sx={{
+                    bgcolor: "rgba(0, 123, 255, 0.1)", // Light blue background
+                    color: "#0056b3",
+                    fontWeight: "bold",
+                  }}
+                />
+              )}
+
+
               <Tooltip
                 title={
                   <Box>

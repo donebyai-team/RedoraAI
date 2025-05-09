@@ -19,7 +19,6 @@ import (
 type Spooler struct {
 	*shutter.Shutter
 	dbPollingInterval  time.Duration
-	gptModel           ai.GPTModel
 	db                 datastore.Repository
 	aiClient           *ai.Client
 	queue              chan *models.AugmentedCustomerCase
@@ -35,7 +34,6 @@ type Spooler struct {
 func New(
 	db datastore.Repository,
 	aiClient *ai.Client,
-	gptModel ai.GPTModel,
 	state state.ConversationState,
 	caseInvestigator *CaseInvestigator,
 	integrationFactory *integrations.Factory,
@@ -48,7 +46,6 @@ func New(
 	return &Spooler{
 		Shutter:            shutter.New(),
 		db:                 db,
-		gptModel:           gptModel,
 		state:              state,
 		caseInvestigator:   caseInvestigator,
 		maxParallelCalls:   maxParallelCalls,
@@ -155,7 +152,7 @@ func (s *Spooler) processCustomerCase(ctx context.Context, customerCase *models.
 
 	debugTemplateName := fmt.Sprintf("voice.%s", strings.ToLower(promptConfig.Name))
 
-	vars := prompt.Model.GetVars(customerCase, time.Now())
+	vars := ai.GetVars(customerCase, time.Now())
 	chatMessages, err := s.aiClient.ExtractMessages(ctx, debugTemplateName, prompt, vars, conversation.ID, logger)
 	if err != nil {
 		return fmt.Errorf("failed to extract messages from prompt: %w", err)
@@ -166,7 +163,7 @@ func (s *Spooler) processCustomerCase(ctx context.Context, customerCase *models.
 		FromPhone:      conversation.FromPhone,
 		ToPhone:        customerCase.Customer.Phone,
 		ChatMessages:   chatMessages,
-		GPTModel:       prompt.Model.String(),
+		LLMModel:       prompt.Model,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to create call response for %s: %w", customerCase.CustomerCase.ID, err)

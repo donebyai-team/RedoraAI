@@ -5,6 +5,13 @@ import (
 	"time"
 )
 
+type LLMModel string
+
+type LLMModelUsage struct {
+	Model LLMModel `json:"model"`
+	Usage int      `json:"usage"`
+}
+
 type RedditPostRelevanceResponse struct {
 	ChainOfThoughtIsRelevant       string       `json:"chain_of_thought"`
 	IsRelevantConfidenceScore      float64      `json:"relevant_confidence_score"`
@@ -13,6 +20,7 @@ type RedditPostRelevanceResponse struct {
 	ChainOfThoughtSuggestedDM      string       `json:"chain_of_thought_suggested_dm"`
 	SuggestedComment               string       `json:"suggested_comment"`
 	ChainOfThoughtSuggestedComment string       `json:"chain_of_thought_suggested_comment"`
+	AppliedRules                   []string     `json:"applied_rules"`
 }
 
 type CaseDecisionResponse struct {

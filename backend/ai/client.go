@@ -10,6 +10,7 @@ import (
 	"github.com/openai/openai-go/shared"
 	"github.com/shank318/doota/models"
 	"github.com/shank318/doota/utils"
+	"github.com/streamingfast/derr"
 	"github.com/streamingfast/dstore"
 	"go.uber.org/zap"
 	"strings"
@@ -20,6 +21,7 @@ import (
 const SEED = 42
 
 type Client struct {
+	defaultLLMModel     models.LLMModel
 	model               openai.Client
 	langsmithConfig     LangsmithConfig
 	/**/ debugFileStore dstore.Store
@@ -49,10 +51,15 @@ type LangsmithConfig struct {
 //	}, nil
 //}
 
-func NewOpenAI(apiKey, openAIOrganization string, config LangsmithConfig, debugFileStore dstore.Store) (*Client, error) {
+func NewOpenAI(apiKey string, defaultLLMModel models.LLMModel, config LangsmithConfig, debugFileStore dstore.Store) (*Client, error) {
 	if apiKey == "" {
 		return nil, fmt.Errorf("openai api key is required, cannot be blank")
 	}
+
+	if len(strings.TrimSpace(string(defaultLLMModel))) == 0 {
+		return nil, fmt.Errorf("default llm model, cannot be blank")
+	}
+
 	//if openAIOrganization == "" {
 	//	return nil, fmt.Errorf("openai organization is required, cannot be blank")
 	//}
@@ -63,8 +70,9 @@ func NewOpenAI(apiKey, openAIOrganization string, config LangsmithConfig, debugF
 	)
 
 	return &Client{
-		model:          llmClient,
-		debugFileStore: debugFileStore,
+		model:           llmClient,
+		defaultLLMModel: defaultLLMModel,
+		debugFileStore:  debugFileStore,
 	}, nil
 }
 
@@ -128,10 +136,12 @@ func (c *Client) getChatMessagesFromPrompt(ctx context.Context, runID string, p 
 	return c.buildChatMessages(ctx, runID, templates, logger, vars)
 }
 
+const MAX_RETRIES = 3
+
 func (c *Client) runChatCompletion(
 	ctx context.Context,
 	runID string,
-	model string,
+	model models.LLMModel,
 	userID string,
 	messages []openai.ChatCompletionMessageParamUnion,
 	responseFormat *openai.ChatCompletionNewParamsResponseFormatUnion,
@@ -139,42 +149,56 @@ func (c *Client) runChatCompletion(
 	outputFile string,
 ) ([]byte, error) {
 	params := openai.ChatCompletionNewParams{
-		Model:          model,
+		Model:          string(model),
 		Messages:       messages,
 		User:           openai.String(userID),
 		ResponseFormat: *responseFormat,
 	}
 
-	chatCompletion, err := c.model.Chat.Completions.New(ctx, params)
+	var output string
+
+	err := derr.RetryContext(ctx, MAX_RETRIES, func(ctx context.Context) error {
+		chatCompletion, err := c.model.Chat.Completions.New(ctx, params)
+		if err != nil {
+			return fmt.Errorf("llm: %w", err)
+		}
+
+		if len(chatCompletion.Choices) == 0 {
+			return fmt.Errorf("llm: no chat completion found, model: %s", model)
+		}
+
+		output = chatCompletion.Choices[0].Message.Content
+		return nil
+	})
+
 	if err != nil {
-		return nil, fmt.Errorf("llm: %w", err)
+		return nil, fmt.Errorf("retry: %w", err)
 	}
-
-	if len(chatCompletion.Choices) == 0 {
-		return nil, fmt.Errorf("llm: no chat completion found, model: %s", model)
-	}
-
-	output := chatCompletion.Choices[0].Message.Content
-	output = strings.ReplaceAll(output, `\"`, `"`)
 
 	c.saveOutput(ctx, runID, outputFile, []byte(output), logger)
+
+	//output = strings.ReplaceAll(output, `\"`, `"`)
 
 	return []byte(output), nil
 }
 
-func (c *Client) IsRedditPostRelevant(ctx context.Context, project *models.Project, post *models.Lead, gptModel GPTModel, logger *zap.Logger) (*models.RedditPostRelevanceResponse, error) {
+func (c *Client) IsRedditPostRelevant(ctx context.Context, organization *models.Organization, project *models.Project, post *models.Lead, logger *zap.Logger) (*models.RedditPostRelevanceResponse, *models.LLMModelUsage, error) {
 	runID := fmt.Sprintf("%s-%s", project.ID, post.PostID)
-	vars := gptModel.GetRedditPostRelevancyVars(project, post)
+	vars := GetRedditPostRelevancyVars(project, post)
+	llmModelToUse := c.defaultLLMModel
+	if organization.FeatureFlags.RelevancyLLMModel != "" {
+		llmModelToUse = organization.FeatureFlags.RelevancyLLMModel
+	}
 
 	messages, responseFormat, err := c.buildChatMessages(ctx, runID, redditPostRelevancyTemplates, logger, vars)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	output, err := c.runChatCompletion(
 		ctx,
 		runID,
-		gptModel.String(),
+		llmModelToUse,
 		project.OrganizationID,
 		messages,
 		responseFormat,
@@ -182,19 +206,19 @@ func (c *Client) IsRedditPostRelevant(ctx context.Context, project *models.Proje
 		"reddit_post_relevancy.output",
 	)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	var data models.RedditPostRelevanceResponse
 	if err := json.Unmarshal(output, &data); err != nil {
-		return nil, fmt.Errorf("unable to unmarshal response: %w", err)
+		return nil, nil, fmt.Errorf("unable to unmarshal response: %w", err)
 	}
-	return &data, nil
+	return &data, &models.LLMModelUsage{Model: llmModelToUse}, nil
 }
 
-func (c *Client) CustomerCaseDecision(ctx context.Context, orgID string, lastConversation *models.Conversation, gptModel GPTModel, logger *zap.Logger) (*models.CaseDecisionResponse, error) {
+func (c *Client) CustomerCaseDecision(ctx context.Context, orgID string, lastConversation *models.Conversation, logger *zap.Logger) (*models.CaseDecisionResponse, error) {
 	runID := lastConversation.ID
-	vars := gptModel.GetCaseDecisionVars(lastConversation)
+	vars := GetCaseDecisionVars(lastConversation)
 
 	messages, responseFormat, err := c.buildChatMessages(ctx, runID, caseDecisionTemplates, logger, vars)
 	if err != nil {
@@ -204,7 +228,7 @@ func (c *Client) CustomerCaseDecision(ctx context.Context, orgID string, lastCon
 	output, err := c.runChatCompletion(
 		ctx,
 		runID,
-		gptModel.String(),
+		c.defaultLLMModel,
 		orgID,
 		messages,
 		responseFormat,
@@ -256,15 +280,20 @@ func (c *Client) RunPrompt(ctx context.Context, prefix string, prompt *Prompt, v
 		return nil, err
 	}
 
+	llmModelToUse := c.defaultLLMModel
+	if prompt.Model != "" {
+		llmModelToUse = prompt.Model
+	}
+
 	output, err := c.runChatCompletion(
 		ctx,
 		runID,
-		prompt.Model.String(),
+		llmModelToUse,
 		orgID,
 		messages,
 		responseFormat,
 		logger,
-		"reddit_post_relevancy.output",
+		fmt.Sprintf("%s.output", prefix),
 	)
 	if err != nil {
 		return nil, err

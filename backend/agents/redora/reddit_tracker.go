@@ -20,7 +20,6 @@ import (
 )
 
 type redditKeywordTracker struct {
-	gptModel          ai.GPTModel
 	db                datastore.Repository
 	aiClient          *ai.Client
 	logger            *zap.Logger
@@ -33,7 +32,6 @@ type redditKeywordTracker struct {
 
 func newRedditKeywordTracker(
 	isDev bool,
-	gptModel ai.GPTModel,
 	redditOauthClient *reddit.OauthClient,
 	db datastore.Repository,
 	aiClient *ai.Client,
@@ -42,7 +40,6 @@ func newRedditKeywordTracker(
 	slackNotifier alerts.AlertNotifier,
 	emailNotifier alerts.AlertNotifier) KeywordTracker {
 	return &redditKeywordTracker{
-		gptModel:          gptModel,
 		db:                db,
 		aiClient:          aiClient,
 		logger:            logger,
@@ -56,7 +53,6 @@ func newRedditKeywordTracker(
 
 func (s *redditKeywordTracker) WithLogger(logger *zap.Logger) KeywordTracker {
 	return &redditKeywordTracker{
-		gptModel:          s.gptModel,
 		db:                s.db,
 		aiClient:          s.aiClient,
 		logger:            logger,
@@ -76,6 +72,7 @@ func (s *redditKeywordTracker) TrackKeyword(ctx context.Context, tracker *models
 
 	err = s.searchLeadsFromPosts(ctx, tracker, redditClient)
 	if err != nil {
+		s.slackNotifier.SendTrackingError(ctx, tracker.GetID(), tracker.Project.Name, err)
 		return err
 	}
 
@@ -261,6 +258,7 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 	countPostsWithHighRelevancy := 0
 	countSkippedPosts := 0
 	countTestPosts := 0
+	aiErrorsCount := 0
 
 	s.logger.Info("posts to be evaluated on relevancy via ai", zap.Int("total_posts", len(newPosts)))
 	// Filter by AI
@@ -269,6 +267,10 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 		if countTestPosts >= 5 && s.isDev {
 			s.logger.Info("dev mode is on, max 5 posts extracted via openai")
 			break
+		}
+
+		if aiErrorsCount >= defaultLLMFailedCount {
+			return fmt.Errorf("more than %d llm called failed, skipped processing", defaultLLMFailedCount)
 		}
 
 		redditLead := &models.Lead{
@@ -296,12 +298,12 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 		isValid, reason := s.isValidPost(post)
 		if isValid {
 			countTestPosts++
-			relevanceResponse, err := s.aiClient.IsRedditPostRelevant(ctx, project, redditLead, s.gptModel, s.logger)
+			relevanceResponse, usage, err := s.aiClient.IsRedditPostRelevant(ctx, tracker.Organization, project, redditLead, s.logger)
 			if err != nil {
-				s.logger.Error("failed to get relevance response", zap.Error(err))
+				s.logger.Error("failed to get relevance response", zap.Error(err), zap.String("post_id", post.ID))
+				aiErrorsCount++
 				continue
 			}
-
 			redditLead.RelevancyScore = relevanceResponse.IsRelevantConfidenceScore
 			if redditLead.RelevancyScore >= defaultRelevancyScore {
 				countPostsWithHighRelevancy++
@@ -313,6 +315,8 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 			redditLead.LeadMetadata.SuggestedDM = relevanceResponse.SuggestedDM
 			redditLead.LeadMetadata.ChainOfThoughtSuggestedComment = relevanceResponse.ChainOfThoughtSuggestedComment
 			redditLead.LeadMetadata.ChainOfThoughtSuggestedDM = relevanceResponse.ChainOfThoughtSuggestedDM
+			redditLead.LeadMetadata.RelevancyLLMModel = usage.Model
+			redditLead.LeadMetadata.AppliedRules = relevanceResponse.AppliedRules
 
 			// Mark the tracker alive in case the execution taking too much time
 			// Doing it here because that's the only place that takes time
@@ -329,6 +333,11 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 
 			redditLead.RelevancyScore = 0
 			redditLead.LeadMetadata.ChainOfThought = reason
+		}
+
+		if redditLead.RelevancyScore < minRelevancyScore {
+			redditLead.Title = utils.Ptr("[Redacted]")
+			redditLead.Description = "[Redacted]"
 		}
 
 		_, err = s.db.CreateLead(ctx, redditLead)
@@ -357,14 +366,14 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 				ThingID:       redditLead.PostID,
 			})
 			if err != nil {
-				s.logger.Warn("failed to send automated comment", zap.Error(err))
+				s.logger.Warn("failed to send automated comment", zap.Error(err), zap.String("post_id", post.ID))
 			}
 			if leadInteraction != nil && leadInteraction.Metadata.ReferenceID != "" {
 				redditLead.LeadMetadata.AutomatedCommentURL = fmt.Sprintf("https://www.reddit.com/%s", leadInteraction.Metadata.Permalink)
 				redditLead.Status = models.LeadStatusCOMPLETED
 				err := s.db.UpdateLeadStatus(ctx, redditLead)
 				if err != nil {
-					s.logger.Warn("failed to update lead status for automated comment", zap.Error(err))
+					s.logger.Warn("failed to update lead status for automated comment", zap.Error(err), zap.String("post_id", post.ID))
 				}
 			}
 		}
@@ -435,6 +444,8 @@ const (
 	minCommentThreshold   = 5
 	maxLeadsPerDay        = 25
 	defaultRelevancyScore = 90
+	minRelevancyScore     = 70
+	defaultLLMFailedCount = 3
 )
 
 var systemAuthors = []string{"[deleted]", "AutoModerator"}

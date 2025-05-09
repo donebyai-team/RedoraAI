@@ -24,6 +24,7 @@ type LeadSummary struct {
 
 type AlertNotifier interface {
 	SendLeadsSummary(ctx context.Context, summary LeadSummary) error
+	SendTrackingError(ctx context.Context, trackingID, project string, err error)
 }
 
 type SlackNotifier struct {
@@ -41,6 +42,19 @@ func NewSlackNotifier(db datastore.Repository, logger *zap.Logger) AlertNotifier
 }
 
 const redoraChannel = "https://hooks.slack.com/services/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"
+const alertsChannel = "https://hooks.slack.com/services/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"
+
+func (s *SlackNotifier) SendTrackingError(ctx context.Context, trackingID, project string, err error) {
+	msg := fmt.Sprintf("*Tracking Error*\n "+
+		"*Product:* %s\n"+
+		"*TrackerID:* %s\n"+
+		"*Error:* %s", project, trackingID, err.Error())
+	err = s.send(ctx, msg, alertsChannel)
+	if err != nil {
+		s.logger.Error("failed to send error alert to redora channel", zap.Error(err))
+		return
+	}
+}
 
 func (s *SlackNotifier) SendLeadsSummary(ctx context.Context, summary LeadSummary) error {
 	integration, err := s.db.GetIntegrationByOrgAndType(ctx, summary.OrgID, models.IntegrationTypeSLACKWEBHOOK)

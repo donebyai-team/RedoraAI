@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"github.com/shank318/doota/agents/redora"
 	"github.com/shank318/doota/agents/vana"
-	"github.com/shank318/doota/ai"
 	"github.com/shank318/doota/app"
 	"github.com/shank318/doota/auth"
 	"github.com/shank318/doota/integrations"
 	"github.com/shank318/doota/integrations/reddit"
+	"github.com/shank318/doota/models"
 	"github.com/shank318/doota/notifiers/alerts"
 	pbportal "github.com/shank318/doota/pb/doota/portal/v1"
 	"github.com/shank318/doota/portal"
@@ -144,14 +144,14 @@ func openAILangsmithLegacyHandling(cmd *cobra.Command, prefix string) (string, s
 }
 
 func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
-	openaiApiKey, openaiOrganization, openaiDebugStore, langsmithApiKey, langsmithProject := openAILangsmithLegacyHandling(cmd, "common")
+	openaiApiKey, _, openaiDebugStore, langsmithApiKey, langsmithProject := openAILangsmithLegacyHandling(cmd, "common")
 	redisAddr := sflags.MustGetString(cmd, "redis-addr")
 	deps, err := app.NewDependenciesBuilder().
 		WithDataStore(sflags.MustGetString(cmd, "pg-dsn")).
 		WithKMSKeyPath(sflags.MustGetString(cmd, "jwt-kms-keypath")).
 		WithAI(
+			models.LLMModel(sflags.MustGetString(cmd, "common-gpt-model")),
 			openaiApiKey,
-			openaiOrganization,
 			openaiDebugStore,
 			langsmithApiKey,
 			langsmithProject,
@@ -169,11 +169,6 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 
 	logger := zlog.Named("spooler")
 
-	gptModel, err := ai.ParseGPTModel(sflags.MustGetString(cmd, "common-gpt-model"))
-	if err != nil {
-		return nil, fmt.Errorf("initiated extractor with invalid gpt model: %w", err)
-	}
-
 	redditOauthClient := reddit.NewRedditOauthClient(logger, deps.DataStore, sflags.MustGetString(cmd, "portal-reddit-client-id"), sflags.MustGetString(cmd, "portal-reddit-client-secret"), sflags.MustGetString(cmd, "portal-reddit-redirect-url"))
 
 	var isDev bool
@@ -184,7 +179,6 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 
 	tracker := redora.NewKeywordTrackerFactory(
 		isDev,
-		gptModel,
 		redditOauthClient,
 		deps.DataStore,
 		deps.AIClient,
@@ -197,7 +191,6 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 	return redora.New(
 		deps.DataStore,
 		deps.AIClient,
-		gptModel,
 		deps.ConversationState,
 		50,
 		10,
@@ -209,12 +202,12 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 }
 
 func vanaSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
-	openaiApiKey, openaiOrganization, openaiDebugStore, langsmithApiKey, langsmithProject := openAILangsmithLegacyHandling(cmd, "common")
+	openaiApiKey, _, openaiDebugStore, langsmithApiKey, langsmithProject := openAILangsmithLegacyHandling(cmd, "common")
 	deps, err := app.NewDependenciesBuilder().
 		WithDataStore(sflags.MustGetString(cmd, "pg-dsn")).
 		WithAI(
+			models.LLMModel(sflags.MustGetString(cmd, "common-gpt-model")),
 			openaiApiKey,
-			openaiOrganization,
 			openaiDebugStore,
 			langsmithApiKey,
 			langsmithProject,
@@ -232,18 +225,12 @@ func vanaSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 
 	logger := zlog.Named("spooler")
 
-	gptModel, err := ai.ParseGPTModel(sflags.MustGetString(cmd, "common-gpt-model"))
-	if err != nil {
-		return nil, fmt.Errorf("initiated extractor with invalid gpt model: %w", err)
-	}
-
 	integrationsFactory := integrations.NewFactory(deps.DataStore, logger)
-	caseInvestigator := vana.NewCaseInvestigator(gptModel, deps.DataStore, deps.AIClient, logger, deps.ConversationState)
+	caseInvestigator := vana.NewCaseInvestigator(deps.DataStore, deps.AIClient, logger, deps.ConversationState)
 
 	return vana.New(
 		deps.DataStore,
 		deps.AIClient,
-		gptModel,
 		deps.ConversationState,
 		caseInvestigator,
 		integrationsFactory,
@@ -256,7 +243,7 @@ func vanaSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 }
 
 func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
-	openaiApiKey, openaiOrganization, openaiDebugStore, langsmithApiKey, langsmithProject := openAILangsmithLegacyHandling(cmd, "common")
+	openaiApiKey, _, openaiDebugStore, langsmithApiKey, langsmithProject := openAILangsmithLegacyHandling(cmd, "common")
 	deps, err := app.NewDependenciesBuilder().
 		WithDataStore(sflags.MustGetString(cmd, "pg-dsn")).
 		WithKMSKeyPath(sflags.MustGetString(cmd, "jwt-kms-keypath")).
@@ -268,8 +255,8 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 			"tracker",
 		).
 		WithAI(
+			models.LLMModel(sflags.MustGetString(cmd, "common-gpt-model")),
 			openaiApiKey,
-			openaiOrganization,
 			openaiDebugStore,
 			langsmithApiKey,
 			langsmithProject,
@@ -289,14 +276,9 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 
 	logger := zlog.Named("portal")
 
-	gptModel, err := ai.ParseGPTModel(sflags.MustGetString(cmd, "common-gpt-model"))
-	if err != nil {
-		return nil, fmt.Errorf("initiated extractor with invalid gpt model: %w", err)
-	}
-
 	integrationsFactory := integrations.NewFactory(deps.DataStore, logger)
 
-	caseInvestigator := vana.NewCaseInvestigator(gptModel, deps.DataStore, deps.AIClient, logger, deps.ConversationState)
+	caseInvestigator := vana.NewCaseInvestigator(deps.DataStore, deps.AIClient, logger, deps.ConversationState)
 
 	vanaWebhookHandler := vana.NewVanaWebhookHandler(
 		deps.DataStore,

@@ -9,7 +9,7 @@ type CallRequest struct {
 	FromPhone      string
 	ToPhone        string
 	ChatMessages   []openai.ChatCompletionMessageParamUnion
-	GPTModel       string
+	LLMModel       LLMModel
 }
 
 type CallResponse struct {
