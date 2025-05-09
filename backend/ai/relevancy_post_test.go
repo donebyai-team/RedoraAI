@@ -56,7 +56,7 @@ func TestRelevancyOutputFormating2(t *testing.T) {
 	assert.Equal(t, usage.Model, defaultModel)
 }
 
-func TestRelevancyOutputFormating(t *testing.T) {
+func TestRelevancyOutputFormating1(t *testing.T) {
 	debugStore, err := dstore.NewStore("../../data/debugstore", "", "", false)
 	if err != nil {
 		t.FailNow()
@@ -80,6 +80,45 @@ func TestRelevancyOutputFormating(t *testing.T) {
 		Author:      "Feeling_Ad_4458",
 		Title:       utils.Ptr("Query Alert: Need some help here - Any content SEO strategies to rank in another country? -\n"),
 		Description: "Say I am sitting in KL (Malaysia) and want my content to rank in the NY and New Jersey area (US). Looking for some grey hat ideas.",
+	}
+
+	org := &models.Organization{}
+
+	relevant, usage, errRel := ai.IsRedditPostRelevant(context.Background(), org, project, post, logger)
+	if errRel != nil {
+		t.FailNow()
+	}
+
+	comment := utils.FormatComment(relevant.SuggestedComment)
+	assert.NotEmpty(t, comment)
+	assert.True(t, relevant.IsRelevantConfidenceScore >= 90)
+	assert.Equal(t, usage.Model, defaultModel)
+}
+
+func TestRelevancyOutputFormating(t *testing.T) {
+	debugStore, err := dstore.NewStore("../../data/debugstore", "", "", false)
+	if err != nil {
+		t.FailNow()
+	}
+	//defaultModel := models.LLMModel("redora-dev-gpt-4.1-2025-04-14")
+	defaultModel := models.LLMModel("redora-gemini-2.0-flash")
+	ai, err := NewOpenAI(utils.GetEnvTestReq(t, "OPENAI_API_KEY_DEV"), defaultModel, LangsmithConfig{}, debugStore, logger)
+	if err != nil {
+		t.FailNow()
+	}
+
+	project := &models.Project{
+		ID:                 "XXX",
+		OrganizationID:     "XXXXX",
+		Name:               "SalesForge.ai",
+		ProductDescription: "Salesforge is an email outreach tool that provides complete suite of tools that helps Sales people boost their Sales pipeline. You can setup cold email infrastructure using Infraforge and Mailforge for better email deliverability or use Agent Frank to do complete outreach for you.",
+		CustomerPersona:    "Sales Reps, Founders, CMOs, Head of Sales, Head of Growth.",
+	}
+
+	post := &models.Lead{
+		Author:      "Feeling_Ad_4458",
+		Title:       utils.Ptr("5 AI Prompts That Boost Conversions Instantly"),
+		Description: "If you’re running a business and haven’t tapped into AI for sales copy, you’re leaving money on the table.\n\nHere are 5 prompts I personally use:\n\n1. Cold email template for SaaS founders targeting tech startups.\n2. Landing page structure for a new SaaS product launch.\n3. Re-engagement email for inactive users — get them back!\n4. LinkedIn DM prompt for selling SaaS consulting services.\n5. Chat simulation: Handling the \"We’re not ready to commit\" objection.\n\nIf you want 45 more prompts for every stage of the funnel, comment “Prompts, please!” and I’ll DM it to you instantly.",
 	}
 
 	org := &models.Organization{}

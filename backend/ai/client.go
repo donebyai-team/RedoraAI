@@ -218,12 +218,12 @@ func (c *Client) runChatCompletion(
 	return []byte(output), nil
 }
 
-func (c *Client) IsRedditPostRelevant(ctx context.Context, organization *models.Organization, project *models.Project, post *models.Lead, logger *zap.Logger) (*models.RedditPostRelevanceResponse, *models.LLMModelUsage, error) {
+func (c *Client) IsRedditPostRelevant(ctx context.Context, model models.LLMModel, project *models.Project, post *models.Lead, logger *zap.Logger) (*models.RedditPostRelevanceResponse, *models.LLMModelUsage, error) {
 	runID := fmt.Sprintf("%s-%s", project.ID, post.PostID)
 	vars := GetRedditPostRelevancyVars(project, post)
 	llmModelToUse := c.defaultLLMModel
-	if organization.FeatureFlags.RelevancyLLMModel != "" {
-		llmModelToUse = organization.FeatureFlags.RelevancyLLMModel
+	if string(model) != "" {
+		llmModelToUse = model
 	}
 
 	messages, responseFormat, err := c.buildChatMessages(ctx, runID, redditPostRelevancyTemplates, logger, vars)
