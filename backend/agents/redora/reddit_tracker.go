@@ -310,7 +310,7 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 				s.logger.Info("calling relevancy with higher model", zap.String("higher_model", defaultHigherModelToUse), zap.String("post_id", post.ID))
 				relevanceResponseHigherModel, usageHigherModel, errHigherModel := s.aiClient.IsRedditPostRelevant(ctx, defaultHigherModelToUse, project, redditLead, s.logger)
 				if errHigherModel != nil {
-					s.logger.Error("failed to get relevance response from the higher model, continuing with the existing one", zap.Error(err), zap.String("post_id", post.ID))
+					s.logger.Error("failed to get relevance response from the higher model, continuing with the existing one", zap.Error(errHigherModel), zap.String("post_id", post.ID))
 					aiErrorsCount++
 				} else {
 					s.logger.Info("llm response overridden",
