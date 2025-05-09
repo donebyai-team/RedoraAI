@@ -67,6 +67,7 @@ const NavBar: FC = () => {
   const [relevancy_score, setRelevancy_Score] = useState<number>(relevancyScore);
   const { isConnected, loading: isLoadingRedditIntegrationStatus } = useRedditIntegrationStatus();
   const canChangeOrg = user && isPlatformAdmin(user) && user.organizations.length > 1;
+  const DEFAULT_RESET_RELEVENCY_SCORE = 90;
 
   const onChangeCommitted = useCallback((key: string, value: number | string) => {
     if (key === 'relevancy_score') {
@@ -153,8 +154,8 @@ const NavBar: FC = () => {
 
   const handleResetFilters = () => {
     // Reset any other filters here
-    debouncedOnChangeCommitted('relevancy_score', 70);
-    setRelevancy_Score(70);
+    debouncedOnChangeCommitted('relevancy_score', DEFAULT_RESET_RELEVENCY_SCORE);
+    setRelevancy_Score(DEFAULT_RESET_RELEVENCY_SCORE);
     debouncedOnChangeCommitted('currentActiveSubRedditId', "");
   }
 
@@ -399,6 +400,8 @@ const NavBar: FC = () => {
           <Slider
             value={relevancy_score}
             onChange={handleRelevancyChange}
+            min={70}
+            step={10}
             sx={{
               color: "#FF9800",
               "& .MuiSlider-thumb": {
