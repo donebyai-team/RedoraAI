@@ -22,8 +22,8 @@ func TestRelevancyOutputFormating(t *testing.T) {
 	if err != nil {
 		t.FailNow()
 	}
-	//defaultModel := models.LLMModel("redora-dev-gpt-4.1-2025-04-14")
-	defaultModel := models.LLMModel("redora-dev-claude-3-7-sonnet-20250219")
+	defaultModel := models.LLMModel("redora-dev-gpt-4.1-2025-04-14")
+	//defaultModel := models.LLMModel("redora-gemini-2.0-flash")
 	ai, err := NewOpenAI(utils.GetEnvTestReq(t, "OPENAI_API_KEY_DEV"), defaultModel, LangsmithConfig{}, debugStore)
 	if err != nil {
 		t.FailNow()
@@ -45,8 +45,8 @@ func TestRelevancyOutputFormating(t *testing.T) {
 
 	org := &models.Organization{}
 
-	relevant, usage, err := ai.IsRedditPostRelevant(context.Background(), org, project, post, logger)
-	if err != nil {
+	relevant, usage, errRel := ai.IsRedditPostRelevant(context.Background(), org, project, post, logger)
+	if errRel != nil {
 		t.FailNow()
 	}
 
