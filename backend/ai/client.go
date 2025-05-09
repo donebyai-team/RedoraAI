@@ -10,6 +10,7 @@ import (
 	"github.com/openai/openai-go/shared"
 	"github.com/shank318/doota/models"
 	"github.com/shank318/doota/utils"
+	"github.com/streamingfast/derr"
 	"github.com/streamingfast/dstore"
 	"go.uber.org/zap"
 	"strings"
@@ -135,6 +136,8 @@ func (c *Client) getChatMessagesFromPrompt(ctx context.Context, runID string, p 
 	return c.buildChatMessages(ctx, runID, templates, logger, vars)
 }
 
+const MAX_RETRIES = 3
+
 func (c *Client) runChatCompletion(
 	ctx context.Context,
 	runID string,
@@ -152,16 +155,26 @@ func (c *Client) runChatCompletion(
 		ResponseFormat: *responseFormat,
 	}
 
-	chatCompletion, err := c.model.Chat.Completions.New(ctx, params)
+	var output string
+
+	err := derr.RetryContext(ctx, MAX_RETRIES, func(ctx context.Context) error {
+		chatCompletion, err := c.model.Chat.Completions.New(ctx, params)
+		if err != nil {
+			return fmt.Errorf("llm: %w", err)
+		}
+
+		if len(chatCompletion.Choices) == 0 {
+			return fmt.Errorf("llm: no chat completion found, model: %s", model)
+		}
+
+		output = chatCompletion.Choices[0].Message.Content
+		return nil
+	})
+
 	if err != nil {
-		return nil, fmt.Errorf("llm: %w", err)
+		return nil, fmt.Errorf("retry: %w", err)
 	}
 
-	if len(chatCompletion.Choices) == 0 {
-		return nil, fmt.Errorf("llm: no chat completion found, model: %s", model)
-	}
-
-	output := chatCompletion.Choices[0].Message.Content
 	c.saveOutput(ctx, runID, outputFile, []byte(output), logger)
 
 	//output = strings.ReplaceAll(output, `\"`, `"`)

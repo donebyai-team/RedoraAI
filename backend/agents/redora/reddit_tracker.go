@@ -331,10 +331,13 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 				zap.String("reason", reason),
 			)
 
-			redditLead.Title = utils.Ptr("[Redacted]")
-			redditLead.Description = "[Redacted]"
 			redditLead.RelevancyScore = 0
 			redditLead.LeadMetadata.ChainOfThought = reason
+		}
+
+		if redditLead.RelevancyScore < minRelevancyScore {
+			redditLead.Title = utils.Ptr("[Redacted]")
+			redditLead.Description = "[Redacted]"
 		}
 
 		_, err = s.db.CreateLead(ctx, redditLead)
@@ -441,6 +444,7 @@ const (
 	minCommentThreshold   = 5
 	maxLeadsPerDay        = 25
 	defaultRelevancyScore = 90
+	minRelevancyScore     = 70
 	defaultLLMFailedCount = 3
 )
 

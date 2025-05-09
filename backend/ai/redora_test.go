@@ -48,9 +48,10 @@ type ModelStats struct {
 
 var llmModels = []string{
 	"redora-dev-gpt-4.1-mini-2025-04-14",
-	"redora-dev-gpt-4.1-2025-04-14",
-	"redora-dev-claude-3-7-sonnet-20250219",
-	"redora-dev-gpt-4o-2024-08-06",
+	"redora-gemini-2.0-flash",
+	//"redora-dev-gpt-4.1-2025-04-14",
+	//"redora-dev-claude-3-7-sonnet-20250219",
+	//"redora-dev-gpt-4o-2024-08-06",
 }
 
 func TestRedoraCase(t *testing.T) {
@@ -120,6 +121,7 @@ func TestRedoraCase(t *testing.T) {
 
 			if err != nil {
 				stats.Errors++
+				t.Logf("Error from mode %s: err: %v:", model, err)
 				continue
 			}
 
