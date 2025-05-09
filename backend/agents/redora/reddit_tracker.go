@@ -11,7 +11,6 @@ import (
 	"github.com/shank318/doota/integrations/reddit"
 	"github.com/shank318/doota/models"
 	"github.com/shank318/doota/notifiers/alerts"
-	pbcore "github.com/shank318/doota/pb/doota/core/v1"
 	"github.com/shank318/doota/utils"
 	"go.uber.org/zap"
 	"sort"
@@ -374,7 +373,7 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 
 		// Send automated comment
 		if tracker.Organization.FeatureFlags.EnableAutoComment &&
-			pbcore.IsGoodForEngagement(redditLead.Intents) &&
+			//pbcore.IsGoodForEngagement(redditLead.Intents) &&
 			redditLead.RelevancyScore >= defaultRelevancyScore &&
 			len(strings.TrimSpace(redditLead.LeadMetadata.SuggestedComment)) > 0 {
 			leadInteraction, err := automatedInteractionService.SendComment(ctx, &interactions.SendCommentInfo{
