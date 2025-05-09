@@ -9,7 +9,6 @@ import (
 	"github.com/VapiAI/server-sdk-go/option"
 	"github.com/shank318/doota/models"
 	"github.com/shank318/doota/utils"
-	"github.com/tmc/langchaingo/llms"
 	"go.uber.org/zap"
 	"strings"
 )
@@ -163,24 +162,24 @@ func transformCallToCallResponse(call *api.Call) *models.CallResponse {
 }
 
 func (m *VAPIVoiceProvider) CreateCall(ctx context.Context, req models.CallRequest) (*models.CallResponse, error) {
-	model, err := api.NewOpenAiModelModelFromString(req.GPTModel)
+	model, err := api.NewOpenAiModelModelFromString(string(req.LLMModel))
 	if err != nil {
 		return nil, err
 	}
 
 	messages := []*api.OpenAiMessage{}
 	for _, message := range req.ChatMessages {
-		if message.GetType() == llms.ChatMessageTypeSystem {
+		if message.OfSystem != nil {
 			messages = append(messages, &api.OpenAiMessage{
 				Role:    api.OpenAiMessageRoleSystem,
-				Content: utils.Ptr(message.GetContent()),
+				Content: utils.Ptr(message.OfSystem.Content.OfString.String()),
 			})
 		}
 
-		if message.GetType() == llms.ChatMessageTypeHuman {
+		if message.OfUser != nil {
 			messages = append(messages, &api.OpenAiMessage{
 				Role:    api.OpenAiMessageRoleAssistant,
-				Content: utils.Ptr(message.GetContent()),
+				Content: utils.Ptr(message.OfSystem.Content.OfString.String()),
 			})
 		}
 	}

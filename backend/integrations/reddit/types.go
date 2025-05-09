@@ -15,21 +15,26 @@ type SubReddit struct {
 
 // Post represents a Reddit post.
 type Post struct {
-	ID          string  `json:"id"`
-	Title       string  `json:"title"`
-	Author      string  `json:"author"`
-	Score       int     `json:"score"`
-	Ups         int     `json:"ups"`   // Number of upvotes
-	Downs       int     `json:"downs"` // Number of downvotes (usually not directly exposed in v1 API)
-	URL         string  `json:"url"`
-	Permalink   string  `json:"permalink"`
-	CreatedAt   float64 `json:"created_utc"`
-	NumComments int     `json:"num_comments"`
-	Selftext    string  `json:"selftext"`
-	IsSelf      bool    `json:"is_self"`
-	Subreddit   string  `json:"subreddit"`
-	AuthorInfo  *User
-	Comments    []*Comment
+	ID                string  `json:"id"`
+	Title             string  `json:"title"`
+	Author            string  `json:"author"`
+	AuthorFullName    string  `json:"author_fullname"`
+	Score             int     `json:"score"`
+	Ups               int64   `json:"ups"`   // Number of upvotes
+	Downs             int64   `json:"downs"` // Number of downvotes (usually not directly exposed in v1 API)
+	URL               string  `json:"url"`
+	Permalink         string  `json:"permalink"`
+	CreatedAt         float64 `json:"created_utc"`
+	NumComments       int64   `json:"num_comments"`
+	Selftext          string  `json:"selftext"`
+	SelftextHTML      string  `json:"selftext_html"`
+	SubRedditPrefixed string  `json:"subreddit_name_prefixed"`
+	SubRedditType     string  `json:"subreddit_type"`
+	IsSelf            bool    `json:"is_self"`
+	Subreddit         string  `json:"subreddit"`
+	Archived          bool    `json:"archived"`
+	AuthorInfo        *User
+	Comments          []*Comment
 	// Add other relevant fields from the post API response
 }
 

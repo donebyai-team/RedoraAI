@@ -14,6 +14,8 @@ CREATE TABLE projects
 );
 
 ALTER TABLE projects ADD CONSTRAINT fk_projects FOREIGN KEY (organization_id) REFERENCES organizations (id);
+CREATE UNIQUE INDEX idx1_projects ON projects (organization_id, LOWER(name));
+CREATE INDEX idx2_projects ON projects (organization_id);
 
 
 CREATE TRIGGER trigger_record_changed_on_projects

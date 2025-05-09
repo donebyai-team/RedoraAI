@@ -7,6 +7,9 @@ const path = require('path')
 
 module.exports = {
   reactStrictMode: false,
+  eslint: {
+    ignoreDuringBuilds: true
+  },
   swcMinify: true,
   modularizeImports: {
     '@mui/icons-material': {

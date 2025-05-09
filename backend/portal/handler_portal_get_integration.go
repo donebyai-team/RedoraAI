@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/shank318/doota/models"
 	pbportal "github.com/shank318/doota/pb/doota/portal/v1"
-	pbreddit "github.com/shank318/doota/pb/doota/reddit/v1"
 	"github.com/streamingfast/logging"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -42,8 +41,8 @@ func (p *Portal) protoIntegration(integration *models.Integration) *pbportal.Int
 			Type:           pbportal.IntegrationType_INTEGRATION_TYPE_REDDIT,
 			Status:         mapIntegrationState(integration.State),
 			Details: &pbportal.Integration_Reddit{
-				Reddit: &pbreddit.Integration{
-					UserName: redditConfig.UserName,
+				Reddit: &pbportal.RedditIntegration{
+					UserName: redditConfig.Name,
 				},
 			},
 		}

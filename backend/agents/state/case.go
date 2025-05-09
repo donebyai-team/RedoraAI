@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
+	"net/url"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -19,7 +21,40 @@ type customerCaseState struct {
 }
 
 func NewCustomerCaseState(redisAddr string, customerCaseTTL time.Duration, logger *zap.Logger, namespace, prefix string) *customerCaseState {
-	redisClient := redis.NewClient(&redis.Options{Addr: redisAddr})
+	var redisClient *redis.Client
+	// Check if redisAddr starts with the redis:// scheme
+	if len(redisAddr) > 6 && redisAddr[:6] == "redis:" {
+		// Parse the Redis URL
+		parsedURL, err := url.Parse(redisAddr)
+		if err != nil {
+			log.Fatalf("Error parsing Redis URL: %v", err)
+		}
+
+		// Extracting user and password from the URL
+		password, _ := parsedURL.User.Password()
+
+		// Extracting the host and port
+		host := parsedURL.Hostname()
+		port := parsedURL.Port()
+
+		// Set up Redis client options
+		options := &redis.Options{
+			Addr:     fmt.Sprintf("%s:%s", host, port),
+			Password: password, // Password from the URL
+		}
+		redisClient = redis.NewClient(options)
+	} else {
+		// Use the simple address like localhost:6379
+		redisClient = redis.NewClient(&redis.Options{
+			Addr: redisAddr,
+		})
+	}
+
+	_, err := redisClient.Ping(context.Background()).Result()
+	if err != nil {
+		logger.Error("Error connecting to Redis", zap.Error(err))
+	}
+
 	return &customerCaseState{
 		redisClient:            redisClient,
 		customerCaseRunningTTL: customerCaseTTL,
@@ -27,6 +62,30 @@ func NewCustomerCaseState(redisAddr string, customerCaseTTL time.Duration, logge
 		namespace:              namespace,
 		prefix:                 prefix,
 	}
+}
+
+func (r *customerCaseState) Acquire(ctx context.Context, organizationID, uniqueID string) error {
+	key := callRunningKey(r.namespace, r.prefix, uniqueID)
+	value := &CustomerCaseState{
+		Phone:          uniqueID,
+		OrganizationID: organizationID,
+		StartedAt:      time.Now(),
+	}
+	data, err := json.Marshal(value)
+	if err != nil {
+		return fmt.Errorf("marshalling : %w", err)
+	}
+
+	ok, err := r.redisClient.SetNX(ctx, key, data, r.customerCaseRunningTTL).Result()
+	if err != nil {
+		return fmt.Errorf("redis error: %w", err)
+	}
+
+	if !ok {
+		return fmt.Errorf("lock already held")
+	}
+
+	return nil
 }
 
 func (r *customerCaseState) Release(ctx context.Context, phone string) error {

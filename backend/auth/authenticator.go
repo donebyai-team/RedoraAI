@@ -77,30 +77,9 @@ func (a *Authenticator) Authenticate(ctx context.Context, path string, headers m
 		orgID = in
 	}
 
-	projectID := ""
-	if in := getHeader(headers, "X-Project-Id"); in != "" {
-		project, err := a.db.GetProject(ctx, in)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get project by org id: %w", err)
-		}
-		projectID = project.ID
-	} else {
-		// TODO: For now, since we have only one project per org. This is a workaround
-		// Remove it later and make X-Project-Id mandatory on frontend
-		projects, err := a.db.GetProjects(ctx, orgID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get project by org id: %w", err)
-		}
-		if len(projects) == 0 {
-			return nil, status.New(codes.PermissionDenied, "no project not found").Err()
-		}
-		projectID = projects[0].ID
-	}
-
 	return WithAuthContext(ctx, &AuthContext{
 		User:           user,
 		OrganizationID: orgID,
-		ProjectID:      projectID,
 	}), nil
 }
 

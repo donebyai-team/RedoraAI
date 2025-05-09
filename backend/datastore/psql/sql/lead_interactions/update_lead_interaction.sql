@@ -1,0 +1,1 @@
+UPDATE lead_interactions SET status=:status, reason=:reason, metadata=:metadata, updated_at=CURRENT_TIMESTAMP WHERE id = :id and project_id = :project_id;

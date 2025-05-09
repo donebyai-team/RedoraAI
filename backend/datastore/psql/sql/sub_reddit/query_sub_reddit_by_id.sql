@@ -1,3 +1,0 @@
-SELECT *
-FROM sub_reddits
-WHERE id = :id AND deleted_at IS NULL;

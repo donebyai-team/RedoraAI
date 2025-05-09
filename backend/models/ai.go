@@ -5,14 +5,22 @@ import (
 	"time"
 )
 
+type LLMModel string
+
+type LLMModelUsage struct {
+	Model LLMModel `json:"model"`
+	Usage int      `json:"usage"`
+}
+
 type RedditPostRelevanceResponse struct {
-	ChainOfThoughtIsRelevant       string  `json:"chain_of_thought_is_relevant"`
-	IsRelevant                     bool    `json:"is_relevant"`
-	IsRelevantConfidenceScore      float64 `json:"is_relevant_confidence_score"`
-	SuggestedDM                    string  `json:"suggested_dm"`
-	ChainOfThoughtSuggestedDM      string  `json:"chain_of_thought_suggested_dm"`
-	SuggestedComment               string  `json:"suggested_comment"`
-	ChainOfThoughtSuggestedComment string  `json:"chain_of_thought_suggested_comment"`
+	ChainOfThoughtIsRelevant       string       `json:"chain_of_thought"`
+	IsRelevantConfidenceScore      float64      `json:"relevant_confidence_score"`
+	SuggestedDM                    string       `json:"suggested_dm"`
+	Intents                        []PostIntent `json:"intents"`
+	ChainOfThoughtSuggestedDM      string       `json:"chain_of_thought_suggested_dm"`
+	SuggestedComment               string       `json:"suggested_comment"`
+	ChainOfThoughtSuggestedComment string       `json:"chain_of_thought_suggested_comment"`
+	AppliedRules                   []string     `json:"applied_rules"`
 }
 
 type CaseDecisionResponse struct {

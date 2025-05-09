@@ -12,6 +12,83 @@ import (
 )
 
 const (
+	// LeadInteractionStatusCREATED is a LeadInteractionStatus of type CREATED.
+	LeadInteractionStatusCREATED LeadInteractionStatus = "CREATED"
+	// LeadInteractionStatusSENT is a LeadInteractionStatus of type SENT.
+	LeadInteractionStatusSENT LeadInteractionStatus = "SENT"
+	// LeadInteractionStatusFAILED is a LeadInteractionStatus of type FAILED.
+	LeadInteractionStatusFAILED LeadInteractionStatus = "FAILED"
+	// LeadInteractionStatusREMOVED is a LeadInteractionStatus of type REMOVED.
+	LeadInteractionStatusREMOVED LeadInteractionStatus = "REMOVED"
+)
+
+var ErrInvalidLeadInteractionStatus = errors.New("not a valid LeadInteractionStatus")
+
+// String implements the Stringer interface.
+func (x LeadInteractionStatus) String() string {
+	return string(x)
+}
+
+// IsValid provides a quick way to determine if the typed value is
+// part of the allowed enumerated values
+func (x LeadInteractionStatus) IsValid() bool {
+	_, err := ParseLeadInteractionStatus(string(x))
+	return err == nil
+}
+
+var _LeadInteractionStatusValue = map[string]LeadInteractionStatus{
+	"CREATED": LeadInteractionStatusCREATED,
+	"SENT":    LeadInteractionStatusSENT,
+	"FAILED":  LeadInteractionStatusFAILED,
+	"REMOVED": LeadInteractionStatusREMOVED,
+}
+
+// ParseLeadInteractionStatus attempts to convert a string to a LeadInteractionStatus.
+func ParseLeadInteractionStatus(name string) (LeadInteractionStatus, error) {
+	if x, ok := _LeadInteractionStatusValue[name]; ok {
+		return x, nil
+	}
+	return LeadInteractionStatus(""), fmt.Errorf("%s is %w", name, ErrInvalidLeadInteractionStatus)
+}
+
+const (
+	// LeadInteractionTypeDM is a LeadInteractionType of type DM.
+	LeadInteractionTypeDM LeadInteractionType = "DM"
+	// LeadInteractionTypeCOMMENT is a LeadInteractionType of type COMMENT.
+	LeadInteractionTypeCOMMENT LeadInteractionType = "COMMENT"
+	// LeadInteractionTypeLIKE is a LeadInteractionType of type LIKE.
+	LeadInteractionTypeLIKE LeadInteractionType = "LIKE"
+)
+
+var ErrInvalidLeadInteractionType = errors.New("not a valid LeadInteractionType")
+
+// String implements the Stringer interface.
+func (x LeadInteractionType) String() string {
+	return string(x)
+}
+
+// IsValid provides a quick way to determine if the typed value is
+// part of the allowed enumerated values
+func (x LeadInteractionType) IsValid() bool {
+	_, err := ParseLeadInteractionType(string(x))
+	return err == nil
+}
+
+var _LeadInteractionTypeValue = map[string]LeadInteractionType{
+	"DM":      LeadInteractionTypeDM,
+	"COMMENT": LeadInteractionTypeCOMMENT,
+	"LIKE":    LeadInteractionTypeLIKE,
+}
+
+// ParseLeadInteractionType attempts to convert a string to a LeadInteractionType.
+func ParseLeadInteractionType(name string) (LeadInteractionType, error) {
+	if x, ok := _LeadInteractionTypeValue[name]; ok {
+		return x, nil
+	}
+	return LeadInteractionType(""), fmt.Errorf("%s is %w", name, ErrInvalidLeadInteractionType)
+}
+
+const (
 	// LeadStatusNEW is a LeadStatus of type NEW.
 	LeadStatusNEW LeadStatus = "NEW"
 	// LeadStatusCOMPLETED is a LeadStatus of type COMPLETED.
@@ -80,4 +157,99 @@ func ParseLeadType(name string) (LeadType, error) {
 		return x, nil
 	}
 	return LeadType(""), fmt.Errorf("%s is %w", name, ErrInvalidLeadType)
+}
+
+const (
+	// PostIntentUNKNOWN is a PostIntent of type UNKNOWN.
+	PostIntentUNKNOWN PostIntent = "UNKNOWN"
+	// PostIntentSEEKINGRECOMMENDATIONS is a PostIntent of type SEEKING_RECOMMENDATIONS.
+	PostIntentSEEKINGRECOMMENDATIONS PostIntent = "SEEKING_RECOMMENDATIONS"
+	// PostIntentEXPRESSINGPAIN is a PostIntent of type EXPRESSING_PAIN.
+	PostIntentEXPRESSINGPAIN PostIntent = "EXPRESSING_PAIN"
+	// PostIntentEXPLORINGALTERNATIVES is a PostIntent of type EXPLORING_ALTERNATIVES.
+	PostIntentEXPLORINGALTERNATIVES PostIntent = "EXPLORING_ALTERNATIVES"
+	// PostIntentASKINGFORSOLUTIONS is a PostIntent of type ASKING_FOR_SOLUTIONS.
+	PostIntentASKINGFORSOLUTIONS PostIntent = "ASKING_FOR_SOLUTIONS"
+	// PostIntentSHARINGRECOMMENDATION is a PostIntent of type SHARING_RECOMMENDATION.
+	PostIntentSHARINGRECOMMENDATION PostIntent = "SHARING_RECOMMENDATION"
+	// PostIntentEXPRESSINGGOAL is a PostIntent of type EXPRESSING_GOAL.
+	PostIntentEXPRESSINGGOAL PostIntent = "EXPRESSING_GOAL"
+	// PostIntentBUILDINGINPUBLIC is a PostIntent of type BUILDING_IN_PUBLIC.
+	PostIntentBUILDINGINPUBLIC PostIntent = "BUILDING_IN_PUBLIC"
+	// PostIntentASKINGFORFEEDBACK is a PostIntent of type ASKING_FOR_FEEDBACK.
+	PostIntentASKINGFORFEEDBACK PostIntent = "ASKING_FOR_FEEDBACK"
+	// PostIntentDESCRIBINGCURRENTSTACK is a PostIntent of type DESCRIBING_CURRENT_STACK.
+	PostIntentDESCRIBINGCURRENTSTACK PostIntent = "DESCRIBING_CURRENT_STACK"
+	// PostIntentCOMPETITORMENTION is a PostIntent of type COMPETITOR_MENTION.
+	PostIntentCOMPETITORMENTION PostIntent = "COMPETITOR_MENTION"
+	// PostIntentGENERALDISCUSSION is a PostIntent of type GENERAL_DISCUSSION.
+	PostIntentGENERALDISCUSSION PostIntent = "GENERAL_DISCUSSION"
+)
+
+var ErrInvalidPostIntent = errors.New("not a valid PostIntent")
+
+// String implements the Stringer interface.
+func (x PostIntent) String() string {
+	return string(x)
+}
+
+// IsValid provides a quick way to determine if the typed value is
+// part of the allowed enumerated values
+func (x PostIntent) IsValid() bool {
+	_, err := ParsePostIntent(string(x))
+	return err == nil
+}
+
+var _PostIntentValue = map[string]PostIntent{
+	"UNKNOWN":                  PostIntentUNKNOWN,
+	"SEEKING_RECOMMENDATIONS":  PostIntentSEEKINGRECOMMENDATIONS,
+	"EXPRESSING_PAIN":          PostIntentEXPRESSINGPAIN,
+	"EXPLORING_ALTERNATIVES":   PostIntentEXPLORINGALTERNATIVES,
+	"ASKING_FOR_SOLUTIONS":     PostIntentASKINGFORSOLUTIONS,
+	"SHARING_RECOMMENDATION":   PostIntentSHARINGRECOMMENDATION,
+	"EXPRESSING_GOAL":          PostIntentEXPRESSINGGOAL,
+	"BUILDING_IN_PUBLIC":       PostIntentBUILDINGINPUBLIC,
+	"ASKING_FOR_FEEDBACK":      PostIntentASKINGFORFEEDBACK,
+	"DESCRIBING_CURRENT_STACK": PostIntentDESCRIBINGCURRENTSTACK,
+	"COMPETITOR_MENTION":       PostIntentCOMPETITORMENTION,
+	"GENERAL_DISCUSSION":       PostIntentGENERALDISCUSSION,
+}
+
+// ParsePostIntent attempts to convert a string to a PostIntent.
+func ParsePostIntent(name string) (PostIntent, error) {
+	if x, ok := _PostIntentValue[name]; ok {
+		return x, nil
+	}
+	return PostIntent(""), fmt.Errorf("%s is %w", name, ErrInvalidPostIntent)
+}
+
+const (
+	// SourceTypeSUBREDDIT is a SourceType of type SUBREDDIT.
+	SourceTypeSUBREDDIT SourceType = "SUBREDDIT"
+)
+
+var ErrInvalidSourceType = errors.New("not a valid SourceType")
+
+// String implements the Stringer interface.
+func (x SourceType) String() string {
+	return string(x)
+}
+
+// IsValid provides a quick way to determine if the typed value is
+// part of the allowed enumerated values
+func (x SourceType) IsValid() bool {
+	_, err := ParseSourceType(string(x))
+	return err == nil
+}
+
+var _SourceTypeValue = map[string]SourceType{
+	"SUBREDDIT": SourceTypeSUBREDDIT,
+}
+
+// ParseSourceType attempts to convert a string to a SourceType.
+func ParseSourceType(name string) (SourceType, error) {
+	if x, ok := _SourceTypeValue[name]; ok {
+		return x, nil
+	}
+	return SourceType(""), fmt.Errorf("%s is %w", name, ErrInvalidSourceType)
 }

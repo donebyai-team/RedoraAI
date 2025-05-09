@@ -9,9 +9,10 @@ import { Toaster } from 'react-hot-toast'
 import { NextElementRegistryProvider } from '../context/NextElementRegistryProvider'
 import { PortalClientProvider } from '../provider/PortalClientProvider'
 import { PortalExecutionRuntimeProvider } from '../provider/PortalExecutionRuntimeProvider'
+import StoreProvider from '../../store/StoreProvider'
 
 export const metadata = {
-  title: 'doota',
+  title: 'RedoraAI',
   description: ''
 }
 
@@ -20,25 +21,29 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang='en'>
       <head>
         <meta name='robots' content='noindex,follow' />
+        <link rel="icon" href="/images/favicon.ico" />
+        <title>RedoraAI</title>
       </head>
 
       <body>
-        <NextElementRegistryProvider>
-          <ConfigGuard fallback={<FallbackSpinner />}>
-            <PortalClientProvider>
-              <ConfigProvider>
-                <PortalExecutionRuntimeProvider>
-                  <ThemeRegistry>
-                    {children}
-                    <StyledReactHotToast>
-                      <Toaster position='top-right' toastOptions={{ className: 'react-hot-toast mt-[47px]' }} />
-                    </StyledReactHotToast>
-                  </ThemeRegistry>
-                </PortalExecutionRuntimeProvider>
-              </ConfigProvider>
-            </PortalClientProvider>
-          </ConfigGuard>
-        </NextElementRegistryProvider>
+        <StoreProvider>
+          <NextElementRegistryProvider>
+            <ConfigGuard fallback={<FallbackSpinner />}>
+              <PortalClientProvider>
+                <ConfigProvider>
+                  <PortalExecutionRuntimeProvider>
+                    <ThemeRegistry>
+                      {children}
+                      <StyledReactHotToast>
+                        <Toaster position='top-right' toastOptions={{ className: 'react-hot-toast mt-[47px]' }} />
+                      </StyledReactHotToast>
+                    </ThemeRegistry>
+                  </PortalExecutionRuntimeProvider>
+                </ConfigProvider>
+              </PortalClientProvider>
+            </ConfigGuard>
+          </NextElementRegistryProvider>
+        </StoreProvider>
       </body>
     </html>
   )

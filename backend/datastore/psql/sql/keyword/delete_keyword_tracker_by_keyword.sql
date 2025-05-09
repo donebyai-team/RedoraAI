@@ -1,0 +1,1 @@
+UPDATE keyword_trackers set deleted_at = CURRENT_TIMESTAMP WHERE keyword_id = :keyword_id RETURNING *;

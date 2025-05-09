@@ -1,0 +1,1 @@
+UPDATE leads SET status = :status, metadata=:metadata WHERE id = :id and project_id = :project_id;

@@ -28,111 +28,6 @@ export declare type Integration = Message<"doota.reddit.v1.Integration"> & {
 export declare const IntegrationSchema: GenMessage<Integration>;
 
 /**
- * @generated from message doota.reddit.v1.RemoveSubRedditRequest
- */
-export declare type RemoveSubRedditRequest = Message<"doota.reddit.v1.RemoveSubRedditRequest"> & {
-  /**
-   * eg. r/SAAS
-   *
-   * @generated from field: string id = 1;
-   */
-  id: string;
-};
-
-/**
- * Describes the message doota.reddit.v1.RemoveSubRedditRequest.
- * Use `create(RemoveSubRedditRequestSchema)` to create a new message.
- */
-export declare const RemoveSubRedditRequestSchema: GenMessage<RemoveSubRedditRequest>;
-
-/**
- * @generated from message doota.reddit.v1.AddSubRedditRequest
- */
-export declare type AddSubRedditRequest = Message<"doota.reddit.v1.AddSubRedditRequest"> & {
-  /**
-   * eg. r/SAAS
-   *
-   * @generated from field: string name = 1;
-   */
-  name: string;
-};
-
-/**
- * Describes the message doota.reddit.v1.AddSubRedditRequest.
- * Use `create(AddSubRedditRequestSchema)` to create a new message.
- */
-export declare const AddSubRedditRequestSchema: GenMessage<AddSubRedditRequest>;
-
-/**
- * @generated from message doota.reddit.v1.SubReddit
- */
-export declare type SubReddit = Message<"doota.reddit.v1.SubReddit"> & {
-  /**
-   * @generated from field: string id = 1;
-   */
-  id: string;
-
-  /**
-   * @generated from field: string url = 2;
-   */
-  url: string;
-
-  /**
-   * @generated from field: string name = 3;
-   */
-  name: string;
-
-  /**
-   * @generated from field: string description = 4;
-   */
-  description: string;
-
-  /**
-   * @generated from field: doota.reddit.v1.SubRedditMetadata metadata = 5;
-   */
-  metadata?: SubRedditMetadata;
-
-  /**
-   * @generated from field: optional string title = 6;
-   */
-  title?: string;
-};
-
-/**
- * Describes the message doota.reddit.v1.SubReddit.
- * Use `create(SubRedditSchema)` to create a new message.
- */
-export declare const SubRedditSchema: GenMessage<SubReddit>;
-
-/**
- * @generated from message doota.reddit.v1.SubRedditMetadata
- */
-export declare type SubRedditMetadata = Message<"doota.reddit.v1.SubRedditMetadata"> & {
-};
-
-/**
- * Describes the message doota.reddit.v1.SubRedditMetadata.
- * Use `create(SubRedditMetadataSchema)` to create a new message.
- */
-export declare const SubRedditMetadataSchema: GenMessage<SubRedditMetadata>;
-
-/**
- * @generated from message doota.reddit.v1.GetSubredditsResponse
- */
-export declare type GetSubredditsResponse = Message<"doota.reddit.v1.GetSubredditsResponse"> & {
-  /**
-   * @generated from field: repeated doota.reddit.v1.SubReddit subreddits = 1;
-   */
-  subreddits: SubReddit[];
-};
-
-/**
- * Describes the message doota.reddit.v1.GetSubredditsResponse.
- * Use `create(GetSubredditsResponseSchema)` to create a new message.
- */
-export declare const GetSubredditsResponseSchema: GenMessage<GetSubredditsResponse>;
-
-/**
  * @generated from message doota.reddit.v1.UpdateLeadStatusRequest
  */
 export declare type UpdateLeadStatusRequest = Message<"doota.reddit.v1.UpdateLeadStatusRequest"> & {
@@ -231,14 +126,44 @@ export declare type LeadMetadata = Message<"doota.reddit.v1.LeadMetadata"> & {
   chainOfThoughtSuggestedComment: string;
 
   /**
-   * @generated from field: string chain_of_thought_comment_suggested_dm = 5;
+   * @generated from field: string chain_of_thought_suggested_dm = 5;
    */
-  chainOfThoughtCommentSuggestedDm: string;
+  chainOfThoughtSuggestedDm: string;
 
   /**
    * @generated from field: string post_url = 6;
    */
   postUrl: string;
+
+  /**
+   * @generated from field: string description_html = 7;
+   */
+  descriptionHtml: string;
+
+  /**
+   * @generated from field: string subreddit_prefixed = 8;
+   */
+  subredditPrefixed: string;
+
+  /**
+   * @generated from field: int64 no_of_comments = 9;
+   */
+  noOfComments: bigint;
+
+  /**
+   * @generated from field: int64 ups = 10;
+   */
+  ups: bigint;
+
+  /**
+   * @generated from field: string author_url = 11;
+   */
+  authorUrl: string;
+
+  /**
+   * @generated from field: string dm_url = 12;
+   */
+  dmUrl: string;
 };
 
 /**
@@ -262,9 +187,9 @@ export declare type RedditLead = Message<"doota.reddit.v1.RedditLead"> & {
   projectId: string;
 
   /**
-   * @generated from field: string subreddit_id = 3;
+   * @generated from field: string source_id = 3;
    */
-  subredditId: string;
+  sourceId: string;
 
   /**
    * @generated from field: string author = 4;

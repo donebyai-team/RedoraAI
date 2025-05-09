@@ -6,42 +6,67 @@
     "schema": {
       "type": "object",
       "properties": {
-        "chain_of_thought_is_relevant": {
+        "chain_of_thought": {
           "type": "string",
-          "description": "Explanation of the chain of thought leading to the suggestion"
-        },
-        "is_relevant": {
-          "type": "boolean",
-          "description": "is the reddit post relevant to the mentioned product"
-        },
-        "is_relevant_confidence_score": {
-          "type": "number",
-          "description": "give a score between 1-100 about how confidant are you to suggest this post"
-        },
-        "suggested_dm": {
-          "type": "string",
-          "description": "suggest a DM message to send to the author"
+          "description": "Brief explanation (2-3 lines) of the reasoning behind the relevance score. Mention only the key reasons and refer to applied rules by ID (e.g., R1, C2, X1 etc)."
         },
         "chain_of_thought_suggested_dm": {
           "type": "string",
-          "description": "Explanation of the chain of thought leading to the suggested_dm"
-        },
-        "suggested_comment": {
-          "type": "string",
-          "description": "suggest a comment I should post on the reddit post"
+          "description": "Brief explanation (2-3 lines) of the reasoning behind the suggested DM. Refer to applied rules (e.g., E3, E8, F1) that guided the tone and structure."
         },
         "chain_of_thought_suggested_comment": {
           "type": "string",
-          "description": "Explanation of the chain of thought leading to the suggested_comment"
+          "description": "Brief explanation (2-3 lines) of the reasoning behind the suggested comment. Refer to applied rules (e.g., E1, E5, F1)."
         },
+        "relevant_confidence_score": {
+          "type": "number",
+          "description": "give a score between 1-100 about how confidant are you to suggest this post. less confidence means low score, more means high score"
+        },
+        "intents": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "UNKNOWN",
+              "SEEKING_RECOMMENDATIONS",
+              "EXPRESSING_PAIN",
+              "EXPLORING_ALTERNATIVES",
+              "ASKING_FOR_SOLUTIONS",
+              "SHARING_RECOMMENDATION",
+              "EXPRESSING_GOAL",
+              "BUILDING_IN_PUBLIC",
+              "ASKING_FOR_FEEDBACK",
+              "DESCRIBING_CURRENT_STACK",
+              "COMPETITOR_MENTION",
+              "GENERAL_DISCUSSION"
+            ]
+          },
+          "description": "List of detected intent labels from the post. Possible values:\n\n-UNKNOWN: When you are not sure of the intent. \n- SEEKING_RECOMMENDATIONS: User is asking for product or tool suggestions to solve a specific problem.\n- EXPRESSING_PAIN: User is complaining about or frustrated with a current tool, process, or situation.\n- EXPLORING_ALTERNATIVES: User is comparing different tools or asking about switching from one to another.\n- ASKING_FOR_SOLUTIONS: User is describing a problem and asking how to solve it, without necessarily naming tools.\n- SHARING_RECOMMENDATION: User is recommending a product, service, or approach based on experience.\n- EXPRESSING_GOAL: User is stating a personal or business goal, which may imply a need for tools or help.\n- BUILDING_IN_PUBLIC: User is sharing updates about what they are building, often mentioning tools or stack.\n- ASKING_FOR_FEEDBACK: User is asking for input on an idea, product, design, or business concept.\n- DESCRIBING_CURRENT_STACK: User is explaining how they currently do something or what tools they use.\n- COMPETITOR_MENTION: User is mentioning a known competitor product or a relevant tool in a positive or negative way.\n- GENERAL_DISCUSSION: User is participating in general conversation without any clear actionable intent."
+        },
+        "suggested_dm": {
+          "type": "string",
+          "description": "A suggested DM to send based on the rules specified in Comment and DM Generating Strategy Rules (E) and relevant_confidence_score >=80"
+        },
+        "suggested_comment": {
+          "type": "string",
+          "description": "A suggested public comment based on the rules specified in Comment and DM Generating Strategy Rules (E) and relevant_confidence_score >=80"
+        },
+        "applied_rules": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of rule identifiers applied when scoring, suggesting comment or DM this post (e.g. R1, C2, X3)"
+        }
       },
       "required": [
-        "chain_of_thought_is_relevant",
-        "is_relevant",
-        "is_relevant_confidence_score",
+        "chain_of_thought",
+        "intents",
+        "relevant_confidence_score",
         "suggested_dm",
         "chain_of_thought_suggested_dm",
         "suggested_comment",
+        "applied_rules",
         "chain_of_thought_suggested_comment"
       ],
       "additionalProperties": false

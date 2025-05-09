@@ -1,0 +1,4 @@
+BEGIN;
+ALTER TABLE leads DROP COLUMN IF EXISTS intents;
+DROP INDEX IF EXISTS idx1_intents_gin_leads;
+COMMIT;

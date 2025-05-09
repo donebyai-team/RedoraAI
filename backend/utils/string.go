@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"regexp"
 	"strings"
 
 	"golang.org/x/text/cases"
@@ -58,5 +59,46 @@ func CleanSubredditName(input string) string {
 	input = strings.ToLower(input)
 	input = strings.TrimPrefix(input, "/r/")
 	input = strings.TrimPrefix(input, "r/")
+	return input
+}
+
+func FormatComment(input string) string {
+	// Replace \n\n with actual newlines (i.e., two newlines for paragraph breaks)
+	input = strings.ReplaceAll(input, `\n\n`, "\n\n")
+
+	// Replace \n with actual single newlines (line breaks)
+	input = strings.ReplaceAll(input, `\n`, "\n")
+
+	re := regexp.MustCompile(`\n{2,}`)
+	input = re.ReplaceAllString(input, "\n")
+
+	return input
+}
+
+func FormatDM(input string) string {
+	// Replace \n\n with actual newlines (i.e., two newlines for paragraph breaks)
+	input = strings.ReplaceAll(input, `\n\n`, "\n\n")
+
+	// Replace \n with actual single newlines (line breaks)
+	input = strings.ReplaceAll(input, `\n`, "\n")
+
+	return input
+}
+
+func SanitizeKeyword(input string) string {
+	// Trim leading/trailing whitespace
+	input = strings.TrimSpace(input)
+
+	// Replace all sequences of whitespace (spaces, tabs, newlines) with a single space
+	whitespaceNormalizer := regexp.MustCompile(`\s+`)
+	input = whitespaceNormalizer.ReplaceAllString(input, " ")
+
+	// Remove all non-alphanumeric characters except spaces
+	safeChars := regexp.MustCompile(`[^a-zA-Z0-9 ]+`)
+	input = safeChars.ReplaceAllString(input, "")
+
+	// Convert to lowercase (optional depending on case sensitivity)
+	input = strings.ToLower(input)
+
 	return input
 }

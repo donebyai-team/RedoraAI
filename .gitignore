@@ -13,7 +13,10 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 data/debugstore
+data/reddit_sessions
+ai/testdata
 
 frontend/extension/chrome/loadlogic-chrome-extension.zip
 frontend/extension/chrome/loadlogic-chrome-extension.*.zip
 backend/cmd/doota/doota
+redora-infra/.terraform

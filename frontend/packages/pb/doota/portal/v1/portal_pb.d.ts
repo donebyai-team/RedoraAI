@@ -4,13 +4,194 @@
 
 import type { GenEnum, GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv1";
 import type { Message } from "@bufbuild/protobuf";
+import type { Lead, LeadStatus, Project, ProjectSchema, Source } from "../../core/v1/core_pb";
 import type { EmptySchema, Timestamp } from "@bufbuild/protobuf/wkt";
-import type { AddSubRedditRequestSchema, GetLeadsByStatusRequestSchema, GetLeadsResponseSchema, GetRelevantLeadsRequestSchema, GetSubredditsResponseSchema, Integration as Integration$1, RemoveSubRedditRequestSchema, UpdateLeadStatusRequestSchema } from "../../reddit/v1/reddit_pb";
 
 /**
  * Describes the file doota/portal/v1/portal.proto.
  */
 export declare const file_doota_portal_v1_portal: GenFile;
+
+/**
+ * @generated from message doota.portal.v1.CreateProjectRequest
+ */
+export declare type CreateProjectRequest = Message<"doota.portal.v1.CreateProjectRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: string name = 2;
+   */
+  name: string;
+
+  /**
+   * @generated from field: string description = 3;
+   */
+  description: string;
+
+  /**
+   * @generated from field: string website = 4;
+   */
+  website: string;
+
+  /**
+   * @generated from field: string target_persona = 5;
+   */
+  targetPersona: string;
+};
+
+/**
+ * Describes the message doota.portal.v1.CreateProjectRequest.
+ * Use `create(CreateProjectRequestSchema)` to create a new message.
+ */
+export declare const CreateProjectRequestSchema: GenMessage<CreateProjectRequest>;
+
+/**
+ * @generated from message doota.portal.v1.GetProjectsResponse
+ */
+export declare type GetProjectsResponse = Message<"doota.portal.v1.GetProjectsResponse"> & {
+  /**
+   * @generated from field: repeated doota.core.v1.Project projects = 1;
+   */
+  projects: Project[];
+
+  /**
+   * @generated from field: bool is_onboarding_done = 2;
+   */
+  isOnboardingDone: boolean;
+};
+
+/**
+ * Describes the message doota.portal.v1.GetProjectsResponse.
+ * Use `create(GetProjectsResponseSchema)` to create a new message.
+ */
+export declare const GetProjectsResponseSchema: GenMessage<GetProjectsResponse>;
+
+/**
+ * @generated from message doota.portal.v1.UpdateLeadStatusRequest
+ */
+export declare type UpdateLeadStatusRequest = Message<"doota.portal.v1.UpdateLeadStatusRequest"> & {
+  /**
+   * @generated from field: doota.core.v1.LeadStatus status = 1;
+   */
+  status: LeadStatus;
+
+  /**
+   * @generated from field: string lead_id = 2;
+   */
+  leadId: string;
+};
+
+/**
+ * Describes the message doota.portal.v1.UpdateLeadStatusRequest.
+ * Use `create(UpdateLeadStatusRequestSchema)` to create a new message.
+ */
+export declare const UpdateLeadStatusRequestSchema: GenMessage<UpdateLeadStatusRequest>;
+
+/**
+ * @generated from message doota.portal.v1.GetLeadsByStatusRequest
+ */
+export declare type GetLeadsByStatusRequest = Message<"doota.portal.v1.GetLeadsByStatusRequest"> & {
+  /**
+   * @generated from field: doota.core.v1.LeadStatus status = 1;
+   */
+  status: LeadStatus;
+};
+
+/**
+ * Describes the message doota.portal.v1.GetLeadsByStatusRequest.
+ * Use `create(GetLeadsByStatusRequestSchema)` to create a new message.
+ */
+export declare const GetLeadsByStatusRequestSchema: GenMessage<GetLeadsByStatusRequest>;
+
+/**
+ * @generated from message doota.portal.v1.GetRelevantLeadsRequest
+ */
+export declare type GetRelevantLeadsRequest = Message<"doota.portal.v1.GetRelevantLeadsRequest"> & {
+  /**
+   * @generated from field: optional string sub_reddit = 1;
+   */
+  subReddit?: string;
+
+  /**
+   * @generated from field: float relevancy_score = 2;
+   */
+  relevancyScore: number;
+};
+
+/**
+ * Describes the message doota.portal.v1.GetRelevantLeadsRequest.
+ * Use `create(GetRelevantLeadsRequestSchema)` to create a new message.
+ */
+export declare const GetRelevantLeadsRequestSchema: GenMessage<GetRelevantLeadsRequest>;
+
+/**
+ * @generated from message doota.portal.v1.GetLeadsResponse
+ */
+export declare type GetLeadsResponse = Message<"doota.portal.v1.GetLeadsResponse"> & {
+  /**
+   * @generated from field: repeated doota.core.v1.Lead leads = 1;
+   */
+  leads: Lead[];
+};
+
+/**
+ * Describes the message doota.portal.v1.GetLeadsResponse.
+ * Use `create(GetLeadsResponseSchema)` to create a new message.
+ */
+export declare const GetLeadsResponseSchema: GenMessage<GetLeadsResponse>;
+
+/**
+ * @generated from message doota.portal.v1.AddSourceRequest
+ */
+export declare type AddSourceRequest = Message<"doota.portal.v1.AddSourceRequest"> & {
+  /**
+   * eg. r/SAAS
+   *
+   * @generated from field: string name = 1;
+   */
+  name: string;
+};
+
+/**
+ * Describes the message doota.portal.v1.AddSourceRequest.
+ * Use `create(AddSourceRequestSchema)` to create a new message.
+ */
+export declare const AddSourceRequestSchema: GenMessage<AddSourceRequest>;
+
+/**
+ * @generated from message doota.portal.v1.GetSourceResponse
+ */
+export declare type GetSourceResponse = Message<"doota.portal.v1.GetSourceResponse"> & {
+  /**
+   * @generated from field: repeated doota.core.v1.Source sources = 1;
+   */
+  sources: Source[];
+};
+
+/**
+ * Describes the message doota.portal.v1.GetSourceResponse.
+ * Use `create(GetSourceResponseSchema)` to create a new message.
+ */
+export declare const GetSourceResponseSchema: GenMessage<GetSourceResponse>;
+
+/**
+ * @generated from message doota.portal.v1.RemoveSourceRequest
+ */
+export declare type RemoveSourceRequest = Message<"doota.portal.v1.RemoveSourceRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+};
+
+/**
+ * Describes the message doota.portal.v1.RemoveSourceRequest.
+ * Use `create(RemoveSourceRequestSchema)` to create a new message.
+ */
+export declare const RemoveSourceRequestSchema: GenMessage<RemoveSourceRequest>;
 
 /**
  * @generated from message doota.portal.v1.CreateCustomerCaseReq
@@ -428,9 +609,9 @@ export declare type Integration = Message<"doota.portal.v1.Integration"> & {
    */
   details: {
     /**
-     * @generated from field: doota.reddit.v1.Integration reddit = 6;
+     * @generated from field: doota.portal.v1.RedditIntegration reddit = 6;
      */
-    value: Integration$1;
+    value: RedditIntegration;
     case: "reddit";
   } | { case: undefined; value?: undefined };
 };
@@ -440,6 +621,22 @@ export declare type Integration = Message<"doota.portal.v1.Integration"> & {
  * Use `create(IntegrationSchema)` to create a new message.
  */
 export declare const IntegrationSchema: GenMessage<Integration>;
+
+/**
+ * @generated from message doota.portal.v1.RedditIntegration
+ */
+export declare type RedditIntegration = Message<"doota.portal.v1.RedditIntegration"> & {
+  /**
+   * @generated from field: string user_name = 1;
+   */
+  userName: string;
+};
+
+/**
+ * Describes the message doota.portal.v1.RedditIntegration.
+ * Use `create(RedditIntegrationSchema)` to create a new message.
+ */
+export declare const RedditIntegrationSchema: GenMessage<RedditIntegration>;
 
 /**
  * @generated from message doota.portal.v1.Integrations
@@ -780,27 +977,27 @@ export declare const PortalService: GenService<{
     output: typeof EmptySchema;
   },
   /**
-   * @generated from rpc doota.portal.v1.PortalService.AddSubReddit
+   * @generated from rpc doota.portal.v1.PortalService.AddSource
    */
-  addSubReddit: {
+  addSource: {
     methodKind: "unary";
-    input: typeof AddSubRedditRequestSchema;
+    input: typeof AddSourceRequestSchema;
     output: typeof EmptySchema;
   },
   /**
-   * @generated from rpc doota.portal.v1.PortalService.GetSubReddits
+   * @generated from rpc doota.portal.v1.PortalService.GetSources
    */
-  getSubReddits: {
+  getSources: {
     methodKind: "unary";
     input: typeof EmptySchema;
-    output: typeof GetSubredditsResponseSchema;
+    output: typeof GetSourceResponseSchema;
   },
   /**
-   * @generated from rpc doota.portal.v1.PortalService.RemoveSubReddit
+   * @generated from rpc doota.portal.v1.PortalService.RemoveSource
    */
-  removeSubReddit: {
+  removeSource: {
     methodKind: "unary";
-    input: typeof RemoveSubRedditRequestSchema;
+    input: typeof RemoveSourceRequestSchema;
     output: typeof EmptySchema;
   },
   /**
@@ -826,6 +1023,22 @@ export declare const PortalService: GenService<{
     methodKind: "unary";
     input: typeof UpdateLeadStatusRequestSchema;
     output: typeof EmptySchema;
+  },
+  /**
+   * @generated from rpc doota.portal.v1.PortalService.GetProjects
+   */
+  getProjects: {
+    methodKind: "unary";
+    input: typeof EmptySchema;
+    output: typeof GetProjectsResponseSchema;
+  },
+  /**
+   * @generated from rpc doota.portal.v1.PortalService.CreateOrEditProject
+   */
+  createOrEditProject: {
+    methodKind: "unary";
+    input: typeof CreateProjectRequestSchema;
+    output: typeof ProjectSchema;
   },
 }>;
 

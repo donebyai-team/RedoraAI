@@ -21,7 +21,6 @@ type Credentials struct {
 type AuthContext struct {
 	*models.User
 	OrganizationID string
-	ProjectID      string
 }
 
 func (a *AuthContext) Identity() *pbcore.Identity {

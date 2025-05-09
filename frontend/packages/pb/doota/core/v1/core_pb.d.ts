@@ -99,117 +99,311 @@ export declare type PlatformErrorDetails = Message<"doota.core.v1.PlatformErrorD
 export declare const PlatformErrorDetailsSchema: GenMessage<PlatformErrorDetails>;
 
 /**
- * @generated from message doota.core.v1.QuoteFormErrorDetails
+ * @generated from message doota.core.v1.Source
  */
-export declare type QuoteFormErrorDetails = Message<"doota.core.v1.QuoteFormErrorDetails"> & {
+export declare type Source = Message<"doota.core.v1.Source"> & {
   /**
-   * @generated from field: repeated doota.core.v1.QuoteFormErrorDetail details = 1;
+   * @generated from field: string id = 1;
    */
-  details: QuoteFormErrorDetail[];
+  id: string;
+
+  /**
+   * @generated from field: string name = 2;
+   */
+  name: string;
+
+  /**
+   * @generated from field: string description = 3;
+   */
+  description: string;
+
+  /**
+   * @generated from field: doota.core.v1.SourceType SourceType = 4;
+   */
+  SourceType: SourceType;
+
+  /**
+   * @generated from oneof doota.core.v1.Source.details
+   */
+  details: {
+    /**
+     * @generated from field: doota.core.v1.SubRedditMetadata reddit_metadata = 5;
+     */
+    value: SubRedditMetadata;
+    case: "redditMetadata";
+  } | { case: undefined; value?: undefined };
 };
 
 /**
- * Describes the message doota.core.v1.QuoteFormErrorDetails.
- * Use `create(QuoteFormErrorDetailsSchema)` to create a new message.
+ * Describes the message doota.core.v1.Source.
+ * Use `create(SourceSchema)` to create a new message.
  */
-export declare const QuoteFormErrorDetailsSchema: GenMessage<QuoteFormErrorDetails>;
+export declare const SourceSchema: GenMessage<Source>;
 
 /**
- * @generated from message doota.core.v1.QuoteFormErrorDetail
+ * @generated from message doota.core.v1.SubRedditMetadata
  */
-export declare type QuoteFormErrorDetail = Message<"doota.core.v1.QuoteFormErrorDetail"> & {
+export declare type SubRedditMetadata = Message<"doota.core.v1.SubRedditMetadata"> & {
   /**
-   * @generated from field: string path = 1;
+   * @generated from field: optional string title = 1;
    */
-  path: string;
+  title?: string;
 
   /**
-   * @generated from field: doota.core.v1.QuoteFormErrorDetail.QuoteFormErrorDetailMessage detail = 2;
+   * @generated from field: google.protobuf.Timestamp created_at = 2;
    */
-  detail: QuoteFormErrorDetail_QuoteFormErrorDetailMessage;
+  createdAt?: Timestamp;
 };
 
 /**
- * Describes the message doota.core.v1.QuoteFormErrorDetail.
- * Use `create(QuoteFormErrorDetailSchema)` to create a new message.
+ * Describes the message doota.core.v1.SubRedditMetadata.
+ * Use `create(SubRedditMetadataSchema)` to create a new message.
  */
-export declare const QuoteFormErrorDetailSchema: GenMessage<QuoteFormErrorDetail>;
+export declare const SubRedditMetadataSchema: GenMessage<SubRedditMetadata>;
 
 /**
- * @generated from enum doota.core.v1.QuoteFormErrorDetail.QuoteFormErrorDetailMessage
+ * @generated from message doota.core.v1.LeadMetadata
  */
-export enum QuoteFormErrorDetail_QuoteFormErrorDetailMessage {
+export declare type LeadMetadata = Message<"doota.core.v1.LeadMetadata"> & {
   /**
-   * @generated from enum value: QUOTE_FORM_ERROR_DETAIL_MESSAGE_UNSPECIFIED = 0;
+   * @generated from field: string chain_of_thought = 1;
    */
-  UNSPECIFIED = 0,
+  chainOfThought: string;
 
   /**
-   * @generated from enum value: QUOTE_FORM_ERROR_DETAIL_MESSAGE_INVALID_GEO = 1;
+   * @generated from field: string suggested_comment = 2;
    */
-  INVALID_GEO = 1,
-}
-
-/**
- * Describes the enum doota.core.v1.QuoteFormErrorDetail.QuoteFormErrorDetailMessage.
- */
-export declare const QuoteFormErrorDetail_QuoteFormErrorDetailMessageSchema: GenEnum<QuoteFormErrorDetail_QuoteFormErrorDetailMessage>;
-
-/**
- * @generated from message doota.core.v1.PricingOptionErrorDetail
- */
-export declare type PricingOptionErrorDetail = Message<"doota.core.v1.PricingOptionErrorDetail"> & {
-  /**
-   * @generated from field: int64 status_code = 1;
-   */
-  statusCode: bigint;
+  suggestedComment: string;
 
   /**
-   * @generated from field: string message = 2;
+   * @generated from field: string suggested_dm = 3;
    */
-  message: string;
+  suggestedDm: string;
 
   /**
-   * @generated from field: string transaction_id = 3;
+   * @generated from field: string chain_of_thought_suggested_comment = 4;
    */
-  transactionId: string;
+  chainOfThoughtSuggestedComment: string;
 
   /**
-   * @generated from field: doota.core.v1.PricingOptionErrorDetail.PricingOptionErrorDetailMessage detail = 4;
+   * @generated from field: string chain_of_thought_suggested_dm = 5;
    */
-  detail: PricingOptionErrorDetail_PricingOptionErrorDetailMessage;
+  chainOfThoughtSuggestedDm: string;
+
+  /**
+   * @generated from field: string post_url = 6;
+   */
+  postUrl: string;
+
+  /**
+   * @generated from field: string description_html = 7;
+   */
+  descriptionHtml: string;
+
+  /**
+   * @generated from field: string subreddit_prefixed = 8;
+   */
+  subredditPrefixed: string;
+
+  /**
+   * @generated from field: int64 no_of_comments = 9;
+   */
+  noOfComments: bigint;
+
+  /**
+   * @generated from field: int64 ups = 10;
+   */
+  ups: bigint;
+
+  /**
+   * @generated from field: string author_url = 11;
+   */
+  authorUrl: string;
+
+  /**
+   * @generated from field: string dm_url = 12;
+   */
+  dmUrl: string;
+
+  /**
+   * @generated from field: string automated_comment_url = 13;
+   */
+  automatedCommentUrl: string;
+
+  /**
+   * @generated from field: string comment_llm_model = 14;
+   */
+  commentLlmModel: string;
+
+  /**
+   * @generated from field: string dm_llm_model = 15;
+   */
+  dmLlmModel: string;
+
+  /**
+   * @generated from field: string relevancy_llm_model = 16;
+   */
+  relevancyLlmModel: string;
 };
 
 /**
- * Describes the message doota.core.v1.PricingOptionErrorDetail.
- * Use `create(PricingOptionErrorDetailSchema)` to create a new message.
+ * Describes the message doota.core.v1.LeadMetadata.
+ * Use `create(LeadMetadataSchema)` to create a new message.
  */
-export declare const PricingOptionErrorDetailSchema: GenMessage<PricingOptionErrorDetail>;
+export declare const LeadMetadataSchema: GenMessage<LeadMetadata>;
 
 /**
- * @generated from enum doota.core.v1.PricingOptionErrorDetail.PricingOptionErrorDetailMessage
+ * @generated from message doota.core.v1.Lead
  */
-export enum PricingOptionErrorDetail_PricingOptionErrorDetailMessage {
+export declare type Lead = Message<"doota.core.v1.Lead"> & {
   /**
-   * @generated from enum value: PRICING_OPTION_ERROR_DETAIL_MESSAGE_UNSPECIFIED = 0;
+   * @generated from field: string id = 1;
    */
-  UNSPECIFIED = 0,
+  id: string;
 
   /**
-   * @generated from enum value: PRICING_OPTION_ERROR_DETAIL_MESSAGE_INVALID_ORIGIN = 1;
+   * @generated from field: string project_id = 2;
    */
-  INVALID_ORIGIN = 1,
+  projectId: string;
 
   /**
-   * @generated from enum value: PRICING_OPTION_ERROR_DETAIL_MESSAGE_INVALID_DESTINATION = 2;
+   * @generated from field: string source_id = 3;
    */
-  INVALID_DESTINATION = 2,
-}
+  sourceId: string;
+
+  /**
+   * @generated from field: string author = 4;
+   */
+  author: string;
+
+  /**
+   * @generated from field: string post_id = 5;
+   */
+  postId: string;
+
+  /**
+   * @generated from field: doota.core.v1.LeadType type = 6;
+   */
+  type: LeadType;
+
+  /**
+   * @generated from field: doota.core.v1.LeadStatus status = 7;
+   */
+  status: LeadStatus;
+
+  /**
+   * @generated from field: double relevancy_score = 8;
+   */
+  relevancyScore: number;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp post_created_at = 9;
+   */
+  postCreatedAt?: Timestamp;
+
+  /**
+   * @generated from field: optional string title = 10;
+   */
+  title?: string;
+
+  /**
+   * @generated from field: string description = 11;
+   */
+  description: string;
+
+  /**
+   * @generated from field: doota.core.v1.LeadMetadata metadata = 12;
+   */
+  metadata?: LeadMetadata;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp created_at = 13;
+   */
+  createdAt?: Timestamp;
+
+  /**
+   * @generated from field: doota.core.v1.Keyword keyword = 14;
+   */
+  keyword?: Keyword;
+
+  /**
+   * @generated from field: repeated string intents = 15;
+   */
+  intents: string[];
+};
 
 /**
- * Describes the enum doota.core.v1.PricingOptionErrorDetail.PricingOptionErrorDetailMessage.
+ * Describes the message doota.core.v1.Lead.
+ * Use `create(LeadSchema)` to create a new message.
  */
-export declare const PricingOptionErrorDetail_PricingOptionErrorDetailMessageSchema: GenEnum<PricingOptionErrorDetail_PricingOptionErrorDetailMessage>;
+export declare const LeadSchema: GenMessage<Lead>;
+
+/**
+ * @generated from message doota.core.v1.Keyword
+ */
+export declare type Keyword = Message<"doota.core.v1.Keyword"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: string name = 2;
+   */
+  name: string;
+};
+
+/**
+ * Describes the message doota.core.v1.Keyword.
+ * Use `create(KeywordSchema)` to create a new message.
+ */
+export declare const KeywordSchema: GenMessage<Keyword>;
+
+/**
+ * @generated from message doota.core.v1.Project
+ */
+export declare type Project = Message<"doota.core.v1.Project"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: string name = 2;
+   */
+  name: string;
+
+  /**
+   * @generated from field: string description = 3;
+   */
+  description: string;
+
+  /**
+   * @generated from field: string website = 4;
+   */
+  website: string;
+
+  /**
+   * @generated from field: string target_persona = 5;
+   */
+  targetPersona: string;
+
+  /**
+   * @generated from field: repeated doota.core.v1.Keyword keywords = 6;
+   */
+  keywords: Keyword[];
+
+  /**
+   * @generated from field: repeated doota.core.v1.Source sources = 7;
+   */
+  sources: Source[];
+};
+
+/**
+ * Describes the message doota.core.v1.Project.
+ * Use `create(ProjectSchema)` to create a new message.
+ */
+export declare const ProjectSchema: GenMessage<Project>;
 
 /**
  * @generated from enum doota.core.v1.PlatformError
@@ -277,687 +471,67 @@ export enum IdentityRole {
 export declare const IdentityRoleSchema: GenEnum<IdentityRole>;
 
 /**
- * @generated from enum doota.core.v1.Currency
+ * @generated from enum doota.core.v1.SourceType
  */
-export enum Currency {
+export enum SourceType {
   /**
-   * @generated from enum value: CURRENCY_UNSPECIFIED = 0;
+   * @generated from enum value: SOURCE_TYPE_UNSPECIFIED = 0;
    */
   UNSPECIFIED = 0,
 
   /**
-   * @generated from enum value: CURRENCY_USD = 1;
+   * @generated from enum value: SOURCE_TYPE_SUBREDDIT = 1;
    */
-  USD = 1,
-
-  /**
-   * @generated from enum value: CURRENCY_AED = 2;
-   */
-  AED = 2,
-
-  /**
-   * @generated from enum value: CURRENCY_AFN = 3;
-   */
-  AFN = 3,
-
-  /**
-   * @generated from enum value: CURRENCY_ALL = 4;
-   */
-  ALL = 4,
-
-  /**
-   * @generated from enum value: CURRENCY_AMD = 5;
-   */
-  AMD = 5,
-
-  /**
-   * @generated from enum value: CURRENCY_ANG = 6;
-   */
-  ANG = 6,
-
-  /**
-   * @generated from enum value: CURRENCY_AOA = 7;
-   */
-  AOA = 7,
-
-  /**
-   * @generated from enum value: CURRENCY_ARS = 8;
-   */
-  ARS = 8,
-
-  /**
-   * @generated from enum value: CURRENCY_AUD = 9;
-   */
-  AUD = 9,
-
-  /**
-   * @generated from enum value: CURRENCY_AWG = 10;
-   */
-  AWG = 10,
-
-  /**
-   * @generated from enum value: CURRENCY_AZN = 11;
-   */
-  AZN = 11,
-
-  /**
-   * @generated from enum value: CURRENCY_BAM = 12;
-   */
-  BAM = 12,
-
-  /**
-   * @generated from enum value: CURRENCY_BBD = 13;
-   */
-  BBD = 13,
-
-  /**
-   * @generated from enum value: CURRENCY_BDT = 14;
-   */
-  BDT = 14,
-
-  /**
-   * @generated from enum value: CURRENCY_BGN = 15;
-   */
-  BGN = 15,
-
-  /**
-   * @generated from enum value: CURRENCY_BIF = 16;
-   */
-  BIF = 16,
-
-  /**
-   * @generated from enum value: CURRENCY_BMD = 17;
-   */
-  BMD = 17,
-
-  /**
-   * @generated from enum value: CURRENCY_BND = 18;
-   */
-  BND = 18,
-
-  /**
-   * @generated from enum value: CURRENCY_BOB = 19;
-   */
-  BOB = 19,
-
-  /**
-   * @generated from enum value: CURRENCY_BRL = 20;
-   */
-  BRL = 20,
-
-  /**
-   * @generated from enum value: CURRENCY_BSD = 21;
-   */
-  BSD = 21,
-
-  /**
-   * @generated from enum value: CURRENCY_BWP = 22;
-   */
-  BWP = 22,
-
-  /**
-   * @generated from enum value: CURRENCY_BYN = 23;
-   */
-  BYN = 23,
-
-  /**
-   * @generated from enum value: CURRENCY_BZD = 24;
-   */
-  BZD = 24,
-
-  /**
-   * @generated from enum value: CURRENCY_CAD = 25;
-   */
-  CAD = 25,
-
-  /**
-   * @generated from enum value: CURRENCY_CDF = 26;
-   */
-  CDF = 26,
-
-  /**
-   * @generated from enum value: CURRENCY_CHF = 27;
-   */
-  CHF = 27,
-
-  /**
-   * @generated from enum value: CURRENCY_CLP = 28;
-   */
-  CLP = 28,
-
-  /**
-   * @generated from enum value: CURRENCY_CNY = 29;
-   */
-  CNY = 29,
-
-  /**
-   * @generated from enum value: CURRENCY_COP = 30;
-   */
-  COP = 30,
-
-  /**
-   * @generated from enum value: CURRENCY_CRC = 31;
-   */
-  CRC = 31,
-
-  /**
-   * @generated from enum value: CURRENCY_CVE = 32;
-   */
-  CVE = 32,
-
-  /**
-   * @generated from enum value: CURRENCY_CZK = 33;
-   */
-  CZK = 33,
-
-  /**
-   * @generated from enum value: CURRENCY_DJF = 34;
-   */
-  DJF = 34,
-
-  /**
-   * @generated from enum value: CURRENCY_DKK = 35;
-   */
-  DKK = 35,
-
-  /**
-   * @generated from enum value: CURRENCY_DOP = 36;
-   */
-  DOP = 36,
-
-  /**
-   * @generated from enum value: CURRENCY_DZD = 37;
-   */
-  DZD = 37,
-
-  /**
-   * @generated from enum value: CURRENCY_EGP = 38;
-   */
-  EGP = 38,
-
-  /**
-   * @generated from enum value: CURRENCY_ETB = 39;
-   */
-  ETB = 39,
-
-  /**
-   * @generated from enum value: CURRENCY_EUR = 40;
-   */
-  EUR = 40,
-
-  /**
-   * @generated from enum value: CURRENCY_FJD = 41;
-   */
-  FJD = 41,
-
-  /**
-   * @generated from enum value: CURRENCY_FKP = 42;
-   */
-  FKP = 42,
-
-  /**
-   * @generated from enum value: CURRENCY_GBP = 43;
-   */
-  GBP = 43,
-
-  /**
-   * @generated from enum value: CURRENCY_GEL = 44;
-   */
-  GEL = 44,
-
-  /**
-   * @generated from enum value: CURRENCY_GIP = 45;
-   */
-  GIP = 45,
-
-  /**
-   * @generated from enum value: CURRENCY_GMD = 46;
-   */
-  GMD = 46,
-
-  /**
-   * @generated from enum value: CURRENCY_GNF = 47;
-   */
-  GNF = 47,
-
-  /**
-   * @generated from enum value: CURRENCY_GTQ = 48;
-   */
-  GTQ = 48,
-
-  /**
-   * @generated from enum value: CURRENCY_GYD = 49;
-   */
-  GYD = 49,
-
-  /**
-   * @generated from enum value: CURRENCY_HKD = 50;
-   */
-  HKD = 50,
-
-  /**
-   * @generated from enum value: CURRENCY_HNL = 51;
-   */
-  HNL = 51,
-
-  /**
-   * @generated from enum value: CURRENCY_HTG = 52;
-   */
-  HTG = 52,
-
-  /**
-   * @generated from enum value: CURRENCY_HUF = 53;
-   */
-  HUF = 53,
-
-  /**
-   * @generated from enum value: CURRENCY_IDR = 54;
-   */
-  IDR = 54,
-
-  /**
-   * @generated from enum value: CURRENCY_ILS = 55;
-   */
-  ILS = 55,
-
-  /**
-   * @generated from enum value: CURRENCY_INR = 56;
-   */
-  INR = 56,
-
-  /**
-   * @generated from enum value: CURRENCY_ISK = 57;
-   */
-  ISK = 57,
-
-  /**
-   * @generated from enum value: CURRENCY_JMD = 58;
-   */
-  JMD = 58,
-
-  /**
-   * @generated from enum value: CURRENCY_JPY = 59;
-   */
-  JPY = 59,
-
-  /**
-   * @generated from enum value: CURRENCY_KES = 60;
-   */
-  KES = 60,
-
-  /**
-   * @generated from enum value: CURRENCY_KGS = 61;
-   */
-  KGS = 61,
-
-  /**
-   * @generated from enum value: CURRENCY_KHR = 62;
-   */
-  KHR = 62,
-
-  /**
-   * @generated from enum value: CURRENCY_KMF = 63;
-   */
-  KMF = 63,
-
-  /**
-   * @generated from enum value: CURRENCY_KRW = 64;
-   */
-  KRW = 64,
-
-  /**
-   * @generated from enum value: CURRENCY_KYD = 65;
-   */
-  KYD = 65,
-
-  /**
-   * @generated from enum value: CURRENCY_KZT = 66;
-   */
-  KZT = 66,
-
-  /**
-   * @generated from enum value: CURRENCY_LAK = 67;
-   */
-  LAK = 67,
-
-  /**
-   * @generated from enum value: CURRENCY_LBP = 68;
-   */
-  LBP = 68,
-
-  /**
-   * @generated from enum value: CURRENCY_LKR = 69;
-   */
-  LKR = 69,
-
-  /**
-   * @generated from enum value: CURRENCY_LRD = 70;
-   */
-  LRD = 70,
-
-  /**
-   * @generated from enum value: CURRENCY_LSL = 71;
-   */
-  LSL = 71,
-
-  /**
-   * @generated from enum value: CURRENCY_MAD = 72;
-   */
-  MAD = 72,
-
-  /**
-   * @generated from enum value: CURRENCY_MDL = 73;
-   */
-  MDL = 73,
-
-  /**
-   * @generated from enum value: CURRENCY_MGA = 74;
-   */
-  MGA = 74,
-
-  /**
-   * @generated from enum value: CURRENCY_MKD = 75;
-   */
-  MKD = 75,
-
-  /**
-   * @generated from enum value: CURRENCY_MMK = 76;
-   */
-  MMK = 76,
-
-  /**
-   * @generated from enum value: CURRENCY_MNT = 77;
-   */
-  MNT = 77,
-
-  /**
-   * @generated from enum value: CURRENCY_MOP = 78;
-   */
-  MOP = 78,
-
-  /**
-   * @generated from enum value: CURRENCY_MUR = 79;
-   */
-  MUR = 79,
-
-  /**
-   * @generated from enum value: CURRENCY_MVR = 80;
-   */
-  MVR = 80,
-
-  /**
-   * @generated from enum value: CURRENCY_MWK = 81;
-   */
-  MWK = 81,
-
-  /**
-   * @generated from enum value: CURRENCY_MXN = 82;
-   */
-  MXN = 82,
-
-  /**
-   * @generated from enum value: CURRENCY_MYR = 83;
-   */
-  MYR = 83,
-
-  /**
-   * @generated from enum value: CURRENCY_MZN = 84;
-   */
-  MZN = 84,
-
-  /**
-   * @generated from enum value: CURRENCY_NAD = 85;
-   */
-  NAD = 85,
-
-  /**
-   * @generated from enum value: CURRENCY_NGN = 86;
-   */
-  NGN = 86,
-
-  /**
-   * @generated from enum value: CURRENCY_NIO = 87;
-   */
-  NIO = 87,
-
-  /**
-   * @generated from enum value: CURRENCY_NOK = 88;
-   */
-  NOK = 88,
-
-  /**
-   * @generated from enum value: CURRENCY_NPR = 89;
-   */
-  NPR = 89,
-
-  /**
-   * @generated from enum value: CURRENCY_NZD = 90;
-   */
-  NZD = 90,
-
-  /**
-   * @generated from enum value: CURRENCY_PAB = 91;
-   */
-  PAB = 91,
-
-  /**
-   * @generated from enum value: CURRENCY_PEN = 92;
-   */
-  PEN = 92,
-
-  /**
-   * @generated from enum value: CURRENCY_PGK = 93;
-   */
-  PGK = 93,
-
-  /**
-   * @generated from enum value: CURRENCY_PHP = 94;
-   */
-  PHP = 94,
-
-  /**
-   * @generated from enum value: CURRENCY_PKR = 95;
-   */
-  PKR = 95,
-
-  /**
-   * @generated from enum value: CURRENCY_PLN = 96;
-   */
-  PLN = 96,
-
-  /**
-   * @generated from enum value: CURRENCY_PYG = 97;
-   */
-  PYG = 97,
-
-  /**
-   * @generated from enum value: CURRENCY_QAR = 98;
-   */
-  QAR = 98,
-
-  /**
-   * @generated from enum value: CURRENCY_RON = 99;
-   */
-  RON = 99,
-
-  /**
-   * @generated from enum value: CURRENCY_RSD = 100;
-   */
-  RSD = 100,
-
-  /**
-   * @generated from enum value: CURRENCY_RUB = 101;
-   */
-  RUB = 101,
-
-  /**
-   * @generated from enum value: CURRENCY_RWF = 102;
-   */
-  RWF = 102,
-
-  /**
-   * @generated from enum value: CURRENCY_SAR = 103;
-   */
-  SAR = 103,
-
-  /**
-   * @generated from enum value: CURRENCY_SBD = 104;
-   */
-  SBD = 104,
-
-  /**
-   * @generated from enum value: CURRENCY_SCR = 105;
-   */
-  SCR = 105,
-
-  /**
-   * @generated from enum value: CURRENCY_SEK = 106;
-   */
-  SEK = 106,
-
-  /**
-   * @generated from enum value: CURRENCY_SGD = 107;
-   */
-  SGD = 107,
-
-  /**
-   * @generated from enum value: CURRENCY_SHP = 108;
-   */
-  SHP = 108,
-
-  /**
-   * @generated from enum value: CURRENCY_SLE = 109;
-   */
-  SLE = 109,
-
-  /**
-   * @generated from enum value: CURRENCY_SOS = 110;
-   */
-  SOS = 110,
-
-  /**
-   * @generated from enum value: CURRENCY_SRD = 111;
-   */
-  SRD = 111,
-
-  /**
-   * @generated from enum value: CURRENCY_STD = 112;
-   */
-  STD = 112,
-
-  /**
-   * @generated from enum value: CURRENCY_SZL = 113;
-   */
-  SZL = 113,
-
-  /**
-   * @generated from enum value: CURRENCY_THB = 114;
-   */
-  THB = 114,
-
-  /**
-   * @generated from enum value: CURRENCY_TJS = 115;
-   */
-  TJS = 115,
-
-  /**
-   * @generated from enum value: CURRENCY_TOP = 116;
-   */
-  TOP = 116,
-
-  /**
-   * @generated from enum value: CURRENCY_TRY = 117;
-   */
-  TRY = 117,
-
-  /**
-   * @generated from enum value: CURRENCY_TTD = 118;
-   */
-  TTD = 118,
-
-  /**
-   * @generated from enum value: CURRENCY_TWD = 119;
-   */
-  TWD = 119,
-
-  /**
-   * @generated from enum value: CURRENCY_TZS = 120;
-   */
-  TZS = 120,
-
-  /**
-   * @generated from enum value: CURRENCY_UAH = 121;
-   */
-  UAH = 121,
-
-  /**
-   * @generated from enum value: CURRENCY_UGX = 122;
-   */
-  UGX = 122,
-
-  /**
-   * @generated from enum value: CURRENCY_UYU = 123;
-   */
-  UYU = 123,
-
-  /**
-   * @generated from enum value: CURRENCY_UZS = 124;
-   */
-  UZS = 124,
-
-  /**
-   * @generated from enum value: CURRENCY_VND = 125;
-   */
-  VND = 125,
-
-  /**
-   * @generated from enum value: CURRENCY_VUV = 126;
-   */
-  VUV = 126,
-
-  /**
-   * @generated from enum value: CURRENCY_WST = 127;
-   */
-  WST = 127,
-
-  /**
-   * @generated from enum value: CURRENCY_XAF = 128;
-   */
-  XAF = 128,
-
-  /**
-   * @generated from enum value: CURRENCY_XCD = 129;
-   */
-  XCD = 129,
-
-  /**
-   * @generated from enum value: CURRENCY_XOF = 130;
-   */
-  XOF = 130,
-
-  /**
-   * @generated from enum value: CURRENCY_XPF = 131;
-   */
-  XPF = 131,
-
-  /**
-   * @generated from enum value: CURRENCY_YER = 132;
-   */
-  YER = 132,
-
-  /**
-   * @generated from enum value: CURRENCY_ZAR = 133;
-   */
-  ZAR = 133,
-
-  /**
-   * @generated from enum value: CURRENCY_ZMW = 134;
-   */
-  ZMW = 134,
+  SUBREDDIT = 1,
 }
 
 /**
- * Describes the enum doota.core.v1.Currency.
+ * Describes the enum doota.core.v1.SourceType.
  */
-export declare const CurrencySchema: GenEnum<Currency>;
+export declare const SourceTypeSchema: GenEnum<SourceType>;
+
+/**
+ * @generated from enum doota.core.v1.LeadStatus
+ */
+export enum LeadStatus {
+  /**
+   * @generated from enum value: NEW = 0;
+   */
+  NEW = 0,
+
+  /**
+   * @generated from enum value: NOT_RELEVANT = 1;
+   */
+  NOT_RELEVANT = 1,
+
+  /**
+   * @generated from enum value: COMPLETED = 3;
+   */
+  COMPLETED = 3,
+}
+
+/**
+ * Describes the enum doota.core.v1.LeadStatus.
+ */
+export declare const LeadStatusSchema: GenEnum<LeadStatus>;
+
+/**
+ * @generated from enum doota.core.v1.LeadType
+ */
+export enum LeadType {
+  /**
+   * @generated from enum value: POST = 0;
+   */
+  POST = 0,
+
+  /**
+   * @generated from enum value: COMMENT = 1;
+   */
+  COMMENT = 1,
+}
+
+/**
+ * Describes the enum doota.core.v1.LeadType.
+ */
+export declare const LeadTypeSchema: GenEnum<LeadType>;
 

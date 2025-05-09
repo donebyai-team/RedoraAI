@@ -8,10 +8,10 @@ import (
 
 //go:generate go-enum -f=$GOFILE
 
-// ENUM(VOICE_MILLIS, VOICE_VAPI, REDDIT)
+// ENUM(VOICE_MILLIS, VOICE_VAPI, REDDIT, SLACK_WEBHOOK)
 type IntegrationType string
 
-// ENUM(ACTIVE)
+// ENUM(ACTIVE, AUTH_REVOKED)
 type IntegrationState string
 
 type Integration struct {
@@ -42,10 +42,25 @@ var _ Serializable = (*VAPIConfig)(nil)
 var _ Serializable = (*RedditConfig)(nil)
 
 type RedditConfig struct {
-	AccessToken  string    `json:"-"`
-	RefreshToken string    `json:"-"`
-	UserName     string    `json:"user_name"`
-	ExpiresAt    time.Time `json:"expires_at"`
+	AccessToken      string    `json:"-"`
+	RefreshToken     string    `json:"-"`
+	Verified         bool      `json:"verified"`
+	Coins            float64   `json:"coins"`
+	Id               string    `json:"id"`
+	OauthClientId    string    `json:"oauth_client_id"`
+	IsMod            bool      `json:"is_mod"`
+	AwarderKarma     float64   `json:"awarder_karma"`
+	HasVerifiedEmail bool      `json:"has_verified_email"`
+	IsSuspended      bool      `json:"is_suspended"`
+	AwardeeKarma     float64   `json:"awardee_karma"`
+	LinkKarma        float64   `json:"link_karma"`
+	TotalKarma       float64   `json:"total_karma"`
+	InboxCount       int       `json:"inbox_count"`
+	Name             string    `json:"name"`
+	Created          float64   `json:"created"`
+	CreatedUtc       float64   `json:"created_utc"`
+	CommentKarma     float64   `json:"comment_karma"`
+	ExpiresAt        time.Time `json:"expires_at"`
 }
 
 func (i *RedditConfig) EncryptedData() []byte {
@@ -92,6 +107,54 @@ func (i *Integration) GetRedditConfig() *RedditConfig {
 	}
 	out.AccessToken = encryptedData.AccessToken
 	out.RefreshToken = encryptedData.RefreshToken
+	return &out
+}
+
+type SlackWebhookConfig struct {
+	Webhook string `json:"-"`
+	Channel string `json:"channel"`
+}
+
+func (i *SlackWebhookConfig) EncryptedData() []byte {
+	toEncrypt := struct {
+		Webhook string `json:"webhook"`
+	}{
+		Webhook: i.Webhook,
+	}
+	data, err := json.Marshal(toEncrypt)
+	if err != nil {
+		panic(err)
+	}
+	return data
+
+}
+
+func (i *SlackWebhookConfig) PlainTextData() []byte {
+	data, err := json.Marshal(i)
+	if err != nil {
+		panic(err)
+	}
+	return data
+}
+
+func (i *Integration) GetSlackWebhook() *SlackWebhookConfig {
+	if i.Type != IntegrationTypeSLACKWEBHOOK {
+		panic(fmt.Errorf("integration is not a slack webhook integration"))
+	}
+
+	out := SlackWebhookConfig{}
+	if err := json.Unmarshal([]byte(i.PlainTextConfig), &out); err != nil {
+		panic(fmt.Errorf("unable to unmarshal reddit config: %w", err))
+	}
+
+	encryptedData := struct {
+		Webhook string `json:"webhook"`
+	}{}
+
+	if err := json.Unmarshal([]byte(i.EncryptedConfig), &encryptedData); err != nil {
+		panic(fmt.Errorf("unable to unmarshal reddit config: %w", err))
+	}
+	out.Webhook = encryptedData.Webhook
 	return &out
 }
 

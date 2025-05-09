@@ -6,7 +6,7 @@ option go_package = "github.com/shank318/doota/pb/doota/portal/v1;pbportal";
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
-import "doota/reddit/v1/reddit.proto";
+import "doota/core/v1/core.proto";
 
 service PortalService {
   rpc GetConfig(.google.protobuf.Empty) returns (Config);
@@ -24,12 +24,57 @@ service PortalService {
 
   // Reddit
   rpc CreateKeyword(CreateKeywordReq) returns (.google.protobuf.Empty);
-  rpc AddSubReddit(doota.reddit.v1.AddSubRedditRequest) returns (.google.protobuf.Empty);
-  rpc GetSubReddits(.google.protobuf.Empty) returns (doota.reddit.v1.GetSubredditsResponse);
-  rpc RemoveSubReddit(doota.reddit.v1.RemoveSubRedditRequest) returns (.google.protobuf.Empty);
-  rpc GetRelevantLeads(doota.reddit.v1.GetRelevantLeadsRequest) returns (doota.reddit.v1.GetLeadsResponse);
-  rpc GetLeadsByStatus(doota.reddit.v1.GetLeadsByStatusRequest) returns (doota.reddit.v1.GetLeadsResponse);
-  rpc UpdateLeadStatus(doota.reddit.v1.UpdateLeadStatusRequest) returns (.google.protobuf.Empty);
+  rpc AddSource(AddSourceRequest) returns (.google.protobuf.Empty);
+  rpc GetSources(.google.protobuf.Empty) returns (GetSourceResponse);
+  rpc RemoveSource(RemoveSourceRequest) returns (.google.protobuf.Empty);
+  rpc GetRelevantLeads(GetRelevantLeadsRequest) returns (GetLeadsResponse);
+  rpc GetLeadsByStatus(GetLeadsByStatusRequest) returns (GetLeadsResponse);
+  rpc UpdateLeadStatus(UpdateLeadStatusRequest) returns (.google.protobuf.Empty);
+  rpc GetProjects(.google.protobuf.Empty) returns (GetProjectsResponse);
+  rpc CreateOrEditProject(CreateProjectRequest) returns (doota.core.v1.Project);
+}
+
+message CreateProjectRequest {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  string website = 4;
+  string target_persona = 5;
+}
+
+message GetProjectsResponse {
+  repeated doota.core.v1.Project projects = 1;
+  bool is_onboarding_done = 2;
+}
+
+message UpdateLeadStatusRequest {
+  doota.core.v1.LeadStatus status = 1;
+  string lead_id = 2;
+}
+
+message GetLeadsByStatusRequest {
+  doota.core.v1.LeadStatus status = 1;
+}
+
+message GetRelevantLeadsRequest {
+  optional string sub_reddit = 1;
+  float relevancy_score = 2;
+}
+
+message GetLeadsResponse {
+  repeated doota.core.v1.Lead leads = 1;
+}
+
+message AddSourceRequest {
+  string name = 1; // eg. r/SAAS
+}
+
+message GetSourceResponse {
+  repeated doota.core.v1.Source sources = 1;
+}
+
+message RemoveSourceRequest {
+  string id = 1;
 }
 
 message CreateCustomerCaseReq {
@@ -135,8 +180,12 @@ message Integration {
   IntegrationType type = 3;
   IntegrationState status = 4;
   oneof details {
-    doota.reddit.v1.Integration reddit = 6;
+    RedditIntegration reddit = 6;
   }
+}
+
+message RedditIntegration {
+  string user_name = 1;
 }
 
 message Integrations {

@@ -1,8 +1,12 @@
 BEGIN;
-
-DROP TABLE IF EXISTS subreddit_trackers;
-DROP INDEX IF EXISTS fk_subreddit_trackers1;
-DROP INDEX IF EXISTS fk_subreddit_trackers2;
-DROP INDEX IF EXISTS idx1_subreddit_trackers;
-
+DROP TABLE IF EXISTS keyword_trackers;
+DROP INDEX IF EXISTS idx1_keyword_trackers;
+DROP INDEX IF EXISTS fk1_keyword_trackers;
+DROP INDEX IF EXISTS fk2_keyword_trackers;
+DROP INDEX IF EXISTS fk3_keyword_trackers;
 COMMIT;
+
+
+
+
+

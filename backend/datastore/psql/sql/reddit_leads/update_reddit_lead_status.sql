@@ -1,1 +1,0 @@
-UPDATE sub_reddits_leads SET status = :status WHERE id = :id and project_id = :project_id;

@@ -42,6 +42,7 @@ Ensure that your version of Golang is correct using `go version`. You should be 
 ```bash
 cd backend
 go test ./...
+go build -o doota && ./doota start
 ```
 
 ##### PostgreSQL
@@ -112,7 +113,7 @@ The database needs to be populated with some information if you want to use the 
 > You will need to insert organization, then user, then message sources because you need organization and user ids which will be available only after first `INSERT`
 
 ```SQL
-INSERT INTO organizations (name) VALUES ('DootaAI'');
+INSERT INTO organizations (name) VALUES ('DootaAI');
 INSERT INTO users (auth0_id, email, email_verified, organization_id, role, state) VALUES ('', 'shank@dootaai.com', true, 'YOUR ORG ID', 'PLATFORM_ADMIN', 'ACTIVE');
 INSERT INTO projects (
     name, 
@@ -131,6 +132,28 @@ VALUES (
     'https://miraai.com'
 )
 RETURNING id;
+
+INSERT INTO sources (
+    name,
+    description,
+    project_id,
+    source_type
+)
+VALUES (
+    'all',
+    'across subreddits',
+    'XXX',
+    'SUBREDDIT'
+)
+
+INSERT INTO keyword_trackers (
+    keyword_id,
+    source_id
+)
+VALUES (
+    '12757f86-d517-4009-a3fc-4a09bbbec9ff',
+    'de452b3e-59a3-401f-8d0f-47832cfe6e4b'
+)
 
 ```
 
@@ -204,6 +227,9 @@ ulimit -Sn 1000000 # to change it to 1000000
 **SQL adding organization feature flag**
 ```sql
 UPDATE organizations SET feature_flags = jsonb_set(feature_flags, '{enable_load_diff_email}', 'true') WHERE id='xx'
+UPDATE organizations SET feature_flags = jsonb_set(feature_flags, '{enable_auto_comment}', 'true') WHERE id='e250ced8-7441-4805-b9dd-2686d9492c4f'
+UPDATE organizations SET feature_flags = jsonb_set(feature_flags, '{relevancy_llm_model}', '"redora-dev-claude-thinking"') WHERE id='e250ced8-7441-4805-b9dd-2686d9492c4f'
+update projects set is_active=false where id='d1732e25-386a-48dc-9851-a8fea2156bf2';
 ```
 
 ## Seed DB
@@ -225,5 +251,10 @@ You can find a sample seed file here [`./devel/seed.sql`](`./devel/seed.sql`)
 ```
 DAT:
 freight  tools integrations dat create <org-id> {\"auth_host\":\"identity.api.staging.dat.com\",\"api_host\":\"analytics.api.staging.dat.com\",\"org_user\":\"dat@loadlogic.ai\",\"org_password\":\"CHANGE_PASSWORD\",\"user_account\":\"mdm@streamingfast.io\"}
-
+doota tools integrations slack_webhook create 9ce764d3-8663-476f-829d-3181109df3e1 {\"channel\":\"redora-daily-leads-alert\",\"webhook\":\"https://hooks.slack.com/services/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\"}
 ```
+
+## Deployment
+Redora is deployed on railway app. It uses google cloud store for openai debug and KMS for jwt
+Postgress and Redis is inside the railway itself. 
+Frontend is deployed via it's dockerfile and backend direct

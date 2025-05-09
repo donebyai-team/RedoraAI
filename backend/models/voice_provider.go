@@ -1,15 +1,15 @@
 package models
 
 import (
-	"github.com/tmc/langchaingo/llms"
+	"github.com/openai/openai-go"
 )
 
 type CallRequest struct {
 	ConversationID string
 	FromPhone      string
 	ToPhone        string
-	ChatMessages   []llms.ChatMessage
-	GPTModel       string
+	ChatMessages   []openai.ChatCompletionMessageParamUnion
+	LLMModel       LLMModel
 }
 
 type CallResponse struct {
