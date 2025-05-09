@@ -52,6 +52,30 @@ func (u *Keyword) FromModel(lead *models.Keyword) *Keyword {
 	return u
 }
 
+func (u *Project) FromModel(product *models.Project, sources []*models.Source, keywords []*models.Keyword) *Project {
+	u.Id = product.ID
+	u.Name = product.Name
+	u.Description = product.ProductDescription
+	u.Website = product.WebsiteURL
+	u.TargetPersona = product.CustomerPersona
+
+	sourcesProto := make([]*Source, 0, len(sources))
+	for _, source := range sources {
+		sourcesProto = append(sourcesProto, new(Source).FromModel(source, new(Source_RedditMetadata).FromModel(&source.Metadata)))
+	}
+
+	keywordsProto := make([]*Keyword, 0, len(keywords))
+	for _, keyword := range keywords {
+		keywordsProto = append(keywordsProto, new(Keyword).FromModel(keyword))
+	}
+
+	u.Keywords = keywordsProto
+	u.Sources = sourcesProto
+	u.SuggestedKeywords = []string{"SEO Agency", "AI SDR", "AI SEO"}
+	u.SuggestedSources = []string{"r/saas", "r/sales", "r/marketing"}
+	return u
+}
+
 func (u *LeadMetadata) FromModel(metadata models.LeadMetadata) *LeadMetadata {
 	u.ChainOfThought = utils.FormatComment(metadata.ChainOfThought)
 	u.SuggestedComment = utils.FormatComment(metadata.SuggestedComment)
