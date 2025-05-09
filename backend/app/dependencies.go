@@ -152,6 +152,7 @@ func (b *DependenciesBuilder) Build(ctx context.Context, logger *zap.Logger, tra
 				ProjectName: b.AIConfig.LangsmithProject,
 			},
 			debugStore,
+			logger,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("unable to create openai client: %w", err)

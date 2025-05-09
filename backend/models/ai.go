@@ -8,8 +8,9 @@ import (
 type LLMModel string
 
 type LLMModelUsage struct {
-	Model LLMModel `json:"model"`
-	Usage int      `json:"usage"`
+	Model        LLMModel `json:"model"`
+	Usage        int      `json:"usage"`
+	RateLimitLow bool
 }
 
 type RedditPostRelevanceResponse struct {

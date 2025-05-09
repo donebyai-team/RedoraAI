@@ -24,7 +24,7 @@ func TestRelevancyOutputFormating(t *testing.T) {
 	}
 	defaultModel := models.LLMModel("redora-dev-gpt-4.1-2025-04-14")
 	//defaultModel := models.LLMModel("redora-gemini-2.0-flash")
-	ai, err := NewOpenAI(utils.GetEnvTestReq(t, "OPENAI_API_KEY_DEV"), defaultModel, LangsmithConfig{}, debugStore)
+	ai, err := NewOpenAI(utils.GetEnvTestReq(t, "OPENAI_API_KEY_DEV"), defaultModel, LangsmithConfig{}, debugStore, logger)
 	if err != nil {
 		t.FailNow()
 	}
