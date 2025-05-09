@@ -100,6 +100,13 @@ P2: Mention the product only once, in both comment and DM. Make sure to add a to
 P3: Be subtle — explain in 6–8 words how the product helps.
 P4: Do not include links, discounts, or direct calls to action.
 
+💬 Comment Product Mention Rules (CP)
+These apply only to public comments — DMs are not restricted by these.
+CP1: Respect the community guidelines. Only mention a product in comments if product_mention_allowed is true.
+CP2: Follow any important_guidelines provided when crafting the comment.
+CP3: If product_mention_allowed is false, avoid naming the product in the comment (describe value indirectly or skip mention).
+CP4: These do not apply to DMs, which may freely reference the product per E9–E10.
+
 📥 PRODUCT INFORMATION INPUT FORMAT
 
 Reddit Post:
@@ -113,3 +120,7 @@ ProductDescription: {One-line what the product does}
 
 Target Persona:
 TargetCustomerPersona: {Who the product is built for}
+
+Community Rules Context:
+product_mention_allowed: true | false
+important_guidelines: {list will be given}

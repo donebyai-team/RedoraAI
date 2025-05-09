@@ -46,8 +46,10 @@ type Source struct {
 // Store fields required to show in UI
 // Eg. Guidelines, rules, karma points etc
 type SubRedditMetadata struct {
-	Title     *string   `db:"title"`
-	CreatedAt time.Time `db:"created_at"`
+	Title           *string               `json:"title"`
+	CreatedAt       time.Time             `json:"created_at"`
+	Rules           []string              `json:"rules"`
+	RulesEvaluation *RuleEvaluationResult `json:"rules_evaluation"`
 }
 
 func (b SubRedditMetadata) Value() (driver.Value, error) {

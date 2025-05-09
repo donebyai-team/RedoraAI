@@ -2,6 +2,7 @@ package portal
 
 import (
 	"context"
+	"github.com/shank318/doota/ai"
 	"github.com/shank318/doota/integrations/reddit"
 	"github.com/shank318/doota/portal/state"
 	"regexp"
@@ -34,9 +35,11 @@ type Portal struct {
 	keywordService      services.KeywordService
 	authStateStore      state.AuthStateStore
 	redditOauthClient   *reddit.OauthClient
+	aiClient            *ai.Client
 }
 
 func New(
+	aiClient *ai.Client,
 	redditOauthClient *reddit.OauthClient,
 	authenticator *auth.Authenticator,
 	authStateStore state.AuthStateStore,
@@ -54,6 +57,7 @@ func New(
 	tracer logging.Tracer,
 ) *Portal {
 	return &Portal{
+		aiClient:            aiClient,
 		redditOauthClient:   redditOauthClient,
 		authStateStore:      authStateStore,
 		authUsecase:         authUsecase,

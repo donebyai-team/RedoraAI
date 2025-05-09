@@ -31,12 +31,30 @@ func GetRedditPostRelevancyVars(project *models.Project, post *models.Lead) Vari
 	return out
 }
 
+func GetSubRedditRulesEvalVars(subReddit *models.Source) Variable {
+	out := make(Variable)
+	out["Name"] = subReddit.Name
+	out["Rules"] = subReddit.Metadata.Rules
+	return out
+}
+
 type Variable map[string]any
 
 func (v Variable) WithProjectDetails(project *models.Project) Variable {
 	v["ProductName"] = project.Name
 	v["ProductDescription"] = project.ProductDescription
 	v["TargetCustomerPersona"] = project.CustomerPersona
+	return v
+}
+
+func (v Variable) WithSourceDetails(source *models.Source) Variable {
+	if source.Metadata.RulesEvaluation != nil {
+		v["ProductMentionAllowed"] = source.Metadata.RulesEvaluation.ProductMentionAllowed
+		v["CommentGuidelines"] = strings.Join(source.Metadata.RulesEvaluation.ImportantGuidelines, ",")
+	} else {
+		v["ProductMentionAllowed"] = true
+		v["CommentGuidelines"] = "No such guidelines, follow the rules defined above"
+	}
 	return v
 }
 

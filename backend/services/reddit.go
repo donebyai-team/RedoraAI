@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/shank318/doota/ai"
 	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/integrations/reddit"
 	"github.com/shank318/doota/models"
@@ -19,13 +20,14 @@ type RedditService interface {
 }
 
 type redditService struct {
+	aiClient     *ai.Client
 	db           datastore.Repository
 	redditClient *reddit.Client
 	logger       *zap.Logger
 }
 
-func NewRedditService(logger *zap.Logger, db datastore.Repository, redditClient *reddit.Client) *redditService {
-	return &redditService{logger: logger, db: db, redditClient: redditClient}
+func NewRedditService(logger *zap.Logger, db datastore.Repository, redditClient *reddit.Client, aiClient *ai.Client) *redditService {
+	return &redditService{logger: logger, db: db, redditClient: redditClient, aiClient: aiClient}
 }
 
 func (r redditService) CreateSubReddit(ctx context.Context, source *models.Source) error {
@@ -56,7 +58,20 @@ func (r redditService) CreateSubReddit(ctx context.Context, source *models.Sourc
 		Title:     utils.Ptr(subRedditDetails.Title),
 		CreatedAt: time.Unix(int64(subRedditDetails.CreatedAt), 0),
 	}
+
+	for _, rule := range subRedditDetails.Rules {
+		metadata.Rules = append(metadata.Rules, rule.Description)
+	}
+
 	source.Metadata = metadata
+
+	// Get evaluation
+	evaluation, _, err := r.aiClient.GetSourceCommunityRulesEvaluation(ctx, "", source, r.logger)
+	if err != nil {
+		return fmt.Errorf("failed to evaluate community guidelines: %w", err)
+	}
+
+	source.Metadata.RulesEvaluation = evaluation
 
 	// Insert the subreddit into the DB
 	createdSource, err := r.db.AddSource(ctx, source)

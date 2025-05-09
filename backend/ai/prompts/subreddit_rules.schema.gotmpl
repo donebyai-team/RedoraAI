@@ -1,0 +1,35 @@
+{
+  "type": "object",
+  "properties": {
+    "can_mention_product": {
+      "type": "boolean",
+      "description": "True if product/tool name mention is allowed in comments under the given subreddit rules"
+    },
+    "risk_level": {
+      "type": "string",
+      "enum": [
+        "LOW",
+        "MEDIUM",
+        "HIGH"
+      ],
+      "description": "How risky it is to mention a product name in comments, given the rules"
+    },
+    "important_comment_guidelines": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of (1 or 2) specific behavioral recommendations for generating safe, acceptable comments in this subreddit"
+    },
+    "chain_of_thought": {
+      "type": "string",
+      "description": "A short reasoning explaining how the rules were interpreted to reach the decision. Reference R1–R5 where applicable."
+    }
+  },
+  "required": [
+    "can_mention_product",
+    "risk_level",
+    "important_comment_guidelines",
+    "chain_of_thought"
+  ]
+}

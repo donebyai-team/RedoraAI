@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/shared"
@@ -216,6 +217,40 @@ func (c *Client) runChatCompletion(
 	c.saveOutput(ctx, runID, outputFile, []byte(output), logger)
 
 	return []byte(output), nil
+}
+
+func (c *Client) GetSourceCommunityRulesEvaluation(ctx context.Context, model models.LLMModel, source *models.Source, logger *zap.Logger) (*models.RuleEvaluationResult, *models.LLMModelUsage, error) {
+	runID := fmt.Sprintf("%s-%s", source.Name, uuid.New().String())
+	vars := GetSubRedditRulesEvalVars(source)
+	llmModelToUse := c.defaultLLMModel
+	if string(model) != "" {
+		llmModelToUse = model
+	}
+
+	messages, responseFormat, err := c.buildChatMessages(ctx, runID, subredditRulesEvalTemplates, logger, vars)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	output, err := c.runChatCompletion(
+		ctx,
+		runID,
+		llmModelToUse,
+		"redora",
+		messages,
+		responseFormat,
+		logger,
+		"subreddit_rules.output",
+	)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var data models.RuleEvaluationResult
+	if err := json.Unmarshal(output, &data); err != nil {
+		return nil, nil, fmt.Errorf("unable to unmarshal response: %w", err)
+	}
+	return &data, &models.LLMModelUsage{Model: llmModelToUse}, nil
 }
 
 func (c *Client) IsRedditPostRelevant(ctx context.Context, model models.LLMModel, project *models.Project, post *models.Lead, logger *zap.Logger) (*models.RedditPostRelevanceResponse, *models.LLMModelUsage, error) {

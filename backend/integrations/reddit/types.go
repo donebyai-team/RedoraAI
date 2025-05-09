@@ -10,7 +10,13 @@ type SubReddit struct {
 	Subscribers int64   `json:"subscribers"`
 	Title       string  `json:"title"`
 	Over18      bool    `json:"over_18"`
+	Rules       []SubRedditRule
 	// Add other relevant fields from the subreddit API response
+}
+
+type SubRedditRule struct {
+	Description string `json:"description"`
+	ShortName   string `json:"short_name"`
 }
 
 // Post represents a Reddit post.
