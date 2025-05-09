@@ -466,7 +466,7 @@ const (
 	defaultRelevancyScore   = 90
 	minRelevancyScore       = 70
 	defaultLLMFailedCount   = 3
-	defaultHigherModelToUse = "redora-dev-gpt-4.1-2025-04-14"
+	defaultHigherModelToUse = "redora-prod-gpt-4.1-2025-04-14"
 )
 
 var systemAuthors = []string{"[deleted]", "AutoModerator"}
