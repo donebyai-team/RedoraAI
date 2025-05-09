@@ -121,13 +121,7 @@ func (p *Portal) CreateOrEditProject(ctx context.Context, c *connect.Request[pbp
 		}
 	}
 
-	return connect.NewResponse(&pbcore.Project{
-		Id:            project.ID,
-		Name:          project.Name,
-		Description:   project.ProductDescription,
-		Website:       project.WebsiteURL,
-		TargetPersona: project.CustomerPersona,
-	}), nil
+	return connect.NewResponse(new(pbcore.Project).FromModel(project, nil, nil)), nil
 }
 
 func (p *Portal) GetProjects(ctx context.Context, c *connect.Request[emptypb.Empty]) (*connect.Response[pbportal.GetProjectsResponse], error) {
@@ -149,40 +143,16 @@ func (p *Portal) GetProjects(ctx context.Context, c *connect.Request[emptypb.Emp
 			return nil, err
 		}
 
-		keywordsProto := make([]*pbcore.Keyword, 0, len(keywords))
-		for _, keyword := range keywords {
-			keywordsProto = append(keywordsProto, &pbcore.Keyword{
-				Id:   keyword.ID,
-				Name: keyword.Keyword,
-			})
-		}
-
 		sources, err := p.db.GetSourcesByProject(ctx, project.ID)
 		if err != nil {
 			return nil, err
-		}
-
-		sourcesProto := make([]*pbcore.Source, 0, len(sources))
-		for _, source := range sources {
-			sourcesProto = append(sourcesProto, &pbcore.Source{
-				Id:   source.ID,
-				Name: source.Name,
-			})
 		}
 
 		if len(sources) > 0 && len(keywords) > 0 {
 			isOnboardingDone = true
 		}
 
-		projectsProto = append(projectsProto, &pbcore.Project{
-			Id:            project.ID,
-			Name:          project.Name,
-			Description:   project.ProductDescription,
-			Website:       project.WebsiteURL,
-			TargetPersona: project.CustomerPersona,
-			Keywords:      keywordsProto,
-			Sources:       sourcesProto,
-		})
+		projectsProto = append(projectsProto, new(pbcore.Project).FromModel(project, sources, keywords))
 	}
 
 	return connect.NewResponse(&pbportal.GetProjectsResponse{

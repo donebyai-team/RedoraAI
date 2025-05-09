@@ -139,4 +139,6 @@ message Project {
   string target_persona = 5;
   repeated Keyword keywords = 6;
   repeated Source sources = 7;
+  repeated string suggested_keywords = 8;
+  repeated string suggested_sources = 9;
 }

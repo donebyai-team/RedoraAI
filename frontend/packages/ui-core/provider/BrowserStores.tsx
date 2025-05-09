@@ -37,6 +37,10 @@ export class BrowserOrganizationStore {
 
     return fromJsonString(OrganizationSchema, storedOrganization)
   }
+
+  async Del(): Promise<void> {
+    window.localStorage.removeItem(ORG_KEY)
+  }
 }
 
 export const browserTokenStore = new BrowserTokenStore()

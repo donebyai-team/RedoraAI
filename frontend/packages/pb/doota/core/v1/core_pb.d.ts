@@ -397,6 +397,16 @@ export declare type Project = Message<"doota.core.v1.Project"> & {
    * @generated from field: repeated doota.core.v1.Source sources = 7;
    */
   sources: Source[];
+
+  /**
+   * @generated from field: repeated string suggested_keywords = 8;
+   */
+  suggestedKeywords: string[];
+
+  /**
+   * @generated from field: repeated string suggested_sources = 9;
+   */
+  suggestedSources: string[];
 };
 
 /**

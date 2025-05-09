@@ -93,7 +93,7 @@ func (s *redditKeywordTracker) isTrackingDone(ctx context.Context, projectID str
 		return false, fmt.Errorf("failed to fetch keyword trackers while checking completion: %w", err)
 	}
 
-	today := time.Now().Format(time.DateOnly)
+	today := time.Now().UTC().Format(time.DateOnly)
 
 	for _, tracker := range trackers {
 		if tracker.LastTrackedAt == nil {
@@ -404,7 +404,7 @@ func (s *redditKeywordTracker) isMaxLeadLimitReached(ctx context.Context, projec
 		return false, err
 	}
 
-	today := time.Now().Truncate(24 * time.Hour)
+	today := time.Now().UTC().Truncate(24 * time.Hour)
 	tomorrow := today.Add(24 * time.Hour)
 
 	if count >= maxLeadsPerDay {
@@ -418,7 +418,7 @@ func (s *redditKeywordTracker) isMaxLeadLimitReached(ctx context.Context, projec
 }
 
 func (s *redditKeywordTracker) getLeadsCountOfTheDay(ctx context.Context, projectID string, relevancyScore int) (uint32, error) {
-	today := time.Now().Truncate(24 * time.Hour)
+	today := time.Now().UTC().Truncate(24 * time.Hour)
 	tomorrow := today.Add(24 * time.Hour)
 	leadsData, err := s.db.CountLeadByCreatedAt(ctx, projectID, relevancyScore, today, tomorrow)
 	if err != nil {
@@ -428,7 +428,7 @@ func (s *redditKeywordTracker) getLeadsCountOfTheDay(ctx context.Context, projec
 }
 
 func (s *redditKeywordTracker) getLeadInteractionCountOfTheDay(ctx context.Context, projectID string) (uint32, error) {
-	today := time.Now().Truncate(24 * time.Hour)
+	today := time.Now().UTC().Truncate(24 * time.Hour)
 	tomorrow := today.Add(24 * time.Hour)
 	leadsData, err := s.db.GetLeadInteractions(ctx, projectID, today, tomorrow)
 	if err != nil {
@@ -480,7 +480,7 @@ func isValidPostDescription(selfText string) (bool, string) {
 }
 
 func (s *redditKeywordTracker) isValidPost(post *reddit.Post) (bool, string) {
-	sixMonthsAgo := time.Now().AddDate(0, -maxPostAgeInMonths, 0).Unix()
+	sixMonthsAgo := time.Now().UTC().AddDate(0, -maxPostAgeInMonths, 0).Unix()
 	author := strings.TrimSpace(post.Author)
 
 	if !isValidAuthor(author) {
