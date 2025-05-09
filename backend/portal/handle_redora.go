@@ -289,6 +289,7 @@ func redactPlatformOnlyMetadata(role models.UserRole, lead *models.AugmentedLead
 		lead.LeadMetadata.RelevancyLLMModel = ""
 		lead.LeadMetadata.CommentLLMModel = ""
 		lead.LeadMetadata.DMLLMModel = ""
+		lead.LeadMetadata.LLMModelResponseOverriddenBy = ""
 	}
 	return lead
 }

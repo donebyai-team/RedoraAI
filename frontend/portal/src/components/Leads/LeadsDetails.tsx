@@ -168,14 +168,19 @@ const LeadsPostDetails = () => {
 
               {selectedleadData.metadata?.relevancyLlmModel && (
                 <Chip
-                  label={`${selectedleadData.metadata?.relevancyLlmModel}`}
+                  label={`${selectedleadData.metadata.relevancyLlmModel}${selectedleadData.metadata.llmModelResponseOverriddenBy
+                    ? `\n${selectedleadData.metadata.llmModelResponseOverriddenBy}`
+                    : ""
+                    }`}
                   sx={{
-                    bgcolor: "rgba(0, 123, 255, 0.1)", // Light blue background
+                    whiteSpace: "pre-line", // allows \n to render as line break
+                    bgcolor: "rgba(0, 123, 255, 0.1)",
                     color: "#0056b3",
                     fontWeight: "bold",
                   }}
                 />
               )}
+
 
 
               <Tooltip

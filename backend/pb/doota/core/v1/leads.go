@@ -93,6 +93,7 @@ func (u *LeadMetadata) FromModel(metadata models.LeadMetadata) *LeadMetadata {
 	u.RelevancyLlmModel = string(metadata.RelevancyLLMModel)
 	u.DmLlmModel = string(metadata.DMLLMModel)
 	u.CommentLlmModel = string(metadata.CommentLLMModel)
+	u.LlmModelResponseOverriddenBy = string(metadata.LLMModelResponseOverriddenBy)
 	return u
 }
 
