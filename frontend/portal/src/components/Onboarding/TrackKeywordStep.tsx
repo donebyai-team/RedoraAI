@@ -2,7 +2,6 @@
 
 import {
     TextField,
-    CircularProgress,
     Typography,
     Chip
 } from "@mui/material";
@@ -12,10 +11,10 @@ import { useAppSelector } from "../../../store/hooks";
 import { RootState } from "../../../store/store";
 import { steps } from "./MainForm";
 import { useDispatch } from "react-redux";
-import { nextStep, prevStep, resetStepper } from "../../../store/Onboarding/OnboardingSlice";
-import { useEffect, useState } from "react";
-import { useForm, Controller } from "react-hook-form";
-// import { useClientsContext } from "@doota/ui-core/context/ClientContext";
+import { nextStep, prevStep, resetStepper, setProjects } from "../../../store/Onboarding/OnboardingSlice";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { useClientsContext } from "@doota/ui-core/context/ClientContext";
 import toast from "react-hot-toast";
 import {
     Box,
@@ -23,55 +22,49 @@ import {
     IconButton,
     Paper,
 } from '@mui/material';
-import { Plus, X } from 'lucide-react';
+import { Plus } from 'lucide-react';
+import { Keyword } from "@doota/pb/doota/core/v1/core_pb";
 
-interface ProductFormValues {
-    website: string;
-    name: string;
-    description: string;
-    targetPersona: string;
+interface TrackKeywordFormValues {
+    keywords: Keyword[];
 }
 
 export default function TrackKeywordStep() {
+
     const dispatch = useDispatch();
     const activeStep = useAppSelector((state: RootState) => state.stepper.activeStep);
-    // const { portalClient } = useClientsContext()
+    const projects = useAppSelector((state: RootState) => state.stepper.projects);
+    const { portalClient } = useClientsContext();
+
     const {
-        control,
         handleSubmit,
-        setValue,
-        clearErrors,
-        formState: { errors },
-        watch,
-    } = useForm<ProductFormValues>({
+    } = useForm<TrackKeywordFormValues>({
         defaultValues: {
-            website: "",
-            name: "",
-            description: "",
-            targetPersona: "",
+            keywords: projects?.keywords ?? [],
         },
     });
 
     const [isLoading, setIsLoading] = useState(false)
 
-    const onSubmit = async (data: ProductFormValues) => {
-        // You can post `data` here if this is the final step
-        console.log("###_debug_data ", data);
-
-        setIsLoading(true)
+    const onSubmit = async (data: TrackKeywordFormValues) => {
+        setIsLoading(true);
 
         try {
-            // await portalClient.createOrEditProject({  })
-            await new Promise(resolve => setTimeout(resolve, 2300));
+            const body = {
+                ...(projects?.id && { id: projects.id }),
+                ...data,
+            };
 
-            const msg = "Product Information saved successfully";
-            toast.success(msg)
+            const result = await portalClient.createOrEditProject(body);
+            dispatch(setProjects(result));
+
+            toast.success("Keywords saved successfully");
             dispatch(nextStep());
         } catch (err: any) {
-            const message = err?.response?.data?.message || err.message || "Something went wrong"
-            toast.error(message)
+            const message = err?.response?.data?.message || err.message || "Something went wrong";
+            toast.error(message);
         } finally {
-            setIsLoading(false)
+            setIsLoading(false);
         }
     };
 

@@ -7,7 +7,7 @@ import { useEffect, useState } from "react"
 
 interface OnboardingStatus {
     loading: boolean;
-    data: Project | null;
+    data: Project | null | undefined;
     isOnboardingDone: boolean | null;
     error: Error | null;
 }
@@ -16,7 +16,7 @@ export const useOnboardingStatus = (): OnboardingStatus => {
     const { portalClient } = useClientsContext()
     const [loading, setLoading] = useState(true)
     const [isOnboardingDone, setIsOnboardingDone] = useState<boolean | null>(null)
-    const [data, seData] = useState<Project | null>(null)
+    const [data, seData] = useState<Project | null | undefined>(undefined)
     const [error, setError] = useState<Error | null>(null)
 
     useEffect(() => {
@@ -25,7 +25,7 @@ export const useOnboardingStatus = (): OnboardingStatus => {
             try {
                 const data = await portalClient.getProjects({})
                 setIsOnboardingDone(data?.isOnboardingDone ?? false)
-                seData(data.projects[0])
+                seData(data.projects?.[0] ?? null)
                 setError(null)
             } catch (err: any) {
                 console.error('Onboarding check failed:', err)

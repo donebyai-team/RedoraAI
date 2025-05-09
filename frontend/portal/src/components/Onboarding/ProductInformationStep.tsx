@@ -11,10 +11,10 @@ import { useAppSelector } from "../../../store/hooks";
 import { RootState } from "../../../store/store";
 import { steps } from "./MainForm";
 import { useDispatch } from "react-redux";
-import { nextStep, prevStep, resetStepper } from "../../../store/Onboarding/OnboardingSlice";
-import { useEffect, useState } from "react";
+import { nextStep, prevStep, resetStepper, setProjects } from "../../../store/Onboarding/OnboardingSlice";
+import { useEffect, useState, useCallback } from "react";
 import { useForm, Controller } from "react-hook-form";
-// import { useClientsContext } from "@doota/ui-core/context/ClientContext";
+import { useClientsContext } from "@doota/ui-core/context/ClientContext";
 import toast from "react-hot-toast";
 
 interface ProductFormValues {
@@ -24,10 +24,50 @@ interface ProductFormValues {
     targetPersona: string;
 }
 
+type FieldConfig = {
+    name: keyof ProductFormValues;
+    label: string;
+    placeholder: string;
+    rules: Record<string, any>;
+    multiline?: boolean;
+    rows?: number;
+};
+
+const fields: FieldConfig[] = [
+    {
+        name: "website",
+        label: "Product Website",
+        placeholder: "https://example.com",
+        rules: { required: "Product website is required" },
+    },
+    {
+        name: "name",
+        label: "Product Name",
+        placeholder: "e.g., My Awesome Product",
+        rules: { required: "Product name is required" },
+    },
+    {
+        name: "description",
+        label: "Product Description",
+        placeholder: "Describe your product and its key features...",
+        rules: { required: "Description is required" },
+        multiline: true,
+        rows: 3,
+    },
+    {
+        name: "targetPersona",
+        label: "Target Audience",
+        placeholder: "e.g., Developers, Marketers, Small Business Owners",
+        rules: { required: "Target audience is required" },
+    },
+];
+
 export default function ProductInformationStep() {
     const dispatch = useDispatch();
     const activeStep = useAppSelector((state: RootState) => state.stepper.activeStep);
-    // const { portalClient } = useClientsContext()
+    const projects = useAppSelector((state: RootState) => state.stepper.projects);
+    const { portalClient } = useClientsContext();
+
     const {
         control,
         handleSubmit,
@@ -37,155 +77,102 @@ export default function ProductInformationStep() {
         watch,
     } = useForm<ProductFormValues>({
         defaultValues: {
-            website: "",
-            name: "",
-            description: "",
-            targetPersona: "",
+            website: projects?.website ?? "",
+            name: projects?.name ?? "",
+            description: projects?.description ?? "",
+            targetPersona: projects?.targetPersona ?? "",
         },
     });
 
     const website = watch("website");
     const [loadingMeta, setLoadingMeta] = useState(false);
-    const [isLoading, setIsLoading] = useState(false)
+    const [isLoading, setIsLoading] = useState(false);
 
-    // 🔁 Debounce metadata fetch
-    useEffect(() => {
-        if (!website) return;
-
-        const timer = setTimeout(() => {
-            if (!website.startsWith("http")) return;
-
+    const fetchMeta = useCallback(async (url: string) => {
+        if (!url.startsWith("http")) return;
+        try {
             setLoadingMeta(true);
-            fetch(`/api/fetch-meta?url=${encodeURIComponent(website)}`)
-                .then(res => res.json())
-                .then(data => {
-                    setValue("name", data.title || "");
-                    setValue("description", data.description || "");
+            const res = await fetch(`/api/fetch-meta?url=${encodeURIComponent(url)}`);
+            const data = await res.json();
 
-                    // ✅ Clear errors only if value is not empty
-                    if (data.title) {
-                        clearErrors("name");
-                    }
-                    if (data.description) {
-                        clearErrors("description");
-                    }
-                })
-                .catch(() => { })
-                .finally(() => setLoadingMeta(false));
-        }, 700); // 700ms debounce
+            setValue("name", data.title || "");
+            setValue("description", data.description || "");
+
+            if (data.title) clearErrors("name");
+            if (data.description) clearErrors("description");
+        } catch {
+            // silently fail
+        } finally {
+            setLoadingMeta(false);
+        }
+    }, [setValue, clearErrors]);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (website && website !== projects?.website) {
+                fetchMeta(website);
+            }
+        }, 700);
 
         return () => clearTimeout(timer);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [website, setValue]);
+    }, [website, projects?.website, fetchMeta]);
 
     const onSubmit = async (data: ProductFormValues) => {
-        // You can post `data` here if this is the final step
-        console.log("###_debug_data ", data);
-
-        setIsLoading(true)
+        setIsLoading(true);
 
         try {
-            // await portalClient.createOrEditProject({  })
-            await new Promise(resolve => setTimeout(resolve, 2300));
+            const body = {
+                ...(projects?.id && { id: projects.id }),
+                ...data,
+            };
 
-            const msg = "Product Information saved successfully";
-            toast.success(msg)
+            const result = await portalClient.createOrEditProject(body);
+            dispatch(setProjects(result));
+
+            toast.success("Product Information saved successfully");
             dispatch(nextStep());
         } catch (err: any) {
-            const message = err?.response?.data?.message || err.message || "Something went wrong"
-            toast.error(message)
+            const message = err?.response?.data?.message || err.message || "Something went wrong";
+            toast.error(message);
         } finally {
-            setIsLoading(false)
+            setIsLoading(false);
         }
     };
 
-    const handleBack = () => {
-        dispatch(prevStep());
-    };
+    const handleBack = () => dispatch(prevStep());
+    const handleReset = () => dispatch(resetStepper());
 
-    const handleReset = () => {
-        dispatch(resetStepper());
-    };
-
-    return (<>
+    return (
         <form onSubmit={handleSubmit(onSubmit)}>
             <Stack spacing={3} mb={5}>
-                <Controller
-                    name="website"
-                    control={control}
-                    rules={{ required: "Product website is required" }}
-                    render={({ field }) => (
-                        <TextField
-                            {...field}
-                            fullWidth
-                            label="Product Website"
-                            placeholder="https://example.com"
-                            error={!!errors.website}
-                            helperText={errors.website?.message}
-                            disabled={isLoading}
-                        />
-                    )}
-                />
+                {fields.map((field) => (
+                    <Controller
+                        key={field.name}
+                        name={field.name as keyof ProductFormValues}
+                        control={control}
+                        rules={field.rules}
+                        render={({ field: controllerField }) => (
+                            <TextField
+                                {...controllerField}
+                                fullWidth
+                                label={field.label}
+                                placeholder={field.placeholder}
+                                error={!!errors[field.name as keyof ProductFormValues]}
+                                helperText={errors[field.name as keyof ProductFormValues]?.message}
+                                disabled={isLoading}
+                                multiline={field.multiline}
+                                rows={field.rows}
+                            />
+                        )}
+                    />
+                ))}
 
                 {loadingMeta && (
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" color="text.secondary" sx={{ display: "flex", alignItems: "center" }}>
                         <CircularProgress size={14} sx={{ mr: 1 }} />
                         Fetching site metadata...
                     </Typography>
                 )}
-
-                <Controller
-                    name="name"
-                    control={control}
-                    rules={{ required: "Product name is required" }}
-                    render={({ field }) => (
-                        <TextField
-                            {...field}
-                            fullWidth
-                            label="Product Name"
-                            placeholder="e.g., My Awesome Product"
-                            error={!!errors.name}
-                            helperText={errors.name?.message}
-                            disabled={isLoading}
-                        />
-                    )}
-                />
-
-                <Controller
-                    name="description"
-                    control={control}
-                    rules={{ required: "Description is required" }}
-                    render={({ field }) => (
-                        <TextField
-                            {...field}
-                            fullWidth
-                            multiline
-                            rows={3}
-                            label="Product Description"
-                            placeholder="Describe your product and its key features..."
-                            error={!!errors.description}
-                            helperText={errors.description?.message}
-                            disabled={isLoading}
-                        />
-                    )}
-                />
-
-                <Controller
-                    name="targetPersona"
-                    control={control}
-                    rules={{ required: "Target audience is required" }}
-                    render={({ field }) => (
-                        <TextField
-                            {...field}
-                            fullWidth
-                            label="Target Audience"
-                            placeholder="e.g., Developers, Marketers, Small Business Owners"
-                            error={!!errors.targetPersona}
-                            helperText={errors.targetPersona?.message}
-                            disabled={isLoading}
-                        />
-                    )}
-                />
             </Stack>
 
             <StepperControls
@@ -197,5 +184,5 @@ export default function ProductInformationStep() {
                 btnDisabled={isLoading}
             />
         </form>
-    </>);
+    );
 }

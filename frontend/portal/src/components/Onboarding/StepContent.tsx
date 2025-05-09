@@ -10,7 +10,6 @@ import {
     Paper,
 } from '@mui/material';
 import { Search, X } from 'lucide-react';
-import ConnectRedditStep from './ConnectRedditStep';
 import ProductInformationStep from './ProductInformationStep';
 import TrackKeywordStep from './TrackKeywordStep';
 
@@ -36,8 +35,6 @@ const StepContent: React.FC<StepContentProps> = ({ step, stepLength }) => {
             Step {step + 1} of {stepLength}
         </Typography>
     );
-
-    
 
     const popularSubreddits = [
         'technology', 'programming', 'webdev', 'startup',
@@ -152,9 +149,6 @@ const StepContent: React.FC<StepContentProps> = ({ step, stepLength }) => {
                     </Stack>
                 </Box>
             );
-
-        case 3:
-            return <ConnectRedditStep />;
 
         default:
             return null;

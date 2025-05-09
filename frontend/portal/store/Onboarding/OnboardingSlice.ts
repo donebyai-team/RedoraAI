@@ -1,48 +1,50 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { Project } from '@doota/pb/doota/core/v1/core_pb'
+import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+
+export type ProjectsTypes = Project | null
 
 interface StepperState {
-    activeStep: number;
-    skipped: number[];
+  activeStep: number
+  skipped: number[]
+  projects: ProjectsTypes
 }
 
 const initialState: StepperState = {
-    activeStep: 3,
-    skipped: [],
-};
+  activeStep: 0,
+  skipped: [],
+  projects: null
+}
 
 const stepperSlice = createSlice({
-    name: 'stepper',
-    initialState,
-    reducers: {
-        // Replace Set operations with array logic:
-        nextStep: (state) => {
-            state.skipped = state.skipped.filter(step => step !== state.activeStep);
-            state.activeStep += 1;
-        },
-        skipStep: (state, action: PayloadAction<number>) => {
-            if (!state.skipped.includes(action.payload)) {
-                state.skipped.push(action.payload);
-            }
-        },
-        prevStep: (state) => {
-            state.activeStep = Math.max(0, state.activeStep - 1);
-        },
-        resetStepper: (state) => {
-            state.activeStep = 0;
-            state.skipped = [];
-        },
-        setStep: (state, action: PayloadAction<number>) => {
-            state.activeStep = action.payload;
-        },
+  name: 'stepper',
+  initialState,
+  reducers: {
+    // Replace Set operations with array logic:
+    nextStep: state => {
+      state.skipped = state.skipped.filter(step => step !== state.activeStep)
+      state.activeStep += 1
     },
-});
+    skipStep: (state, action: PayloadAction<number>) => {
+      if (!state.skipped.includes(action.payload)) {
+        state.skipped.push(action.payload)
+      }
+    },
+    prevStep: state => {
+      state.activeStep = Math.max(0, state.activeStep - 1)
+    },
+    resetStepper: state => {
+      state.activeStep = 0
+      state.skipped = []
+    },
+    setStep: (state, action: PayloadAction<number>) => {
+      state.activeStep = action.payload
+    },
+    setProjects: (state, action: PayloadAction<ProjectsTypes>) => {
+      state.projects = action.payload
+    }
+  }
+})
 
-export const {
-    nextStep,
-    prevStep,
-    resetStepper,
-    skipStep,
-    setStep,
-} = stepperSlice.actions;
+export const { nextStep, prevStep, resetStepper, skipStep, setStep, setProjects } = stepperSlice.actions
 
-export const stepperReducer = stepperSlice.reducer;
+export const stepperReducer = stepperSlice.reducer
