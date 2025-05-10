@@ -67,7 +67,7 @@ func TestRedoraCase(t *testing.T) {
 		t.FailNow()
 	}
 	defaultModel := models.LLMModel("redora-dev-gpt-4.1-2025-04-14")
-	ai, err := NewOpenAI(utils.GetEnvTestReq(t, "OPENAI_API_KEY_DEV"), defaultModel, LangsmithConfig{}, debugStore)
+	ai, err := NewOpenAI(utils.GetEnvTestReq(t, "OPENAI_API_KEY_DEV"), defaultModel, LangsmithConfig{}, debugStore, logger)
 	if err != nil {
 		t.FailNow()
 	}
@@ -103,13 +103,9 @@ func TestRedoraCase(t *testing.T) {
 				Title:       utils.Ptr(input.Title),
 				Description: input.Description,
 			}
-
-			org := &models.Organization{
-				FeatureFlags: models.OrganizationFeatureFlags{RelevancyLLMModel: models.LLMModel(model)},
-			}
-
+			
 			start := time.Now()
-			relevant, _, err := ai.IsRedditPostRelevant(context.Background(), org, project, post, logger)
+			relevant, _, err := ai.IsRedditPostRelevant(context.Background(), models.LLMModel(model), project, post, logger)
 			duration := time.Since(start)
 
 			if _, ok := modelStats[model]; !ok {

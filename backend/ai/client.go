@@ -13,6 +13,8 @@ import (
 	"github.com/streamingfast/derr"
 	"github.com/streamingfast/dstore"
 	"go.uber.org/zap"
+	"net/http"
+	"strconv"
 	"strings"
 	"text/template"
 	"time"
@@ -25,6 +27,7 @@ type Client struct {
 	model               openai.Client
 	langsmithConfig     LangsmithConfig
 	/**/ debugFileStore dstore.Store
+	log                 *zap.Logger
 }
 
 type LangsmithConfig struct {
@@ -51,7 +54,7 @@ type LangsmithConfig struct {
 //	}, nil
 //}
 
-func NewOpenAI(apiKey string, defaultLLMModel models.LLMModel, config LangsmithConfig, debugFileStore dstore.Store) (*Client, error) {
+func NewOpenAI(apiKey string, defaultLLMModel models.LLMModel, config LangsmithConfig, debugFileStore dstore.Store, log *zap.Logger) (*Client, error) {
 	if apiKey == "" {
 		return nil, fmt.Errorf("openai api key is required, cannot be blank")
 	}
@@ -73,6 +76,7 @@ func NewOpenAI(apiKey string, defaultLLMModel models.LLMModel, config LangsmithC
 		model:           llmClient,
 		defaultLLMModel: defaultLLMModel,
 		debugFileStore:  debugFileStore,
+		log:             log,
 	}, nil
 }
 
@@ -148,25 +152,58 @@ func (c *Client) runChatCompletion(
 	logger *zap.Logger,
 	outputFile string,
 ) ([]byte, error) {
-	params := openai.ChatCompletionNewParams{
-		Model:          string(model),
-		Messages:       messages,
-		User:           openai.String(userID),
-		ResponseFormat: *responseFormat,
-	}
-
 	var output string
 
 	err := derr.RetryContext(ctx, MAX_RETRIES, func(ctx context.Context) error {
-		chatCompletion, err := c.model.Chat.Completions.New(ctx, params)
+		httpResponse := &http.Response{}
+		params := openai.ChatCompletionNewParams{
+			Model:          string(model),
+			Messages:       messages,
+			User:           openai.String(userID),
+			ResponseFormat: *responseFormat,
+		}
+
+		// Send the API request
+		chatCompletion, err := c.model.Chat.Completions.New(ctx, params, option.WithResponseInto(&httpResponse))
+
+		// Check if we hit rate limit even if there's an error
+		if httpResponse.StatusCode == http.StatusTooManyRequests {
+			c.log.Debug("rate limit hit (429), retrying after backoff", zap.String("model", string(model)))
+			retryAfter := httpResponse.Header.Get("Retry-After")
+			if retryAfter != "" {
+				if seconds, convErr := strconv.Atoi(retryAfter); convErr == nil {
+					time.Sleep(time.Duration(seconds) * time.Second)
+				} else {
+					time.Sleep(time.Minute)
+				}
+			} else {
+				time.Sleep(time.Minute)
+			}
+			return fmt.Errorf("[%s]rate limit hit (429), retrying after backoff", model)
+		}
+
 		if err != nil {
 			return fmt.Errorf("llm: %w", err)
 		}
 
+		// Proceed normally
 		if len(chatCompletion.Choices) == 0 {
 			return fmt.Errorf("llm: no chat completion found, model: %s", model)
 		}
 
+		// Optionally: check remaining rate limits
+		remainingRequests := httpResponse.Header.Get("x-ratelimit-remaining-requests")
+		remainingTokens := httpResponse.Header.Get("x-ratelimit-remaining-tokens")
+
+		reqRemaining, _ := strconv.Atoi(remainingRequests)
+		tokRemaining, _ := strconv.Atoi(remainingTokens)
+
+		if reqRemaining <= 1 || tokRemaining <= 2000 {
+			c.log.Debug("rate limit hit (remaining requests/tokens), waiting for 1min before next request", zap.String("model", string(model)))
+			time.Sleep(time.Minute)
+		}
+
+		// If rate limit not exhausted, proceed normally
 		output = chatCompletion.Choices[0].Message.Content
 		return nil
 	})
@@ -175,19 +212,18 @@ func (c *Client) runChatCompletion(
 		return nil, fmt.Errorf("retry: %w", err)
 	}
 
+	// Save output to the specified file
 	c.saveOutput(ctx, runID, outputFile, []byte(output), logger)
-
-	//output = strings.ReplaceAll(output, `\"`, `"`)
 
 	return []byte(output), nil
 }
 
-func (c *Client) IsRedditPostRelevant(ctx context.Context, organization *models.Organization, project *models.Project, post *models.Lead, logger *zap.Logger) (*models.RedditPostRelevanceResponse, *models.LLMModelUsage, error) {
+func (c *Client) IsRedditPostRelevant(ctx context.Context, model models.LLMModel, project *models.Project, post *models.Lead, logger *zap.Logger) (*models.RedditPostRelevanceResponse, *models.LLMModelUsage, error) {
 	runID := fmt.Sprintf("%s-%s", project.ID, post.PostID)
 	vars := GetRedditPostRelevancyVars(project, post)
 	llmModelToUse := c.defaultLLMModel
-	if organization.FeatureFlags.RelevancyLLMModel != "" {
-		llmModelToUse = organization.FeatureFlags.RelevancyLLMModel
+	if string(model) != "" {
+		llmModelToUse = model
 	}
 
 	messages, responseFormat, err := c.buildChatMessages(ctx, runID, redditPostRelevancyTemplates, logger, vars)

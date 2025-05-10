@@ -43,11 +43,11 @@ func (r ResendNotifier) SendLeadsSummary(ctx context.Context, summary LeadSummar
 		<html>
 		<body style="font-family: Arial, sans-serif; background-color: #f7f9fc; padding: 20px;">
 		  <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 30px; border-radius: 8px;">
-		    <h2>Daily Lead Summary — <strong>RedoraAI</strong></h2>
+		    <h2>Daily Reddit Posts Summary — <strong>RedoraAI</strong></h2>
 		    <p><strong>Product:</strong> %s</p>
 		    <p><strong>Posts Analyzed:</strong> %d</p>
 		    <p><strong>Automated Comments Posted:</strong> %d</p>
-		    <p><strong>Leads Found:</strong> <strong>%d</strong></p>
+		    <p><strong>Relevant Posts Found:</strong> <strong>%d</strong></p>
 		    <p>🔗 <a href="%s">View all leads in your dashboard</a></p>
 		    <hr>
 		    <footer style="font-size: 12px; color: #888;">

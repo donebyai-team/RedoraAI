@@ -11,7 +11,6 @@ import (
 	"github.com/shank318/doota/integrations/reddit"
 	"github.com/shank318/doota/models"
 	"github.com/shank318/doota/notifiers/alerts"
-	pbcore "github.com/shank318/doota/pb/doota/core/v1"
 	"github.com/shank318/doota/utils"
 	"go.uber.org/zap"
 	"sort"
@@ -298,12 +297,33 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 		isValid, reason := s.isValidPost(post)
 		if isValid {
 			countTestPosts++
-			relevanceResponse, usage, err := s.aiClient.IsRedditPostRelevant(ctx, tracker.Organization, project, redditLead, s.logger)
+			relevanceResponse, usage, err := s.aiClient.IsRedditPostRelevant(ctx, tracker.Organization.FeatureFlags.RelevancyLLMModel, project, redditLead, s.logger)
 			if err != nil {
 				s.logger.Error("failed to get relevance response", zap.Error(err), zap.String("post_id", post.ID))
 				aiErrorsCount++
 				continue
 			}
+
+			// if the lower model thinks it is relevant, verify it with the higher one and override it if it is
+			if relevanceResponse.IsRelevantConfidenceScore >= defaultRelevancyScore {
+				s.logger.Info("calling relevancy with higher model", zap.String("higher_model", defaultHigherModelToUse), zap.String("post_id", post.ID))
+				relevanceResponseHigherModel, usageHigherModel, errHigherModel := s.aiClient.IsRedditPostRelevant(ctx, defaultHigherModelToUse, project, redditLead, s.logger)
+				if errHigherModel != nil {
+					s.logger.Error("failed to get relevance response from the higher model, continuing with the existing one", zap.Error(errHigherModel), zap.String("post_id", post.ID))
+					aiErrorsCount++
+				} else {
+					s.logger.Info("llm response overridden",
+						zap.String("old_model", string(usage.Model)),
+						zap.String("new_model", string(usageHigherModel.Model)),
+						zap.Any("old_relevancy_score", relevanceResponse.IsRelevantConfidenceScore),
+						zap.Any("new_relevancy_score", relevanceResponseHigherModel.IsRelevantConfidenceScore),
+						zap.String("post_id", post.ID))
+
+					relevanceResponse = relevanceResponseHigherModel
+					redditLead.LeadMetadata.LLMModelResponseOverriddenBy = usageHigherModel.Model
+				}
+			}
+
 			redditLead.RelevancyScore = relevanceResponse.IsRelevantConfidenceScore
 			if redditLead.RelevancyScore >= defaultRelevancyScore {
 				countPostsWithHighRelevancy++
@@ -354,7 +374,7 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 
 		// Send automated comment
 		if tracker.Organization.FeatureFlags.EnableAutoComment &&
-			pbcore.IsGoodForEngagement(redditLead.Intents) &&
+			//pbcore.IsGoodForEngagement(redditLead.Intents) &&
 			redditLead.RelevancyScore >= defaultRelevancyScore &&
 			len(strings.TrimSpace(redditLead.LeadMetadata.SuggestedComment)) > 0 {
 			leadInteraction, err := automatedInteractionService.SendComment(ctx, &interactions.SendCommentInfo{
@@ -438,14 +458,15 @@ func (s *redditKeywordTracker) getLeadInteractionCountOfTheDay(ctx context.Conte
 }
 
 const (
-	minSelftextLength     = 30
-	minTitleLength        = 5
-	maxPostAgeInMonths    = 6
-	minCommentThreshold   = 5
-	maxLeadsPerDay        = 25
-	defaultRelevancyScore = 90
-	minRelevancyScore     = 70
-	defaultLLMFailedCount = 3
+	minSelftextLength       = 30
+	minTitleLength          = 5
+	maxPostAgeInMonths      = 6
+	minCommentThreshold     = 5
+	maxLeadsPerDay          = 25
+	defaultRelevancyScore   = 90
+	minRelevancyScore       = 70
+	defaultLLMFailedCount   = 3
+	defaultHigherModelToUse = "redora-prod-gpt-4.1-2025-04-14"
 )
 
 var systemAuthors = []string{"[deleted]", "AutoModerator"}

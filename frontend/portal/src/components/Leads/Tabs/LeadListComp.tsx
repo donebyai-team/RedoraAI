@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 import { LeadTyeps, setSelectedLeadData } from "../../../../store/Lead/leadSlice";
 import { useAppDispatch, useAppSelector } from "../../../../store/hooks";
-import { formateDate, setLeadActive } from "./NewTab";
+import { formateDate, isSameDay, setLeadActive } from "./NewTab";
 import { RootState } from "../../../../store/store";
 import { LoadigSkeletons } from "../../NavBar";
 import { MarkdownRenderer } from "../../Html/HtmlRenderer";
@@ -136,8 +136,36 @@ const ListRenderComp: React.FC<ListRenderCompProps> = ({ isLoading, list }) => {
                                         >
                                             Keyword: {post.keyword?.name}
                                         </Box>
+                                        {post.createdAt && isSameDay(post.createdAt) && (
+                                            <Box
+                                                sx={{
+                                                    display: "flex",
+                                                    flexWrap: "wrap",
+                                                    gap: 1,
+                                                    mt: 0.5,
+                                                }}
+                                            >
+                                                <Box
+                                                    sx={{
+                                                        backgroundColor: '#FFCDD2', // light red background
+                                                        color: '#B71C1C',           // dark red text
+                                                        fontSize: "0.8rem",
+                                                        px: 1.5,
+                                                        py: 0.5,
+                                                        mt: "0.5rem",
+                                                        borderRadius: "999px",
+                                                        whiteSpace: "nowrap",
+                                                        fontWeight: 500,
+                                                    }}
+                                                >
+                                                    🔥 New
+                                                </Box>
+                                            </Box>
+                                        )}
 
-                                        {post.intents && post.intents.length > 0 && (
+
+
+                                        {/* {post.intents && post.intents.length > 0 && (
                                             <Box
                                                 sx={{
                                                     display: "flex",
@@ -181,7 +209,7 @@ const ListRenderComp: React.FC<ListRenderCompProps> = ({ isLoading, list }) => {
                                                     );
                                                 })}
                                             </Box>
-                                        )}
+                                        )} */}
                                     </Stack>
                                 </ListItem>
                             </React.Fragment>

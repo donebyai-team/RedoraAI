@@ -15,7 +15,7 @@ import {
   Stack,
   Tooltip,
 } from "@mui/material";
-import { ThumbDown, ThumbUp, Close, Star, Send } from "@mui/icons-material";
+import { ThumbDown, ThumbUp, Close, Star, Send, Leaderboard, Person } from "@mui/icons-material";
 import { LightbulbIcon } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
@@ -27,6 +27,7 @@ import {
   LeadTabStatus,
   setCompletedList,
   setDiscardedTabList,
+  setLeadsTabList,
   setNewTabList,
   setSelectedLeadData,
 } from "../../../store/Lead/leadSlice";
@@ -59,6 +60,7 @@ const LeadsPostDetails = () => {
   const newTabList = useAppSelector((state: RootState) => state.lead.newTabList);
   const completedTabList = useAppSelector((state: RootState) => state.lead.completedTabList);
   const discardedTabList = useAppSelector((state: RootState) => state.lead.discardedTabList);
+  const leadsTabList = useAppSelector((state: RootState) => state.lead.leadsTabList);
   const subredditList = useAppSelector((state: RootState) => state.source.subredditList);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -85,6 +87,8 @@ const LeadsPostDetails = () => {
       dispatch(setCompletedList([...completedTabList, selectedleadData]));
     } else if (status === LeadStatus.NOT_RELEVANT) {
       dispatch(setDiscardedTabList([...discardedTabList, selectedleadData]));
+    } else if (status === LeadStatus.LEAD) {
+      dispatch(setLeadsTabList([...leadsTabList, selectedleadData]));
     }
 
     if (nextItem) {
@@ -93,7 +97,7 @@ const LeadsPostDetails = () => {
     } else {
       handleCloseLeadDetail();
     }
-  }, [activeTab, completedTabList, discardedTabList, dispatch, newTabList, selectedleadData, handleCloseLeadDetail]);
+  }, [activeTab, completedTabList, discardedTabList, leadsTabList, dispatch, newTabList, selectedleadData, handleCloseLeadDetail]);
 
   const copyTextAndOpenLink = useCallback((textToCopy: string, linkToOpen: string) => {
     if (!navigator.clipboard) {
@@ -168,14 +172,19 @@ const LeadsPostDetails = () => {
 
               {selectedleadData.metadata?.relevancyLlmModel && (
                 <Chip
-                  label={`${selectedleadData.metadata?.relevancyLlmModel}`}
+                  label={`${selectedleadData.metadata.relevancyLlmModel}${selectedleadData.metadata.llmModelResponseOverriddenBy
+                    ? `\n${selectedleadData.metadata.llmModelResponseOverriddenBy}`
+                    : ""
+                    }`}
                   sx={{
-                    bgcolor: "rgba(0, 123, 255, 0.1)", // Light blue background
+                    whiteSpace: "pre-line", // allows \n to render as line break
+                    bgcolor: "rgba(0, 123, 255, 0.1)",
                     color: "#0056b3",
                     fontWeight: "bold",
                   }}
                 />
               )}
+
 
 
               <Tooltip
@@ -203,8 +212,17 @@ const LeadsPostDetails = () => {
                 </IconButton>
               </Tooltip>
             </Box>
-            <Box sx={{ display: "flex", gap: 1 }}>
-              {activeTab === LeadTabStatus.NEW && (
+
+            <IconButton size="small" onClick={handleCloseLeadDetail}>
+              <Close />
+            </IconButton>
+          </Box>
+
+          {/* Body */}
+          <Box sx={{ width: "100%", pb: 2 }}>
+            {activeTab === LeadTabStatus.NEW && (
+              <Box sx={{ display: "flex", gap: 1, p: 2 }}>
+
                 <>
                   <Button
                     variant="contained"
@@ -236,16 +254,25 @@ const LeadsPostDetails = () => {
                   >
                     Mark Responded
                   </Button>
+                  <Button
+                    variant="contained"
+                    startIcon={<Person />}
+                    sx={{
+                      bgcolor: "#f0f0f0",
+                      color: "#666",
+                      "&:hover": { bgcolor: "#e0e0e0" },
+                      textTransform: "none",
+                      boxShadow: "none",
+                    }}
+                    onClick={() => handleLeadStatusUpdate(LeadStatus.LEAD)}
+                    disabled={isLoading}
+                  >
+                    Mark As Lead
+                  </Button>
                 </>
-              )}
-              <IconButton size="small" onClick={handleCloseLeadDetail}>
-                <Close />
-              </IconButton>
-            </Box>
-          </Box>
+              </Box>
+            )}
 
-          {/* Body */}
-          <Box sx={{ width: "100%", pb: 2 }}>
             <Box sx={{ px: 2, pt: 2, height: "42dvh", maxHeight: "100%", overflowY: "scroll" }}>
               {/* Metadata line */}
               <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>

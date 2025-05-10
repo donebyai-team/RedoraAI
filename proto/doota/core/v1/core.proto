@@ -95,6 +95,7 @@ message LeadMetadata {
   string comment_llm_model = 14;
   string dm_llm_model = 15;
   string relevancy_llm_model = 16;
+  string llm_model_response_overridden_by = 17;
 }
 
 message Lead {
@@ -119,6 +120,7 @@ enum LeadStatus {
   NEW = 0;
   NOT_RELEVANT = 1;
   COMPLETED = 3;
+  LEAD = 4;
 }
 
 enum LeadType {

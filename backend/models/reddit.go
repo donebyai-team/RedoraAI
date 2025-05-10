@@ -153,7 +153,7 @@ func (a *PostIntents) Scan(src interface{}) error {
 // ENUM(COMMENT, POST)
 type LeadType string
 
-// ENUM(NEW, COMPLETED, NOT_RELEVANT)
+// ENUM(NEW, COMPLETED, NOT_RELEVANT, LEAD)
 type LeadStatus string
 
 type Lead struct {
@@ -221,6 +221,7 @@ type LeadMetadata struct {
 	CommentLLMModel                LLMModel `json:"comment_llm_model"`
 	DMLLMModel                     LLMModel `json:"dm_llm_model"`
 	RelevancyLLMModel              LLMModel `json:"relevancy_llm_model"`
+	LLMModelResponseOverriddenBy   LLMModel `json:"llm_model_response_overridden_by"`
 }
 
 func (b LeadMetadata) Value() (driver.Value, error) {

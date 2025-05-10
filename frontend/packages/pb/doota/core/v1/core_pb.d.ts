@@ -244,6 +244,11 @@ export declare type LeadMetadata = Message<"doota.core.v1.LeadMetadata"> & {
    * @generated from field: string relevancy_llm_model = 16;
    */
   relevancyLlmModel: string;
+
+  /**
+   * @generated from field: string llm_model_response_overridden_by = 17;
+   */
+  llmModelResponseOverriddenBy: string;
 };
 
 /**
@@ -518,6 +523,11 @@ export enum LeadStatus {
    * @generated from enum value: COMPLETED = 3;
    */
   COMPLETED = 3,
+
+  /**
+   * @generated from enum value: LEAD = 4;
+   */
+  LEAD = 4,
 }
 
 /**
