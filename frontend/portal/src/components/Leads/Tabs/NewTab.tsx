@@ -14,6 +14,17 @@ export const formateDate = (timestamp: Timestamp): string => {
     return timeAgo;
 };
 
+export const isSameDay = (timestamp: Timestamp): boolean => {
+    const date = new Date(Number(timestamp.seconds) * 1000);
+    const now = new Date();
+
+    return (
+        date.getDate() === now.getDate() &&
+        date.getMonth() === now.getMonth() &&
+        date.getFullYear() === now.getFullYear()
+    );
+};
+
 export const getSubredditName = (list: SourceTyeps[], id: string) => {
     const name = list?.find(reddit => reddit.id === id)?.name ?? "N/A";
     return name;

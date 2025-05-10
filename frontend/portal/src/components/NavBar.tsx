@@ -219,7 +219,7 @@ const NavBar: FC = () => {
 
   const countItem = useCallback((id: string) => {
     if (!newTabListLoaded) return 0;
-    return id === "inbox"
+    return id === "posts"
       ? newTabList.length
       : newTabList.reduce((count, ele) => ele.sourceId === id ? count + 1 : count, 0);
   }, [newTabListLoaded, newTabList]);
@@ -295,7 +295,7 @@ const NavBar: FC = () => {
         </Box>
         <Divider sx={{ bgcolor: "#2d3748" }} />
 
-        {/* Inbox */}
+        {/* Posts */}
         <List
           sx={{
             m: 2,
@@ -327,7 +327,7 @@ const NavBar: FC = () => {
             onClick={() => handleMenuClick()}
             secondaryAction={
               <Badge
-                badgeContent={countItem("inbox")}
+                badgeContent={countItem("posts")}
                 color="warning"
                 sx={{
                   "& .MuiBadge-badge": {
@@ -356,7 +356,7 @@ const NavBar: FC = () => {
               <ListItemIcon sx={{ minWidth: "auto", mr: 2 }}>
                 <MailIcon />
               </ListItemIcon>
-              <ListItemText primary={`Inbox`} />
+              <ListItemText primary={`Posts`} />
             </ListItemButton>
           </ListItem>
         </List>

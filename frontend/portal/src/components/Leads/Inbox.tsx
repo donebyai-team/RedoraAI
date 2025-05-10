@@ -65,7 +65,7 @@ const InboxComponent = () => {
         }}
       >
         <Typography variant="h4" component="h3" sx={{ fontWeight: "bold" }}>
-          Inbox
+          Posts
         </Typography>
       </Box>
 
