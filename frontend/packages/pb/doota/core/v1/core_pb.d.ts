@@ -523,6 +523,11 @@ export enum LeadStatus {
    * @generated from enum value: COMPLETED = 3;
    */
   COMPLETED = 3,
+
+  /**
+   * @generated from enum value: LEAD = 4;
+   */
+  LEAD = 4,
 }
 
 /**

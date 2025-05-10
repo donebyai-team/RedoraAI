@@ -11,7 +11,6 @@ import (
 	"github.com/shank318/doota/integrations/reddit"
 	"github.com/shank318/doota/models"
 	"github.com/shank318/doota/notifiers/alerts"
-	pbcore "github.com/shank318/doota/pb/doota/core/v1"
 	"github.com/shank318/doota/utils"
 	"go.uber.org/zap"
 	"sort"
@@ -310,13 +309,14 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 				s.logger.Info("calling relevancy with higher model", zap.String("higher_model", defaultHigherModelToUse), zap.String("post_id", post.ID))
 				relevanceResponseHigherModel, usageHigherModel, errHigherModel := s.aiClient.IsRedditPostRelevant(ctx, defaultHigherModelToUse, project, redditLead, s.logger)
 				if errHigherModel != nil {
-					s.logger.Error("failed to get relevance response from the higher model, continuing with the existing one", zap.Error(err), zap.String("post_id", post.ID))
+					s.logger.Error("failed to get relevance response from the higher model, continuing with the existing one", zap.Error(errHigherModel), zap.String("post_id", post.ID))
 					aiErrorsCount++
 				} else {
 					s.logger.Info("llm response overridden",
-						zap.String("model_used", string(usage.Model)),
-						zap.Any("model_response", relevanceResponse),
-						zap.Any("overridden_by", usageHigherModel.Model),
+						zap.String("old_model", string(usage.Model)),
+						zap.String("new_model", string(usageHigherModel.Model)),
+						zap.Any("old_relevancy_score", relevanceResponse.IsRelevantConfidenceScore),
+						zap.Any("new_relevancy_score", relevanceResponseHigherModel.IsRelevantConfidenceScore),
 						zap.String("post_id", post.ID))
 
 					relevanceResponse = relevanceResponseHigherModel
@@ -374,7 +374,7 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 
 		// Send automated comment
 		if tracker.Organization.FeatureFlags.EnableAutoComment &&
-			pbcore.IsGoodForEngagement(redditLead.Intents) &&
+			//pbcore.IsGoodForEngagement(redditLead.Intents) &&
 			redditLead.RelevancyScore >= defaultRelevancyScore &&
 			len(strings.TrimSpace(redditLead.LeadMetadata.SuggestedComment)) > 0 {
 			leadInteraction, err := automatedInteractionService.SendComment(ctx, &interactions.SendCommentInfo{
@@ -466,7 +466,7 @@ const (
 	defaultRelevancyScore   = 90
 	minRelevancyScore       = 70
 	defaultLLMFailedCount   = 3
-	defaultHigherModelToUse = "redora-dev-gpt-4.1-2025-04-14"
+	defaultHigherModelToUse = "redora-prod-gpt-4.1-2025-04-14"
 )
 
 var systemAuthors = []string{"[deleted]", "AutoModerator"}

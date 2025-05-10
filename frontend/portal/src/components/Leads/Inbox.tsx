@@ -17,11 +17,13 @@ import DiscardedTabComponent from "./Tabs/DiscardedTab";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { RootState } from "../../../store/store";
 import { LeadTabStatus, setActiveTab } from "../../../store/Lead/leadSlice";
+import LeadsTabComponent from "./Tabs/LeadsTab";
 
 const tabList: { label: string; value: LeadTabStatus }[] = [
   { label: "New", value: LeadTabStatus.NEW },
   { label: "Responded", value: LeadTabStatus.COMPLETED },
   { label: "Discarded", value: LeadTabStatus.DISCARDED },
+  { label: "Leads", value: LeadTabStatus.LEAD },
 ];
 
 const InboxComponent = () => {
@@ -41,6 +43,8 @@ const InboxComponent = () => {
         return <CompletedTabComponent />;
       case LeadTabStatus.DISCARDED:
         return <DiscardedTabComponent />;
+      case LeadTabStatus.LEAD:
+        return <LeadsTabComponent />;
       default:
         return null;
     }
@@ -65,7 +69,7 @@ const InboxComponent = () => {
         }}
       >
         <Typography variant="h4" component="h3" sx={{ fontWeight: "bold" }}>
-          Inbox
+          Posts
         </Typography>
       </Box>
 
