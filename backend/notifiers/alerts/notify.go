@@ -65,12 +65,12 @@ func (s *SlackNotifier) SendLeadsSummary(ctx context.Context, summary LeadSummar
 	leadsURL := "https://app.redoraai.com/dashboard/leads"
 
 	msg := fmt.Sprintf(
-		"*📊 Daily Lead Summary — RedoraAI*\n"+
+		"*📊 Daily Reddit Posts Summary — RedoraAI*\n"+
 			"*Product:* %s\n"+
 			"*Posts Analyzed:* %d\n"+
 			"*Automated Comments Posted:* %d\n"+
-			"*Leads Found:* *%d*\n\n"+
-			"🔗 <%s|View all leads in your dashboard>",
+			"*Relevant Posts Found:* *%d*\n\n"+
+			"🔗 <%s|View all posts in your dashboard>",
 		summary.ProjectName,
 		summary.TotalPostsAnalysed,
 		summary.TotalCommentsSent,
