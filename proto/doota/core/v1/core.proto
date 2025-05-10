@@ -120,6 +120,7 @@ enum LeadStatus {
   NEW = 0;
   NOT_RELEVANT = 1;
   COMPLETED = 3;
+  LEAD = 4;
 }
 
 enum LeadType {

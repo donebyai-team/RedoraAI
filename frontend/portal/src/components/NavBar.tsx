@@ -39,9 +39,10 @@ import { isActivePath } from '../utils/url'
 import { useDebounce } from '@doota/ui-core/hooks/useDebounce';
 import { setRelevancyScore, setSubReddit } from '../../store/Params/ParamsSlice'
 import { useRedditIntegrationStatus } from './Leads/Tabs/useRedditIntegrationStatus'
-import { LeadTabStatus, setActiveTab, setCompletedList, setDiscardedTabList, setIsLoading, setNewTabList, setSelectedLeadData } from '../../store/Lead/leadSlice'
-import { LeadStatus } from '@doota/pb/doota/core/v1/core_pb'
+import { LeadTabStatus, setActiveTab, setCompletedList, setDiscardedTabList, setIsLoading, setLeadsTabList, setNewTabList, setSelectedLeadData } from '../../store/Lead/leadSlice'
+import { Lead, LeadStatus } from '@doota/pb/doota/core/v1/core_pb'
 import { GetLeadsResponse } from '@doota/pb/doota/portal/v1/portal_pb'
+import { isSameDay } from './Leads/Tabs/NewTab'
 
 export const LoadigSkeletons = ({ count, height }: { count: number, height: number | string }) => (
   [...Array(count)].map((_, i) => (
@@ -182,9 +183,11 @@ const NavBar: FC = () => {
         // After relevant leads are fetched, trigger completed and discarded leads
         const completedResult = await getAllLeadsByStatus(LeadStatus.COMPLETED);
         const discardedResult = await getAllLeadsByStatus(LeadStatus.NOT_RELEVANT);
+        const leadsResult = await getAllLeadsByStatus(LeadStatus.LEAD);
 
         dispatch(setCompletedList(completedResult.leads ?? []));
         dispatch(setDiscardedTabList(discardedResult?.leads ?? []));
+        dispatch(setLeadsTabList(leadsResult?.leads ?? []));
 
         // Set the first lead only once after all API calls are complete
         if (allLeads.length > 0) {
@@ -217,11 +220,24 @@ const NavBar: FC = () => {
 
   const newTabListLoaded = useMemo(() => newTabList.length > 0 && !isLoading, [newTabList, isLoading]);
 
+  const getLeadsCreatedToday = (leads: Lead[]): Lead[] => {
+    return leads.filter(lead => lead.createdAt && isSameDay(lead.createdAt));
+  };
+
+  const countLeadsCreatedToday = (leads: Lead[]): number => {
+    return leads.reduce((count, lead) => {
+      if (lead.createdAt && isSameDay(lead.createdAt)) {
+        return count + 1;
+      }
+      return count;
+    }, 0);
+  };
+
   const countItem = useCallback((id: string) => {
     if (!newTabListLoaded) return 0;
     return id === "posts"
-      ? newTabList.length
-      : newTabList.reduce((count, ele) => ele.sourceId === id ? count + 1 : count, 0);
+      ? getLeadsCreatedToday(newTabList).length
+      : getLeadsCreatedToday(newTabList).reduce((count, ele) => ele.sourceId === id ? count + 1 : count, 0);
   }, [newTabListLoaded, newTabList]);
 
   return (<>
