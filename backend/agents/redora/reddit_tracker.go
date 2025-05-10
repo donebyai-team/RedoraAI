@@ -206,6 +206,8 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 	project := tracker.Project
 	keyword := tracker.Keyword
 	source := tracker.Source
+	// to make it available downstream
+	source.OrgID = project.OrganizationID
 
 	automatedInteractionService := interactions.NewRedditInteractions(redditClient, s.db, s.logger)
 
@@ -297,7 +299,11 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 		isValid, reason := s.isValidPost(post)
 		if isValid {
 			countTestPosts++
-			relevanceResponse, usage, err := s.aiClient.IsRedditPostRelevant(ctx, tracker.Organization.FeatureFlags.RelevancyLLMModel, project, redditLead, s.logger)
+			relevanceResponse, usage, err := s.aiClient.IsRedditPostRelevant(ctx, tracker.Organization.FeatureFlags.RelevancyLLMModel, ai.IsPostRelevantInput{
+				Project: project,
+				Post:    redditLead,
+				Source:  source,
+			}, s.logger)
 			if err != nil {
 				s.logger.Error("failed to get relevance response", zap.Error(err), zap.String("post_id", post.ID))
 				aiErrorsCount++
@@ -307,7 +313,11 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 			// if the lower model thinks it is relevant, verify it with the higher one and override it if it is
 			if relevanceResponse.IsRelevantConfidenceScore >= defaultRelevancyScore {
 				s.logger.Info("calling relevancy with higher model", zap.String("higher_model", defaultHigherModelToUse), zap.String("post_id", post.ID))
-				relevanceResponseHigherModel, usageHigherModel, errHigherModel := s.aiClient.IsRedditPostRelevant(ctx, defaultHigherModelToUse, project, redditLead, s.logger)
+				relevanceResponseHigherModel, usageHigherModel, errHigherModel := s.aiClient.IsRedditPostRelevant(ctx, defaultHigherModelToUse, ai.IsPostRelevantInput{
+					Project: project,
+					Post:    redditLead,
+					Source:  source,
+				}, s.logger)
 				if errHigherModel != nil {
 					s.logger.Error("failed to get relevance response from the higher model, continuing with the existing one", zap.Error(errHigherModel), zap.String("post_id", post.ID))
 					aiErrorsCount++

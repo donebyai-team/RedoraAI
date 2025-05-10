@@ -10,6 +10,7 @@ import (
 	"github.com/shank318/doota/models"
 	"github.com/shank318/doota/utils"
 	"go.uber.org/zap"
+	"strings"
 	"time"
 )
 
@@ -60,18 +61,21 @@ func (r redditService) CreateSubReddit(ctx context.Context, source *models.Sourc
 	}
 
 	for _, rule := range subRedditDetails.Rules {
-		metadata.Rules = append(metadata.Rules, rule.Description)
+		if strings.TrimSpace(rule.Description) != "" {
+			metadata.Rules = append(metadata.Rules, rule.Description)
+		}
 	}
 
 	source.Metadata = metadata
 
 	// Get evaluation
-	evaluation, _, err := r.aiClient.GetSourceCommunityRulesEvaluation(ctx, "", source, r.logger)
+	evaluation, usage, err := r.aiClient.GetSourceCommunityRulesEvaluation(ctx, "", source, r.logger)
 	if err != nil {
 		return fmt.Errorf("failed to evaluate community guidelines: %w", err)
 	}
 
 	source.Metadata.RulesEvaluation = evaluation
+	source.Metadata.RulesEvaluation.ModelUsed = usage.Model
 
 	// Insert the subreddit into the DB
 	createdSource, err := r.db.AddSource(ctx, source)

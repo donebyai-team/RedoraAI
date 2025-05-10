@@ -41,6 +41,7 @@ type Source struct {
 	// Optional
 	CreatedAt time.Time  `db:"created_at"`
 	UpdatedAt *time.Time `db:"updated_at"`
+	OrgID     string     `db:"-"`
 }
 
 // Store fields required to show in UI

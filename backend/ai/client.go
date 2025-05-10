@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/google/uuid"
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/shared"
@@ -220,7 +219,7 @@ func (c *Client) runChatCompletion(
 }
 
 func (c *Client) GetSourceCommunityRulesEvaluation(ctx context.Context, model models.LLMModel, source *models.Source, logger *zap.Logger) (*models.RuleEvaluationResult, *models.LLMModelUsage, error) {
-	runID := fmt.Sprintf("%s-%s", source.Name, uuid.New().String())
+	runID := fmt.Sprintf("%s-%s", utils.CleanSubredditName(source.Name), source.OrgID)
 	vars := GetSubRedditRulesEvalVars(source)
 	llmModelToUse := c.defaultLLMModel
 	if string(model) != "" {
@@ -236,7 +235,7 @@ func (c *Client) GetSourceCommunityRulesEvaluation(ctx context.Context, model mo
 		ctx,
 		runID,
 		llmModelToUse,
-		"redora",
+		source.OrgID,
 		messages,
 		responseFormat,
 		logger,
@@ -253,15 +252,40 @@ func (c *Client) GetSourceCommunityRulesEvaluation(ctx context.Context, model mo
 	return &data, &models.LLMModelUsage{Model: llmModelToUse}, nil
 }
 
-func (c *Client) IsRedditPostRelevant(ctx context.Context, model models.LLMModel, project *models.Project, post *models.Lead, logger *zap.Logger) (*models.RedditPostRelevanceResponse, *models.LLMModelUsage, error) {
-	runID := fmt.Sprintf("%s-%s", project.ID, post.PostID)
-	vars := GetRedditPostRelevancyVars(project, post)
+type IsPostRelevantInput struct {
+	Project *models.Project `json:"project"`
+	Post    *models.Lead    `json:"post"`
+	Source  *models.Source  `json:"source"`
+}
+
+func (c *Client) IsRedditPostRelevant(ctx context.Context, model models.LLMModel, input IsPostRelevantInput, logger *zap.Logger) (*models.RedditPostRelevanceResponse, *models.LLMModelUsage, error) {
+	runID := fmt.Sprintf("%s-%s", input.Project.ID, input.Post.PostID)
+	out := make(Variable)
+	out["ProductName"] = input.Project.Name
+	out["ProductDescription"] = input.Project.ProductDescription
+	out["TargetCustomerPersona"] = input.Project.CustomerPersona
+
+	if input.Post.Title != nil {
+		out["Title"] = input.Post.Title
+	} else {
+		out["Title"] = "Comment"
+	}
+	out["Description"] = input.Post.Description
+	out["Author"] = input.Post.Author
+	if input.Source.Metadata.RulesEvaluation != nil {
+		out["ProductMentionAllowed"] = input.Source.Metadata.RulesEvaluation.ProductMentionAllowed
+		out["CommentGuidelines"] = strings.Join(input.Source.Metadata.RulesEvaluation.ImportantGuidelines, ",")
+	} else {
+		out["ProductMentionAllowed"] = true
+		out["CommentGuidelines"] = "No such guidelines, follow the rules defined above"
+	}
+
 	llmModelToUse := c.defaultLLMModel
 	if string(model) != "" {
 		llmModelToUse = model
 	}
 
-	messages, responseFormat, err := c.buildChatMessages(ctx, runID, redditPostRelevancyTemplates, logger, vars)
+	messages, responseFormat, err := c.buildChatMessages(ctx, runID, redditPostRelevancyTemplates, logger, out)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -270,7 +294,7 @@ func (c *Client) IsRedditPostRelevant(ctx context.Context, model models.LLMModel
 		ctx,
 		runID,
 		llmModelToUse,
-		project.OrganizationID,
+		input.Project.OrganizationID,
 		messages,
 		responseFormat,
 		logger,

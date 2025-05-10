@@ -204,6 +204,7 @@ func (p *Portal) AddSource(ctx context.Context, c *connect.Request[pbportal.AddS
 	err = redditService.CreateSubReddit(ctx, &models.Source{
 		ProjectID: projectID,
 		Name:      utils.CleanSubredditName(c.Msg.Name),
+		OrgID:     actor.OrganizationID,
 	})
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to add subreddit: %w", err))
