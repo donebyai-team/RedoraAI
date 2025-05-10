@@ -313,9 +313,10 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 					aiErrorsCount++
 				} else {
 					s.logger.Info("llm response overridden",
-						zap.String("model_used", string(usage.Model)),
-						zap.Any("model_response", relevanceResponse),
-						zap.Any("overridden_by", usageHigherModel.Model),
+						zap.String("old_model", string(usage.Model)),
+						zap.String("new_model", string(usageHigherModel.Model)),
+						zap.Any("old_relevancy_score", relevanceResponse.IsRelevantConfidenceScore),
+						zap.Any("new_relevancy_score", relevanceResponseHigherModel.IsRelevantConfidenceScore),
 						zap.String("post_id", post.ID))
 
 					relevanceResponse = relevanceResponseHigherModel
