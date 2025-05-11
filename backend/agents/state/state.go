@@ -1,6 +1,9 @@
 package state
 
-import "context"
+import (
+	"context"
+	"time"
+)
 
 type ConversationState interface {
 	// IsRunning returns true if a case is currently running
@@ -15,4 +18,6 @@ type ConversationState interface {
 	Release(ctx context.Context, phone string) error
 
 	Acquire(ctx context.Context, organizationID, uniqueID string) error
+	Set(ctx context.Context, key string, data interface{}, ttl time.Duration) error
+	Get(ctx context.Context, key string) ([]byte, error)
 }

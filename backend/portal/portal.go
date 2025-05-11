@@ -2,6 +2,7 @@ package portal
 
 import (
 	"context"
+	state2 "github.com/shank318/doota/agents/state"
 	"github.com/shank318/doota/ai"
 	"github.com/shank318/doota/integrations/reddit"
 	"github.com/shank318/doota/portal/state"
@@ -36,6 +37,7 @@ type Portal struct {
 	authStateStore      state.AuthStateStore
 	redditOauthClient   *reddit.OauthClient
 	aiClient            *ai.Client
+	cache               state2.ConversationState
 }
 
 func New(
@@ -48,6 +50,7 @@ func New(
 	keywordService services.KeywordService,
 	vanaWebhookHandler agents.WebhookHandler,
 	db datastore.Repository,
+	cache state2.ConversationState,
 	httpListenAddr string,
 	corsURLRegexAllow *regexp.Regexp,
 	config *pbportal.Config,
@@ -68,6 +71,7 @@ func New(
 		customerCaseService: customerCaseService,
 		keywordService:      keywordService,
 		db:                  db,
+		cache:               cache,
 		httpListenAddr:      httpListenAddr,
 		corsURLRegexAllow:   corsURLRegexAllow,
 		domainWhitelist:     domainWhitelist,

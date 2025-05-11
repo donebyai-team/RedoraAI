@@ -274,10 +274,8 @@ func (c *Client) IsRedditPostRelevant(ctx context.Context, model models.LLMModel
 	out["Author"] = input.Post.Author
 	if input.Source.Metadata.RulesEvaluation != nil {
 		out["ProductMentionAllowed"] = input.Source.Metadata.RulesEvaluation.ProductMentionAllowed
-		out["CommentGuidelines"] = strings.Join(input.Source.Metadata.RulesEvaluation.ImportantGuidelines, ",")
 	} else {
 		out["ProductMentionAllowed"] = true
-		out["CommentGuidelines"] = "No such guidelines, follow the rules defined above"
 	}
 
 	llmModelToUse := c.defaultLLMModel

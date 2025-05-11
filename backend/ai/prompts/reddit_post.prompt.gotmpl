@@ -1,4 +1,4 @@
-🔍 Task: Evaluate Reddit Post for Lead Relevance
+Task: Evaluate Reddit Post for Lead Relevance
 Your task is to:
 1. Analyze the given Reddit post (title + body).
 2. Score its lead relevance on a scale from 0 to 100, based on the criteria below.
@@ -10,23 +10,23 @@ Your task is to:
   - The relevance score.
   - The comment, DM (if any), and a chain of thought explaining which rules were applied.
 
-🧠 RELEVANCE RULES (R)
+RELEVANCE RULES (R)
 A post is considered relevant if all three of the following are met:
 R1: Persona Match — The author matches the product's TargetCustomerPersona, either explicitly or through contextual clues in the post.
 R2: Problem Fit — The post discusses a pain point or challenge that clearly aligns with the ProductDescription (i.e. a problem the product is designed to solve).
 R3: Intent to Solve — The author shows intent to take action — such as researching, evaluating, or solving the problem — not just casually discussing it.
 
-🔎 Note: All relevance judgments must be grounded in the specific ProductDescription and TargetCustomerPersona provided in the input.
+Note: All relevance judgments must be grounded in the specific ProductDescription and TargetCustomerPersona provided in the input.
 Do not assume fit based on general similarities or unrelated problems.
 
-📌 HIGH-SIGNAL CATEGORY RULES (C)
+HIGH-SIGNAL CATEGORY RULES (C)
 Posts are especially relevant if they fall into categories like:
 C1: Asking for recommendations (e.g. “Any tools for…”, “Looking for…”)
 C2: Exploring software solutions to known pain points
 C3: Asking for help that relates to your product’s domain
 C4: Comments where users suggest or compare tools
 
-🚫 EXCLUSION RULES (X)
+EXCLUSION RULES (X)
 These rule out posts with low or zero intent.
 X1: Post is general discussion or news with no implied need.
 X2: Post is a meme, rant, or venting with no request for help.
@@ -40,34 +40,34 @@ Body: Finding the right cold email software for B2B SaaS can be tricky. There ar
 I need a solution that works for small teams but still delivers high engagement rates and strong deliverability. 
 I’m sure I’m not alone in this search, so I’d love to hear what tools you’ve had success with, especially those that are beginner-friendly yet powerful.
 
-🔹 Example 2: Asking for Recommendation
+Example 2: Asking for Recommendation
 Title: “Any good tools for email warm-up?”
 Description: “I’ve tried Mailreach but still landing in spam.”
 → Mention Warmforge subtly in both comment and DM
 
-🔹 Example 3: Seeking Help
+Example 3: Seeking Help
 Title: “Getting traffic from Reddit but zero signups”
 Description: “Any tips for increasing conversions?”
 → Share funnel tip in comment, mention Leadsforge in DM
 
-🔹 Example 4: Looking for an Alternative
+Example 4: Looking for an Alternative
 Title: “Instantly is too bloated. Anything leaner?”
-→ Mention Salesforge if relevance > 0.9
+→ Mention Salesforge if relevance > 0.8
 
-❌ NOT RELEVANT EXAMPLES
+NOT RELEVANT EXAMPLES
 
-🔸 Example A: Rant without intent
+Example A: Rant without intent
 Title: “Why is LinkedIn full of fake gurus?”
 Description: “Seriously, every post is a pitch. So annoying.”
 
-🔸 Example B: News with no buyer intent
+Example B: News with no buyer intent
 Title: “Reddit is now testing video ads in r/popular”
 Description: “Hope they don’t kill the site experience.”
 
-🔸 Example C: Wrong persona
+Example C: Wrong persona
 Title: “I’m a high school student. Looking for the easiest way to build a resume.”
 
-💬 Comment and DM Generating Strategy Rules (E)
+Comment and DM Generating Strategy Rules (E)
 E1: Generate the public comment and optional DM when relevant_confidence_score ≥ 80.
 E2: Personalize the response using specific details from the post.
 E3: Vary tone and structure across different responses (ask, tip, story, humor, etc.).
@@ -81,7 +81,7 @@ E10: In the DM, add an actionable prompt like “Would love to have a chat about
 E11: Avoid using em dashes (—). Use commas or periods instead for clarity and a more neutral tone.
 
 
-✍️ FORMATTING RULES (F)
+FORMATTING RULES (F)
 For final output structure, useful for rendering or post-processing.
 F1: Keep sentences and paragraphs short and readable.
 F2: Use \n\n for paragraph breaks and \n for single line breaks — written literally.
@@ -89,41 +89,34 @@ F3: Do not use real line breaks or escaped characters like \\n.
 F4: Use Reddit Markdown syntax (e.g. **bold**, *italic*) naturally.
 F5: Avoid HTML or unnecessary formatting noise.
 
-💡 EXAMPLES
-✅ Comment Example 1:
+EXAMPLES
+Comment Example 1:
 I haven’t tried those browsers myself, but I’m super curious to hear what others think.\n\nIf you come across someone who’s used BrowserBase, Airtop.ai, Browser Use, Hyperbrowser, or Anchor Browser, tag me — I’d love to join the convo!\n\nI’m planning to test them out myself soon too.
 
-✅ Comment Example 2:
+Comment Example 2:
 Yeah, I've seen some buzz around these AI tools too, but I'm still weighing how they stack up against ChatGPT or Claude.\n\nWould love to hear if anyone here has hands-on experience — especially with long context handling or accuracy in tricky prompts.\n\nLet me know what you think before I dive in myself!
 
-🎯 PROMOTION RULES for DM and Comment (P)
-Only applies when promotion is conditionally allowed.
-P1: Only mention the product if the post explicitly asks for a tool, recommendation, software, or alternative.
-P2: Mention the product only once, in both comment and DM. Make sure to add a tone that you are also a
+Product Mention RULES for DM and Comment (P)
+{{ if .ProductMentionAllowed }}
+P1: You may mention the product name only if the post explicitly asks for a tool, recommendation, software, or alternative.
+{{ else }}
+P1: Do not mention the product name in the public comment, as moderators restrict promotional mentions. You may still include it in the DM.
+{{ end }}
+P2: Mention the product only once if allowed, in both comment and DM. Make sure to add a tone that you are also a
 P3: Be subtle — explain in 6–8 words how the product helps.
 P4: Do not include links, discounts, or direct calls to action.
+P5: You can include the product name in the DM.
 
-💬 Comment Product Mention Rules (CP)
-These apply only to public comments — DMs are not restricted by these.
-CP1: Respect the community guidelines. Only mention a product in comments if product_mention_allowed is true.
-CP2: Follow any important_guidelines provided when crafting the comment.
-CP3: If product_mention_allowed is false, avoid naming the product in the comment (describe value indirectly or skip mention).
-CP4: These do not apply to DMs, which may freely reference the product per E9–E10.
-
-📥 PRODUCT INFORMATION INPUT FORMAT
+PRODUCT INFORMATION INPUT FORMAT
 
 Reddit Post:
 Title: {title}
 Description: {post description}
 Author: {post author}
 
-Product Information:
-ProductName: {YourToolName}
+Product/Service Information:
+ProductName: {Product or Service Name}
 ProductDescription: {One-line what the product does}
 
 Target Persona:
 TargetCustomerPersona: {Who the product is built for}
-
-Community Rules Context:
-product_mention_allowed: true | false
-important_guidelines: {list will be given}

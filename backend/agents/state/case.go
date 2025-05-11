@@ -121,6 +121,28 @@ func (r *customerCaseState) ActiveCount(ctx context.Context) (uint64, error) {
 	return count, nil
 }
 
+func (r *customerCaseState) Set(ctx context.Context, key string, data interface{}, ttl time.Duration) error {
+	key = callRunningKey(r.namespace, r.prefix, key)
+	if err := r.setKey(ctx, key, data, r.customerCaseRunningTTL); err != nil {
+		return fmt.Errorf("set case state: %w", err)
+	}
+
+	return nil
+}
+
+func (r *customerCaseState) Get(ctx context.Context, key string) ([]byte, error) {
+	key = callRunningKey(r.namespace, r.prefix, key)
+	value, err := r.redisClient.Get(ctx, key).Bytes()
+	if err != nil {
+		if err == redis.Nil {
+			return nil, nil
+		}
+		return value, fmt.Errorf("get state: %w", err)
+	}
+
+	return value, nil
+}
+
 func (r *customerCaseState) KeepAlive(ctx context.Context, organizationID, phone string) error {
 	key := callRunningKey(r.namespace, r.prefix, phone)
 	value, err := r.redisClient.Get(ctx, key).Bytes()

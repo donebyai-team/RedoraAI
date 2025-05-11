@@ -223,8 +223,12 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 
 	s.logger.Info("started tracking reddit keyword",
 		zap.String("keyword", keyword.Keyword),
-		zap.String("sub_reddit", source.Name),
 		zap.Any("query", redditQuery))
+
+	if source.Metadata.RulesEvaluation != nil && source.Metadata.RulesEvaluation.ProductMentionAllowed {
+		s.logger.Info("product mention allowed",
+			zap.Bool("product_mention_allowed", source.Metadata.RulesEvaluation.ProductMentionAllowed))
+	}
 
 	posts, err := redditClient.GetPosts(ctx, source.Name, redditQuery)
 

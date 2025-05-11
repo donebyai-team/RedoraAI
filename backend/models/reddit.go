@@ -2,7 +2,9 @@ package models
 
 import (
 	"database/sql/driver"
+	"fmt"
 	"github.com/lib/pq"
+	"strings"
 	"time"
 )
 
@@ -42,6 +44,12 @@ type Source struct {
 	CreatedAt time.Time  `db:"created_at"`
 	UpdatedAt *time.Time `db:"updated_at"`
 	OrgID     string     `db:"-"`
+}
+
+const subRedditCacheKey = "subreddit"
+
+func (b Source) GetCacheKey() string {
+	return strings.ToLower(fmt.Sprintf("%s:%s", subRedditCacheKey, b.Name))
 }
 
 // Store fields required to show in UI

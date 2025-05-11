@@ -320,6 +320,7 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		services.NewKeywordServiceImpl(deps.DataStore),
 		vanaWebhookHandler,
 		deps.DataStore,
+		deps.ConversationState,
 		sflags.MustGetString(cmd, "portal-http-listen-addr"),
 		deps.CorsURLRegexAllow,
 		config,

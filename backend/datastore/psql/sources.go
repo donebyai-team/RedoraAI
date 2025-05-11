@@ -14,8 +14,23 @@ func init() {
 		"source/delete_source_by_id.sql",
 		"source/query_source_by_id.sql",
 		"source/query_source_by_project.sql",
+		"source/update_source.sql",
 		"keyword/delete_keyword_tracker_by_source_id.sql",
 	})
+}
+
+func (r *Database) UpdateSource(ctx context.Context, subreddit *models.Source) error {
+	stmt := r.mustGetStmt("source/update_source.sql")
+
+	_, err := stmt.ExecContext(ctx, map[string]interface{}{
+		"id":       subreddit.ID,
+		"metadata": subreddit.Metadata,
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (r *Database) AddSource(ctx context.Context, subreddit *models.Source) (*models.Source, error) {

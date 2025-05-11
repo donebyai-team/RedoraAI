@@ -29,9 +29,9 @@ func TestRelevancyOutputFormatting(t *testing.T) {
 		source  *models.Source
 	}{
 		{
-			name: "MiraaAI - mini course for solo creators",
-			//model: models.LLMModel("redora-dev-gpt-4.1-2025-04-14"),
-			model: models.LLMModel("redora-gemini-2.0-flash"),
+			name:  "MiraaAI - mini course for solo creators",
+			model: models.LLMModel("redora-dev-gpt-4.1-2025-04-14"),
+			//model: models.LLMModel("redora-gemini-2.0-flash"),
 			project: &models.Project{
 				ID:                 "XXX",
 				OrganizationID:     "XXXXX",
@@ -44,10 +44,6 @@ func TestRelevancyOutputFormatting(t *testing.T) {
 				Metadata: models.SubRedditMetadata{
 					RulesEvaluation: &models.RuleEvaluationResult{
 						ProductMentionAllowed: false,
-						ImportantGuidelines: []string{
-							"Only mention a product/tool if directly relevant to a technical discussion and avoid sales language.",
-							"Frame any tool mention as personal experience, not as a suggestion or pitch.",
-						},
 					},
 				},
 			},
