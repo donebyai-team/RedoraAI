@@ -24,32 +24,14 @@ func GetCaseDecisionVars(customerCase *models.Conversation) Variable {
 	return out
 }
 
-func GetRedditPostRelevancyVars(project *models.Project, post *models.Lead) Variable {
-	out := make(Variable).
-		WithProjectDetails(project).
-		WithRedditPost(post)
+func GetSubRedditRulesEvalVars(subReddit *models.Source) Variable {
+	out := make(Variable)
+	out["Name"] = subReddit.Name
+	out["Rules"] = subReddit.Metadata.Rules
 	return out
 }
 
 type Variable map[string]any
-
-func (v Variable) WithProjectDetails(project *models.Project) Variable {
-	v["ProductName"] = project.Name
-	v["ProductDescription"] = project.ProductDescription
-	v["TargetCustomerPersona"] = project.CustomerPersona
-	return v
-}
-
-func (v Variable) WithRedditPost(post *models.Lead) Variable {
-	if post.Title != nil {
-		v["Title"] = post.Title
-	} else {
-		v["Title"] = "Comment"
-	}
-	v["Description"] = post.Description
-	v["Author"] = post.Author
-	return v
-}
 
 func (v Variable) WithCustomer(customer *models.Customer) Variable {
 	v["firstName"] = customer.FirstName

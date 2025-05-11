@@ -80,6 +80,7 @@ type ProjectRepository interface {
 
 type SourceRepository interface {
 	AddSource(ctx context.Context, subreddit *models.Source) (*models.Source, error)
+	UpdateSource(ctx context.Context, subreddit *models.Source) error
 	GetSourceByName(ctx context.Context, url, orgID string) (*models.Source, error)
 	DeleteSourceByID(ctx context.Context, id string) error
 	GetSourceByID(ctx context.Context, ID string) (*models.Source, error)

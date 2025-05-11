@@ -200,10 +200,11 @@ func (p *Portal) AddSource(ctx context.Context, c *connect.Request[pbportal.AddS
 	if err != nil {
 		return nil, err
 	}
-	redditService := services.NewRedditService(p.logger, p.db, redditClient)
+	redditService := services.NewRedditService(p.logger, p.db, redditClient, p.aiClient, p.cache)
 	err = redditService.CreateSubReddit(ctx, &models.Source{
 		ProjectID: projectID,
 		Name:      utils.CleanSubredditName(c.Msg.Name),
+		OrgID:     actor.OrganizationID,
 	})
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to add subreddit: %w", err))
@@ -223,7 +224,7 @@ func (p *Portal) GetSources(ctx context.Context, c *connect.Request[emptypb.Empt
 		return nil, err
 	}
 
-	redditService := services.NewRedditService(p.logger, p.db, nil)
+	redditService := services.NewRedditService(p.logger, p.db, nil, nil, nil)
 	sources, err := redditService.GetSubReddits(ctx, projectID)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to get subreddits: %w", err))
@@ -246,7 +247,7 @@ func (p *Portal) RemoveSource(ctx context.Context, c *connect.Request[pbportal.R
 	if err != nil {
 		return nil, err
 	}
-	redditService := services.NewRedditService(p.logger, p.db, redditClient)
+	redditService := services.NewRedditService(p.logger, p.db, redditClient, nil, nil)
 	err = redditService.RemoveSubReddit(ctx, c.Msg.Id)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to add subreddit: %w", err))

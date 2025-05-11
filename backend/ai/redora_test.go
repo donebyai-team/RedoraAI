@@ -103,9 +103,26 @@ func TestRedoraCase(t *testing.T) {
 				Title:       utils.Ptr(input.Title),
 				Description: input.Description,
 			}
-			
+
+			source := &models.Source{
+				Name: "bigseo",
+				Metadata: models.SubRedditMetadata{
+					RulesEvaluation: &models.RuleEvaluationResult{
+						ProductMentionAllowed: false,
+						ImportantGuidelines: []string{
+							"Only mention a product/tool if directly relevant to a technical discussion and avoid sales language.",
+							"Frame any tool mention as personal experience, not as a suggestion or pitch.",
+						},
+					},
+				},
+			}
+
 			start := time.Now()
-			relevant, _, err := ai.IsRedditPostRelevant(context.Background(), models.LLMModel(model), project, post, logger)
+			relevant, _, err := ai.IsRedditPostRelevant(context.Background(), models.LLMModel(model), IsPostRelevantInput{
+				Project: project,
+				Post:    post,
+				Source:  source,
+			}, logger)
 			duration := time.Since(start)
 
 			if _, ok := modelStats[model]; !ok {

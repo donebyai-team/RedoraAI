@@ -314,14 +314,25 @@ const LeadsPostDetails = () => {
                       }}
                     >
                       <Box>
-                        <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                          <Star sx={{ color: "#e25a9e", mr: 1 }} />
-                          <Typography color="#e25a9e" fontWeight="medium">Suggested comment</Typography>
+                        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+                          <Box sx={{ display: "flex", alignItems: "center" }}>
+                            <Star sx={{ color: "#e25a9e", mr: 1 }} />
+                            <Typography color="#e25a9e" fontWeight="medium">
+                              {selectedleadData.metadata?.automatedCommentUrl ? "Commented By AI" : "Suggested comment"}
+                            </Typography>
+                          </Box>
+                          {(selectedleadData.metadata?.automatedCommentUrl && (
+                            <Typography variant="body2" color="text.secondary">
+                              {formattedDate}
+                            </Typography>
+                          ))}
                         </Box>
+
                         <Typography variant="body1" sx={{ mb: 2 }}>
                           <MarkdownRenderer data={selectedleadData.metadata?.suggestedComment || ""} />
                         </Typography>
                       </Box>
+
 
                       <Stack direction="row" justifyContent="flex-start">
                         <Button
@@ -343,9 +354,29 @@ const LeadsPostDetails = () => {
                             )
                           }
                         >
-                          {selectedleadData.metadata?.automatedCommentUrl ? "Commented by AI" : "Copy & open post"}
+                          {selectedleadData.metadata?.automatedCommentUrl ? "View Comment" : "Copy & open post"}
                         </Button>
                       </Stack>
+                      {selectedleadData.metadata?.automatedCommentUrl && (
+                        <Typography
+                          color="text.secondary"
+                          variant="body2"
+                          sx={{
+                            mt: 1,
+                            fontSize: "0.1rem",
+                            textDecoration: "underline",
+                          }}
+                        >
+                          <Link
+                            href={`https://www.reddit.com/${selectedleadData.metadata.subredditPrefixed}/about/rules`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            As per community guidelines
+                          </Link>
+                        </Typography>
+                      )}
+
                     </CardContent>
                   </Card>
                 )}

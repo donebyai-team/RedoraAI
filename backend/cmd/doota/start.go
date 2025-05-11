@@ -311,6 +311,7 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 	redditOauthClient := reddit.NewRedditOauthClient(logger, deps.DataStore, sflags.MustGetString(cmd, "portal-reddit-client-id"), sflags.MustGetString(cmd, "portal-reddit-client-secret"), sflags.MustGetString(cmd, "portal-reddit-redirect-url"))
 
 	p := portal.New(
+		deps.AIClient,
 		redditOauthClient,
 		authenticator,
 		state.NewRedisStore(sflags.MustGetString(cmd, "redis-addr"), zlog),
@@ -319,6 +320,7 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		services.NewKeywordServiceImpl(deps.DataStore),
 		vanaWebhookHandler,
 		deps.DataStore,
+		deps.ConversationState,
 		sflags.MustGetString(cmd, "portal-http-listen-addr"),
 		deps.CorsURLRegexAllow,
 		config,

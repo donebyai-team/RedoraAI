@@ -18,6 +18,12 @@ var redditPostRelevancyTemplates = []Template{
 	{path: "reddit_post.human.gotmpl", promptType: PromptTypeHUMAN, promptFeature: PromptFeatureBOTH},
 }
 
+var subredditRulesEvalTemplates = []Template{
+	{path: "subreddit_rules.prompt.gotmpl", promptType: PromptTypeSYSTEM, promptFeature: PromptFeatureTEXTONLY},
+	{path: "subreddit_rules.schema.gotmpl", promptType: PromptTypeRESPONSESCHEMA, promptFeature: PromptFeatureBOTH},
+	{path: "subreddit_rules.human.gotmpl", promptType: PromptTypeHUMAN, promptFeature: PromptFeatureBOTH},
+}
+
 //go:generate go-enum -f=$GOFILE
 
 // ENUM(HUMAN,SYSTEM,IMAGE,RESPONSE_SCHEMA)

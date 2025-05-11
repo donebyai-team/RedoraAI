@@ -2,6 +2,8 @@ package portal
 
 import (
 	"context"
+	state2 "github.com/shank318/doota/agents/state"
+	"github.com/shank318/doota/ai"
 	"github.com/shank318/doota/integrations/reddit"
 	"github.com/shank318/doota/portal/state"
 	"regexp"
@@ -34,9 +36,12 @@ type Portal struct {
 	keywordService      services.KeywordService
 	authStateStore      state.AuthStateStore
 	redditOauthClient   *reddit.OauthClient
+	aiClient            *ai.Client
+	cache               state2.ConversationState
 }
 
 func New(
+	aiClient *ai.Client,
 	redditOauthClient *reddit.OauthClient,
 	authenticator *auth.Authenticator,
 	authStateStore state.AuthStateStore,
@@ -45,6 +50,7 @@ func New(
 	keywordService services.KeywordService,
 	vanaWebhookHandler agents.WebhookHandler,
 	db datastore.Repository,
+	cache state2.ConversationState,
 	httpListenAddr string,
 	corsURLRegexAllow *regexp.Regexp,
 	config *pbportal.Config,
@@ -54,6 +60,7 @@ func New(
 	tracer logging.Tracer,
 ) *Portal {
 	return &Portal{
+		aiClient:            aiClient,
 		redditOauthClient:   redditOauthClient,
 		authStateStore:      authStateStore,
 		authUsecase:         authUsecase,
@@ -64,6 +71,7 @@ func New(
 		customerCaseService: customerCaseService,
 		keywordService:      keywordService,
 		db:                  db,
+		cache:               cache,
 		httpListenAddr:      httpListenAddr,
 		corsURLRegexAllow:   corsURLRegexAllow,
 		domainWhitelist:     domainWhitelist,

@@ -137,6 +137,24 @@ func (r *Client) GetSubRedditByName(ctx context.Context, name string) (*SubReddi
 		return nil, err
 	}
 
+	// Get RUles
+	reqURL = fmt.Sprintf("%s/r/%s/about/rules.json", r.baseURL, name)
+	resp, err = r.doRequest(ctx, http.MethodGet, reqURL, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var responseRules struct {
+		Rules []SubRedditRule `json:"rules"`
+	}
+
+	if err := decodeJSON(resp.Body, &responseRules); err != nil {
+		return nil, err
+	}
+
+	response.Data.Rules = responseRules.Rules
+
 	return &response.Data, nil
 }
 

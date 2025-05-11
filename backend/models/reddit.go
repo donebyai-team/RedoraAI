@@ -2,7 +2,9 @@ package models
 
 import (
 	"database/sql/driver"
+	"fmt"
 	"github.com/lib/pq"
+	"strings"
 	"time"
 )
 
@@ -41,13 +43,22 @@ type Source struct {
 	// Optional
 	CreatedAt time.Time  `db:"created_at"`
 	UpdatedAt *time.Time `db:"updated_at"`
+	OrgID     string     `db:"-"`
+}
+
+const subRedditCacheKey = "subreddit"
+
+func (b Source) GetCacheKey() string {
+	return strings.ToLower(fmt.Sprintf("%s:%s", subRedditCacheKey, b.Name))
 }
 
 // Store fields required to show in UI
 // Eg. Guidelines, rules, karma points etc
 type SubRedditMetadata struct {
-	Title     *string   `db:"title"`
-	CreatedAt time.Time `db:"created_at"`
+	Title           *string               `json:"title"`
+	CreatedAt       time.Time             `json:"created_at"`
+	Rules           []string              `json:"rules"`
+	RulesEvaluation *RuleEvaluationResult `json:"rules_evaluation"`
 }
 
 func (b SubRedditMetadata) Value() (driver.Value, error) {

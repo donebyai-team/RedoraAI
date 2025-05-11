@@ -13,6 +13,13 @@ type LLMModelUsage struct {
 	RateLimitLow bool
 }
 
+type RuleEvaluationResult struct {
+	ProductMentionAllowed bool     `json:"can_mention_product"`  // true if it's okay to mention product in comments
+	ImportantGuidelines   []string `json:"important_guidelines"` // key points to keep in mind while generating comments
+	ChainOfThought        string   `json:"chain_of_thought"`     // short explanation referencing rules that influenced the decision
+	ModelUsed             LLMModel `json:"model_used"`
+}
+
 type RedditPostRelevanceResponse struct {
 	ChainOfThoughtIsRelevant       string       `json:"chain_of_thought"`
 	IsRelevantConfidenceScore      float64      `json:"relevant_confidence_score"`
