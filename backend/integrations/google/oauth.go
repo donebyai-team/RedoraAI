@@ -69,6 +69,10 @@ func (c *OauthClient) Authorize(ctx context.Context, code string) (string, error
 		return "", err
 	}
 
+	if userInfo.Email == "" {
+		return "", fmt.Errorf("no email found")
+	}
+
 	return userInfo.Email, nil
 }
 
