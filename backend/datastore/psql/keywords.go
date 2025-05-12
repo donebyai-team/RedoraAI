@@ -83,6 +83,10 @@ func (r *Database) CreateKeywords(ctx context.Context, projectID string, keyword
 
 	toAdd, toDelete := diffKeywords(existingKeywords, keywords)
 
+	if len(toAdd) == 0 && len(toDelete) == 0 {
+		return nil
+	}
+
 	// Add
 	stmt := r.mustGetTxStmt(ctx, "keyword/create_keyword.sql", tx)
 	stmtTracker := r.mustGetTxStmt(ctx, "keyword/create_keyword_tracker.sql", tx)
