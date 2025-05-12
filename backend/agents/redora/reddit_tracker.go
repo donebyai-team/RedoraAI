@@ -139,7 +139,8 @@ func (s *redditKeywordTracker) sendAlert(ctx context.Context, project *models.Pr
 	// Send alert
 	if done {
 		s.logger.Info("daily tracking summary for project", zap.String("project_name", project.Name))
-		dailyCount, err := s.getLeadsCountOfTheDay(ctx, project.ID, defaultRelevancyScore)
+		// daily count not to not be highly relevant and hence using a different relevancy score
+		dailyCount, err := s.getLeadsCountOfTheDay(ctx, project.ID, dailyPostsRelevancyScore)
 		if err != nil {
 			s.logger.Error("failed to get leads count", zap.Error(err))
 			return
@@ -211,6 +212,7 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 
 	automatedInteractionService := interactions.NewRedditInteractions(redditClient, s.db, s.logger)
 
+	// We will try to keep searching until we reach the max relevant posts per day >= defaultRelevancyScore
 	if ok, err := s.isMaxLeadLimitReached(ctx, project.ID, defaultRelevancyScore); err != nil || ok {
 		return err
 	}
@@ -404,7 +406,7 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 			}
 		}
 
-		// Check if we have got enough relevant leads for the dat
+		// We will try to keep searching until we reach the max relevant posts per day >= defaultRelevancyScore
 		ok, err := s.isMaxLeadLimitReached(ctx, project.ID, defaultRelevancyScore)
 		if err != nil || ok {
 			if err != nil {
@@ -464,14 +466,15 @@ func (s *redditKeywordTracker) getLeadInteractionCountOfTheDay(ctx context.Conte
 }
 
 const (
-	minSelftextLength     = 30
-	minTitleLength        = 5
-	maxPostAgeInMonths    = 6
-	minCommentThreshold   = 5
-	maxLeadsPerDay        = 25
-	defaultRelevancyScore = 90
-	minRelevancyScore     = 70
-	defaultLLMFailedCount = 3
+	minSelftextLength        = 30
+	minTitleLength           = 5
+	maxPostAgeInMonths       = 6
+	minCommentThreshold      = 5
+	maxLeadsPerDay           = 25
+	defaultRelevancyScore    = 90
+	dailyPostsRelevancyScore = 80
+	minRelevancyScore        = 70
+	defaultLLMFailedCount    = 3
 )
 
 var systemAuthors = []string{"[deleted]", "AutoModerator"}
