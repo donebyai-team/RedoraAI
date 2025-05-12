@@ -259,7 +259,7 @@ func (p *Portal) AddSource(ctx context.Context, c *connect.Request[pbportal.AddS
 		OrgID:     actor.OrganizationID,
 	})
 	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to add subreddit: %w", err))
+		return nil, err
 	}
 
 	return connect.NewResponse(&emptypb.Empty{}), nil
