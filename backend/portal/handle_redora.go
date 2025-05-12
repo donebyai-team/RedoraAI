@@ -17,6 +17,7 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 func (p *Portal) getProject(ctx context.Context, headers http.Header, orgID string) (string, error) {
@@ -122,12 +123,7 @@ func (p *Portal) CreateOrEditProject(ctx context.Context, c *connect.Request[pbp
 		}
 	}
 
-	keywords, err := p.db.GetKeywords(ctx, project.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	sources, err := p.db.GetSourcesByProject(ctx, project.ID)
+	projectProto, err := p.projectToProto(ctx, project)
 	if err != nil {
 		return nil, err
 	}
@@ -137,8 +133,6 @@ func (p *Portal) CreateOrEditProject(ctx context.Context, c *connect.Request[pbp
 		p.logger.Error("failed to get keyword suggestions", zap.Error(err))
 	}
 
-	projectProto := new(pbcore.Project).FromModel(project, sources, keywords)
-
 	if suggestions != nil {
 		p.logger.Debug("adding keyword suggestions",
 			zap.String("model_used", string(usage.Model)),
@@ -146,10 +140,20 @@ func (p *Portal) CreateOrEditProject(ctx context.Context, c *connect.Request[pbp
 			zap.Int("num_subreddits", len(suggestions.Subreddits)))
 
 		for _, keyword := range suggestions.Keywords {
+			if keyword.Keyword == "" {
+				continue
+			}
 			projectProto.SuggestedKeywords = append(projectProto.SuggestedKeywords, keyword.Keyword)
 		}
 
 		for _, subreddit := range suggestions.Subreddits {
+			if subreddit.Subreddit == "" {
+				continue
+			}
+			if !strings.HasPrefix(subreddit.Subreddit, "r/") {
+				subreddit.Subreddit = "r/" + subreddit.Subreddit
+			}
+
 			projectProto.SuggestedSources = append(projectProto.SuggestedSources, subreddit.Subreddit)
 		}
 	}
@@ -168,30 +172,39 @@ func (p *Portal) GetProjects(ctx context.Context, c *connect.Request[emptypb.Emp
 		return nil, err
 	}
 
-	projectsProto := make([]*pbcore.Project, 0, len(projects))
+	projectsProtos := make([]*pbcore.Project, 0, len(projects))
 	isOnboardingDone := false
 	for _, project := range projects {
-		keywords, err := p.db.GetKeywords(ctx, project.ID)
+		projectProto, err := p.projectToProto(ctx, project)
 		if err != nil {
 			return nil, err
 		}
 
-		sources, err := p.db.GetSourcesByProject(ctx, project.ID)
-		if err != nil {
-			return nil, err
-		}
-
-		if len(sources) > 0 && len(keywords) > 0 {
+		if len(projectProto.Sources) > 0 && len(projectProto.Keywords) > 0 {
 			isOnboardingDone = true
 		}
 
-		projectsProto = append(projectsProto, new(pbcore.Project).FromModel(project, sources, keywords))
+		projectsProtos = append(projectsProtos, projectProto)
 	}
 
 	return connect.NewResponse(&pbportal.GetProjectsResponse{
-		Projects:         projectsProto,
+		Projects:         projectsProtos,
 		IsOnboardingDone: isOnboardingDone,
 	}), nil
+}
+
+func (p *Portal) projectToProto(ctx context.Context, project *models.Project) (*pbcore.Project, error) {
+	keywords, err := p.db.GetKeywords(ctx, project.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	sources, err := p.db.GetSourcesByProject(ctx, project.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return new(pbcore.Project).FromModel(project, sources, keywords), nil
 }
 
 func (p *Portal) CreateKeywords(ctx context.Context, c *connect.Request[pbportal.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error) {
