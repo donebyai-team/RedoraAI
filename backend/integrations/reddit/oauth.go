@@ -60,7 +60,11 @@ func NewRedditOauthClient(logger *zap.Logger, db datastore.Repository, clientID,
 	}
 }
 
-func (r *OauthClient) NewRedditClient(ctx context.Context, orgID string) (*Client, error) {
+func (r *OauthClient) NewRedditClient(ctx context.Context, orgID string, forceAuth bool) (*Client, error) {
+	if !forceAuth {
+		return NewClientWithOutConfig(r.logger), nil
+	}
+	
 	integration, err := r.db.GetIntegrationByOrgAndType(ctx, orgID, models.IntegrationTypeREDDIT)
 	if err != nil && errors.Is(err, datastore.NotFound) {
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("reddit integration not configured"))

@@ -64,7 +64,7 @@ func (s *redditKeywordTracker) WithLogger(logger *zap.Logger) KeywordTracker {
 }
 
 func (s *redditKeywordTracker) TrackKeyword(ctx context.Context, tracker *models.AugmentedKeywordTracker) error {
-	redditClient, err := s.redditOauthClient.NewRedditClient(ctx, tracker.Project.OrganizationID)
+	redditClient, err := s.redditOauthClient.NewRedditClient(ctx, tracker.Project.OrganizationID, true)
 	if err != nil {
 		return fmt.Errorf("failed to create reddit client: %w", err)
 	}

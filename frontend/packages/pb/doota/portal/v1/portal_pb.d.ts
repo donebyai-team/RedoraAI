@@ -98,6 +98,11 @@ export declare type GetLeadsByStatusRequest = Message<"doota.portal.v1.GetLeadsB
    * @generated from field: doota.core.v1.LeadStatus status = 1;
    */
   status: LeadStatus;
+
+  /**
+   * @generated from field: int32 page_no = 3;
+   */
+  pageNo: number;
 };
 
 /**
@@ -119,6 +124,11 @@ export declare type GetRelevantLeadsRequest = Message<"doota.portal.v1.GetReleva
    * @generated from field: float relevancy_score = 2;
    */
   relevancyScore: number;
+
+  /**
+   * @generated from field: int32 page_no = 3;
+   */
+  pageNo: number;
 };
 
 /**

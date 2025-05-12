@@ -10,4 +10,6 @@ WHERE l.project_id = :project_id
   AND l.relevancy_score >= :relevancy_score
   AND (:source_ids = '{}' OR l.source_id = ANY(:source_ids))
   AND l.status = :status
-ORDER BY l.post_created_at DESC, l.relevancy_score DESC;
+ORDER BY l.post_created_at DESC, l.relevancy_score DESC
+LIMIT :limit
+OFFSET :offset;
