@@ -39,7 +39,6 @@ const (
 	PortalService_GetRelevantLeads_FullMethodName    = "/doota.portal.v1.PortalService/GetRelevantLeads"
 	PortalService_GetLeadsByStatus_FullMethodName    = "/doota.portal.v1.PortalService/GetLeadsByStatus"
 	PortalService_UpdateLeadStatus_FullMethodName    = "/doota.portal.v1.PortalService/UpdateLeadStatus"
-	PortalService_GetProjects_FullMethodName         = "/doota.portal.v1.PortalService/GetProjects"
 	PortalService_CreateOrEditProject_FullMethodName = "/doota.portal.v1.PortalService/CreateOrEditProject"
 )
 
@@ -68,7 +67,6 @@ type PortalServiceClient interface {
 	GetRelevantLeads(ctx context.Context, in *GetRelevantLeadsRequest, opts ...grpc.CallOption) (*GetLeadsResponse, error)
 	GetLeadsByStatus(ctx context.Context, in *GetLeadsByStatusRequest, opts ...grpc.CallOption) (*GetLeadsResponse, error)
 	UpdateLeadStatus(ctx context.Context, in *UpdateLeadStatusRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	GetProjects(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetProjectsResponse, error)
 	CreateOrEditProject(ctx context.Context, in *CreateProjectRequest, opts ...grpc.CallOption) (*v1.Project, error)
 }
 
@@ -242,15 +240,6 @@ func (c *portalServiceClient) UpdateLeadStatus(ctx context.Context, in *UpdateLe
 	return out, nil
 }
 
-func (c *portalServiceClient) GetProjects(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetProjectsResponse, error) {
-	out := new(GetProjectsResponse)
-	err := c.cc.Invoke(ctx, PortalService_GetProjects_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *portalServiceClient) CreateOrEditProject(ctx context.Context, in *CreateProjectRequest, opts ...grpc.CallOption) (*v1.Project, error) {
 	out := new(v1.Project)
 	err := c.cc.Invoke(ctx, PortalService_CreateOrEditProject_FullMethodName, in, out, opts...)
@@ -285,7 +274,6 @@ type PortalServiceServer interface {
 	GetRelevantLeads(context.Context, *GetRelevantLeadsRequest) (*GetLeadsResponse, error)
 	GetLeadsByStatus(context.Context, *GetLeadsByStatusRequest) (*GetLeadsResponse, error)
 	UpdateLeadStatus(context.Context, *UpdateLeadStatusRequest) (*emptypb.Empty, error)
-	GetProjects(context.Context, *emptypb.Empty) (*GetProjectsResponse, error)
 	CreateOrEditProject(context.Context, *CreateProjectRequest) (*v1.Project, error)
 	mustEmbedUnimplementedPortalServiceServer()
 }
@@ -347,9 +335,6 @@ func (UnimplementedPortalServiceServer) GetLeadsByStatus(context.Context, *GetLe
 }
 func (UnimplementedPortalServiceServer) UpdateLeadStatus(context.Context, *UpdateLeadStatusRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateLeadStatus not implemented")
-}
-func (UnimplementedPortalServiceServer) GetProjects(context.Context, *emptypb.Empty) (*GetProjectsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetProjects not implemented")
 }
 func (UnimplementedPortalServiceServer) CreateOrEditProject(context.Context, *CreateProjectRequest) (*v1.Project, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateOrEditProject not implemented")
@@ -691,24 +676,6 @@ func _PortalService_UpdateLeadStatus_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
-func _PortalService_GetProjects_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(emptypb.Empty)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(PortalServiceServer).GetProjects(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: PortalService_GetProjects_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PortalServiceServer).GetProjects(ctx, req.(*emptypb.Empty))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _PortalService_CreateOrEditProject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateProjectRequest)
 	if err := dec(in); err != nil {
@@ -805,10 +772,6 @@ var PortalService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateLeadStatus",
 			Handler:    _PortalService_UpdateLeadStatus_Handler,
-		},
-		{
-			MethodName: "GetProjects",
-			Handler:    _PortalService_GetProjects_Handler,
 		},
 		{
 			MethodName: "CreateOrEditProject",

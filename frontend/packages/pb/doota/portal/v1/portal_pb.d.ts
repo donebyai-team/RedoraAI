@@ -49,27 +49,6 @@ export declare type CreateProjectRequest = Message<"doota.portal.v1.CreateProjec
 export declare const CreateProjectRequestSchema: GenMessage<CreateProjectRequest>;
 
 /**
- * @generated from message doota.portal.v1.GetProjectsResponse
- */
-export declare type GetProjectsResponse = Message<"doota.portal.v1.GetProjectsResponse"> & {
-  /**
-   * @generated from field: repeated doota.core.v1.Project projects = 1;
-   */
-  projects: Project[];
-
-  /**
-   * @generated from field: bool is_onboarding_done = 2;
-   */
-  isOnboardingDone: boolean;
-};
-
-/**
- * Describes the message doota.portal.v1.GetProjectsResponse.
- * Use `create(GetProjectsResponseSchema)` to create a new message.
- */
-export declare const GetProjectsResponseSchema: GenMessage<GetProjectsResponse>;
-
-/**
  * @generated from message doota.portal.v1.UpdateLeadStatusRequest
  */
 export declare type UpdateLeadStatusRequest = Message<"doota.portal.v1.UpdateLeadStatusRequest"> & {
@@ -460,6 +439,16 @@ export declare type User = Message<"doota.portal.v1.User"> & {
    * @generated from field: google.protobuf.Timestamp created_at = 10;
    */
   createdAt?: Timestamp;
+
+  /**
+   * @generated from field: repeated doota.core.v1.Project projects = 11;
+   */
+  projects: Project[];
+
+  /**
+   * @generated from field: bool is_onboarding_done = 12;
+   */
+  isOnboardingDone: boolean;
 };
 
 /**
@@ -1041,14 +1030,6 @@ export declare const PortalService: GenService<{
     methodKind: "unary";
     input: typeof UpdateLeadStatusRequestSchema;
     output: typeof EmptySchema;
-  },
-  /**
-   * @generated from rpc doota.portal.v1.PortalService.GetProjects
-   */
-  getProjects: {
-    methodKind: "unary";
-    input: typeof EmptySchema;
-    output: typeof GetProjectsResponseSchema;
   },
   /**
    * @generated from rpc doota.portal.v1.PortalService.CreateOrEditProject

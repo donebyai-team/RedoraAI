@@ -31,7 +31,6 @@ service PortalService {
   rpc GetRelevantLeads(GetRelevantLeadsRequest) returns (GetLeadsResponse);
   rpc GetLeadsByStatus(GetLeadsByStatusRequest) returns (GetLeadsResponse);
   rpc UpdateLeadStatus(UpdateLeadStatusRequest) returns (.google.protobuf.Empty);
-  rpc GetProjects(.google.protobuf.Empty) returns (GetProjectsResponse);
   rpc CreateOrEditProject(CreateProjectRequest) returns (doota.core.v1.Project);
 }
 
@@ -41,11 +40,6 @@ message CreateProjectRequest {
   string description = 3;
   string website = 4;
   string target_persona = 5;
-}
-
-message GetProjectsResponse {
-  repeated doota.core.v1.Project projects = 1;
-  bool is_onboarding_done = 2;
 }
 
 message UpdateLeadStatusRequest {
@@ -137,6 +131,8 @@ message User {
   UserRole role = 4;
   repeated Organization organizations = 7;
   .google.protobuf.Timestamp created_at = 10;
+  repeated doota.core.v1.Project projects = 11;
+  bool is_onboarding_done = 12;
 }
 
 message OauthAuthorizeRequest {

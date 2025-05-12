@@ -161,15 +161,10 @@ func (p *Portal) CreateOrEditProject(ctx context.Context, c *connect.Request[pbp
 	return connect.NewResponse(projectProto), nil
 }
 
-func (p *Portal) GetProjects(ctx context.Context, c *connect.Request[emptypb.Empty]) (*connect.Response[pbportal.GetProjectsResponse], error) {
-	actor, err := p.gethAuthContext(ctx)
+func (p *Portal) getProjects(ctx context.Context, orgID string) ([]*pbcore.Project, bool, error) {
+	projects, err := p.db.GetProjects(ctx, orgID)
 	if err != nil {
-		return nil, err
-	}
-
-	projects, err := p.db.GetProjects(ctx, actor.OrganizationID)
-	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	projectsProtos := make([]*pbcore.Project, 0, len(projects))
@@ -177,7 +172,7 @@ func (p *Portal) GetProjects(ctx context.Context, c *connect.Request[emptypb.Emp
 	for _, project := range projects {
 		projectProto, err := p.projectToProto(ctx, project)
 		if err != nil {
-			return nil, err
+			return nil, isOnboardingDone, err
 		}
 
 		if len(projectProto.Sources) > 0 && len(projectProto.Keywords) > 0 {
@@ -187,10 +182,7 @@ func (p *Portal) GetProjects(ctx context.Context, c *connect.Request[emptypb.Emp
 		projectsProtos = append(projectsProtos, projectProto)
 	}
 
-	return connect.NewResponse(&pbportal.GetProjectsResponse{
-		Projects:         projectsProtos,
-		IsOnboardingDone: isOnboardingDone,
-	}), nil
+	return projectsProtos, isOnboardingDone, nil
 }
 
 func (p *Portal) projectToProto(ctx context.Context, project *models.Project) (*pbcore.Project, error) {
