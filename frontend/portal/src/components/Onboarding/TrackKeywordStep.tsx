@@ -19,7 +19,6 @@ import { useDispatch } from "react-redux";
 import {
     nextStep,
     prevStep,
-    resetStepper,
     setProjects,
 } from "../../../store/Onboarding/OnboardingSlice";
 import { useState, useCallback } from "react";
@@ -58,22 +57,22 @@ export default function TrackKeywordStep() {
 
     const handleAddKeyword = useCallback(() => {
         const trimmed = newKeyword.trim();
-    
+
         if (!trimmed) return;
-    
+
         const isDuplicate = keywords.some(
             (k) => k.toLowerCase() === trimmed.toLowerCase()
         );
-    
+
         if (isDuplicate) {
             toast.error(`"${trimmed}" is already added`);
             return;
         }
-    
+
         setValue("keywords", [...keywords, trimmed]);
         setValue("newKeyword", "");
     }, [newKeyword, keywords, setValue]);
-    
+
 
     const handleDeleteKeyword = useCallback((index: number) => {
         const updated = keywords.filter((_, i) => i !== index);
@@ -103,7 +102,6 @@ export default function TrackKeywordStep() {
     );
 
     const handleBack = useCallback(() => dispatch(prevStep()), [dispatch]);
-    const handleReset = useCallback(() => dispatch(resetStepper()), [dispatch]);
 
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
@@ -170,9 +168,8 @@ export default function TrackKeywordStep() {
                 activeStep={activeStep}
                 handleBack={handleBack}
                 handleNext={handleSubmit(onSubmit)}
-                handleReset={handleReset}
                 steps={steps}
-                btnDisabled={isLoading}
+                btnDisabled={isLoading || keywords.length === 0}
             />
         </form>
     );

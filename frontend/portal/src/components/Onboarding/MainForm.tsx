@@ -18,7 +18,7 @@ import { RootState } from '../../../store/store';
 import { AuthLoading } from '../../app/(restricted)/dashboard/layout';
 import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { setProjects, skipStep } from '../../../store/Onboarding/OnboardingSlice';
+import { setProjects, setStep } from '../../../store/Onboarding/OnboardingSlice';
 
 export const steps = [
     {
@@ -47,8 +47,6 @@ export default function ManinForm() {
     const skipped = useAppSelector((state: RootState) => state.stepper.skipped);
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
-    // console.log("###_debug_data ", { loading, data });
-
     const isStepSkipped = (step: number) => skipped.includes(step);
 
     useEffect(() => {
@@ -58,59 +56,46 @@ export default function ManinForm() {
             setIsLoading(true);
 
             // Step 1: Set projects in store
-
             const newData = {
-                id: data.id ?? "",
-                name: data.name,
-                description: data.description,
-                website: data.website,
-                targetPersona: data.targetPersona,
-                keywords: data.keywords.map(keyword => keyword.name) ?? [],
-                sources: data.sources.map(source => ({ id: source.id, name: source.name })) ?? [],
-                suggestedKeywords: data.suggestedKeywords ?? [],
-                suggestedSources: data.suggestedSources ?? [],
+                id: data?.id ?? "",
+                name: data?.name ?? "",
+                description: data?.description ?? "",
+                website: data?.website ?? "",
+                targetPersona: data?.targetPersona ?? "",
+                keywords: data?.keywords?.map(keyword => keyword.name) ?? [],
+                sources: data?.sources?.map(source => ({ id: source.id, name: source.name })) ?? [],
+                suggestedKeywords: data?.suggestedKeywords ?? [],
+                suggestedSources: data?.suggestedSources ?? [],
             };
             dispatch(setProjects(newData));
 
+            // Step 2: Run all checks
+            const { id, website, name, description, targetPersona, keywords, sources } = data;
+            console.log("###_steps ", data);
+
+            const hasBasicInfo = Boolean(id && website && name && description && targetPersona);
+            const hasKeywords = Array.isArray(keywords) && keywords.length > 0;
+            const hasSources = Array.isArray(sources) && sources.length > 0;
+
+            await new Promise((resolve) => setTimeout(resolve, 500));
+
+            // Step 3: Determine final step based on all conditions
             let nextStep = 0;
-
-            // Step 2: Check if project data is valid
-            if (data !== null) {
-                const { id, website, name, description, targetPersona, keywords, sources } = data;
-
-                // Wait until basic info is verified
-                const hasBasicInfo = Boolean(id && website && name && description && targetPersona);
-                await new Promise((resolve) => setTimeout(resolve, 0)); // micro-wait for async flow
-
-                if (hasBasicInfo) {
-                    nextStep = 1;
-
-                    // Step 3: Check keywords
-                    const hasKeywords = Array.isArray(keywords) && keywords.length > 0;
-                    await new Promise((resolve) => setTimeout(resolve, 0)); // micro-wait again
-
-                    if (hasKeywords) {
-                        nextStep = 2;
-
-                        // Step 4: Check sources
-                        const hasSources = Array.isArray(sources) && sources.length > 0;
-                        await new Promise((resolve) => setTimeout(resolve, 0));
-
-                        if (hasSources) {
-                            nextStep = 3;
-                        }
-                    }
-                }
+            if (hasBasicInfo && hasKeywords && hasSources) {
+                nextStep = 2;
+            } else if (hasBasicInfo && hasKeywords) {
+                nextStep = 2;
+            } else if (hasBasicInfo) {
+                nextStep = 1;
             }
-
-            // Step 5: Finally, set active step in store
-            dispatch(skipStep(nextStep));
-
+            // Step 4: Set active step
+            dispatch(setStep(nextStep));
             setIsLoading(false);
         };
 
         handleStepNavigation();
     }, [loading, data, error, dispatch]);
+
 
     if (loading || isLoading) {
         return <AuthLoading />
@@ -211,8 +196,6 @@ export default function ManinForm() {
                                     <Box sx={{ flex: 1 }}>
                                         <StepContent step={activeStep} stepLength={steps.length} />
                                     </Box>
-
-
                                 </Box>
                             </Grid>
                         </Grid>

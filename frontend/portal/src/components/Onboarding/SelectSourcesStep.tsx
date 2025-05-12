@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react/jsx-key */
 "use client";
 
@@ -18,9 +19,7 @@ import { RootState } from "../../../store/store";
 import { steps } from "./MainForm";
 import { useDispatch } from "react-redux";
 import {
-    nextStep,
     prevStep,
-    resetStepper,
     setProjects,
     SourcesTypes,
 } from "../../../store/Onboarding/OnboardingSlice";
@@ -28,6 +27,8 @@ import React, { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { useClientsContext } from "@doota/ui-core/context/ClientContext";
 import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
+import { routes } from "@doota/ui-core/routing";
 
 interface SubredditFormValues {
     sources: SourcesTypes[];
@@ -35,6 +36,7 @@ interface SubredditFormValues {
 
 export default function SelectSourcesStep() {
     const dispatch = useDispatch();
+    const routers = useRouter();
     const activeStep = useAppSelector((state: RootState) => state.stepper.activeStep);
     const projects = useAppSelector((state: RootState) => state.stepper.projects);
     const listOfSuggestedSources = projects?.suggestedSources ?? [];
@@ -119,10 +121,9 @@ export default function SelectSourcesStep() {
             setIsLoading(true);
 
             try {
-                // await portalClient.saveSelectedSources({ sources: data.sources });
                 dispatch(setProjects({ ...projects, sources: data.sources }));
                 toast.success("Sources saved successfully");
-                dispatch(nextStep());
+                routers.push(routes.app.home);
             } catch (err: any) {
                 const message = err?.response?.data?.message || err.message || "Something went wrong";
                 toast.error(message);
@@ -130,11 +131,10 @@ export default function SelectSourcesStep() {
                 setIsLoading(false);
             }
         },
-        [dispatch, portalClient, projects]
+        [dispatch, portalClient, projects, routers]  // Add router to dependencies
     );
 
     const handleBack = useCallback(() => dispatch(prevStep()), [dispatch]);
-    const handleReset = useCallback(() => dispatch(resetStepper()), [dispatch]);
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter") {
@@ -204,7 +204,6 @@ export default function SelectSourcesStep() {
                             );
                         })
                     }
-
                 />
 
                 <Paper variant="outlined" sx={{ p: 2, bgcolor: 'background.default' }}>
@@ -250,9 +249,8 @@ export default function SelectSourcesStep() {
                 activeStep={activeStep}
                 handleBack={handleBack}
                 handleNext={handleSubmit(onSubmit)}
-                handleReset={handleReset}
                 steps={steps}
-                btnDisabled={isLoading}
+                btnDisabled={isLoading || sources.length === 0} // Disable next if no sources are selected
             />
         </form>
     );

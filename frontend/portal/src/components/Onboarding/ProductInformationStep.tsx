@@ -11,7 +11,7 @@ import { useAppSelector } from "../../../store/hooks";
 import { RootState } from "../../../store/store";
 import { steps } from "./MainForm";
 import { useDispatch } from "react-redux";
-import { nextStep, prevStep, resetStepper, setProjects } from "../../../store/Onboarding/OnboardingSlice";
+import { nextStep, prevStep, setProjects } from "../../../store/Onboarding/OnboardingSlice";
 import { useEffect, useState, useCallback } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useClientsContext } from "@doota/ui-core/context/ClientContext";
@@ -150,7 +150,6 @@ export default function ProductInformationStep() {
     };
 
     const handleBack = () => dispatch(prevStep());
-    const handleReset = () => dispatch(resetStepper());
 
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
@@ -189,7 +188,6 @@ export default function ProductInformationStep() {
                 activeStep={activeStep}
                 handleBack={handleBack}
                 handleNext={handleSubmit(onSubmit)}
-                handleReset={handleReset}
                 steps={steps}
                 btnDisabled={isLoading}
             />

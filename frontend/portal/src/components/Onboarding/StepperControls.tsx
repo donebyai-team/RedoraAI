@@ -6,7 +6,6 @@ interface StepperControlsProps {
   activeStep: number;
   handleBack: () => void;
   handleNext: () => void;
-  handleReset: () => void;
   steps: { label: string; description: string; }[];
   btnDisabled: boolean;
 }
@@ -15,7 +14,6 @@ const StepperControls: React.FC<StepperControlsProps> = ({
   activeStep,
   handleBack,
   handleNext,
-  handleReset,
   steps,
   btnDisabled
 }) => {
@@ -39,7 +37,7 @@ const StepperControls: React.FC<StepperControlsProps> = ({
         <Button
           variant="contained"
           color="success"
-          onClick={handleReset}
+          onClick={handleNext}
           endIcon={<Check size={18} />}
           disabled={btnDisabled}
         >
