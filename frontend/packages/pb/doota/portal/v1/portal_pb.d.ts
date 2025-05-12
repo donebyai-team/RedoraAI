@@ -959,6 +959,14 @@ export declare const PortalService: GenService<{
     output: typeof OauthCallbackResponseSchema;
   },
   /**
+   * @generated from rpc doota.portal.v1.PortalService.SocialLoginCallback
+   */
+  socialLoginCallback: {
+    methodKind: "unary";
+    input: typeof OauthCallbackRequestSchema;
+    output: typeof JWTSchema;
+  },
+  /**
    * @generated from rpc doota.portal.v1.PortalService.GetIntegrations
    */
   getIntegrations: {

@@ -30,6 +30,7 @@ const (
 	PortalService_PasswordlessVerify_FullMethodName  = "/doota.portal.v1.PortalService/PasswordlessVerify"
 	PortalService_OauthAuthorize_FullMethodName      = "/doota.portal.v1.PortalService/OauthAuthorize"
 	PortalService_OauthCallback_FullMethodName       = "/doota.portal.v1.PortalService/OauthCallback"
+	PortalService_SocialLoginCallback_FullMethodName = "/doota.portal.v1.PortalService/SocialLoginCallback"
 	PortalService_GetIntegrations_FullMethodName     = "/doota.portal.v1.PortalService/GetIntegrations"
 	PortalService_CreateKeywords_FullMethodName      = "/doota.portal.v1.PortalService/CreateKeywords"
 	PortalService_AddSource_FullMethodName           = "/doota.portal.v1.PortalService/AddSource"
@@ -57,6 +58,7 @@ type PortalServiceClient interface {
 	PasswordlessVerify(ctx context.Context, in *PasswordlessStartVerify, opts ...grpc.CallOption) (*JWT, error)
 	OauthAuthorize(ctx context.Context, in *OauthAuthorizeRequest, opts ...grpc.CallOption) (*OauthAuthorizeResponse, error)
 	OauthCallback(ctx context.Context, in *OauthCallbackRequest, opts ...grpc.CallOption) (*OauthCallbackResponse, error)
+	SocialLoginCallback(ctx context.Context, in *OauthCallbackRequest, opts ...grpc.CallOption) (*JWT, error)
 	GetIntegrations(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Integrations, error)
 	// Reddit
 	CreateKeywords(ctx context.Context, in *CreateKeywordReq, opts ...grpc.CallOption) (*emptypb.Empty, error)
@@ -153,6 +155,15 @@ func (c *portalServiceClient) OauthAuthorize(ctx context.Context, in *OauthAutho
 func (c *portalServiceClient) OauthCallback(ctx context.Context, in *OauthCallbackRequest, opts ...grpc.CallOption) (*OauthCallbackResponse, error) {
 	out := new(OauthCallbackResponse)
 	err := c.cc.Invoke(ctx, PortalService_OauthCallback_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *portalServiceClient) SocialLoginCallback(ctx context.Context, in *OauthCallbackRequest, opts ...grpc.CallOption) (*JWT, error) {
+	out := new(JWT)
+	err := c.cc.Invoke(ctx, PortalService_SocialLoginCallback_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -264,6 +275,7 @@ type PortalServiceServer interface {
 	PasswordlessVerify(context.Context, *PasswordlessStartVerify) (*JWT, error)
 	OauthAuthorize(context.Context, *OauthAuthorizeRequest) (*OauthAuthorizeResponse, error)
 	OauthCallback(context.Context, *OauthCallbackRequest) (*OauthCallbackResponse, error)
+	SocialLoginCallback(context.Context, *OauthCallbackRequest) (*JWT, error)
 	GetIntegrations(context.Context, *emptypb.Empty) (*Integrations, error)
 	// Reddit
 	CreateKeywords(context.Context, *CreateKeywordReq) (*emptypb.Empty, error)
@@ -308,6 +320,9 @@ func (UnimplementedPortalServiceServer) OauthAuthorize(context.Context, *OauthAu
 }
 func (UnimplementedPortalServiceServer) OauthCallback(context.Context, *OauthCallbackRequest) (*OauthCallbackResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method OauthCallback not implemented")
+}
+func (UnimplementedPortalServiceServer) SocialLoginCallback(context.Context, *OauthCallbackRequest) (*JWT, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SocialLoginCallback not implemented")
 }
 func (UnimplementedPortalServiceServer) GetIntegrations(context.Context, *emptypb.Empty) (*Integrations, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetIntegrations not implemented")
@@ -510,6 +525,24 @@ func _PortalService_OauthCallback_Handler(srv interface{}, ctx context.Context, 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(PortalServiceServer).OauthCallback(ctx, req.(*OauthCallbackRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PortalService_SocialLoginCallback_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(OauthCallbackRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortalServiceServer).SocialLoginCallback(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortalService_SocialLoginCallback_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortalServiceServer).SocialLoginCallback(ctx, req.(*OauthCallbackRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -736,6 +769,10 @@ var PortalService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "OauthCallback",
 			Handler:    _PortalService_OauthCallback_Handler,
+		},
+		{
+			MethodName: "SocialLoginCallback",
+			Handler:    _PortalService_SocialLoginCallback_Handler,
 		},
 		{
 			MethodName: "GetIntegrations",

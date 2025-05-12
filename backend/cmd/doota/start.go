@@ -265,6 +265,11 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 			langsmithApiKey,
 			langsmithProject,
 		).
+		WithGoogle(
+			sflags.MustGetString(cmd, "google-client-id"),
+			sflags.MustGetString(cmd, "google-client-secret"),
+			sflags.MustGetString(cmd, "portal-reddit-redirect-url"),
+		).
 		Build(cmd.Context(), zlog, tracer)
 	if err != nil {
 		return nil, err
@@ -301,10 +306,11 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 
 	// TODO: Understand how to setup this as part of an auth use case
 	config := &pbportal.Config{
-		Auth0Domain:    authConfig.Auth0Domain,
-		Auth0ClientId:  authConfig.Auth0PortalClientID,
-		Auth0Scope:     "openid email",
-		FullStoryOrgId: sflags.MustGetString(cmd, "portal-fullstory-org-id"),
+		Auth0Domain:            authConfig.Auth0Domain,
+		Auth0ClientId:          authConfig.Auth0PortalClientID,
+		Auth0Scope:             "openid email",
+		FullStoryOrgId:         sflags.MustGetString(cmd, "portal-fullstory-org-id"),
+		GoogleAuth0CallbackUrl: sflags.MustGetString(cmd, "portal-reddit-redirect-url"),
 	}
 
 	authUsecase, err := services.NewAuthUsecase(cmd.Context(), authConfig, deps.DataStore, deps.AuthSigningKeyGetter, zlog)
@@ -317,6 +323,7 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 	p := portal.New(
 		deps.AIClient,
 		redditOauthClient,
+		deps.GoogleClient,
 		authenticator,
 		state.NewRedisStore(sflags.MustGetString(cmd, "redis-addr"), zlog),
 		services.NewCustomerCaseServiceImpl(deps.DataStore),

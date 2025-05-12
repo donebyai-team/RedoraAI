@@ -8,8 +8,10 @@ import (
 	"github.com/shank318/doota/auth"
 	"github.com/shank318/doota/auth/crypto"
 	"github.com/shank318/doota/datastore"
+	google2 "github.com/shank318/doota/integrations/google"
 	"github.com/shank318/doota/models"
 	"github.com/streamingfast/dstore"
+	"golang.org/x/oauth2"
 	"regexp"
 	"time"
 
@@ -17,6 +19,14 @@ import (
 	"go.uber.org/dig"
 	"go.uber.org/zap"
 )
+
+type GoogleConfig struct {
+	ClientID     string
+	ClientSecret string
+	RedirectURL  string
+	Scopes       []string
+	Endpoint     oauth2.Endpoint
+}
 
 type DependenciesBuilder struct {
 	PGDSN              string
@@ -27,8 +37,8 @@ type DependenciesBuilder struct {
 	Processor          bool
 	AIConfig           *AIConfig
 	ConversationState  *conversationState
-
-	dig *dig.Container
+	GoogleConfig       *GoogleConfig
+	dig                *dig.Container
 }
 
 func NewDependenciesBuilder() *DependenciesBuilder {
@@ -62,6 +72,15 @@ func (b *DependenciesBuilder) mustProvide(constructor interface{}) {
 func (b *DependenciesBuilder) WithDataStore(pgDSN string) *DependenciesBuilder {
 	b.mustProvide(func() PostgresDSNString { return PostgresDSNString(pgDSN) })
 	b.PGDSN = pgDSN
+	return b
+}
+
+func (b *DependenciesBuilder) WithGoogle(clientId, clientSecret, redirectUrl string) *DependenciesBuilder {
+	b.GoogleConfig = &GoogleConfig{
+		ClientID:     clientId,
+		ClientSecret: clientSecret,
+		RedirectURL:  fmt.Sprintf("%s/login", redirectUrl),
+	}
 	return b
 }
 
@@ -162,6 +181,13 @@ func (b *DependenciesBuilder) Build(ctx context.Context, logger *zap.Logger, tra
 		}
 	}
 
+	if b.GoogleConfig != nil {
+		logger.Info("setting up google",
+			zap.Reflect("client_id", b.GoogleConfig.ClientID),
+		)
+		out.GoogleClient = google2.NewOauthClient(b.GoogleConfig.ClientID, b.GoogleConfig.ClientSecret, b.GoogleConfig.RedirectURL, logger)
+	}
+
 	if b.ConversationState != nil {
 		out.ConversationState = state.NewCustomerCaseState(b.ConversationState.redisAddr, b.ConversationState.phoneCallStateTTL, logger, b.ConversationState.namespace, b.ConversationState.prefix)
 	}
@@ -180,5 +206,6 @@ type Dependencies struct {
 	dootaDepMissing []string
 
 	AIClient          *ai.Client
+	GoogleClient      *google2.OauthClient
 	ConversationState state.ConversationState
 }

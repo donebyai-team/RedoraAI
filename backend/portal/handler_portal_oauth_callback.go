@@ -18,6 +18,24 @@ var integrations = map[pbportal.IntegrationType]IntegrationHandler{
 	pbportal.IntegrationType_INTEGRATION_TYPE_REDDIT: handleRedditOauth,
 }
 
+func (p *Portal) SocialLoginCallback(ctx context.Context, c *connect.Request[pbportal.OauthCallbackRequest]) (*connect.Response[pbportal.JWT], error) {
+	_, err := p.validateState(c.Msg.State)
+	if err != nil {
+		return nil, fmt.Errorf("error validating state: %w", err)
+	}
+
+	email, err := p.googleOauthClient.Authorize(ctx, c.Msg.GetExternalCode())
+	if err != nil {
+		return nil, err
+	}
+
+	jwt, err := p.authUsecase.SignUser(ctx, email)
+	if err != nil {
+		return nil, err
+	}
+	return connect.NewResponse(jwt), nil
+}
+
 func (p *Portal) OauthCallback(ctx context.Context, c *connect.Request[pbportal.OauthCallbackRequest]) (*connect.Response[pbportal.OauthCallbackResponse], error) {
 	actor, err := p.gethAuthContext(ctx)
 	if err != nil {

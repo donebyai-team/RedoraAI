@@ -63,6 +63,24 @@ func newAuth0(ctx context.Context, auth0Config *Auth0Config, logger *zap.Logger)
 	}, nil
 }
 
+func (a *auth0) getAuthURL(hash string) string {
+	return a.oauthConf.AuthCodeURL(hash, oauth2.AccessTypeOffline)
+}
+
+func (a *auth0) Authorize(ctx context.Context, code string) (string, error) {
+	token, err := a.oauthConf.Exchange(ctx, code)
+	if err != nil {
+		return "", err
+	}
+
+	if !token.Valid() {
+		return "", fmt.Errorf("invalid token")
+	}
+
+	fmt.Println(token.Extra("id_token"))
+	return "", err
+}
+
 func (a *auth0) verifyIDToken(ctx context.Context, tokenId string) (*oidc.IDToken, error) {
 	return a.oauthProvider.Verifier(a.oidcConfig).Verify(ctx, tokenId)
 }

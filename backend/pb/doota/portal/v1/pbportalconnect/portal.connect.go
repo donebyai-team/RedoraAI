@@ -59,6 +59,9 @@ const (
 	// PortalServiceOauthCallbackProcedure is the fully-qualified name of the PortalService's
 	// OauthCallback RPC.
 	PortalServiceOauthCallbackProcedure = "/doota.portal.v1.PortalService/OauthCallback"
+	// PortalServiceSocialLoginCallbackProcedure is the fully-qualified name of the PortalService's
+	// SocialLoginCallback RPC.
+	PortalServiceSocialLoginCallbackProcedure = "/doota.portal.v1.PortalService/SocialLoginCallback"
 	// PortalServiceGetIntegrationsProcedure is the fully-qualified name of the PortalService's
 	// GetIntegrations RPC.
 	PortalServiceGetIntegrationsProcedure = "/doota.portal.v1.PortalService/GetIntegrations"
@@ -102,6 +105,7 @@ var (
 	portalServicePasswordlessVerifyMethodDescriptor  = portalServiceServiceDescriptor.Methods().ByName("PasswordlessVerify")
 	portalServiceOauthAuthorizeMethodDescriptor      = portalServiceServiceDescriptor.Methods().ByName("OauthAuthorize")
 	portalServiceOauthCallbackMethodDescriptor       = portalServiceServiceDescriptor.Methods().ByName("OauthCallback")
+	portalServiceSocialLoginCallbackMethodDescriptor = portalServiceServiceDescriptor.Methods().ByName("SocialLoginCallback")
 	portalServiceGetIntegrationsMethodDescriptor     = portalServiceServiceDescriptor.Methods().ByName("GetIntegrations")
 	portalServiceCreateKeywordsMethodDescriptor      = portalServiceServiceDescriptor.Methods().ByName("CreateKeywords")
 	portalServiceAddSourceMethodDescriptor           = portalServiceServiceDescriptor.Methods().ByName("AddSource")
@@ -127,6 +131,7 @@ type PortalServiceClient interface {
 	PasswordlessVerify(context.Context, *connect.Request[v1.PasswordlessStartVerify]) (*connect.Response[v1.JWT], error)
 	OauthAuthorize(context.Context, *connect.Request[v1.OauthAuthorizeRequest]) (*connect.Response[v1.OauthAuthorizeResponse], error)
 	OauthCallback(context.Context, *connect.Request[v1.OauthCallbackRequest]) (*connect.Response[v1.OauthCallbackResponse], error)
+	SocialLoginCallback(context.Context, *connect.Request[v1.OauthCallbackRequest]) (*connect.Response[v1.JWT], error)
 	GetIntegrations(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.Integrations], error)
 	// Reddit
 	CreateKeywords(context.Context, *connect.Request[v1.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error)
@@ -204,6 +209,12 @@ func NewPortalServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(portalServiceOauthCallbackMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
+		socialLoginCallback: connect.NewClient[v1.OauthCallbackRequest, v1.JWT](
+			httpClient,
+			baseURL+PortalServiceSocialLoginCallbackProcedure,
+			connect.WithSchema(portalServiceSocialLoginCallbackMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
 		getIntegrations: connect.NewClient[emptypb.Empty, v1.Integrations](
 			httpClient,
 			baseURL+PortalServiceGetIntegrationsProcedure,
@@ -278,6 +289,7 @@ type portalServiceClient struct {
 	passwordlessVerify  *connect.Client[v1.PasswordlessStartVerify, v1.JWT]
 	oauthAuthorize      *connect.Client[v1.OauthAuthorizeRequest, v1.OauthAuthorizeResponse]
 	oauthCallback       *connect.Client[v1.OauthCallbackRequest, v1.OauthCallbackResponse]
+	socialLoginCallback *connect.Client[v1.OauthCallbackRequest, v1.JWT]
 	getIntegrations     *connect.Client[emptypb.Empty, v1.Integrations]
 	createKeywords      *connect.Client[v1.CreateKeywordReq, emptypb.Empty]
 	addSource           *connect.Client[v1.AddSourceRequest, emptypb.Empty]
@@ -333,6 +345,11 @@ func (c *portalServiceClient) OauthAuthorize(ctx context.Context, req *connect.R
 // OauthCallback calls doota.portal.v1.PortalService.OauthCallback.
 func (c *portalServiceClient) OauthCallback(ctx context.Context, req *connect.Request[v1.OauthCallbackRequest]) (*connect.Response[v1.OauthCallbackResponse], error) {
 	return c.oauthCallback.CallUnary(ctx, req)
+}
+
+// SocialLoginCallback calls doota.portal.v1.PortalService.SocialLoginCallback.
+func (c *portalServiceClient) SocialLoginCallback(ctx context.Context, req *connect.Request[v1.OauthCallbackRequest]) (*connect.Response[v1.JWT], error) {
+	return c.socialLoginCallback.CallUnary(ctx, req)
 }
 
 // GetIntegrations calls doota.portal.v1.PortalService.GetIntegrations.
@@ -398,6 +415,7 @@ type PortalServiceHandler interface {
 	PasswordlessVerify(context.Context, *connect.Request[v1.PasswordlessStartVerify]) (*connect.Response[v1.JWT], error)
 	OauthAuthorize(context.Context, *connect.Request[v1.OauthAuthorizeRequest]) (*connect.Response[v1.OauthAuthorizeResponse], error)
 	OauthCallback(context.Context, *connect.Request[v1.OauthCallbackRequest]) (*connect.Response[v1.OauthCallbackResponse], error)
+	SocialLoginCallback(context.Context, *connect.Request[v1.OauthCallbackRequest]) (*connect.Response[v1.JWT], error)
 	GetIntegrations(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.Integrations], error)
 	// Reddit
 	CreateKeywords(context.Context, *connect.Request[v1.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error)
@@ -469,6 +487,12 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 		PortalServiceOauthCallbackProcedure,
 		svc.OauthCallback,
 		connect.WithSchema(portalServiceOauthCallbackMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	portalServiceSocialLoginCallbackHandler := connect.NewUnaryHandler(
+		PortalServiceSocialLoginCallbackProcedure,
+		svc.SocialLoginCallback,
+		connect.WithSchema(portalServiceSocialLoginCallbackMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
 	portalServiceGetIntegrationsHandler := connect.NewUnaryHandler(
@@ -551,6 +575,8 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 			portalServiceOauthAuthorizeHandler.ServeHTTP(w, r)
 		case PortalServiceOauthCallbackProcedure:
 			portalServiceOauthCallbackHandler.ServeHTTP(w, r)
+		case PortalServiceSocialLoginCallbackProcedure:
+			portalServiceSocialLoginCallbackHandler.ServeHTTP(w, r)
 		case PortalServiceGetIntegrationsProcedure:
 			portalServiceGetIntegrationsHandler.ServeHTTP(w, r)
 		case PortalServiceCreateKeywordsProcedure:
@@ -614,6 +640,10 @@ func (UnimplementedPortalServiceHandler) OauthAuthorize(context.Context, *connec
 
 func (UnimplementedPortalServiceHandler) OauthCallback(context.Context, *connect.Request[v1.OauthCallbackRequest]) (*connect.Response[v1.OauthCallbackResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.OauthCallback is not implemented"))
+}
+
+func (UnimplementedPortalServiceHandler) SocialLoginCallback(context.Context, *connect.Request[v1.OauthCallbackRequest]) (*connect.Response[v1.JWT], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.SocialLoginCallback is not implemented"))
 }
 
 func (UnimplementedPortalServiceHandler) GetIntegrations(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.Integrations], error) {
