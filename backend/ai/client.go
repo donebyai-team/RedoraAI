@@ -23,9 +23,10 @@ import (
 const SEED = 42
 
 type Client struct {
-	defaultLLMModel     models.LLMModel
-	model               openai.Client
-	langsmithConfig     LangsmithConfig
+	defaultLLMModel models.LLMModel
+	advanceLLMModel models.LLMModel
+	model           openai.Client
+	langsmithConfig LangsmithConfig
 	/**/ debugFileStore dstore.Store
 	log                 *zap.Logger
 }
@@ -54,7 +55,7 @@ type LangsmithConfig struct {
 //	}, nil
 //}
 
-func NewOpenAI(apiKey string, defaultLLMModel models.LLMModel, config LangsmithConfig, debugFileStore dstore.Store, log *zap.Logger) (*Client, error) {
+func NewOpenAI(apiKey string, defaultLLMModel, advanceLLMModel models.LLMModel, config LangsmithConfig, debugFileStore dstore.Store, log *zap.Logger) (*Client, error) {
 	if apiKey == "" {
 		return nil, fmt.Errorf("openai api key is required, cannot be blank")
 	}
@@ -75,9 +76,14 @@ func NewOpenAI(apiKey string, defaultLLMModel models.LLMModel, config LangsmithC
 	return &Client{
 		model:           llmClient,
 		defaultLLMModel: defaultLLMModel,
+		advanceLLMModel: advanceLLMModel,
 		debugFileStore:  debugFileStore,
 		log:             log,
 	}, nil
+}
+
+func (c *Client) GetAdvanceModel() models.LLMModel {
+	return c.advanceLLMModel
 }
 
 func (c *Client) processTemplate(ctx context.Context, runID, path, tmplData string, vars map[string]any, logger *zap.Logger) (*bytes.Buffer, error) {
@@ -218,8 +224,46 @@ func (c *Client) runChatCompletion(
 	return []byte(output), nil
 }
 
+func (c *Client) SuggestKeywordsAndSubreddits(ctx context.Context, model models.LLMModel, project *models.Project, logger *zap.Logger) (*models.RedditKeywordSuggestionResult, *models.LLMModelUsage, error) {
+	runID := fmt.Sprintf("%s-%s", strings.ToLower(project.Name), project.ID)
+	vars := make(Variable)
+	vars["ProductName"] = project.Name
+	vars["ProductDescription"] = project.ProductDescription
+	vars["TargetCustomerPersona"] = project.CustomerPersona
+	llmModelToUse := c.defaultLLMModel
+
+	if string(model) != "" {
+		llmModelToUse = model
+	}
+
+	messages, responseFormat, err := c.buildChatMessages(ctx, runID, keywordSuggestionRedditTemplates, logger, vars)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	output, err := c.runChatCompletion(
+		ctx,
+		runID,
+		llmModelToUse,
+		project.OrganizationID,
+		messages,
+		responseFormat,
+		logger,
+		"reddit_keyword_suggestion.output",
+	)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var data models.RedditKeywordSuggestionResult
+	if err := json.Unmarshal(output, &data); err != nil {
+		return nil, nil, fmt.Errorf("unable to unmarshal response: %w", err)
+	}
+	return &data, &models.LLMModelUsage{Model: llmModelToUse}, nil
+}
+
 func (c *Client) GetSourceCommunityRulesEvaluation(ctx context.Context, model models.LLMModel, source *models.Source, logger *zap.Logger) (*models.RuleEvaluationResult, *models.LLMModelUsage, error) {
-	runID := fmt.Sprintf("%s-%s", utils.CleanSubredditName(source.Name), source.OrgID)
+	runID := fmt.Sprintf("%s-%s", strings.ToLower(utils.CleanSubredditName(source.Name)), source.OrgID)
 	vars := GetSubRedditRulesEvalVars(source)
 	llmModelToUse := c.defaultLLMModel
 	if string(model) != "" {

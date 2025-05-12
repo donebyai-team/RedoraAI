@@ -50,6 +50,7 @@ type AIConfig struct {
 	LangsmithApiKey      string
 	LangsmithProject     string
 	DefaultLLMModel      models.LLMModel
+	AdvanceLLMModel      models.LLMModel
 }
 
 func (b *DependenciesBuilder) mustProvide(constructor interface{}) {
@@ -73,13 +74,14 @@ func (b *DependenciesBuilder) WithConversationState(phoneCallStateTTL time.Durat
 	return b
 }
 
-func (b *DependenciesBuilder) WithAI(defaultLLMModel models.LLMModel, openAIKey string, openAIDebugLogsStore string, langsmithApiKey string, langsmithProject string) *DependenciesBuilder {
+func (b *DependenciesBuilder) WithAI(defaultLLMModel, advanceLLMModel models.LLMModel, openAIKey string, openAIDebugLogsStore string, langsmithApiKey string, langsmithProject string) *DependenciesBuilder {
 	b.AIConfig = &AIConfig{
 		OpenAIKey:            openAIKey,
 		OpenAIDebugLogsStore: openAIDebugLogsStore,
 		LangsmithApiKey:      langsmithApiKey,
 		LangsmithProject:     langsmithProject,
 		DefaultLLMModel:      defaultLLMModel,
+		AdvanceLLMModel:      advanceLLMModel,
 	}
 	return b
 }
@@ -147,6 +149,7 @@ func (b *DependenciesBuilder) Build(ctx context.Context, logger *zap.Logger, tra
 		out.AIClient, err = ai.NewOpenAI(
 			b.AIConfig.OpenAIKey,
 			b.AIConfig.DefaultLLMModel,
+			b.AIConfig.AdvanceLLMModel,
 			ai.LangsmithConfig{
 				ApiKey:      b.AIConfig.LangsmithApiKey,
 				ProjectName: b.AIConfig.LangsmithProject,

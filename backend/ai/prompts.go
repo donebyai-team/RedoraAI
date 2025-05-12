@@ -24,6 +24,12 @@ var subredditRulesEvalTemplates = []Template{
 	{path: "subreddit_rules.human.gotmpl", promptType: PromptTypeHUMAN, promptFeature: PromptFeatureBOTH},
 }
 
+var keywordSuggestionRedditTemplates = []Template{
+	{path: "reddit_keyword_suggestion.prompt.gotmpl", promptType: PromptTypeSYSTEM, promptFeature: PromptFeatureTEXTONLY},
+	{path: "reddit_keyword_suggestion.schema.gotmpl", promptType: PromptTypeRESPONSESCHEMA, promptFeature: PromptFeatureBOTH},
+	{path: "reddit_keyword_suggestion.human.gotmpl", promptType: PromptTypeHUMAN, promptFeature: PromptFeatureBOTH},
+}
+
 //go:generate go-enum -f=$GOFILE
 
 // ENUM(HUMAN,SYSTEM,IMAGE,RESPONSE_SCHEMA)

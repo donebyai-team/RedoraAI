@@ -316,8 +316,8 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 
 			// if the lower model thinks it is relevant, verify it with the higher one and override it if it is
 			if relevanceResponse.IsRelevantConfidenceScore >= defaultRelevancyScore {
-				s.logger.Info("calling relevancy with higher model", zap.String("higher_model", defaultHigherModelToUse), zap.String("post_id", post.ID))
-				relevanceResponseHigherModel, usageHigherModel, errHigherModel := s.aiClient.IsRedditPostRelevant(ctx, defaultHigherModelToUse, ai.IsPostRelevantInput{
+				s.logger.Info("calling relevancy with higher model", zap.String("higher_model", string(s.aiClient.GetAdvanceModel())), zap.String("post_id", post.ID))
+				relevanceResponseHigherModel, usageHigherModel, errHigherModel := s.aiClient.IsRedditPostRelevant(ctx, s.aiClient.GetAdvanceModel(), ai.IsPostRelevantInput{
 					Project: project,
 					Post:    redditLead,
 					Source:  source,
@@ -472,15 +472,14 @@ func (s *redditKeywordTracker) getLeadInteractionCountOfTheDay(ctx context.Conte
 }
 
 const (
-	minSelftextLength       = 30
-	minTitleLength          = 5
-	maxPostAgeInMonths      = 6
-	minCommentThreshold     = 5
-	maxLeadsPerDay          = 25
-	defaultRelevancyScore   = 90
-	minRelevancyScore       = 70
-	defaultLLMFailedCount   = 3
-	defaultHigherModelToUse = "redora-prod-gpt-4.1-2025-04-14"
+	minSelftextLength     = 30
+	minTitleLength        = 5
+	maxPostAgeInMonths    = 6
+	minCommentThreshold   = 5
+	maxLeadsPerDay        = 25
+	defaultRelevancyScore = 90
+	minRelevancyScore     = 70
+	defaultLLMFailedCount = 3
 )
 
 var systemAuthors = []string{"[deleted]", "AutoModerator"}

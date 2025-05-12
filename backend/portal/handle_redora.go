@@ -11,6 +11,7 @@ import (
 	pbportal "github.com/shank318/doota/pb/doota/portal/v1"
 	"github.com/shank318/doota/services"
 	"github.com/shank318/doota/utils"
+	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -121,7 +122,39 @@ func (p *Portal) CreateOrEditProject(ctx context.Context, c *connect.Request[pbp
 		}
 	}
 
-	return connect.NewResponse(new(pbcore.Project).FromModel(project, nil, nil)), nil
+	keywords, err := p.db.GetKeywords(ctx, project.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	sources, err := p.db.GetSourcesByProject(ctx, project.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	suggestions, usage, err := p.aiClient.SuggestKeywordsAndSubreddits(ctx, p.aiClient.GetAdvanceModel(), project, p.logger)
+	if err != nil {
+		p.logger.Error("failed to get keyword suggestions", zap.Error(err))
+	}
+
+	projectProto := new(pbcore.Project).FromModel(project, sources, keywords)
+
+	if suggestions != nil {
+		p.logger.Debug("adding keyword suggestions",
+			zap.String("model_used", string(usage.Model)),
+			zap.Int("num_suggestions", len(suggestions.Keywords)),
+			zap.Int("num_subreddits", len(suggestions.Subreddits)))
+
+		for _, keyword := range suggestions.Keywords {
+			projectProto.SuggestedKeywords = append(projectProto.SuggestedKeywords, keyword.Keyword)
+		}
+
+		for _, subreddit := range suggestions.Subreddits {
+			projectProto.SuggestedSources = append(projectProto.SuggestedSources, subreddit.Subreddit)
+		}
+	}
+
+	return connect.NewResponse(projectProto), nil
 }
 
 func (p *Portal) GetProjects(ctx context.Context, c *connect.Request[emptypb.Empty]) (*connect.Response[pbportal.GetProjectsResponse], error) {

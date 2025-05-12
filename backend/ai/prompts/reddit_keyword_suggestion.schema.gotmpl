@@ -1,0 +1,59 @@
+{
+  "type": "json_schema",
+  "json_schema": {
+    "name": "reddit_keyword_suggestion_schema",
+    "strict": true,
+    "schema": {
+      "type": "object",
+      "properties": {
+        "keywords": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "keyword": {
+                "type": "string",
+                "description": "suggest a keyword relevant to the product and target persona"
+              },
+              "chain_of_thought": {
+                "type": "string",
+                "description": "Brief explanation in a few words of why this keyword is relevant to the product and target persona."
+              }
+            },
+            "required": [
+              "keyword",
+              "chain_of_thought"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "subreddits": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "subreddit": {
+                "type": "string",
+                "description": "suggest a subreddit relevant to the product and target persona"
+              },
+              "chain_of_thought": {
+                "type": "string",
+                "description": "Brief explanation in a few words of why this subreddit is relevant to the product and target persona."
+              }
+            },
+            "required": [
+              "subreddit",
+              "chain_of_thought"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "keywords",
+        "subreddits"
+      ],
+      "additionalProperties": false
+    }
+  }
+}
