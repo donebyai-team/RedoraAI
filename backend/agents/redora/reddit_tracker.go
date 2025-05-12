@@ -262,18 +262,11 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 	// Hard filters
 	countPostsWithHighRelevancy := 0
 	countSkippedPosts := 0
-	countTestPosts := 0
 	aiErrorsCount := 0
 
 	s.logger.Info("posts to be evaluated on relevancy via ai", zap.Int("total_posts", len(newPosts)))
 	// Filter by AI
 	for _, post := range newPosts {
-		// TODO: Only on dev to avoid openai calls
-		if countTestPosts >= 5 && s.isDev {
-			s.logger.Info("dev mode is on, max 5 posts extracted via openai")
-			break
-		}
-
 		if aiErrorsCount >= defaultLLMFailedCount {
 			return fmt.Errorf("more than %d llm called failed, skipped processing", defaultLLMFailedCount)
 		}
@@ -302,7 +295,6 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 
 		isValid, reason := s.isValidPost(post)
 		if isValid {
-			countTestPosts++
 			relevanceResponse, usage, err := s.aiClient.IsRedditPostRelevant(ctx, tracker.Organization.FeatureFlags.RelevancyLLMModel, ai.IsPostRelevantInput{
 				Project: project,
 				Post:    redditLead,

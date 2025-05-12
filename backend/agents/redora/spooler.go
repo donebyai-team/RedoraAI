@@ -55,7 +55,9 @@ func New(
 
 func (s *Spooler) Run(ctx context.Context) error {
 	go s.runLoop(ctx)
-	go s.pollKeywordTrackers(ctx)
+	if !s.keywordTracker.isDev {
+		go s.pollKeywordTrackers(ctx)
+	}
 	return nil
 }
 
@@ -119,7 +121,6 @@ func (s *Spooler) processKeywordsTracking(ctx context.Context, tracker *models.A
 				s.logger.Error("failed to release lock on keyword tracker", zap.Error(err))
 			}
 		}()
-
 		keywordTracker := s.keywordTracker.GetKeywordTrackerBySource(tracker.Source.SourceType)
 		if err := keywordTracker.WithLogger(logger).TrackKeyword(ctx, tracker); err != nil {
 			logger.Error("failed to track keyword", zap.Error(err))
