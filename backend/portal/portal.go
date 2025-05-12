@@ -33,7 +33,6 @@ type Portal struct {
 	authenticator       *auth.Authenticator
 	vanaWebhookHandler  agents.WebhookHandler
 	customerCaseService services.CustomerCaseService
-	keywordService      services.KeywordService
 	authStateStore      state.AuthStateStore
 	redditOauthClient   *reddit.OauthClient
 	aiClient            *ai.Client
@@ -47,7 +46,6 @@ func New(
 	authStateStore state.AuthStateStore,
 	customerCaseService services.CustomerCaseService,
 	authUsecase *services.AuthUsecase,
-	keywordService services.KeywordService,
 	vanaWebhookHandler agents.WebhookHandler,
 	db datastore.Repository,
 	cache state2.ConversationState,
@@ -69,7 +67,6 @@ func New(
 		authenticator:       authenticator,
 		vanaWebhookHandler:  vanaWebhookHandler,
 		customerCaseService: customerCaseService,
-		keywordService:      keywordService,
 		db:                  db,
 		cache:               cache,
 		httpListenAddr:      httpListenAddr,

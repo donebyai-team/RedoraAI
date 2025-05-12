@@ -23,7 +23,7 @@ service PortalService {
   rpc GetIntegrations(.google.protobuf.Empty) returns (Integrations);
 
   // Reddit
-  rpc CreateKeyword(CreateKeywordReq) returns (.google.protobuf.Empty);
+  rpc CreateKeywords(CreateKeywordReq) returns (.google.protobuf.Empty);
   rpc AddSource(AddSourceRequest) returns (.google.protobuf.Empty);
   rpc GetSources(.google.protobuf.Empty) returns (GetSourceResponse);
   rpc RemoveSource(RemoveSourceRequest) returns (.google.protobuf.Empty);
@@ -87,7 +87,7 @@ message CreateCustomerCaseReq {
 }
 
 message CreateKeywordReq {
-  string keyword = 1;
+  repeated string keywords =1;
 }
 
 message BatchReq {

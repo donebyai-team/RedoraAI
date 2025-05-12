@@ -161,10 +161,14 @@ func (p *Portal) GetProjects(ctx context.Context, c *connect.Request[emptypb.Emp
 	}), nil
 }
 
-func (p *Portal) CreateKeyword(ctx context.Context, c *connect.Request[pbportal.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error) {
+func (p *Portal) CreateKeywords(ctx context.Context, c *connect.Request[pbportal.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error) {
 	actor, err := p.gethAuthContext(ctx)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(c.Msg.Keywords) == 0 {
+		return nil, status.New(codes.InvalidArgument, "at least one keyword is required").Err()
 	}
 
 	projectID, err := p.getProject(ctx, c.Header(), actor.OrganizationID)
@@ -172,12 +176,14 @@ func (p *Portal) CreateKeyword(ctx context.Context, c *connect.Request[pbportal.
 		return nil, err
 	}
 
-	req := services.CreateKeyword{
-		Keyword:   c.Msg.Keyword,
-		ProjectID: projectID,
+	for _, keyword := range c.Msg.Keywords {
+		err = utils.ValidateKeyword(keyword)
+		if err != nil {
+			return nil, connect.NewError(connect.CodeInvalidArgument, err)
+		}
 	}
 
-	_, err = p.keywordService.CreateKeyword(ctx, &req)
+	err = p.db.CreateKeywords(ctx, projectID, c.Msg.Keywords)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to create keyword: %w", err))
 	}

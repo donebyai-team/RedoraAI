@@ -62,9 +62,9 @@ const (
 	// PortalServiceGetIntegrationsProcedure is the fully-qualified name of the PortalService's
 	// GetIntegrations RPC.
 	PortalServiceGetIntegrationsProcedure = "/doota.portal.v1.PortalService/GetIntegrations"
-	// PortalServiceCreateKeywordProcedure is the fully-qualified name of the PortalService's
-	// CreateKeyword RPC.
-	PortalServiceCreateKeywordProcedure = "/doota.portal.v1.PortalService/CreateKeyword"
+	// PortalServiceCreateKeywordsProcedure is the fully-qualified name of the PortalService's
+	// CreateKeywords RPC.
+	PortalServiceCreateKeywordsProcedure = "/doota.portal.v1.PortalService/CreateKeywords"
 	// PortalServiceAddSourceProcedure is the fully-qualified name of the PortalService's AddSource RPC.
 	PortalServiceAddSourceProcedure = "/doota.portal.v1.PortalService/AddSource"
 	// PortalServiceGetSourcesProcedure is the fully-qualified name of the PortalService's GetSources
@@ -103,7 +103,7 @@ var (
 	portalServiceOauthAuthorizeMethodDescriptor      = portalServiceServiceDescriptor.Methods().ByName("OauthAuthorize")
 	portalServiceOauthCallbackMethodDescriptor       = portalServiceServiceDescriptor.Methods().ByName("OauthCallback")
 	portalServiceGetIntegrationsMethodDescriptor     = portalServiceServiceDescriptor.Methods().ByName("GetIntegrations")
-	portalServiceCreateKeywordMethodDescriptor       = portalServiceServiceDescriptor.Methods().ByName("CreateKeyword")
+	portalServiceCreateKeywordsMethodDescriptor      = portalServiceServiceDescriptor.Methods().ByName("CreateKeywords")
 	portalServiceAddSourceMethodDescriptor           = portalServiceServiceDescriptor.Methods().ByName("AddSource")
 	portalServiceGetSourcesMethodDescriptor          = portalServiceServiceDescriptor.Methods().ByName("GetSources")
 	portalServiceRemoveSourceMethodDescriptor        = portalServiceServiceDescriptor.Methods().ByName("RemoveSource")
@@ -129,7 +129,7 @@ type PortalServiceClient interface {
 	OauthCallback(context.Context, *connect.Request[v1.OauthCallbackRequest]) (*connect.Response[v1.OauthCallbackResponse], error)
 	GetIntegrations(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.Integrations], error)
 	// Reddit
-	CreateKeyword(context.Context, *connect.Request[v1.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error)
+	CreateKeywords(context.Context, *connect.Request[v1.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error)
 	AddSource(context.Context, *connect.Request[v1.AddSourceRequest]) (*connect.Response[emptypb.Empty], error)
 	GetSources(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetSourceResponse], error)
 	RemoveSource(context.Context, *connect.Request[v1.RemoveSourceRequest]) (*connect.Response[emptypb.Empty], error)
@@ -210,10 +210,10 @@ func NewPortalServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(portalServiceGetIntegrationsMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
-		createKeyword: connect.NewClient[v1.CreateKeywordReq, emptypb.Empty](
+		createKeywords: connect.NewClient[v1.CreateKeywordReq, emptypb.Empty](
 			httpClient,
-			baseURL+PortalServiceCreateKeywordProcedure,
-			connect.WithSchema(portalServiceCreateKeywordMethodDescriptor),
+			baseURL+PortalServiceCreateKeywordsProcedure,
+			connect.WithSchema(portalServiceCreateKeywordsMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
 		addSource: connect.NewClient[v1.AddSourceRequest, emptypb.Empty](
@@ -279,7 +279,7 @@ type portalServiceClient struct {
 	oauthAuthorize      *connect.Client[v1.OauthAuthorizeRequest, v1.OauthAuthorizeResponse]
 	oauthCallback       *connect.Client[v1.OauthCallbackRequest, v1.OauthCallbackResponse]
 	getIntegrations     *connect.Client[emptypb.Empty, v1.Integrations]
-	createKeyword       *connect.Client[v1.CreateKeywordReq, emptypb.Empty]
+	createKeywords      *connect.Client[v1.CreateKeywordReq, emptypb.Empty]
 	addSource           *connect.Client[v1.AddSourceRequest, emptypb.Empty]
 	getSources          *connect.Client[emptypb.Empty, v1.GetSourceResponse]
 	removeSource        *connect.Client[v1.RemoveSourceRequest, emptypb.Empty]
@@ -340,9 +340,9 @@ func (c *portalServiceClient) GetIntegrations(ctx context.Context, req *connect.
 	return c.getIntegrations.CallUnary(ctx, req)
 }
 
-// CreateKeyword calls doota.portal.v1.PortalService.CreateKeyword.
-func (c *portalServiceClient) CreateKeyword(ctx context.Context, req *connect.Request[v1.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error) {
-	return c.createKeyword.CallUnary(ctx, req)
+// CreateKeywords calls doota.portal.v1.PortalService.CreateKeywords.
+func (c *portalServiceClient) CreateKeywords(ctx context.Context, req *connect.Request[v1.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error) {
+	return c.createKeywords.CallUnary(ctx, req)
 }
 
 // AddSource calls doota.portal.v1.PortalService.AddSource.
@@ -400,7 +400,7 @@ type PortalServiceHandler interface {
 	OauthCallback(context.Context, *connect.Request[v1.OauthCallbackRequest]) (*connect.Response[v1.OauthCallbackResponse], error)
 	GetIntegrations(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.Integrations], error)
 	// Reddit
-	CreateKeyword(context.Context, *connect.Request[v1.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error)
+	CreateKeywords(context.Context, *connect.Request[v1.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error)
 	AddSource(context.Context, *connect.Request[v1.AddSourceRequest]) (*connect.Response[emptypb.Empty], error)
 	GetSources(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetSourceResponse], error)
 	RemoveSource(context.Context, *connect.Request[v1.RemoveSourceRequest]) (*connect.Response[emptypb.Empty], error)
@@ -477,10 +477,10 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(portalServiceGetIntegrationsMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
-	portalServiceCreateKeywordHandler := connect.NewUnaryHandler(
-		PortalServiceCreateKeywordProcedure,
-		svc.CreateKeyword,
-		connect.WithSchema(portalServiceCreateKeywordMethodDescriptor),
+	portalServiceCreateKeywordsHandler := connect.NewUnaryHandler(
+		PortalServiceCreateKeywordsProcedure,
+		svc.CreateKeywords,
+		connect.WithSchema(portalServiceCreateKeywordsMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
 	portalServiceAddSourceHandler := connect.NewUnaryHandler(
@@ -553,8 +553,8 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 			portalServiceOauthCallbackHandler.ServeHTTP(w, r)
 		case PortalServiceGetIntegrationsProcedure:
 			portalServiceGetIntegrationsHandler.ServeHTTP(w, r)
-		case PortalServiceCreateKeywordProcedure:
-			portalServiceCreateKeywordHandler.ServeHTTP(w, r)
+		case PortalServiceCreateKeywordsProcedure:
+			portalServiceCreateKeywordsHandler.ServeHTTP(w, r)
 		case PortalServiceAddSourceProcedure:
 			portalServiceAddSourceHandler.ServeHTTP(w, r)
 		case PortalServiceGetSourcesProcedure:
@@ -620,8 +620,8 @@ func (UnimplementedPortalServiceHandler) GetIntegrations(context.Context, *conne
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.GetIntegrations is not implemented"))
 }
 
-func (UnimplementedPortalServiceHandler) CreateKeyword(context.Context, *connect.Request[v1.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.CreateKeyword is not implemented"))
+func (UnimplementedPortalServiceHandler) CreateKeywords(context.Context, *connect.Request[v1.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.CreateKeywords is not implemented"))
 }
 
 func (UnimplementedPortalServiceHandler) AddSource(context.Context, *connect.Request[v1.AddSourceRequest]) (*connect.Response[emptypb.Empty], error) {

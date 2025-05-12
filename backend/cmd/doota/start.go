@@ -317,7 +317,6 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		state.NewRedisStore(sflags.MustGetString(cmd, "redis-addr"), zlog),
 		services.NewCustomerCaseServiceImpl(deps.DataStore),
 		authUsecase,
-		services.NewKeywordServiceImpl(deps.DataStore),
 		vanaWebhookHandler,
 		deps.DataStore,
 		deps.ConversationState,

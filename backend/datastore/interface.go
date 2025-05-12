@@ -106,7 +106,8 @@ type LeadRepository interface {
 
 type KeywordRepository interface {
 	GetKeywords(ctx context.Context, projectID string) ([]*models.Keyword, error)
-	CreateKeyword(ctx context.Context, keyword *models.Keyword) (*models.Keyword, error)
+	CreateKeywords(ctx context.Context, projectID string, keywords []string) error
+	RemoveKeyword(ctx context.Context, projectID, keywordID string) error
 	GetKeywordTrackers(ctx context.Context) ([]*models.AugmentedKeywordTracker, error)
 	UpdatKeywordTrackerLastTrackedAt(ctx context.Context, id string) error
 	CreateKeywordTracker(ctx context.Context, tracker *models.KeywordTracker) (*models.KeywordTracker, error)

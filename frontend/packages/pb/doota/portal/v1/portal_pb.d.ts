@@ -239,9 +239,9 @@ export declare const CreateCustomerCaseReqSchema: GenMessage<CreateCustomerCaseR
  */
 export declare type CreateKeywordReq = Message<"doota.portal.v1.CreateKeywordReq"> & {
   /**
-   * @generated from field: string keyword = 1;
+   * @generated from field: repeated string keywords = 1;
    */
-  keyword: string;
+  keywords: string[];
 };
 
 /**
@@ -969,9 +969,9 @@ export declare const PortalService: GenService<{
   /**
    * Reddit
    *
-   * @generated from rpc doota.portal.v1.PortalService.CreateKeyword
+   * @generated from rpc doota.portal.v1.PortalService.CreateKeywords
    */
-  createKeyword: {
+  createKeywords: {
     methodKind: "unary";
     input: typeof CreateKeywordReqSchema;
     output: typeof EmptySchema;
