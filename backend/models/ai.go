@@ -20,6 +20,21 @@ type RuleEvaluationResult struct {
 	ModelUsed             LLMModel `json:"model_used"`
 }
 
+type RedditKeywordSuggestionResult struct {
+	Keywords   []KeywordSuggestion   `json:"keywords"`
+	Subreddits []SubredditSuggestion `json:"subreddits"`
+}
+
+type KeywordSuggestion struct {
+	Keyword        string `json:"keyword"`
+	ChainOfThought string `json:"chain_of_thought"`
+}
+
+type SubredditSuggestion struct {
+	Subreddit      string `json:"subreddit"`
+	ChainOfThought string `json:"chain_of_thought"`
+}
+
 type RedditPostRelevanceResponse struct {
 	ChainOfThoughtIsRelevant       string       `json:"chain_of_thought"`
 	IsRelevantConfidenceScore      float64      `json:"relevant_confidence_score"`

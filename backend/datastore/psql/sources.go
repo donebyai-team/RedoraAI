@@ -16,6 +16,7 @@ func init() {
 		"source/query_source_by_project.sql",
 		"source/update_source.sql",
 		"keyword/delete_keyword_tracker_by_source_id.sql",
+		"keyword/create_keyword_tracker.sql",
 	})
 }
 
@@ -34,10 +35,18 @@ func (r *Database) UpdateSource(ctx context.Context, subreddit *models.Source) e
 }
 
 func (r *Database) AddSource(ctx context.Context, subreddit *models.Source) (*models.Source, error) {
-	stmt := r.mustGetStmt("source/create_source.sql")
+	tx, err := r.BeginTxx(ctx, nil)
+	if err != nil {
+		return nil, fmt.Errorf("begin transaction: %w", err)
+	}
+	defer func() {
+		err = executePotentialRollback(tx, err)
+	}()
+
+	stmt := r.mustGetTxStmt(ctx, "source/create_source.sql", tx)
 
 	var id string
-	err := stmt.GetContext(ctx, &id, map[string]interface{}{
+	err = stmt.GetContext(ctx, &id, map[string]interface{}{
 		"external_id": subreddit.ExternalID,
 		"name":        strings.ToLower(subreddit.Name),
 		"description": subreddit.Description,
@@ -50,6 +59,31 @@ func (r *Database) AddSource(ctx context.Context, subreddit *models.Source) (*mo
 	}
 
 	subreddit.ID = id
+
+	// Add trackers
+	// Create trackers for each keyword
+	keywords, err := r.GetKeywords(ctx, subreddit.ProjectID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch keywords by project: %w", err)
+	}
+
+	stmtKeywordTracker := r.mustGetTxStmt(ctx, "keyword/create_keyword_tracker.sql", tx)
+
+	for _, keyword := range keywords {
+		_, err = stmtKeywordTracker.ExecContext(ctx, map[string]interface{}{
+			"keyword_id": keyword.ID,
+			"source_id":  subreddit.ID,
+			"project_id": subreddit.ProjectID,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to add keyword tracker for keyword [%s]: %w", keyword.Keyword, err)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("commit transaction: %w", err)
+	}
+
 	return subreddit, nil
 }
 

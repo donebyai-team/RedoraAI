@@ -1,6 +1,7 @@
 package services
 
 import (
+	"connectrpc.com/connect"
 	"context"
 	"encoding/json"
 	"errors"
@@ -75,7 +76,7 @@ func (r redditService) CreateSubReddit(ctx context.Context, source *models.Sourc
 	}
 
 	if existingSubreddit != nil {
-		return fmt.Errorf("subreddit already exists: %s", source.Name)
+		return connect.NewError(connect.CodeAlreadyExists, fmt.Errorf("subreddit already exists"))
 	}
 
 	value, err := r.cache.Get(ctx, source.GetCacheKey())
@@ -132,22 +133,6 @@ func (r redditService) CreateSubReddit(ctx context.Context, source *models.Sourc
 	// If not cached before
 	if value == nil {
 		go r.cacheSubReddit(context.Background(), createdSource)
-	}
-
-	// Create trackers for each keyword
-	keywords, err := r.db.GetKeywords(ctx, createdSource.ProjectID)
-	if err != nil {
-		return fmt.Errorf("failed to fetch sources by project: %w", err)
-	}
-
-	for _, keyword := range keywords {
-		_, err := r.db.CreateKeywordTracker(ctx, &models.KeywordTracker{
-			SourceID:  createdSource.ID,
-			KeywordID: keyword.ID,
-		})
-		if err != nil {
-			return fmt.Errorf("failed to add keyword tracker for source [%s]: %w", createdSource.Name, err)
-		}
 	}
 
 	return nil
