@@ -31,7 +31,7 @@ const (
 	PortalService_OauthAuthorize_FullMethodName      = "/doota.portal.v1.PortalService/OauthAuthorize"
 	PortalService_OauthCallback_FullMethodName       = "/doota.portal.v1.PortalService/OauthCallback"
 	PortalService_GetIntegrations_FullMethodName     = "/doota.portal.v1.PortalService/GetIntegrations"
-	PortalService_CreateKeyword_FullMethodName       = "/doota.portal.v1.PortalService/CreateKeyword"
+	PortalService_CreateKeywords_FullMethodName      = "/doota.portal.v1.PortalService/CreateKeywords"
 	PortalService_AddSource_FullMethodName           = "/doota.portal.v1.PortalService/AddSource"
 	PortalService_GetSources_FullMethodName          = "/doota.portal.v1.PortalService/GetSources"
 	PortalService_RemoveSource_FullMethodName        = "/doota.portal.v1.PortalService/RemoveSource"
@@ -59,7 +59,7 @@ type PortalServiceClient interface {
 	OauthCallback(ctx context.Context, in *OauthCallbackRequest, opts ...grpc.CallOption) (*OauthCallbackResponse, error)
 	GetIntegrations(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Integrations, error)
 	// Reddit
-	CreateKeyword(ctx context.Context, in *CreateKeywordReq, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	CreateKeywords(ctx context.Context, in *CreateKeywordReq, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	AddSource(ctx context.Context, in *AddSourceRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GetSources(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetSourceResponse, error)
 	RemoveSource(ctx context.Context, in *RemoveSourceRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
@@ -168,9 +168,9 @@ func (c *portalServiceClient) GetIntegrations(ctx context.Context, in *emptypb.E
 	return out, nil
 }
 
-func (c *portalServiceClient) CreateKeyword(ctx context.Context, in *CreateKeywordReq, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *portalServiceClient) CreateKeywords(ctx context.Context, in *CreateKeywordReq, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, PortalService_CreateKeyword_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, PortalService_CreateKeywords_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -266,7 +266,7 @@ type PortalServiceServer interface {
 	OauthCallback(context.Context, *OauthCallbackRequest) (*OauthCallbackResponse, error)
 	GetIntegrations(context.Context, *emptypb.Empty) (*Integrations, error)
 	// Reddit
-	CreateKeyword(context.Context, *CreateKeywordReq) (*emptypb.Empty, error)
+	CreateKeywords(context.Context, *CreateKeywordReq) (*emptypb.Empty, error)
 	AddSource(context.Context, *AddSourceRequest) (*emptypb.Empty, error)
 	GetSources(context.Context, *emptypb.Empty) (*GetSourceResponse, error)
 	RemoveSource(context.Context, *RemoveSourceRequest) (*emptypb.Empty, error)
@@ -312,8 +312,8 @@ func (UnimplementedPortalServiceServer) OauthCallback(context.Context, *OauthCal
 func (UnimplementedPortalServiceServer) GetIntegrations(context.Context, *emptypb.Empty) (*Integrations, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetIntegrations not implemented")
 }
-func (UnimplementedPortalServiceServer) CreateKeyword(context.Context, *CreateKeywordReq) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateKeyword not implemented")
+func (UnimplementedPortalServiceServer) CreateKeywords(context.Context, *CreateKeywordReq) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateKeywords not implemented")
 }
 func (UnimplementedPortalServiceServer) AddSource(context.Context, *AddSourceRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddSource not implemented")
@@ -532,20 +532,20 @@ func _PortalService_GetIntegrations_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
-func _PortalService_CreateKeyword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _PortalService_CreateKeywords_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateKeywordReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(PortalServiceServer).CreateKeyword(ctx, in)
+		return srv.(PortalServiceServer).CreateKeywords(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: PortalService_CreateKeyword_FullMethodName,
+		FullMethod: PortalService_CreateKeywords_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PortalServiceServer).CreateKeyword(ctx, req.(*CreateKeywordReq))
+		return srv.(PortalServiceServer).CreateKeywords(ctx, req.(*CreateKeywordReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -742,8 +742,8 @@ var PortalService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _PortalService_GetIntegrations_Handler,
 		},
 		{
-			MethodName: "CreateKeyword",
-			Handler:    _PortalService_CreateKeyword_Handler,
+			MethodName: "CreateKeywords",
+			Handler:    _PortalService_CreateKeywords_Handler,
 		},
 		{
 			MethodName: "AddSource",
