@@ -3,10 +3,27 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 
 export type ProjectsTypes = Project | null
 
+export type SourcesTypes = {
+  id: string
+  name: string
+}
+
+type ProjectTypes = {
+  id?: string
+  name: string
+  description: string
+  website: string
+  targetPersona: string
+  keywords?: string[]
+  sources?: SourcesTypes[]
+  suggestedKeywords?: string[]
+  suggestedSources?: string[]
+}
+
 interface StepperState {
   activeStep: number
   skipped: number[]
-  projects: ProjectsTypes
+  projects: ProjectTypes | null
 }
 
 const initialState: StepperState = {
@@ -39,7 +56,7 @@ const stepperSlice = createSlice({
     setStep: (state, action: PayloadAction<number>) => {
       state.activeStep = action.payload
     },
-    setProjects: (state, action: PayloadAction<ProjectsTypes>) => {
+    setProjects: (state, action: PayloadAction<ProjectTypes>) => {
       state.projects = action.payload
     }
   }

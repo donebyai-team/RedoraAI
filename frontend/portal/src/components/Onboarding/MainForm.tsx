@@ -47,7 +47,7 @@ export default function ManinForm() {
     const skipped = useAppSelector((state: RootState) => state.stepper.skipped);
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
-    console.log("###_debug_data ", { loading, data });
+    // console.log("###_debug_data ", { loading, data });
 
     const isStepSkipped = (step: number) => skipped.includes(step);
 
@@ -58,7 +58,19 @@ export default function ManinForm() {
             setIsLoading(true);
 
             // Step 1: Set projects in store
-            dispatch(setProjects(data));
+
+            const newData = {
+                id: data.id ?? "",
+                name: data.name,
+                description: data.description,
+                website: data.website,
+                targetPersona: data.targetPersona,
+                keywords: data.keywords.map(keyword => keyword.name) ?? [],
+                sources: data.sources.map(source => ({ id: source.id, name: source.name })) ?? [],
+                suggestedKeywords: data.suggestedKeywords ?? [],
+                suggestedSources: data.suggestedSources ?? [],
+            };
+            dispatch(setProjects(newData));
 
             let nextStep = 0;
 

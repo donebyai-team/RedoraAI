@@ -127,7 +127,17 @@ export default function ProductInformationStep() {
             };
 
             const result = await portalClient.createOrEditProject(body);
-            dispatch(setProjects(result));
+            const newPayload = {
+                ...projects,
+                id: result.id ?? projects?.id,
+                name: result.name,
+                description: result.description,
+                website: result.website,
+                targetPersona: result.targetPersona,
+                suggestedKeywords: result.suggestedKeywords ?? [],
+                suggestedSources: result.suggestedSources ?? [],
+            };
+            dispatch(setProjects(newPayload));
 
             toast.success("Product Information saved successfully");
             dispatch(nextStep());

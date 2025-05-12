@@ -1,17 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
     Box,
     Typography,
-    TextField,
-    Stack,
-    Chip,
-    Autocomplete,
-    InputAdornment,
-    Paper,
 } from '@mui/material';
-import { Search, X } from 'lucide-react';
 import ProductInformationStep from './ProductInformationStep';
 import TrackKeywordStep from './TrackKeywordStep';
+import SelectSourcesStep from './SelectSourcesStep';
 
 interface StepContentProps {
     step: number;
@@ -19,8 +13,6 @@ interface StepContentProps {
 }
 
 const StepContent: React.FC<StepContentProps> = ({ step, stepLength }) => {
-    
-    const [selectedSubreddits, setSelectedSubreddits] = useState<string[]>([]);
 
     const StepCounter = () => (
         <Typography
@@ -35,11 +27,6 @@ const StepContent: React.FC<StepContentProps> = ({ step, stepLength }) => {
             Step {step + 1} of {stepLength}
         </Typography>
     );
-
-    const popularSubreddits = [
-        'technology', 'programming', 'webdev', 'startup',
-        'business', 'marketing', 'entrepreneur', 'software'
-    ];
 
     switch (step) {
         case 0:
@@ -77,76 +64,13 @@ const StepContent: React.FC<StepContentProps> = ({ step, stepLength }) => {
                 <Box>
                     <StepCounter />
                     <Typography variant="h5" gutterBottom color="primary">
-                        Select Subreddits
+                        Select Sources
                     </Typography>
                     <Typography color="text.secondary" sx={{ mb: 4 }}>
-                        Choose subreddits where you want to track your keywords.
+                        Choose your source where you want to track your keywords.
                     </Typography>
 
-                    <Stack spacing={3}>
-                        <Autocomplete
-                            multiple
-                            options={popularSubreddits}
-                            value={selectedSubreddits}
-                            onChange={(_, newValue) => setSelectedSubreddits(newValue)}
-                            renderInput={(params) => (
-                                <TextField
-                                    {...params}
-                                    label="Search Subreddits"
-                                    placeholder="Type to search..."
-                                    InputProps={{
-                                        ...params.InputProps,
-                                        startAdornment: (
-                                            <>
-                                                <InputAdornment position="start">
-                                                    <Search size={20} />
-                                                </InputAdornment>
-                                                {params.InputProps.startAdornment}
-                                            </>
-                                        ),
-                                    }}
-                                />
-                            )}
-                            renderTags={(value, getTagProps) =>
-                                value.map((option, index) => (
-                                    <React.Fragment key={index}>
-                                        <Chip
-                                            label={option}
-                                            {...getTagProps({ index })}
-                                            color="primary"
-                                            onDelete={() => {
-                                                const newSelected = selectedSubreddits.filter(
-                                                    (item) => item !== option
-                                                );
-                                                setSelectedSubreddits(newSelected);
-                                            }}
-                                            deleteIcon={<X size={16} />}
-                                        />
-                                    </React.Fragment>
-                                ))
-                            }
-                        />
-
-                        <Paper variant="outlined" sx={{ p: 2, bgcolor: 'background.default' }}>
-                            <Typography variant="subtitle2" gutterBottom>
-                                Popular Subreddits
-                            </Typography>
-                            <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
-                                {popularSubreddits.slice(0, 6).map((subreddit) => (
-                                    <Chip
-                                        key={subreddit}
-                                        label={`r/${subreddit}`}
-                                        onClick={() => {
-                                            if (!selectedSubreddits.includes(subreddit)) {
-                                                setSelectedSubreddits([...selectedSubreddits, subreddit]);
-                                            }
-                                        }}
-                                        size="small"
-                                    />
-                                ))}
-                            </Stack>
-                        </Paper>
-                    </Stack>
+                    <SelectSourcesStep />
                 </Box>
             );
 
