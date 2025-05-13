@@ -69,6 +69,7 @@ func (p *Portal) CreateOrEditProject(ctx context.Context, c *connect.Request[pbp
 	}
 
 	var project *models.Project
+	shouldSuggestKeywords := true
 
 	if c.Msg.Id != "" {
 		existingProject, err := p.db.GetProject(ctx, c.Msg.Id)
@@ -88,18 +89,26 @@ func (p *Portal) CreateOrEditProject(ctx context.Context, c *connect.Request[pbp
 			}
 		}
 
+		// suggest only if any of these field changes
+		if (existingProject.Name == c.Msg.Name &&
+			existingProject.ProductDescription == c.Msg.Description &&
+			existingProject.CustomerPersona == c.Msg.TargetPersona) &&
+			(len(existingProject.Metadata.SuggestedSubReddits) != 0 || len(existingProject.Metadata.SuggestedKeywords) != 0) {
+			shouldSuggestKeywords = false
+		}
+
 		project, err = p.db.UpdateProject(ctx, &models.Project{
 			OrganizationID:     actor.OrganizationID,
 			Name:               c.Msg.Name,
 			ProductDescription: c.Msg.Description,
 			CustomerPersona:    c.Msg.TargetPersona,
 			WebsiteURL:         c.Msg.Website,
+			Metadata:           existingProject.Metadata,
 			ID:                 existingProject.ID,
 		})
 		if err != nil {
 			return nil, err
 		}
-
 	} else {
 		project, err = p.db.GetProjectByName(ctx, c.Msg.Name, actor.OrganizationID)
 		if err != nil && !errors.Is(err, datastore.NotFound) {
@@ -123,39 +132,44 @@ func (p *Portal) CreateOrEditProject(ctx context.Context, c *connect.Request[pbp
 		}
 	}
 
+	if shouldSuggestKeywords {
+		suggestions, usage, err := p.aiClient.SuggestKeywordsAndSubreddits(ctx, p.aiClient.GetAdvanceModel(), project, p.logger)
+		if err != nil {
+			p.logger.Error("failed to get keyword suggestions", zap.Error(err))
+		}
+
+		if suggestions != nil {
+			p.logger.Debug("adding keyword suggestions",
+				zap.String("model_used", string(usage.Model)),
+				zap.Int("num_suggestions", len(suggestions.Keywords)),
+				zap.Int("num_subreddits", len(suggestions.Subreddits)))
+
+			for _, keyword := range suggestions.Keywords {
+				if keyword.Keyword == "" {
+					continue
+				}
+				project.Metadata.SuggestedKeywords = append(project.Metadata.SuggestedKeywords, keyword.Keyword)
+			}
+
+			for _, subreddit := range suggestions.Subreddits {
+				if subreddit.Subreddit == "" {
+					continue
+				}
+				if !strings.HasPrefix(subreddit.Subreddit, "r/") {
+					subreddit.Subreddit = "r/" + subreddit.Subreddit
+				}
+
+				project.Metadata.SuggestedSubReddits = append(project.Metadata.SuggestedSubReddits, subreddit.Subreddit)
+			}
+
+			// Update project metadata
+			p.db.UpdateProject(ctx, project)
+		}
+	}
+
 	projectProto, err := p.projectToProto(ctx, project)
 	if err != nil {
 		return nil, err
-	}
-
-	suggestions, usage, err := p.aiClient.SuggestKeywordsAndSubreddits(ctx, p.aiClient.GetAdvanceModel(), project, p.logger)
-	if err != nil {
-		p.logger.Error("failed to get keyword suggestions", zap.Error(err))
-	}
-
-	if suggestions != nil {
-		p.logger.Debug("adding keyword suggestions",
-			zap.String("model_used", string(usage.Model)),
-			zap.Int("num_suggestions", len(suggestions.Keywords)),
-			zap.Int("num_subreddits", len(suggestions.Subreddits)))
-
-		for _, keyword := range suggestions.Keywords {
-			if keyword.Keyword == "" {
-				continue
-			}
-			projectProto.SuggestedKeywords = append(projectProto.SuggestedKeywords, keyword.Keyword)
-		}
-
-		for _, subreddit := range suggestions.Subreddits {
-			if subreddit.Subreddit == "" {
-				continue
-			}
-			if !strings.HasPrefix(subreddit.Subreddit, "r/") {
-				subreddit.Subreddit = "r/" + subreddit.Subreddit
-			}
-
-			projectProto.SuggestedSources = append(projectProto.SuggestedSources, subreddit.Subreddit)
-		}
 	}
 
 	return connect.NewResponse(projectProto), nil

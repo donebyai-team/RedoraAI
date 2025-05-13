@@ -71,6 +71,8 @@ func (u *Project) FromModel(product *models.Project, sources []*models.Source, k
 
 	u.Keywords = keywordsProto
 	u.Sources = sourcesProto
+	u.SuggestedSources = product.Metadata.SuggestedSubReddits
+	u.SuggestedKeywords = product.Metadata.SuggestedKeywords
 	return u
 }
 
