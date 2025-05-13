@@ -35,6 +35,7 @@ func NewAuthenticator(
 			"/doota.portal.v1.PortalService/PasswordlessStart":   true,
 			"/doota.portal.v1.PortalService/PasswordlessVerify":  true,
 			"/doota.portal.v1.PortalService/SocialLoginCallback": true,
+			"/doota.portal.v1.PortalService/OauthAuthorize":      true,
 		},
 		logger: logger,
 	}
