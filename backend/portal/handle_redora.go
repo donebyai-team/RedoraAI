@@ -133,13 +133,14 @@ func (p *Portal) CreateOrEditProject(ctx context.Context, c *connect.Request[pbp
 	}
 
 	if shouldSuggestKeywords {
+		p.logger.Info("suggesting keywords", zap.String("project_id", project.ID))
 		suggestions, usage, err := p.aiClient.SuggestKeywordsAndSubreddits(ctx, p.aiClient.GetAdvanceModel(), project, p.logger)
 		if err != nil {
 			p.logger.Error("failed to get keyword suggestions", zap.Error(err))
 		}
 
 		if suggestions != nil {
-			p.logger.Debug("adding keyword suggestions",
+			p.logger.Info("adding keyword suggestions",
 				zap.String("model_used", string(usage.Model)),
 				zap.Int("num_suggestions", len(suggestions.Keywords)),
 				zap.Int("num_subreddits", len(suggestions.Subreddits)))
