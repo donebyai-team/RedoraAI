@@ -45,7 +45,7 @@ func (a *AuthUsecase) StartPasswordless(ctx context.Context, email string, ip st
 
 func (a *AuthUsecase) SignUser(ctx context.Context, email string) (*pbportal.JWT, error) {
 	logger := logging.Logger(ctx, a.logger)
-	jwt, err := a.getUser(ctx, email, "", false, logger)
+	jwt, err := a.getUser(ctx, email, "", true, logger)
 	if err != nil {
 		return nil, fmt.Errorf("get user: %w", err)
 	}
