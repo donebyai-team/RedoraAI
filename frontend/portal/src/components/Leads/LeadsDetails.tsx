@@ -72,6 +72,10 @@ const LeadsPostDetails = () => {
     return selectedleadData?.postCreatedAt ? formateDate(selectedleadData.postCreatedAt) : "N/A";
   }, [selectedleadData?.postCreatedAt]);
 
+  const formattedDateCreatedAt = useMemo(() => {
+    return selectedleadData?.createdAt ? formateDate(selectedleadData.createdAt) : "N/A";
+  }, [selectedleadData?.createdAt]);
+
   const handleCloseLeadDetail = useCallback(() => {
     dispatch(setSelectedLeadData(null));
   }, [dispatch]);
@@ -323,7 +327,7 @@ const LeadsPostDetails = () => {
                           </Box>
                           {(selectedleadData.metadata?.automatedCommentUrl && (
                             <Typography variant="body2" color="text.secondary">
-                              {formattedDate}
+                              {formattedDateCreatedAt}
                             </Typography>
                           ))}
                         </Box>
