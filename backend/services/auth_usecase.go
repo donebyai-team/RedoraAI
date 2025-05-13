@@ -120,45 +120,62 @@ func (p *AuthUsecase) decodeIDToken(idToken *oidc.IDToken, nonce *string) (*Auth
 	}, nil
 }
 
-func (a *AuthUsecase) getUser(ctx context.Context, email, externalAuthProviderID string, emailVerified bool, logger *zap.Logger) (*pbportal.JWT, error) {
-	user, err := a.db.GetUserByEmail(ctx, email)
-	if err != nil && err != datastore.NotFound {
-		logger.Warn("failed to get user", zap.Error(err),
-			zap.String("external_id", externalAuthProviderID),
-			zap.String("email", email),
-		)
-		return nil, fmt.Errorf("unable to get user: %w", err)
+func (a *AuthUsecase) createUserForEmail(ctx context.Context, email string, emailVerified bool, logger *zap.Logger) (*models.User, error) {
+	orgName := utils.GetOrganizationName(email)
+
+	org, err := a.db.GetOrganizationByName(ctx, orgName)
+	if err != nil && !errors.Is(err, datastore.NotFound) {
+		logger.Error("failed to get organization", zap.Error(err), zap.String("org_name", orgName))
+		return nil, fmt.Errorf("unable to get organization: %w", err)
 	}
 
-	if err != nil {
-		if errors.Is(err, datastore.NotFound) {
-			organization, err := a.db.CreateOrganization(ctx, &models.Organization{Name: utils.GetOrganizationName(email)})
-			if err != nil {
-				return nil, fmt.Errorf("unable to create organization: %w", err)
-			}
-
-			user, err = a.db.CreateUser(ctx, &models.User{
-				Email:          email,
-				EmailVerified:  emailVerified,
-				OrganizationID: organization.ID,
-				Role:           models.UserRoleADMIN,
-				State:          models.UserStateACTIVE,
-			})
-			if err != nil {
-				return nil, fmt.Errorf("unable to create user: %w", err)
-			}
-		} else {
-			return nil, err
+	if org == nil {
+		org, err = a.db.CreateOrganization(ctx, &models.Organization{Name: orgName})
+		if err != nil {
+			logger.Error("failed to create organization", zap.Error(err), zap.String("org_name", orgName))
+			return nil, fmt.Errorf("unable to create organization: %w", err)
 		}
 	}
 
-	resp, err := a.getJWTToken(ctx, user)
+	user := &models.User{
+		Email:          email,
+		EmailVerified:  emailVerified,
+		OrganizationID: org.ID,
+		Role:           models.UserRoleADMIN,
+		State:          models.UserStateACTIVE,
+	}
+
+	createdUser, err := a.db.CreateUser(ctx, user)
+	if err != nil {
+		logger.Error("failed to create user", zap.Error(err), zap.String("email", email))
+		return nil, fmt.Errorf("unable to create user: %w", err)
+	}
+
+	return createdUser, nil
+}
+
+func (a *AuthUsecase) getUser(ctx context.Context, email, externalAuthProviderID string, emailVerified bool, logger *zap.Logger) (*pbportal.JWT, error) {
+	user, err := a.db.GetUserByEmail(ctx, email)
+	switch {
+	case err == nil:
+		// user found, continue
+	case errors.Is(err, datastore.NotFound):
+		user, err = a.createUserForEmail(ctx, email, emailVerified, logger)
+		if err != nil {
+			return nil, err
+		}
+	default:
+		logger.Warn("failed to get user", zap.Error(err), zap.String("email", email))
+		return nil, fmt.Errorf("unable to get user: %w", err)
+	}
+
+	token, err := a.getJWTToken(ctx, user)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create token for user credentials: %w", err)
 	}
 
 	logger.Info("jwt issued", zap.String("user_id", user.ID))
-	return resp, nil
+	return token, nil
 }
 
 func (a *AuthUsecase) getJWTToken(ctx context.Context, user *models.User) (*pbportal.JWT, error) {
