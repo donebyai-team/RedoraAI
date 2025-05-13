@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -102,6 +103,50 @@ I’m planning to test them out myself soon too.`,
 			// Check if the actual output matches the expected result
 			if actual != tt.expected {
 				t.Errorf("FormatComment() = %v; expected %v", actual, tt.expected)
+			}
+		})
+	}
+}
+
+func TestGetOrganizationName(t *testing.T) {
+	tests := []struct {
+		email        string
+		expectPrefix string // since generateUnique() adds random suffix
+		description  string
+	}{
+		{
+			email:        "john@openai.com",
+			expectPrefix: "Openai",
+			description:  "custom domain should return capitalized domain prefix",
+		},
+		{
+			email:        "jane.doe@gmail.com",
+			expectPrefix: "jane.doe-",
+			description:  "generic domain should return local part with suffix",
+		},
+		{
+			email:        "user@unknowncustomdomain.org",
+			expectPrefix: "Unknowncustomdomain",
+			description:  "custom domain with uncommon TLD",
+		},
+		{
+			email:        "invalid-email",
+			expectPrefix: "user-",
+			description:  "malformed email should fallback to user prefix",
+		},
+		{
+			email:        "",
+			expectPrefix: "user-",
+			description:  "empty email should fallback to user prefix",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.description, func(t *testing.T) {
+			orgName := GetOrganizationName(test.email)
+
+			if !strings.HasPrefix(orgName, test.expectPrefix) {
+				t.Errorf("expected prefix %q, got %q", test.expectPrefix, orgName)
 			}
 		})
 	}
