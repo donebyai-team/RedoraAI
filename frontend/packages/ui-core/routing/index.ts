@@ -20,7 +20,7 @@ export const routes = {
     auth: {
       login: '/auth/login',
       callback: '/auth/callback',
-      onboarding: '/auth/onboarding',
+      onboarding: '/onboarding',
     },
     serverError: '/500'
   }

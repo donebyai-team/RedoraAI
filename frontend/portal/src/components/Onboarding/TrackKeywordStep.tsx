@@ -73,6 +73,21 @@ export default function TrackKeywordStep() {
         setValue("newKeyword", "");
     }, [newKeyword, keywords, setValue]);
 
+    const addKeyword = useCallback((value: string) => {
+        const trimmed = value.trim();
+        if (!trimmed) return;
+
+        const isDuplicate = keywords.some(
+            (k) => k.toLowerCase() === trimmed.toLowerCase()
+        );
+
+        if (isDuplicate) {
+            toast.error(`"${trimmed}" is already added`);
+            return;
+        }
+
+        setValue("keywords", [...keywords, trimmed]);
+    }, [keywords, setValue]);
 
     const handleDeleteKeyword = useCallback((index: number) => {
         const updated = keywords.filter((_, i) => i !== index);
@@ -88,8 +103,6 @@ export default function TrackKeywordStep() {
                 await portalClient.createKeywords({ keywords: data.keywords });
 
                 dispatch(setProjects({ ...projects, keywords: data.keywords }));
-
-                toast.success("Keywords saved successfully");
                 dispatch(nextStep());
             } catch (err: any) {
                 const message = err?.response?.data?.message || err.message || "Something went wrong";
@@ -103,16 +116,25 @@ export default function TrackKeywordStep() {
 
     const handleBack = useCallback(() => dispatch(prevStep()), [dispatch]);
 
+    const filteredSuggestions = listOfSuggestedKeywords.filter(
+        (suggestion) =>
+            !keywords.some(
+                (keyword) => keyword.toLowerCase() === suggestion.toLowerCase()
+            )
+    );
+
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
-            <Stack spacing={3} mb={5}>
+            <Stack spacing={2} mb={3} gap={4}>
                 <Controller
                     name="newKeyword"
                     control={control}
                     render={({ field }) => (
                         <TextField
+                            size="small"
                             fullWidth
                             label="Add Keyword"
+                            variant="outlined"
                             {...field}
                             onKeyDown={(e) => {
                                 if (e.key === "Enter") {
@@ -123,8 +145,8 @@ export default function TrackKeywordStep() {
                             InputProps={{
                                 endAdornment: (
                                     <InputAdornment position="end">
-                                        <IconButton onClick={handleAddKeyword} edge="end">
-                                            <Plus size={20} />
+                                        <IconButton onClick={handleAddKeyword} edge="end" size="small">
+                                            <Plus size={16} />
                                         </IconButton>
                                     </InputAdornment>
                                 ),
@@ -133,7 +155,14 @@ export default function TrackKeywordStep() {
                     )}
                 />
 
-                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                <Box
+                    sx={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: 0.5,
+                        px: 0.5,
+                    }}
+                >
                     {keywords.map((keyword, index) => (
                         <Chip
                             key={`${keyword}-${index}`}
@@ -141,22 +170,41 @@ export default function TrackKeywordStep() {
                             onDelete={() => handleDeleteKeyword(index)}
                             color="primary"
                             variant="outlined"
+                            size="small"
+                            sx={{ fontSize: "0.75rem", py: 0.5 }}
                         />
                     ))}
                 </Box>
 
-                {listOfSuggestedKeywords.length > 0 && (
-                    <Paper variant="outlined" sx={{ p: 2, bgcolor: "background.default" }}>
-                        <Typography variant="subtitle2" gutterBottom>
-                            Suggested Keywords
+                {filteredSuggestions?.length > 0 && (
+                    <Paper
+                        variant="outlined"
+                        sx={{
+                            p: 1.5,
+                            bgcolor: "background.default",
+                            mt: 1,
+                        }}
+                    >
+                        <Typography
+                            variant="body2"
+                            gutterBottom
+                            sx={{ fontWeight: 500 }}
+                        >
+                            {`Suggested Keywords as per ${projects?.name}`}
                         </Typography>
-                        <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
-                            {listOfSuggestedKeywords.map((suggestion, index) => (
+                        <Stack
+                            direction="row"
+                            spacing={0.5}
+                            flexWrap="wrap"
+                            gap={0.5}
+                        >
+                            {filteredSuggestions.map((suggestion, index) => (
                                 <Chip
                                     key={index}
                                     label={suggestion}
-                                    onClick={() => setValue("newKeyword", suggestion)}
+                                    onClick={() => addKeyword(suggestion)}
                                     size="small"
+                                    sx={{ fontSize: "0.7rem", py: 0.3 }}
                                 />
                             ))}
                         </Stack>

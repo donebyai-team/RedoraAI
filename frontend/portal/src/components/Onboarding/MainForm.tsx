@@ -71,7 +71,6 @@ export default function ManinForm() {
 
             // Step 2: Run all checks
             const { id, website, name, description, targetPersona, keywords, sources } = data;
-            console.log("###_steps ", data);
 
             const hasBasicInfo = Boolean(id && website && name && description && targetPersona);
             const hasKeywords = Array.isArray(keywords) && keywords.length > 0;
@@ -95,7 +94,6 @@ export default function ManinForm() {
 
         handleStepNavigation();
     }, [loading, data, error, dispatch]);
-
 
     if (loading || isLoading) {
         return <AuthLoading />
@@ -128,7 +126,7 @@ export default function ManinForm() {
                                     orientation="vertical"
                                     sx={{
                                         '& .MuiStepConnector-line': {
-                                            minHeight: '40px',
+                                            minHeight: '60px',
                                             borderLeftWidth: '2px',
                                             ml: '8px',
                                             borderColor: 'rgba(25, 118, 210, 0.2)'

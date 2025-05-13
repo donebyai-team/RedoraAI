@@ -22,7 +22,7 @@ export const useOnboardingStatus = (): OnboardingStatus => {
     const fetchStatus = async () => {
       setLoading(true)
       try {
-        const data = await portalClient.getProjects({})
+        const data = await portalClient.self({})
         setIsOnboardingDone(data?.isOnboardingDone ?? false)
         seData(data.projects?.[0] ?? null)
         setError(null)

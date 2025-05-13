@@ -3,7 +3,7 @@
 import {
     TextField,
     CircularProgress,
-    Typography
+    Typography,
 } from "@mui/material";
 import { Stack } from "@mui/system";
 import StepperControls from "./StepperControls";
@@ -31,6 +31,7 @@ type FieldConfig = {
     rules: Record<string, any>;
     multiline?: boolean;
     rows?: number;
+    helperText?: string;
 };
 
 const fields: FieldConfig[] = [
@@ -53,12 +54,16 @@ const fields: FieldConfig[] = [
         rules: { required: "Description is required" },
         multiline: true,
         rows: 3,
+        helperText: "Add what your product does in brief between 15-20 words",
     },
     {
         name: "targetPersona",
         label: "Target Audience",
         placeholder: "e.g., Developers, Marketers, Small Business Owners",
         rules: { required: "Target audience is required" },
+        multiline: true,
+        rows: 3,
+        helperText: "Briefly explain what kind of customer you are targeting in 15-20 words",
     },
 ];
 
@@ -134,12 +139,12 @@ export default function ProductInformationStep() {
                 description: result.description,
                 website: result.website,
                 targetPersona: result.targetPersona,
-                suggestedKeywords: result.suggestedKeywords ?? [],
-                suggestedSources: result.suggestedSources ?? [],
+                suggestedKeywords: result?.suggestedKeywords ?? [],
+                suggestedSources: result?.suggestedSources ?? [],
+                // suggestedKeywords: ["SEO AI", "DEV"],
+                // suggestedSources: ["r/php", "r/java", "r/laravel"],
             };
             dispatch(setProjects(newPayload));
-
-            toast.success("Product Information saved successfully");
             dispatch(nextStep());
         } catch (err: any) {
             const message = err?.response?.data?.message || err.message || "Something went wrong";
@@ -153,32 +158,42 @@ export default function ProductInformationStep() {
 
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
-            <Stack spacing={3} mb={5}>
+            <Stack spacing={2} mb={3} gap={3.8}>
                 {fields.map((field) => (
                     <Controller
                         key={field.name}
-                        name={field.name as keyof ProductFormValues}
+                        name={field.name}
                         control={control}
                         rules={field.rules}
                         render={({ field: controllerField }) => (
                             <TextField
                                 {...controllerField}
+                                size="small"
                                 fullWidth
                                 label={field.label}
                                 placeholder={field.placeholder}
-                                error={!!errors[field.name as keyof ProductFormValues]}
-                                helperText={errors[field.name as keyof ProductFormValues]?.message}
-                                disabled={isLoading}
                                 multiline={field.multiline}
                                 rows={field.rows}
+                                disabled={isLoading || loadingMeta}
+                                error={!!errors[field.name]}
+                                helperText={
+                                    errors[field.name]?.message ?? field.helperText
+                                }
+                                FormHelperTextProps={{
+                                    sx: { ml: 1.5, fontSize: "0.75rem" },
+                                }}
                             />
                         )}
                     />
                 ))}
 
                 {loadingMeta && (
-                    <Typography variant="body2" color="text.secondary" sx={{ display: "flex", alignItems: "center" }}>
-                        <CircularProgress size={14} sx={{ mr: 1 }} />
+                    <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                    >
+                        <CircularProgress size={12} />
                         Fetching site metadata...
                     </Typography>
                 )}
@@ -189,7 +204,7 @@ export default function ProductInformationStep() {
                 handleBack={handleBack}
                 handleNext={handleSubmit(onSubmit)}
                 steps={steps}
-                btnDisabled={isLoading}
+                btnDisabled={isLoading || loadingMeta}
             />
         </form>
     );

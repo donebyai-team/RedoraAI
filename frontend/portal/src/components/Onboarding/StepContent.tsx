@@ -20,9 +20,9 @@ const StepContent: React.FC<StepContentProps> = ({ step, stepLength }) => {
             sx={{
                 color: 'primary.main',
                 fontWeight: 500,
-                mb: 2,
                 display: 'block'
             }}
+            mb={2}
         >
             Step {step + 1} of {stepLength}
         </Typography>
@@ -31,12 +31,12 @@ const StepContent: React.FC<StepContentProps> = ({ step, stepLength }) => {
     switch (step) {
         case 0:
             return (
-                <Box>
+                <Box p={5}>
                     <StepCounter />
-                    <Typography variant="h5" gutterBottom color="primary">
+                    <Typography variant="h5" gutterBottom color="primary" mb={3}>
                         Product Information
                     </Typography>
-                    <Typography color="text.secondary" sx={{ mb: 4 }}>
+                    <Typography color="text.secondary" mb={5}>
                         Tell us about your product to help us track relevant discussions.
                     </Typography>
 
@@ -46,12 +46,12 @@ const StepContent: React.FC<StepContentProps> = ({ step, stepLength }) => {
 
         case 1:
             return (
-                <Box>
+                <Box p={5}>
                     <StepCounter />
-                    <Typography variant="h5" gutterBottom color="primary">
+                    <Typography variant="h5" gutterBottom color="primary" mb={2}>
                         Track Keywords
                     </Typography>
-                    <Typography color="text.secondary" sx={{ mb: 4 }}>
+                    <Typography color="text.secondary" mb={4}>
                         Add keywords related to your product that you want to track on Reddit.
                     </Typography>
 
@@ -61,7 +61,7 @@ const StepContent: React.FC<StepContentProps> = ({ step, stepLength }) => {
 
         case 2:
             return (
-                <Box>
+                <Box p={5}>
                     <StepCounter />
                     <Typography variant="h5" gutterBottom color="primary">
                         Select Sources

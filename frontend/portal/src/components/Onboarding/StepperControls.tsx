@@ -17,8 +17,8 @@ const StepperControls: React.FC<StepperControlsProps> = ({
   steps,
   btnDisabled
 }) => {
-  //   const isLastStep = activeStep === steps.length - 1;
-  const isFirstStep = btnDisabled || activeStep === 0;
+  
+  const isFirstStep = activeStep === 0;
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', pt: 2, pb: 2 }}>
@@ -36,7 +36,6 @@ const StepperControls: React.FC<StepperControlsProps> = ({
       {activeStep === steps.length - 1 ? (
         <Button
           variant="contained"
-          color="success"
           onClick={handleNext}
           endIcon={<Check size={18} />}
           disabled={btnDisabled}

@@ -7,12 +7,11 @@ import {
     Typography,
     Chip,
     Box,
-    InputAdornment,
     Paper,
     Stack,
     Autocomplete,
 } from "@mui/material";
-import { Search, X } from "lucide-react";
+import { X } from "lucide-react";
 import StepperControls from "./StepperControls";
 import { useAppSelector } from "../../../store/hooks";
 import { RootState } from "../../../store/store";
@@ -80,11 +79,11 @@ export default function SelectSourcesStep() {
             await portalClient.addSource({ name: nameToSend });
 
             // 🔄 Get fresh list after add
-            const updatedProjects = await portalClient.getProjects({});
+            const updatedProjects = await portalClient.self({});
             const updatedSources = updatedProjects.projects?.[0].sources.map(source => ({ id: source.id, name: source.name })) ?? [];
 
             setValue("sources", updatedSources);
-            toast.success(`Added ${nameToSend}`);
+            // toast.success(`Added ${nameToSend}`);
             setInputValue("");
 
         } catch (err: any) {
@@ -101,11 +100,11 @@ export default function SelectSourcesStep() {
             await portalClient.removeSource({ id: source.id });
 
             // 🔥 Get fresh list after remove
-            const updatedProjects = await portalClient.getProjects({});
+            const updatedProjects = await portalClient.self({});
             const updatedSources = updatedProjects.projects?.[0].sources.map(source => ({ id: source.id, name: source.name })) ?? [];
 
             setValue("sources", updatedSources);
-            toast.success(`Removed r/${source.name}`);
+            // toast.success(`Removed r/${source.name}`);
 
         } catch (err: any) {
             const message = err?.response?.data?.message || err.message || "Failed to remove";
@@ -122,7 +121,7 @@ export default function SelectSourcesStep() {
 
             try {
                 dispatch(setProjects({ ...projects, sources: data.sources }));
-                toast.success("Sources saved successfully");
+                // toast.success("Sources saved successfully");
                 routers.push(routes.app.home);
             } catch (err: any) {
                 const message = err?.response?.data?.message || err.message || "Something went wrong";
@@ -143,13 +142,20 @@ export default function SelectSourcesStep() {
         }
     };
 
+    const filteredSuggestions = listOfSuggestedSources.filter(
+        (subreddit) => {
+            const plainName = subreddit.replace(/^r\//i, "").toLowerCase();
+            return !sources.some((s) => s.name.toLowerCase() === plainName);
+        }
+    );
+
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
-            <Stack spacing={3} mb={5}>
+            <Stack spacing={3} mb={5} gap={4}>
                 <Autocomplete
                     multiple
                     freeSolo
-                    options={listOfSuggestedSources}
+                    options={[]}
                     value={sources.map((s) => s.name)}
                     inputValue={inputValue}
                     onInputChange={(_, newInputValue) => setInputValue(newInputValue)}
@@ -157,19 +163,8 @@ export default function SelectSourcesStep() {
                     renderInput={(params) => (
                         <TextField
                             {...params}
-                            label="Search Subreddits"
-                            placeholder="Type subreddit and press Enter"
-                            InputProps={{
-                                ...params.InputProps,
-                                startAdornment: (
-                                    <>
-                                        <InputAdornment position="start">
-                                            <Search size={20} />
-                                        </InputAdornment>
-                                        {params.InputProps.startAdornment}
-                                    </>
-                                ),
-                            }}
+                            label="Add Subreddit To Track"
+                            placeholder="choose relevant subreddits to track keywords"
                             onKeyDown={handleKeyDown}
                         />
                     )}
@@ -200,49 +195,54 @@ export default function SelectSourcesStep() {
                                         )
                                     }
                                     disabled={isLoading}
+                                    sx={{
+                                        p: 2,
+                                        fontSize: "0.75rem"
+                                    }}
                                 />
                             );
                         })
                     }
                 />
 
-                <Paper variant="outlined" sx={{ p: 2, bgcolor: 'background.default' }}>
-                    <Typography variant="subtitle2" gutterBottom>
-                        Popular Subreddits
-                    </Typography>
-                    <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
-                        {listOfSuggestedSources.map((subreddit) => {
-                            const isSelected = sources.some((s) => s.name === subreddit);
-                            const isLoading = loadingSubredditId === subreddit;
+                {filteredSuggestions.length > 0 && (
+                    <Paper variant="outlined" sx={{ p: 2, bgcolor: 'background.default' }}>
+                        <Typography variant="subtitle2" gutterBottom>
+                            {`Suggested subreddit as per ${projects?.name}`}
+                        </Typography>
+                        <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
+                            {filteredSuggestions.map((subreddit) => {
+                                const isLoading = loadingSubredditId === subreddit;
 
-                            return (
-                                <Chip
-                                    key={subreddit}
-                                    label={`${subreddit}`}
-                                    onClick={() => handleAddSubreddit(subreddit)}
-                                    size="small"
-                                    color={isSelected ? "primary" : "default"}
-                                    disabled={isLoading || isSelected}
-                                    deleteIcon={
-                                        isLoading ? (
-                                            <Box
-                                                component="span"
-                                                sx={{
-                                                    border: '2px solid transparent',
-                                                    borderTop: '2px solid currentColor',
-                                                    borderRadius: '50%',
-                                                    width: 16,
-                                                    height: 16,
-                                                    animation: 'spin 0.6s linear infinite',
-                                                }}
-                                            />
-                                        ) : undefined
-                                    }
-                                />
-                            );
-                        })}
-                    </Stack>
-                </Paper>
+                                return (
+                                    <Chip
+                                        key={subreddit}
+                                        label={subreddit}
+                                        onClick={() => handleAddSubreddit(subreddit)}
+                                        size="small"
+                                        disabled={isLoading}
+                                        deleteIcon={
+                                            isLoading ? (
+                                                <Box
+                                                    component="span"
+                                                    sx={{
+                                                        border: '2px solid transparent',
+                                                        borderTop: '2px solid currentColor',
+                                                        borderRadius: '50%',
+                                                        width: 16,
+                                                        height: 16,
+                                                        animation: 'spin 0.6s linear infinite',
+                                                    }}
+                                                />
+                                            ) : undefined
+                                        }
+                                    />
+                                );
+                            })}
+                        </Stack>
+                    </Paper>
+                )}
+
             </Stack>
 
             <StepperControls
@@ -250,7 +250,7 @@ export default function SelectSourcesStep() {
                 handleBack={handleBack}
                 handleNext={handleSubmit(onSubmit)}
                 steps={steps}
-                btnDisabled={isLoading || sources.length === 0} // Disable next if no sources are selected
+                btnDisabled={isLoading || sources.length === 0 || loadingSubredditId !== null}
             />
         </form>
     );
