@@ -1,6 +1,5 @@
 "use client"
 
-import React, { useState } from 'react';
 import {
     Box,
     Stepper,
@@ -10,12 +9,18 @@ import {
     Grid,
     Typography,
 } from '@mui/material';
-import StepperControls from './StepperControls';
 import { Container } from '@mui/system';
 import StepContent from './StepContent';
 import CustomStepIcon from './CustomStepIcon';
+import { useOnboardingStatus } from '../../hooks/useOnboardingStatus';
+import { useAppSelector } from '../../../store/hooks';
+import { RootState } from '../../../store/store';
+import { AuthLoading } from '../../app/(restricted)/dashboard/layout';
+import { useEffect, useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { setProjects, setStep } from '../../../store/Onboarding/OnboardingSlice';
 
-const steps = [
+export const steps = [
     {
         label: 'Product Information',
         description: 'Enter your product details and basic information.'
@@ -25,144 +30,176 @@ const steps = [
         description: 'Choose keywords to track across Reddit.'
     },
     {
-        label: 'Select Subreddits',
-        description: 'Select subreddits to monitor for your keywords.'
-    }
+        label: 'Select Sources',
+        description: 'Select sources to monitor for your keywords.'
+    },
+    // {
+    //     label: 'Connect Reddit',
+    //     description: 'Connect your Reddit account to start tracking.'
+    // }
 ];
 
 export default function ManinForm() {
 
-    const [activeStep, setActiveStep] = useState(0);
-    const [skipped, setSkipped] = useState(new Set<number>());
+    const { loading, data, error } = useOnboardingStatus();
+    const dispatch = useDispatch();
+    const activeStep = useAppSelector((state: RootState) => state.stepper.activeStep);
+    const skipped = useAppSelector((state: RootState) => state.stepper.skipped);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
 
-    const isStepSkipped = (step: number) => {
-        return skipped.has(step);
-    };
+    const isStepSkipped = (step: number) => skipped.includes(step);
 
-    const handleNext = () => {
-        let newSkipped = skipped;
-        if (isStepSkipped(activeStep)) {
-            newSkipped = new Set(newSkipped.values());
-            newSkipped.delete(activeStep);
-        }
+    useEffect(() => {
+        const handleStepNavigation = async () => {
+            if (loading || error || !data) return;
 
-        setActiveStep((prevActiveStep) => prevActiveStep + 1);
-        setSkipped(newSkipped);
-    };
+            setIsLoading(true);
 
-    const handleBack = () => {
-        setActiveStep((prevActiveStep) => prevActiveStep - 1);
-    };
+            // Step 1: Set projects in store
+            const newData = {
+                id: data?.id ?? "",
+                name: data?.name ?? "",
+                description: data?.description ?? "",
+                website: data?.website ?? "",
+                targetPersona: data?.targetPersona ?? "",
+                keywords: data?.keywords?.map(keyword => keyword.name) ?? [],
+                sources: data?.sources?.map(source => ({ id: source.id, name: source.name })) ?? [],
+                suggestedKeywords: data?.suggestedKeywords ?? [],
+                suggestedSources: data?.suggestedSources ?? [],
+            };
+            dispatch(setProjects(newData));
 
-    const handleReset = () => {
-        setActiveStep(0);
-    };
+            // Step 2: Run all checks
+            const { id, website, name, description, targetPersona, keywords, sources } = data;
+
+            const hasBasicInfo = Boolean(id && website && name && description && targetPersona);
+            const hasKeywords = Array.isArray(keywords) && keywords.length > 0;
+            const hasSources = Array.isArray(sources) && sources.length > 0;
+
+            await new Promise((resolve) => setTimeout(resolve, 500));
+
+            // Step 3: Determine final step based on all conditions
+            let nextStep = 0;
+            if (hasBasicInfo && hasKeywords && hasSources) {
+                nextStep = 2;
+            } else if (hasBasicInfo && hasKeywords) {
+                nextStep = 2;
+            } else if (hasBasicInfo) {
+                nextStep = 1;
+            }
+            // Step 4: Set active step
+            dispatch(setStep(nextStep));
+            setIsLoading(false);
+        };
+
+        handleStepNavigation();
+    }, [loading, data, error, dispatch]);
+
+    if (loading || isLoading) {
+        return <AuthLoading />
+    }
 
     return (<>
-        <Box
-            className="min-h-screen flex flex-col justify-center"
-            sx={{ py: { xs: 2, sm: 4, md: 6 }, background: '#f9fafb' }}
-        >
-            <Container maxWidth="md">
-                <Paper
-                    elevation={3}
-                    sx={{
-                        p: 4,
-                        borderRadius: 3,
-                        minHeight: '400px',
-                        display: 'flex',
-                        flexDirection: 'column'
-                    }}
-                >
-                    <Grid container spacing={4}>
-                        <Grid item xs={12} md={4}>
-                            <Stepper
-                                activeStep={activeStep}
-                                orientation="vertical"
-                                sx={{
-                                    '& .MuiStepConnector-line': {
-                                        minHeight: '40px',
-                                        borderLeftWidth: '2px',
-                                        ml: '8px',
-                                        borderColor: 'rgba(25, 118, 210, 0.2)'
-                                    },
-                                    '& .MuiStepLabel-root': {
-                                        padding: '8px 0'
-                                    },
-                                    '& .MuiStepIcon-root': {
-                                        fontSize: '2rem'
-                                    }
-                                }}
-                            >
-                                {steps.map((step, index) => {
-                                    const stepProps: { completed?: boolean } = {};
-                                    if (isStepSkipped(index)) {
-                                        stepProps.completed = false;
-                                    }
-
-                                    return (
-                                        <Step key={step.label} {...stepProps}>
-                                            <StepLabel
-                                                StepIconComponent={CustomStepIcon}
-                                                sx={{
-                                                    '& .MuiStepLabel-label': {
-                                                        color: activeStep === index ? 'primary.main' : 'text.primary',
-                                                        fontWeight: activeStep === index ? 600 : 400
-                                                    }
-                                                }}
-                                            >
-                                                <Typography
-                                                    variant="subtitle1"
-                                                    sx={{
-                                                        mb: 0.5,
-                                                        lineHeight: 1.2
-                                                    }}
-                                                >
-                                                    {step.label}
-                                                </Typography>
-                                                <Typography
-                                                    variant="body2"
-                                                    color="text.secondary"
-                                                    sx={{
-                                                        display: 'block',
-                                                        maxWidth: '240px',
-                                                        lineHeight: 1.4
-                                                    }}
-                                                >
-                                                    {step.description}
-                                                </Typography>
-                                            </StepLabel>
-                                        </Step>
-                                    );
-                                })}
-                            </Stepper>
-                        </Grid>
-
-                        <Grid item xs={12} md={8}>
-                            <Box sx={{
-                                height: '100%',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                pl: { md: 4 },
-                                borderLeft: { md: '1px solid rgba(0, 0, 0, 0.08)' }
-                            }}>
-                                <Box sx={{ flex: 1 }}>
-                                    <StepContent step={activeStep} />
-                                </Box>
-
-                                <StepperControls
+        <Box sx={{ width: "100%", height: "100%" }}>
+            <Box
+                className="min-h-screen flex flex-col justify-center"
+                sx={{ py: { xs: 2, sm: 4, md: 6 }, background: '#f9fafb' }}
+            >
+                <Container maxWidth="md">
+                    <Paper
+                        elevation={3}
+                        sx={{
+                            minHeight: '400px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            padding: 10,
+                            borderRadius: 7,
+                            boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
+                            overflow: "hidden",
+                            position: "relative",
+                        }}
+                    >
+                        <Grid container spacing={4}>
+                            <Grid item xs={12} md={4}>
+                                <Stepper
                                     activeStep={activeStep}
-                                    handleBack={handleBack}
-                                    handleNext={handleNext}
-                                    handleReset={handleReset}
-                                    steps={steps}
-                                />
-                            </Box>
-                        </Grid>
-                    </Grid>
-                </Paper>
-            </Container>
-        </Box>
+                                    orientation="vertical"
+                                    sx={{
+                                        '& .MuiStepConnector-line': {
+                                            minHeight: '60px',
+                                            borderLeftWidth: '2px',
+                                            ml: '8px',
+                                            borderColor: 'rgba(25, 118, 210, 0.2)'
+                                        },
+                                        '& .MuiStepLabel-root': {
+                                            padding: '8px 0'
+                                        },
+                                        '& .MuiStepIcon-root': {
+                                            fontSize: '2rem'
+                                        }
+                                    }}
+                                >
+                                    {steps.map((step, index) => {
+                                        const stepProps: { completed?: boolean } = {};
+                                        if (isStepSkipped(index)) {
+                                            stepProps.completed = false;
+                                        }
 
+                                        return (
+                                            <Step key={step.label} {...stepProps}>
+                                                <StepLabel
+                                                    StepIconComponent={CustomStepIcon}
+                                                    sx={{
+                                                        '& .MuiStepLabel-label': {
+                                                            color: activeStep === index ? 'primary.main' : 'text.primary',
+                                                            fontWeight: activeStep === index ? 600 : 400
+                                                        }
+                                                    }}
+                                                >
+                                                    <Typography
+                                                        variant="subtitle1"
+                                                        sx={{
+                                                            mb: 0.5,
+                                                            lineHeight: 1.2
+                                                        }}
+                                                    >
+                                                        {step.label}
+                                                    </Typography>
+                                                    <Typography
+                                                        variant="body2"
+                                                        color="text.secondary"
+                                                        sx={{
+                                                            display: 'block',
+                                                            maxWidth: '240px',
+                                                            lineHeight: 1.4
+                                                        }}
+                                                    >
+                                                        {step.description}
+                                                    </Typography>
+                                                </StepLabel>
+                                            </Step>
+                                        );
+                                    })}
+                                </Stepper>
+                            </Grid>
+
+                            <Grid item xs={12} md={8}>
+                                <Box sx={{
+                                    height: '100%',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    pl: { md: 4 },
+                                    borderLeft: { md: '1px solid rgba(0, 0, 0, 0.08)' }
+                                }}>
+                                    <Box sx={{ flex: 1 }}>
+                                        <StepContent step={activeStep} stepLength={steps.length} />
+                                    </Box>
+                                </Box>
+                            </Grid>
+                        </Grid>
+                    </Paper>
+                </Container>
+            </Box>
+        </Box>
     </>);
 }

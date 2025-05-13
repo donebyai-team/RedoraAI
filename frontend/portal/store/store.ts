@@ -7,12 +7,14 @@ import { sourceReducer } from './Source/sourceSlice';
 import { leadReducer } from './Lead/leadSlice';
 import { paremsReducer } from './Params/ParamsSlice';
 import { redditIntegrationReducer } from './slices/redditIntegrationSlice';
+import { stepperReducer } from './Onboarding/OnboardingSlice';
 
 const rootReducer = combineReducers({
   source: sourceReducer,
   lead: leadReducer,
   parems: paremsReducer,
   redditIntegration: redditIntegrationReducer,
+  stepper: stepperReducer,
 });
 
 const persistConfig = {

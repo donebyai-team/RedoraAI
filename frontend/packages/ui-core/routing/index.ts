@@ -19,7 +19,8 @@ export const routes = {
     },
     auth: {
       login: '/auth/login',
-      callback: '/auth/callback'
+      callback: '/auth/callback',
+      onboarding: '/onboarding',
     },
     serverError: '/500'
   }

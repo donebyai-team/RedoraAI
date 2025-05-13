@@ -6,18 +6,18 @@ interface StepperControlsProps {
   activeStep: number;
   handleBack: () => void;
   handleNext: () => void;
-  handleReset: () => void;
   steps: { label: string; description: string; }[];
+  btnDisabled: boolean;
 }
 
 const StepperControls: React.FC<StepperControlsProps> = ({
   activeStep,
   handleBack,
   handleNext,
-  handleReset,
   steps,
+  btnDisabled
 }) => {
-//   const isLastStep = activeStep === steps.length - 1;
+  
   const isFirstStep = activeStep === 0;
 
   return (
@@ -34,19 +34,20 @@ const StepperControls: React.FC<StepperControlsProps> = ({
       </Button>
       <Box sx={{ flex: '1 1 auto' }} />
       {activeStep === steps.length - 1 ? (
-        <Button 
-          variant="contained" 
-          color="success" 
-          onClick={handleReset}
+        <Button
+          variant="contained"
+          onClick={handleNext}
           endIcon={<Check size={18} />}
+          disabled={btnDisabled}
         >
           Finish
         </Button>
       ) : (
-        <Button 
-          variant="contained" 
-          onClick={handleNext} 
+        <Button
+          variant="contained"
+          onClick={handleNext}
           endIcon={<ArrowRight size={18} />}
+          disabled={btnDisabled}
         >
           Next
         </Button>
