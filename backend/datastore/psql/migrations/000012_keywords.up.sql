@@ -11,6 +11,7 @@ CREATE TABLE keywords
 );
 
 ALTER TABLE keywords ADD CONSTRAINT fk_keywords FOREIGN KEY (project_id) REFERENCES projects (id);
+CREATE INDEX idx_keywords_project_id_deleted_at_null ON keywords (project_id) WHERE deleted_at IS NULL;
 
 
 CREATE TRIGGER trigger_record_changed_on_keywords
