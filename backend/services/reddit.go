@@ -99,7 +99,7 @@ func (r redditService) CreateSubReddit(ctx context.Context, source *models.Sourc
 		// Fetch the subreddit details by URL from Reddit API
 		subRedditDetails, err := r.redditClient.GetSubRedditByName(ctx, source.Name)
 		if err != nil {
-			return fmt.Errorf("failed to fetch subreddit details from Reddit: %w", err)
+			return err
 		}
 
 		// Fill in the fields in models.Source using fetched details

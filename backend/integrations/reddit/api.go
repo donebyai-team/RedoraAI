@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"github.com/shank318/doota/models"
 	"golang.org/x/oauth2"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -135,6 +137,10 @@ func (r *Client) GetSubRedditByName(ctx context.Context, name string) (*SubReddi
 
 	if err := decodeJSON(resp.Body, &response); err != nil {
 		return nil, err
+	}
+
+	if response.Data.ID == "" || response.Data.DisplayName == "" {
+		return nil, status.Error(codes.NotFound, "subreddit not found")
 	}
 
 	// Get RUles
