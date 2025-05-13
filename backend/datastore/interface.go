@@ -93,9 +93,17 @@ type LeadInteractionRepository interface {
 	GetLeadInteractions(ctx context.Context, projectID string, start, end time.Time) ([]*models.LeadInteraction, error)
 }
 
+type LeadsFilter struct {
+	RelevancyScore float32
+	Sources        []string
+	Status         models.LeadStatus
+	Limit          int
+	Offset         int
+}
+
 type LeadRepository interface {
-	GetLeadsByStatus(ctx context.Context, projectID string, status models.LeadStatus) ([]*models.AugmentedLead, error)
-	GetLeadsByRelevancy(ctx context.Context, projectID string, relevancy float32, sources []string) ([]*models.AugmentedLead, error)
+	GetLeadsByStatus(ctx context.Context, projectID string, filter LeadsFilter) ([]*models.AugmentedLead, error)
+	GetLeadsByRelevancy(ctx context.Context, projectID string, filter LeadsFilter) ([]*models.AugmentedLead, error)
 	GetLeadByPostID(ctx context.Context, projectID, postID string) (*models.Lead, error)
 	GetLeadByCommentID(ctx context.Context, projectID, commentID string) (*models.Lead, error)
 	CreateLead(ctx context.Context, reddit *models.Lead) (*models.Lead, error)

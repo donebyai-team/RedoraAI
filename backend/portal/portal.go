@@ -4,6 +4,7 @@ import (
 	"context"
 	state2 "github.com/shank318/doota/agents/state"
 	"github.com/shank318/doota/ai"
+	google2 "github.com/shank318/doota/integrations/google"
 	"github.com/shank318/doota/integrations/reddit"
 	"github.com/shank318/doota/portal/state"
 	"regexp"
@@ -35,6 +36,7 @@ type Portal struct {
 	customerCaseService services.CustomerCaseService
 	authStateStore      state.AuthStateStore
 	redditOauthClient   *reddit.OauthClient
+	googleOauthClient   *google2.OauthClient
 	aiClient            *ai.Client
 	cache               state2.ConversationState
 }
@@ -42,6 +44,7 @@ type Portal struct {
 func New(
 	aiClient *ai.Client,
 	redditOauthClient *reddit.OauthClient,
+	googleOauthClient *google2.OauthClient,
 	authenticator *auth.Authenticator,
 	authStateStore state.AuthStateStore,
 	customerCaseService services.CustomerCaseService,
@@ -60,6 +63,7 @@ func New(
 	return &Portal{
 		aiClient:            aiClient,
 		redditOauthClient:   redditOauthClient,
+		googleOauthClient:   googleOauthClient,
 		authStateStore:      authStateStore,
 		authUsecase:         authUsecase,
 		Shutter:             shutter.New(),

@@ -36,6 +36,8 @@ func main() {
 				flags.Duration("shutdown-unready-period", 0*time.Second, "[OPERATOR] If non-zero, the process upon receiving the first Ctrl-C will be marked unready for this period of time before being shutdown allowing orchestrators to drain connections and remove the pod from the load-balancer")
 				flags.Duration("shutdown-grace-period", 5*time.Second, "[OPERATOR] If non-zero, the process upon receiving the first Ctrl-C and after the elapsed unready period (if set) will give this period of time to components shutdown gracefully before being forced killed")
 				flags.String("gcp-project", "doota-main", "GCP project name")
+				flags.String("google-client-id", "", "Google Client ID")
+				flags.String("google-client-secret", "", "Google Client Secret")
 				flags.String("pg-dsn", "postgresql://dev-node:insecure-change-me-in-prod@localhost:5432/dev-node?enable_incremental_sort=off&sslmode=disable", "PostgreSQL DSN, set to empty to disable")
 				flags.String("jwt-kms-keypath", "", "JWT signing/verifying key, set to empty to disable (e.g. projects/doota/locations/global/keyRings/api-auth/cryptoKeys/jwt-signing/cryptoKeyVersions/1)")
 				flags.String("encrypt-kms-keypath", "", "KMS key to encrypt/decrypt provider configs without version (e.g. projects/doota/locations/global/keyRings/encrypt-provider-credentials/cryptoKeys/encrypt-credentials-dev)")

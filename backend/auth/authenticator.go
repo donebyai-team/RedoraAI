@@ -29,11 +29,12 @@ func NewAuthenticator(
 		tokenValidator: tokenValidator,
 		db:             db,
 		exemptPaths: map[string]bool{
-			"/doota.portal.v1.PortalService/GetConfig":          true,
-			"/doota.portal.v1.PortalService/AuthState":          true,
-			"/doota.portal.v1.PortalService/Issue":              true,
-			"/doota.portal.v1.PortalService/PasswordlessStart":  true,
-			"/doota.portal.v1.PortalService/PasswordlessVerify": true,
+			"/doota.portal.v1.PortalService/GetConfig":           true,
+			"/doota.portal.v1.PortalService/AuthState":           true,
+			"/doota.portal.v1.PortalService/Issue":               true,
+			"/doota.portal.v1.PortalService/PasswordlessStart":   true,
+			"/doota.portal.v1.PortalService/PasswordlessVerify":  true,
+			"/doota.portal.v1.PortalService/SocialLoginCallback": true,
 		},
 		logger: logger,
 	}

@@ -1,17 +1,17 @@
 package services
 
 import (
+	"connectrpc.com/connect"
 	"context"
 	"errors"
 	"fmt"
-
-	"connectrpc.com/connect"
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/shank318/doota/auth"
 	"github.com/shank318/doota/auth/crypto"
 	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/models"
 	pbportal "github.com/shank318/doota/pb/doota/portal/v1"
+	"github.com/shank318/doota/utils"
 	"github.com/streamingfast/logging"
 	"go.uber.org/zap"
 )
@@ -41,6 +41,15 @@ func (a *AuthUsecase) StartPasswordless(ctx context.Context, email string, ip st
 		return fmt.Errorf("failed to initiate passwordless flow: %w", err)
 	}
 	return nil
+}
+
+func (a *AuthUsecase) SignUser(ctx context.Context, email string) (*pbportal.JWT, error) {
+	logger := logging.Logger(ctx, a.logger)
+	jwt, err := a.getUser(ctx, email, "", false, logger)
+	if err != nil {
+		return nil, fmt.Errorf("get user: %w", err)
+	}
+	return jwt, nil
 }
 
 func (a *AuthUsecase) VerifyPasswordless(ctx context.Context, email string, code string, ip string) (*pbportal.JWT, error) {
@@ -123,10 +132,24 @@ func (a *AuthUsecase) getUser(ctx context.Context, email, externalAuthProviderID
 
 	if err != nil {
 		if errors.Is(err, datastore.NotFound) {
-			return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("User account not found, please contact your system administrator"))
-		}
+			organization, err := a.db.CreateOrganization(ctx, &models.Organization{Name: utils.GetOrganizationName(email)})
+			if err != nil {
+				return nil, fmt.Errorf("unable to create organization: %w", err)
+			}
 
-		return nil, fmt.Errorf("unable to retrieved user: %w", err)
+			user, err = a.db.CreateUser(ctx, &models.User{
+				Email:          email,
+				EmailVerified:  emailVerified,
+				OrganizationID: organization.ID,
+				Role:           models.UserRoleADMIN,
+				State:          models.UserStateACTIVE,
+			})
+			if err != nil {
+				return nil, fmt.Errorf("unable to create user: %w", err)
+			}
+		} else {
+			return nil, err
+		}
 	}
 
 	resp, err := a.getJWTToken(ctx, user)

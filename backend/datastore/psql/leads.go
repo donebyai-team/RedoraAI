@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/lib/pq"
+	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/models"
 	"time"
 )
@@ -61,19 +62,23 @@ func (r *Database) UpdateLeadStatus(ctx context.Context, lead *models.Lead) erro
 	return nil
 }
 
-func (r *Database) GetLeadsByStatus(ctx context.Context, projectID string, status models.LeadStatus) ([]*models.AugmentedLead, error) {
+func (r *Database) GetLeadsByStatus(ctx context.Context, projectID string, filter datastore.LeadsFilter) ([]*models.AugmentedLead, error) {
 	return getMany[models.AugmentedLead](ctx, r, "leads/query_lead_by_status.sql", map[string]any{
-		"status":     status,
+		"status":     filter.Status,
 		"project_id": projectID,
+		"limit":      filter.Limit,
+		"offset":     filter.Offset * filter.Limit,
 	})
 }
 
-func (r *Database) GetLeadsByRelevancy(ctx context.Context, projectID string, relevancy float32, sources []string) ([]*models.AugmentedLead, error) {
+func (r *Database) GetLeadsByRelevancy(ctx context.Context, projectID string, filter datastore.LeadsFilter) ([]*models.AugmentedLead, error) {
 	return getMany[models.AugmentedLead](ctx, r, "leads/query_lead_by_filter.sql", map[string]any{
-		"source_ids":      pq.Array(sources),
-		"relevancy_score": relevancy,
+		"source_ids":      pq.Array(filter.Sources),
+		"relevancy_score": filter.RelevancyScore,
 		"status":          models.LeadStatusNEW,
 		"project_id":      projectID,
+		"limit":           filter.Limit,
+		"offset":          filter.Offset * filter.Limit,
 	})
 }
 

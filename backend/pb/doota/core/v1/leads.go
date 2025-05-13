@@ -71,8 +71,6 @@ func (u *Project) FromModel(product *models.Project, sources []*models.Source, k
 
 	u.Keywords = keywordsProto
 	u.Sources = sourcesProto
-	u.SuggestedKeywords = []string{"SEO Agency", "AI SDR", "AI SEO"}
-	u.SuggestedSources = []string{"r/saas", "r/sales", "r/marketing"}
 	return u
 }
 

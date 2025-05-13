@@ -42,8 +42,13 @@ func (r *Client) buildRequest(ctx context.Context, rawBody interface{}, method, 
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", r.config.AccessToken))
-	req.Header.Set("User-Agent", fmt.Sprintf("linux:com.reddit.scraper:v0.1 by (/u/%s)", r.config.Name))
+	if r.config != nil {
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", r.config.AccessToken))
+		req.Header.Set("User-Agent", fmt.Sprintf("com.redoraai:v0.1 by (/u/%s)", r.config.Name))
+	} else {
+		req.Header.Set("User-Agent", "com.redoraai:v0.1 by (redora)")
+	}
+
 	return req, nil
 }
 

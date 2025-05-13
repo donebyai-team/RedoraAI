@@ -161,15 +161,10 @@ func (p *Portal) CreateOrEditProject(ctx context.Context, c *connect.Request[pbp
 	return connect.NewResponse(projectProto), nil
 }
 
-func (p *Portal) GetProjects(ctx context.Context, c *connect.Request[emptypb.Empty]) (*connect.Response[pbportal.GetProjectsResponse], error) {
-	actor, err := p.gethAuthContext(ctx)
+func (p *Portal) getProjects(ctx context.Context, orgID string) ([]*pbcore.Project, bool, error) {
+	projects, err := p.db.GetProjects(ctx, orgID)
 	if err != nil {
-		return nil, err
-	}
-
-	projects, err := p.db.GetProjects(ctx, actor.OrganizationID)
-	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	projectsProtos := make([]*pbcore.Project, 0, len(projects))
@@ -177,7 +172,7 @@ func (p *Portal) GetProjects(ctx context.Context, c *connect.Request[emptypb.Emp
 	for _, project := range projects {
 		projectProto, err := p.projectToProto(ctx, project)
 		if err != nil {
-			return nil, err
+			return nil, isOnboardingDone, err
 		}
 
 		if len(projectProto.Sources) > 0 && len(projectProto.Keywords) > 0 {
@@ -187,10 +182,7 @@ func (p *Portal) GetProjects(ctx context.Context, c *connect.Request[emptypb.Emp
 		projectsProtos = append(projectsProtos, projectProto)
 	}
 
-	return connect.NewResponse(&pbportal.GetProjectsResponse{
-		Projects:         projectsProtos,
-		IsOnboardingDone: isOnboardingDone,
-	}), nil
+	return projectsProtos, isOnboardingDone, nil
 }
 
 func (p *Portal) projectToProto(ctx context.Context, project *models.Project) (*pbcore.Project, error) {
@@ -248,7 +240,7 @@ func (p *Portal) AddSource(ctx context.Context, c *connect.Request[pbportal.AddS
 		return nil, err
 	}
 
-	redditClient, err := p.redditOauthClient.NewRedditClient(ctx, actor.OrganizationID)
+	redditClient, err := p.redditOauthClient.NewRedditClient(ctx, actor.OrganizationID, false)
 	if err != nil {
 		return nil, err
 	}
@@ -290,16 +282,12 @@ func (p *Portal) GetSources(ctx context.Context, c *connect.Request[emptypb.Empt
 }
 
 func (p *Portal) RemoveSource(ctx context.Context, c *connect.Request[pbportal.RemoveSourceRequest]) (*connect.Response[emptypb.Empty], error) {
-	actor, err := p.gethAuthContext(ctx)
+	_, err := p.gethAuthContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	redditClient, err := p.redditOauthClient.NewRedditClient(ctx, actor.OrganizationID)
-	if err != nil {
-		return nil, err
-	}
-	redditService := services.NewRedditService(p.logger, p.db, redditClient, nil, nil)
+	redditService := services.NewRedditService(p.logger, p.db, nil, nil, nil)
 	err = redditService.RemoveSubReddit(ctx, c.Msg.Id)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to add subreddit: %w", err))
@@ -324,7 +312,12 @@ func (p *Portal) GetRelevantLeads(ctx context.Context, c *connect.Request[pbport
 		subReddits = append(subReddits, *c.Msg.SubReddit)
 	}
 
-	leads, err := p.db.GetLeadsByRelevancy(ctx, projectID, c.Msg.RelevancyScore, subReddits)
+	leads, err := p.db.GetLeadsByRelevancy(ctx, projectID, datastore.LeadsFilter{
+		RelevancyScore: c.Msg.RelevancyScore,
+		Sources:        subReddits,
+		Limit:          pageCount,
+		Offset:         int(c.Msg.PageNo),
+	})
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to fetch leads: %w", err))
 	}
@@ -347,6 +340,8 @@ func redactPlatformOnlyMetadata(role models.UserRole, lead *models.AugmentedLead
 	return lead
 }
 
+const pageCount = 30
+
 func (p *Portal) GetLeadsByStatus(ctx context.Context, c *connect.Request[pbportal.GetLeadsByStatusRequest]) (*connect.Response[pbportal.GetLeadsResponse], error) {
 	actor, err := p.gethAuthContext(ctx)
 	if err != nil {
@@ -362,8 +357,11 @@ func (p *Portal) GetLeadsByStatus(ctx context.Context, c *connect.Request[pbport
 	if err != nil {
 		return nil, err
 	}
-
-	leads, err := p.db.GetLeadsByStatus(ctx, projectID, status)
+	leads, err := p.db.GetLeadsByStatus(ctx, projectID, datastore.LeadsFilter{
+		Status: status,
+		Limit:  pageCount,
+		Offset: int(c.Msg.PageNo),
+	})
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to fetch leads: %w", err))
 	}

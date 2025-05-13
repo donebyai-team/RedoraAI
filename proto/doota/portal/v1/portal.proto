@@ -20,6 +20,7 @@ service PortalService {
   rpc PasswordlessVerify(PasswordlessStartVerify) returns (JWT);
   rpc OauthAuthorize(OauthAuthorizeRequest) returns (OauthAuthorizeResponse);
   rpc OauthCallback(OauthCallbackRequest) returns (OauthCallbackResponse);
+  rpc SocialLoginCallback(OauthCallbackRequest) returns (JWT);
   rpc GetIntegrations(.google.protobuf.Empty) returns (Integrations);
 
   // Reddit
@@ -30,7 +31,6 @@ service PortalService {
   rpc GetRelevantLeads(GetRelevantLeadsRequest) returns (GetLeadsResponse);
   rpc GetLeadsByStatus(GetLeadsByStatusRequest) returns (GetLeadsResponse);
   rpc UpdateLeadStatus(UpdateLeadStatusRequest) returns (.google.protobuf.Empty);
-  rpc GetProjects(.google.protobuf.Empty) returns (GetProjectsResponse);
   rpc CreateOrEditProject(CreateProjectRequest) returns (doota.core.v1.Project);
 }
 
@@ -42,11 +42,6 @@ message CreateProjectRequest {
   string target_persona = 5;
 }
 
-message GetProjectsResponse {
-  repeated doota.core.v1.Project projects = 1;
-  bool is_onboarding_done = 2;
-}
-
 message UpdateLeadStatusRequest {
   doota.core.v1.LeadStatus status = 1;
   string lead_id = 2;
@@ -54,11 +49,13 @@ message UpdateLeadStatusRequest {
 
 message GetLeadsByStatusRequest {
   doota.core.v1.LeadStatus status = 1;
+  int32 page_no = 3;
 }
 
 message GetRelevantLeadsRequest {
   optional string sub_reddit = 1;
   float relevancy_score = 2;
+  int32 page_no = 3;
 }
 
 message GetLeadsResponse {
@@ -134,6 +131,8 @@ message User {
   UserRole role = 4;
   repeated Organization organizations = 7;
   .google.protobuf.Timestamp created_at = 10;
+  repeated doota.core.v1.Project projects = 11;
+  bool is_onboarding_done = 12;
 }
 
 message OauthAuthorizeRequest {

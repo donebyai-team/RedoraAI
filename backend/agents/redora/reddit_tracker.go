@@ -64,9 +64,9 @@ func (s *redditKeywordTracker) WithLogger(logger *zap.Logger) KeywordTracker {
 }
 
 func (s *redditKeywordTracker) TrackKeyword(ctx context.Context, tracker *models.AugmentedKeywordTracker) error {
-	redditClient, err := s.redditOauthClient.NewRedditClient(ctx, tracker.Project.OrganizationID)
+	redditClient, err := s.redditOauthClient.NewRedditClient(ctx, tracker.Project.OrganizationID, true)
 	if err != nil {
-		return fmt.Errorf("failed to create reddit client: %w", err)
+		return err
 	}
 
 	err = s.searchLeadsFromPosts(ctx, tracker, redditClient)
@@ -139,7 +139,8 @@ func (s *redditKeywordTracker) sendAlert(ctx context.Context, project *models.Pr
 	// Send alert
 	if done {
 		s.logger.Info("daily tracking summary for project", zap.String("project_name", project.Name))
-		dailyCount, err := s.getLeadsCountOfTheDay(ctx, project.ID, defaultRelevancyScore)
+		// daily count not to not be highly relevant and hence using a different relevancy score
+		dailyCount, err := s.getLeadsCountOfTheDay(ctx, project.ID, dailyPostsRelevancyScore)
 		if err != nil {
 			s.logger.Error("failed to get leads count", zap.Error(err))
 			return
@@ -211,6 +212,7 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 
 	automatedInteractionService := interactions.NewRedditInteractions(redditClient, s.db, s.logger)
 
+	// We will try to keep searching until we reach the max relevant posts per day >= defaultRelevancyScore
 	if ok, err := s.isMaxLeadLimitReached(ctx, project.ID, defaultRelevancyScore); err != nil || ok {
 		return err
 	}
@@ -262,18 +264,11 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 	// Hard filters
 	countPostsWithHighRelevancy := 0
 	countSkippedPosts := 0
-	countTestPosts := 0
 	aiErrorsCount := 0
 
 	s.logger.Info("posts to be evaluated on relevancy via ai", zap.Int("total_posts", len(newPosts)))
 	// Filter by AI
 	for _, post := range newPosts {
-		// TODO: Only on dev to avoid openai calls
-		if countTestPosts >= 5 && s.isDev {
-			s.logger.Info("dev mode is on, max 5 posts extracted via openai")
-			break
-		}
-
 		if aiErrorsCount >= defaultLLMFailedCount {
 			return fmt.Errorf("more than %d llm called failed, skipped processing", defaultLLMFailedCount)
 		}
@@ -302,7 +297,6 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 
 		isValid, reason := s.isValidPost(post)
 		if isValid {
-			countTestPosts++
 			relevanceResponse, usage, err := s.aiClient.IsRedditPostRelevant(ctx, tracker.Organization.FeatureFlags.RelevancyLLMModel, ai.IsPostRelevantInput{
 				Project: project,
 				Post:    redditLead,
@@ -412,7 +406,7 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 			}
 		}
 
-		// Check if we have got enough relevant leads for the dat
+		// We will try to keep searching until we reach the max relevant posts per day >= defaultRelevancyScore
 		ok, err := s.isMaxLeadLimitReached(ctx, project.ID, defaultRelevancyScore)
 		if err != nil || ok {
 			if err != nil {
@@ -472,14 +466,15 @@ func (s *redditKeywordTracker) getLeadInteractionCountOfTheDay(ctx context.Conte
 }
 
 const (
-	minSelftextLength     = 30
-	minTitleLength        = 5
-	maxPostAgeInMonths    = 6
-	minCommentThreshold   = 5
-	maxLeadsPerDay        = 25
-	defaultRelevancyScore = 90
-	minRelevancyScore     = 70
-	defaultLLMFailedCount = 3
+	minSelftextLength        = 30
+	minTitleLength           = 5
+	maxPostAgeInMonths       = 6
+	minCommentThreshold      = 5
+	maxLeadsPerDay           = 25
+	defaultRelevancyScore    = 90
+	dailyPostsRelevancyScore = 80
+	minRelevancyScore        = 70
+	defaultLLMFailedCount    = 3
 )
 
 var systemAuthors = []string{"[deleted]", "AutoModerator"}
