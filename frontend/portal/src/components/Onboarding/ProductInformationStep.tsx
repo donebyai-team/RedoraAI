@@ -94,10 +94,16 @@ export default function ProductInformationStep() {
     const [isLoading, setIsLoading] = useState(false);
 
     const fetchMeta = useCallback(async (url: string) => {
-        if (!url.startsWith("http")) return;
+        if (!url) return;
+
+        // Prepend https:// if no scheme is present
+        const normalizedUrl = url.startsWith("http://") || url.startsWith("https://")
+            ? url
+            : `https://${url}`;
+
         try {
             setLoadingMeta(true);
-            const res = await fetch(`/api/fetch-meta?url=${encodeURIComponent(url)}`);
+            const res = await fetch(`/api/fetch-meta?url=${encodeURIComponent(normalizedUrl)}`);
             const data = await res.json();
 
             setValue("name", data.title || "");

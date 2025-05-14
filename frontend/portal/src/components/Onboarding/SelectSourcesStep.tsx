@@ -44,6 +44,7 @@ export default function SelectSourcesStep() {
     const [loadingSubredditId, setLoadingSubredditId] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [inputValue, setInputValue] = useState("");
+    const [pendingSources, setPendingSources] = useState<string[]>([]);
 
     const {
         handleSubmit,
@@ -59,38 +60,34 @@ export default function SelectSourcesStep() {
 
     const handleAddSubreddit = async (subredditName: string) => {
         const trimmed = subredditName.trim();
-
         if (!trimmed) return;
 
-        // 🔎 Remove r/ if present for checking
         const plainName = trimmed.replace(/^r\//i, "");
+        const nameToSend = trimmed.startsWith("r/") ? trimmed : `r/${plainName}`;
 
-        // Check duplicate in sources (compare name only)
-        if (sources.some((s) => s.name.toLowerCase() === plainName.toLowerCase())) {
-            toast.error(`r/${plainName} is already added`);
+        if (sources.some((s) => s.name.toLowerCase() === plainName.toLowerCase()) ||
+            pendingSources.includes(plainName.toLowerCase())) {
+            toast.error(`r/${plainName} is already being tracked`);
             return;
         }
 
-        // 🔥 Ensure the name we send has r/ prefix
-        const nameToSend = trimmed.startsWith("r/") ? trimmed : `r/${plainName}`;
+        // Add to pending pills
+        setPendingSources((prev) => [...prev, plainName.toLowerCase()]);
+        setInputValue("");
 
-        setLoadingSubredditId(plainName);  // use plain name for loading check
         try {
             await portalClient.addSource({ name: nameToSend });
 
-            // 🔄 Get fresh list after add
             const updatedProjects = await portalClient.self({});
             const updatedSources = updatedProjects.projects?.[0].sources.map(source => ({ id: source.id, name: source.name })) ?? [];
 
             setValue("sources", updatedSources);
-            // toast.success(`Added ${nameToSend}`);
-            setInputValue("");
-
         } catch (err: any) {
             const message = err?.response?.data?.message || err.message || "Failed to add";
             toast.error(message);
         } finally {
-            setLoadingSubredditId(null);
+            // Remove from pending either way
+            setPendingSources((prev) => prev.filter((name) => name !== plainName.toLowerCase()));
         }
     };
 
@@ -168,41 +165,63 @@ export default function SelectSourcesStep() {
                             onKeyDown={handleKeyDown}
                         />
                     )}
-                    renderTags={(_, getTagProps) =>
-                        sources.map((option, index) => {
-                            const isLoading = loadingSubredditId === option.id;
-                            return (
+                    renderTags={(_, getTagProps) => (
+                        <>
+                            {sources.map((option, index) => {
+                                const isLoading = loadingSubredditId === option.id;
+                                return (
+                                    <Chip
+                                        label={`r/${option.name}`}
+                                        {...getTagProps({ index })}
+                                        color="primary"
+                                        onDelete={() => handleRemoveSubreddit(option)}
+                                        deleteIcon={
+                                            isLoading ? (
+                                                <Box
+                                                    component="span"
+                                                    sx={{
+                                                        border: '2px solid transparent',
+                                                        borderTop: '2px solid currentColor',
+                                                        borderRadius: '50%',
+                                                        width: 16,
+                                                        height: 16,
+                                                        animation: 'spin 0.6s linear infinite',
+                                                    }}
+                                                />
+                                            ) : (
+                                                <X size={16} />
+                                            )
+                                        }
+                                        disabled={isLoading}
+                                        sx={{ p: 2, fontSize: "0.75rem" }}
+                                    />
+                                );
+                            })}
+                            {pendingSources.map((name, index) => (
                                 <Chip
-                                    label={`r/${option.name}`}
-                                    {...getTagProps({ index })}
-                                    color="primary"
-                                    onDelete={() => handleRemoveSubreddit(option)}
+                                    key={`pending-${index}`}
+                                    label={`r/${name}`}
+                                    color="default"
+                                    disabled
                                     deleteIcon={
-                                        isLoading ? (
-                                            <Box
-                                                component="span"
-                                                sx={{
-                                                    border: '2px solid transparent',
-                                                    borderTop: '2px solid currentColor',
-                                                    borderRadius: '50%',
-                                                    width: 16,
-                                                    height: 16,
-                                                    animation: 'spin 0.6s linear infinite',
-                                                }}
-                                            />
-                                        ) : (
-                                            <X size={16} />
-                                        )
+                                        <Box
+                                            component="span"
+                                            sx={{
+                                                border: '2px solid transparent',
+                                                borderTop: '2px solid currentColor',
+                                                borderRadius: '50%',
+                                                width: 16,
+                                                height: 16,
+                                                animation: 'spin 0.6s linear infinite',
+                                            }}
+                                        />
                                     }
-                                    disabled={isLoading}
-                                    sx={{
-                                        p: 2,
-                                        fontSize: "0.75rem"
-                                    }}
+                                    sx={{ p: 2, fontSize: "0.75rem", opacity: 0.6 }}
                                 />
-                            );
-                        })
-                    }
+                            ))}
+                        </>
+                    )}
+
                 />
 
                 {filteredSuggestions.length > 0 && (
