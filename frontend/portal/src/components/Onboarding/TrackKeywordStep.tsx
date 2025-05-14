@@ -37,7 +37,6 @@ export default function TrackKeywordStep() {
     const projects = useAppSelector((state: RootState) => state.stepper.projects);
     const listOfSuggestedKeywords = projects?.suggestedKeywords ?? [];
     const { portalClient } = useClientsContext();
-
     const [isLoading, setIsLoading] = useState(false);
 
     const {
@@ -94,34 +93,26 @@ export default function TrackKeywordStep() {
         setValue("keywords", updated);
     }, [keywords, setValue]);
 
-    const onSubmit = useCallback(
-        async (data: TrackKeywordFormValues) => {
-            if (!projects) return;
-            setIsLoading(true);
+    const onSubmit = useCallback(async (data: TrackKeywordFormValues) => {
+        if (!projects) return;
+        setIsLoading(true);
 
-            try {
-                await portalClient.createKeywords({ keywords: data.keywords });
+        try {
+            await portalClient.createKeywords({ keywords: data.keywords });
 
-                dispatch(setProjects({ ...projects, keywords: data.keywords }));
-                dispatch(nextStep());
-            } catch (err: any) {
-                const message = err?.response?.data?.message || err.message || "Something went wrong";
-                toast.error(message);
-            } finally {
-                setIsLoading(false);
-            }
-        },
-        [dispatch, portalClient, projects]
-    );
+            dispatch(setProjects({ ...projects, keywords: data.keywords }));
+            dispatch(nextStep());
+        } catch (err: any) {
+            const message = err?.response?.data?.message || err.message || "Something went wrong";
+            toast.error(message);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [dispatch, portalClient, projects]);
 
     const handleBack = useCallback(() => dispatch(prevStep()), [dispatch]);
 
-    const filteredSuggestions = listOfSuggestedKeywords.filter(
-        (suggestion) =>
-            !keywords.some(
-                (keyword) => keyword.toLowerCase() === suggestion.toLowerCase()
-            )
-    );
+    const filteredSuggestions = listOfSuggestedKeywords.filter((suggestion) => !keywords.some((keyword) => keyword.toLowerCase() === suggestion.toLowerCase()));
 
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
