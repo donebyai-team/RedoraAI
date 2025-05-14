@@ -186,6 +186,21 @@ func (r *Database) GetKeywordTrackers(ctx context.Context) ([]*models.AugmentedK
 	}
 	var results []*models.AugmentedKeywordTracker
 	for _, tracker := range trackers {
+		project, err := r.GetProject(ctx, tracker.ProjectID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get project %q: %w", tracker.ProjectID, err)
+		}
+
+		org, err := r.GetOrganizationById(ctx, project.OrganizationID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get organization %q: %w", tracker.ProjectID, err)
+		}
+
+		// Skip the tracking if the subscription is expired
+		if org.FeatureFlags.IsSubscriptionExpired() {
+			continue
+		}
+
 		keyword, err := r.GetKeywordByID(ctx, tracker.KeywordID)
 		if err != nil && errors.Is(err, datastore.NotFound) {
 			continue
@@ -200,16 +215,6 @@ func (r *Database) GetKeywordTrackers(ctx context.Context) ([]*models.AugmentedK
 		}
 		if err != nil {
 			return nil, fmt.Errorf("failed to get source for project %q: %w", tracker.KeywordID, err)
-		}
-
-		project, err := r.GetProject(ctx, tracker.ProjectID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get project %q: %w", keyword.ProjectID, err)
-		}
-
-		org, err := r.GetOrganizationById(ctx, project.OrganizationID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get organization %q: %w", keyword.ProjectID, err)
 		}
 
 		results = append(results, &models.AugmentedKeywordTracker{

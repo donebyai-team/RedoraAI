@@ -1,0 +1,168 @@
+package models
+
+import (
+	"database/sql/driver"
+	"encoding/json"
+	"time"
+)
+
+type UsageLimits struct {
+	PerDay   int `json:"per_day"`
+	PerMonth int `json:"per_month"`
+}
+
+type SubscriptionPlanMetadata struct {
+	Comments      UsageLimits `json:"comments"`
+	DMs           UsageLimits `json:"dms"`
+	RelevantPosts UsageLimits `json:"relevant_posts"`
+	MaxKeywords   int         `json:"max_keywords"`
+	MaxSources    int         `json:"max_sources"`
+}
+
+//go:generate go-enum -f=$GOFILE
+
+// ENUM(FREE, FOUNDER, AGENCY, GROWTH)
+type SubscriptionPlanType string
+
+type SubscriptionPlan struct {
+	PlanType    SubscriptionPlanType     `json:"plan_type"`
+	Description string                   `json:"description"`
+	Price       float64                  `json:"price"`
+	Interval    int                      `json:"interval"`
+	Metadata    SubscriptionPlanMetadata `json:"metadata"`
+}
+
+var RedoraPlans = map[SubscriptionPlanType]SubscriptionPlan{
+	SubscriptionPlanTypeFREE: {
+		PlanType:    SubscriptionPlanTypeFREE,
+		Description: "Free plan with limited usage to try out the platform",
+		Price:       0.0,
+		Interval:    7, // 14-day trial
+		Metadata: SubscriptionPlanMetadata{
+			Comments: UsageLimits{
+				PerDay:   5,
+				PerMonth: 50,
+			},
+			DMs: UsageLimits{
+				PerDay:   2,
+				PerMonth: 20,
+			},
+			RelevantPosts: UsageLimits{
+				PerDay:   25,
+				PerMonth: 750,
+			},
+			MaxSources:  5,
+			MaxKeywords: 5,
+		},
+	},
+	SubscriptionPlanTypeFOUNDER: {
+		PlanType:    SubscriptionPlanTypeFOUNDER,
+		Description: "Perfect for individual founders reaching out to niche communities",
+		Price:       29.99,
+		Interval:    30,
+		Metadata: SubscriptionPlanMetadata{
+			Comments: UsageLimits{
+				PerDay:   30,
+				PerMonth: 300,
+			},
+			DMs: UsageLimits{
+				PerDay:   10,
+				PerMonth: 100,
+			},
+			RelevantPosts: UsageLimits{
+				PerDay:   50,
+				PerMonth: 500,
+			},
+			MaxSources:  5,
+			MaxKeywords: 5,
+		},
+	},
+	SubscriptionPlanTypeAGENCY: {
+		PlanType:    SubscriptionPlanTypeAGENCY,
+		Description: "Best for marketing agencies managing multiple clients",
+		Price:       99.99,
+		Interval:    30,
+		Metadata: SubscriptionPlanMetadata{
+			Comments: UsageLimits{
+				PerDay:   100,
+				PerMonth: 1000,
+			},
+			DMs: UsageLimits{
+				PerDay:   40,
+				PerMonth: 400,
+			},
+			RelevantPosts: UsageLimits{
+				PerDay:   200,
+				PerMonth: 2000,
+			},
+			MaxSources:  5,
+			MaxKeywords: 5,
+		},
+	},
+	SubscriptionPlanTypeGROWTH: {
+		PlanType:    SubscriptionPlanTypeGROWTH,
+		Description: "For startups scaling user outreach and engagement",
+		Price:       49.99,
+		Interval:    30,
+		Metadata: SubscriptionPlanMetadata{
+			Comments: UsageLimits{
+				PerDay:   60,
+				PerMonth: 600,
+			},
+			DMs: UsageLimits{
+				PerDay:   25,
+				PerMonth: 250,
+			},
+			RelevantPosts: UsageLimits{
+				PerDay:   100,
+				PerMonth: 1000,
+			},
+		},
+	},
+}
+
+// ENUM(CREATED, FAILED, EXPIRED, ACTIVE)
+type SubscriptionStatus string
+
+type Subscription struct {
+	ID             string                   `db:"id" json:"id"`
+	OrganizationID string                   `db:"organization_id" json:"organization_id"`
+	Amount         float64                  `db:"amount" json:"amount"`
+	PlanID         SubscriptionPlanType     `db:"plan_id" json:"plan_id"`
+	Status         SubscriptionStatus       `db:"status" json:"status"`
+	Metadata       SubscriptionPlanMetadata `db:"metadata" json:"metadata"`
+	ExternalID     *string                  `db:"external_id" json:"external_id,omitempty"`
+	CreatedAt      time.Time                `db:"created_at" json:"created_at"`
+	ExpiresAt      time.Time                `db:"expires_at" json:"expires_at"`
+	UpdatedAt      *time.Time               `db:"updated_at" json:"updated_at,omitempty"`
+}
+
+func (b SubscriptionPlanMetadata) Value() (driver.Value, error) {
+	return valueAsJSON(b, "subscription metadata")
+}
+
+func (b *SubscriptionPlanMetadata) Scan(value interface{}) error {
+	return scanFromJSON(value, b, "subscription metadata")
+}
+
+func (s *Subscription) MarshalJSON() ([]byte, error) {
+	// Check expiration and override status if needed
+	if s.IsExpired() {
+		s.Status = SubscriptionStatusEXPIRED
+	}
+
+	// Define alias to avoid infinite recursion
+	type Alias Subscription
+	return json.Marshal((*Alias)(s))
+}
+
+func (s *Subscription) IsExpired() bool {
+	return time.Now().After(s.ExpiresAt)
+}
+
+func (s *Subscription) GetStatus() SubscriptionStatus {
+	if s.IsExpired() {
+		return SubscriptionStatusEXPIRED
+	}
+	return s.Status
+}
