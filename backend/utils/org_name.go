@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"strings"
 	"time"
+	"unicode"
 )
 
 func GetOrganizationName(email string) string {
@@ -33,7 +34,18 @@ func GetOrganizationName(email string) string {
 
 	// for custom domains, use domain prefix (e.g., "openai" from "openai.com")
 	org := strings.Split(domain, ".")[0]
-	return generateUnique(org)
+	return CapitalizeFirst(org)
+}
+
+func CapitalizeFirst(s string) string {
+	if s == "" {
+		return s
+	}
+
+	// Convert first rune to upper, append rest
+	runes := []rune(s)
+	runes[0] = unicode.ToUpper(runes[0])
+	return string(runes)
 }
 
 // generateUnique appends a short random string to the base for uniqueness
