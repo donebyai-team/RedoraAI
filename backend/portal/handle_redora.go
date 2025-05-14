@@ -224,6 +224,10 @@ func (p *Portal) CreateKeywords(ctx context.Context, c *connect.Request[pbportal
 		return nil, status.New(codes.InvalidArgument, "at least one keyword is required").Err()
 	}
 
+	if len(c.Msg.Keywords) > 5 {
+		return nil, status.New(codes.InvalidArgument, "maximum 5 keywords are allowed").Err()
+	}
+
 	projectID, err := p.getProject(ctx, c.Header(), actor.OrganizationID)
 	if err != nil {
 		return nil, err
@@ -253,6 +257,15 @@ func (p *Portal) AddSource(ctx context.Context, c *connect.Request[pbportal.AddS
 	projectID, err := p.getProject(ctx, c.Header(), actor.OrganizationID)
 	if err != nil {
 		return nil, err
+	}
+
+	sources, err := p.db.GetSourcesByProject(ctx, projectID)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(sources) >= 5 {
+		return nil, status.New(codes.InvalidArgument, "maximum 5 sources are allowed").Err()
 	}
 
 	redditClient, err := p.redditOauthClient.NewRedditClient(ctx, actor.OrganizationID, false)
