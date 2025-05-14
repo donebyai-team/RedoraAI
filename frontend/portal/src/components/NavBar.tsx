@@ -189,8 +189,11 @@ const NavBar: FC = () => {
         dispatch(setDiscardedTabList(discardedResult?.leads ?? []));
         dispatch(setLeadsTabList(leadsResult?.leads ?? []));
 
-        // Set the first lead only once after all API calls are complete
-        if (allLeads.length > 0) {
+        // if the new leads is empty and completedResult is not empty then set active tab as COMPLETED
+        if (allLeads.length === 0 && completedResult.leads?.length > 0) {
+          dispatch(setActiveTab(LeadTabStatus.COMPLETED));
+          dispatch(setSelectedLeadData(completedResult.leads[0]));
+        } else if (allLeads.length > 0) {
           dispatch(setSelectedLeadData(allLeads[0])); // Set the first lead as selected
         }
 
