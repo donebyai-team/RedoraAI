@@ -130,7 +130,10 @@ func (a *AuthUsecase) createUserForEmail(ctx context.Context, email string, emai
 	}
 
 	if org == nil {
-		org, err = a.db.CreateOrganization(ctx, &models.Organization{Name: orgName})
+		org, err = a.db.CreateOrganization(ctx, &models.Organization{
+			Name:         orgName,
+			FeatureFlags: models.OrganizationFeatureFlags{EnableAutoComment: true},
+		})
 		if err != nil {
 			logger.Error("failed to create organization", zap.Error(err), zap.String("org_name", orgName))
 			return nil, fmt.Errorf("unable to create organization: %w", err)
