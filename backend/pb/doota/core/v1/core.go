@@ -9,6 +9,14 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+func (i *SubscriptionPlanID) FromModel(model models.SubscriptionPlanType) {
+	enum, found := SubscriptionPlanID_value["SUBSCRIPTION_PLAN_"+strings.ToUpper(model.String())]
+	if !found {
+		panic(fmt.Errorf("unknown subscription plan %q", model.String()))
+	}
+	*i = SubscriptionPlanID(enum)
+}
+
 func (i *SubscriptionStatus) FromModel(model models.SubscriptionStatus) {
 	enum, found := SubscriptionStatus_value["SUBSCRIPTION_STATUS_"+strings.ToUpper(model.String())]
 	if !found {
@@ -25,6 +33,7 @@ func (u *UsageLimit) FromModel(model *models.UsageLimits) *UsageLimit {
 
 func (u *Subscription) FromModel(model *models.Subscription) *Subscription {
 	u.Status.FromModel(model.GetStatus())
+	u.PlanId.FromModel(model.PlanID)
 	u.CreatedAt = timestamppb.New(model.CreatedAt)
 	u.ExpiresAt = timestamppb.New(model.ExpiresAt)
 	u.MaxSources = int32(model.Metadata.MaxSources)

@@ -152,6 +152,14 @@ enum SubscriptionStatus {
   SUBSCRIPTION_STATUS_CREATED= 3;
 }
 
+enum SubscriptionPlanID {
+  SUBSCRIPTION_PLAN_UNKNOWN = 0;
+  SUBSCRIPTION_PLAN_FREE = 1;
+  SUBSCRIPTION_PLAN_FOUNDER = 2;
+  SUBSCRIPTION_PLAN_AGENCY = 3;
+  SUBSCRIPTION_PLAN_GROWTH = 4;
+}
+
 message UsageLimit {
   int32 per_day = 1;
   int32 per_month = 2;
@@ -165,4 +173,5 @@ message Subscription {
   UsageLimit dm = 5;
   google.protobuf.Timestamp created_at = 6;
   google.protobuf.Timestamp expires_at = 7;
+  SubscriptionPlanID plan_id = 8;
 }

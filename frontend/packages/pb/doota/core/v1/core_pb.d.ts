@@ -479,6 +479,11 @@ export declare type Subscription = Message<"doota.core.v1.Subscription"> & {
    * @generated from field: google.protobuf.Timestamp expires_at = 7;
    */
   expiresAt?: Timestamp;
+
+  /**
+   * @generated from field: doota.core.v1.SubscriptionPlanID plan_id = 8;
+   */
+  planId: SubscriptionPlanID;
 };
 
 /**
@@ -651,4 +656,39 @@ export enum SubscriptionStatus {
  * Describes the enum doota.core.v1.SubscriptionStatus.
  */
 export declare const SubscriptionStatusSchema: GenEnum<SubscriptionStatus>;
+
+/**
+ * @generated from enum doota.core.v1.SubscriptionPlanID
+ */
+export enum SubscriptionPlanID {
+  /**
+   * @generated from enum value: SUBSCRIPTION_PLAN_UNKNOWN = 0;
+   */
+  SUBSCRIPTION_PLAN_UNKNOWN = 0,
+
+  /**
+   * @generated from enum value: SUBSCRIPTION_PLAN_FREE = 1;
+   */
+  SUBSCRIPTION_PLAN_FREE = 1,
+
+  /**
+   * @generated from enum value: SUBSCRIPTION_PLAN_FOUNDER = 2;
+   */
+  SUBSCRIPTION_PLAN_FOUNDER = 2,
+
+  /**
+   * @generated from enum value: SUBSCRIPTION_PLAN_AGENCY = 3;
+   */
+  SUBSCRIPTION_PLAN_AGENCY = 3,
+
+  /**
+   * @generated from enum value: SUBSCRIPTION_PLAN_GROWTH = 4;
+   */
+  SUBSCRIPTION_PLAN_GROWTH = 4,
+}
+
+/**
+ * Describes the enum doota.core.v1.SubscriptionPlanID.
+ */
+export declare const SubscriptionPlanIDSchema: GenEnum<SubscriptionPlanID>;
 
