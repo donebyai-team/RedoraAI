@@ -2,6 +2,7 @@ package pbportal
 
 import (
 	"fmt"
+	pbcore "github.com/shank318/doota/pb/doota/core/v1"
 	"strings"
 
 	"github.com/shank318/doota/models"
@@ -35,6 +36,9 @@ func (o *Organization) FromModel(model *models.Organization) *Organization {
 	o.Id = model.ID
 	o.Name = model.Name
 	o.FeatureFlags = &OrganizationFeatureFlags{}
+	if model.FeatureFlags.Subscription != nil {
+		o.FeatureFlags.Subscription = new(pbcore.Subscription).FromModel(model.FeatureFlags.Subscription)
+	}
 	o.CreatedAt = timestamppb.New(model.CreatedAt)
 	return o
 }

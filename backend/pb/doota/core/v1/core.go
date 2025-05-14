@@ -9,6 +9,31 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+func (i *SubscriptionStatus) FromModel(model models.SubscriptionStatus) {
+	enum, found := SubscriptionStatus_value["SUBSCRIPTION_STATUS_"+strings.ToUpper(model.String())]
+	if !found {
+		panic(fmt.Errorf("unknown subscription status %q", model.String()))
+	}
+	*i = SubscriptionStatus(enum)
+}
+
+func (u *UsageLimit) FromModel(model *models.UsageLimits) *UsageLimit {
+	u.PerDay = int32(model.PerDay)
+	u.PerMonth = int32(model.PerMonth)
+	return u
+}
+
+func (u *Subscription) FromModel(model *models.Subscription) *Subscription {
+	u.Status.FromModel(model.GetStatus())
+	u.CreatedAt = timestamppb.New(model.CreatedAt)
+	u.ExpiresAt = timestamppb.New(model.ExpiresAt)
+	u.MaxSources = int32(model.Metadata.MaxSources)
+	u.MaxKeywords = int32(model.Metadata.MaxKeywords)
+	u.Comments = new(UsageLimit).FromModel(&model.Metadata.Comments)
+	u.Dm = new(UsageLimit).FromModel(&model.Metadata.DMs)
+	return u
+}
+
 func (u *Source_RedditMetadata) FromModel(metadata *models.SubRedditMetadata) *Source_RedditMetadata {
 	u.RedditMetadata = &SubRedditMetadata{
 		Title:     metadata.Title,
