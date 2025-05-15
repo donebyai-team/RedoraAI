@@ -4,13 +4,29 @@
 
 import type { GenEnum, GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv1";
 import type { Message } from "@bufbuild/protobuf";
-import type { Lead, LeadStatus, Project, ProjectSchema, Source, Subscription } from "../../core/v1/core_pb";
+import type { Keyword, Lead, LeadStatus, Project, ProjectSchema, Source, SourceSchema, Subscription } from "../../core/v1/core_pb";
 import type { EmptySchema, Timestamp } from "@bufbuild/protobuf/wkt";
 
 /**
  * Describes the file doota/portal/v1/portal.proto.
  */
 export declare const file_doota_portal_v1_portal: GenFile;
+
+/**
+ * @generated from message doota.portal.v1.CreateKeywordsRes
+ */
+export declare type CreateKeywordsRes = Message<"doota.portal.v1.CreateKeywordsRes"> & {
+  /**
+   * @generated from field: repeated doota.core.v1.Keyword keywords = 1;
+   */
+  keywords: Keyword[];
+};
+
+/**
+ * Describes the message doota.portal.v1.CreateKeywordsRes.
+ * Use `create(CreateKeywordsResSchema)` to create a new message.
+ */
+export declare const CreateKeywordsResSchema: GenMessage<CreateKeywordsRes>;
 
 /**
  * @generated from message doota.portal.v1.CreateProjectRequest
@@ -985,7 +1001,7 @@ export declare const PortalService: GenService<{
   createKeywords: {
     methodKind: "unary";
     input: typeof CreateKeywordReqSchema;
-    output: typeof EmptySchema;
+    output: typeof CreateKeywordsResSchema;
   },
   /**
    * @generated from rpc doota.portal.v1.PortalService.AddSource
@@ -993,7 +1009,7 @@ export declare const PortalService: GenService<{
   addSource: {
     methodKind: "unary";
     input: typeof AddSourceRequestSchema;
-    output: typeof EmptySchema;
+    output: typeof SourceSchema;
   },
   /**
    * @generated from rpc doota.portal.v1.PortalService.GetSources

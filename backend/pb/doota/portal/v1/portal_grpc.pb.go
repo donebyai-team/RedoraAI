@@ -60,8 +60,8 @@ type PortalServiceClient interface {
 	SocialLoginCallback(ctx context.Context, in *OauthCallbackRequest, opts ...grpc.CallOption) (*JWT, error)
 	GetIntegrations(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Integrations, error)
 	// Reddit
-	CreateKeywords(ctx context.Context, in *CreateKeywordReq, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	AddSource(ctx context.Context, in *AddSourceRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	CreateKeywords(ctx context.Context, in *CreateKeywordReq, opts ...grpc.CallOption) (*CreateKeywordsRes, error)
+	AddSource(ctx context.Context, in *AddSourceRequest, opts ...grpc.CallOption) (*v1.Source, error)
 	GetSources(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetSourceResponse, error)
 	RemoveSource(ctx context.Context, in *RemoveSourceRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GetRelevantLeads(ctx context.Context, in *GetRelevantLeadsRequest, opts ...grpc.CallOption) (*GetLeadsResponse, error)
@@ -177,8 +177,8 @@ func (c *portalServiceClient) GetIntegrations(ctx context.Context, in *emptypb.E
 	return out, nil
 }
 
-func (c *portalServiceClient) CreateKeywords(ctx context.Context, in *CreateKeywordReq, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
+func (c *portalServiceClient) CreateKeywords(ctx context.Context, in *CreateKeywordReq, opts ...grpc.CallOption) (*CreateKeywordsRes, error) {
+	out := new(CreateKeywordsRes)
 	err := c.cc.Invoke(ctx, PortalService_CreateKeywords_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -186,8 +186,8 @@ func (c *portalServiceClient) CreateKeywords(ctx context.Context, in *CreateKeyw
 	return out, nil
 }
 
-func (c *portalServiceClient) AddSource(ctx context.Context, in *AddSourceRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
+func (c *portalServiceClient) AddSource(ctx context.Context, in *AddSourceRequest, opts ...grpc.CallOption) (*v1.Source, error) {
+	out := new(v1.Source)
 	err := c.cc.Invoke(ctx, PortalService_AddSource_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -267,8 +267,8 @@ type PortalServiceServer interface {
 	SocialLoginCallback(context.Context, *OauthCallbackRequest) (*JWT, error)
 	GetIntegrations(context.Context, *emptypb.Empty) (*Integrations, error)
 	// Reddit
-	CreateKeywords(context.Context, *CreateKeywordReq) (*emptypb.Empty, error)
-	AddSource(context.Context, *AddSourceRequest) (*emptypb.Empty, error)
+	CreateKeywords(context.Context, *CreateKeywordReq) (*CreateKeywordsRes, error)
+	AddSource(context.Context, *AddSourceRequest) (*v1.Source, error)
 	GetSources(context.Context, *emptypb.Empty) (*GetSourceResponse, error)
 	RemoveSource(context.Context, *RemoveSourceRequest) (*emptypb.Empty, error)
 	GetRelevantLeads(context.Context, *GetRelevantLeadsRequest) (*GetLeadsResponse, error)
@@ -315,10 +315,10 @@ func (UnimplementedPortalServiceServer) SocialLoginCallback(context.Context, *Oa
 func (UnimplementedPortalServiceServer) GetIntegrations(context.Context, *emptypb.Empty) (*Integrations, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetIntegrations not implemented")
 }
-func (UnimplementedPortalServiceServer) CreateKeywords(context.Context, *CreateKeywordReq) (*emptypb.Empty, error) {
+func (UnimplementedPortalServiceServer) CreateKeywords(context.Context, *CreateKeywordReq) (*CreateKeywordsRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateKeywords not implemented")
 }
-func (UnimplementedPortalServiceServer) AddSource(context.Context, *AddSourceRequest) (*emptypb.Empty, error) {
+func (UnimplementedPortalServiceServer) AddSource(context.Context, *AddSourceRequest) (*v1.Source, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddSource not implemented")
 }
 func (UnimplementedPortalServiceServer) GetSources(context.Context, *emptypb.Empty) (*GetSourceResponse, error) {

@@ -130,6 +130,8 @@ func (r redditService) CreateSubReddit(ctx context.Context, source *models.Sourc
 		return fmt.Errorf("failed to add subreddit to the database: %w", err)
 	}
 
+	source.ID = createdSource.ID
+
 	// If not cached before
 	if value == nil {
 		go r.cacheSubReddit(context.Background(), createdSource)

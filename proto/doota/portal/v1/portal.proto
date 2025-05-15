@@ -24,14 +24,18 @@ service PortalService {
   rpc GetIntegrations(.google.protobuf.Empty) returns (Integrations);
 
   // Reddit
-  rpc CreateKeywords(CreateKeywordReq) returns (.google.protobuf.Empty);
-  rpc AddSource(AddSourceRequest) returns (.google.protobuf.Empty);
+  rpc CreateKeywords(CreateKeywordReq) returns (CreateKeywordsRes);
+  rpc AddSource(AddSourceRequest) returns (core.v1.Source);
   rpc GetSources(.google.protobuf.Empty) returns (GetSourceResponse);
   rpc RemoveSource(RemoveSourceRequest) returns (.google.protobuf.Empty);
   rpc GetRelevantLeads(GetRelevantLeadsRequest) returns (GetLeadsResponse);
   rpc GetLeadsByStatus(GetLeadsByStatusRequest) returns (GetLeadsResponse);
   rpc UpdateLeadStatus(UpdateLeadStatusRequest) returns (.google.protobuf.Empty);
   rpc CreateOrEditProject(CreateProjectRequest) returns (doota.core.v1.Project);
+}
+
+message CreateKeywordsRes {
+  repeated core.v1.Keyword keywords = 1;
 }
 
 message CreateProjectRequest {

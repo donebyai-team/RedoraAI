@@ -130,8 +130,8 @@ type PortalServiceClient interface {
 	SocialLoginCallback(context.Context, *connect.Request[v1.OauthCallbackRequest]) (*connect.Response[v1.JWT], error)
 	GetIntegrations(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.Integrations], error)
 	// Reddit
-	CreateKeywords(context.Context, *connect.Request[v1.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error)
-	AddSource(context.Context, *connect.Request[v1.AddSourceRequest]) (*connect.Response[emptypb.Empty], error)
+	CreateKeywords(context.Context, *connect.Request[v1.CreateKeywordReq]) (*connect.Response[v1.CreateKeywordsRes], error)
+	AddSource(context.Context, *connect.Request[v1.AddSourceRequest]) (*connect.Response[v11.Source], error)
 	GetSources(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetSourceResponse], error)
 	RemoveSource(context.Context, *connect.Request[v1.RemoveSourceRequest]) (*connect.Response[emptypb.Empty], error)
 	GetRelevantLeads(context.Context, *connect.Request[v1.GetRelevantLeadsRequest]) (*connect.Response[v1.GetLeadsResponse], error)
@@ -216,13 +216,13 @@ func NewPortalServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(portalServiceGetIntegrationsMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
-		createKeywords: connect.NewClient[v1.CreateKeywordReq, emptypb.Empty](
+		createKeywords: connect.NewClient[v1.CreateKeywordReq, v1.CreateKeywordsRes](
 			httpClient,
 			baseURL+PortalServiceCreateKeywordsProcedure,
 			connect.WithSchema(portalServiceCreateKeywordsMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
-		addSource: connect.NewClient[v1.AddSourceRequest, emptypb.Empty](
+		addSource: connect.NewClient[v1.AddSourceRequest, v11.Source](
 			httpClient,
 			baseURL+PortalServiceAddSourceProcedure,
 			connect.WithSchema(portalServiceAddSourceMethodDescriptor),
@@ -280,8 +280,8 @@ type portalServiceClient struct {
 	oauthCallback       *connect.Client[v1.OauthCallbackRequest, v1.OauthCallbackResponse]
 	socialLoginCallback *connect.Client[v1.OauthCallbackRequest, v1.JWT]
 	getIntegrations     *connect.Client[emptypb.Empty, v1.Integrations]
-	createKeywords      *connect.Client[v1.CreateKeywordReq, emptypb.Empty]
-	addSource           *connect.Client[v1.AddSourceRequest, emptypb.Empty]
+	createKeywords      *connect.Client[v1.CreateKeywordReq, v1.CreateKeywordsRes]
+	addSource           *connect.Client[v1.AddSourceRequest, v11.Source]
 	getSources          *connect.Client[emptypb.Empty, v1.GetSourceResponse]
 	removeSource        *connect.Client[v1.RemoveSourceRequest, emptypb.Empty]
 	getRelevantLeads    *connect.Client[v1.GetRelevantLeadsRequest, v1.GetLeadsResponse]
@@ -346,12 +346,12 @@ func (c *portalServiceClient) GetIntegrations(ctx context.Context, req *connect.
 }
 
 // CreateKeywords calls doota.portal.v1.PortalService.CreateKeywords.
-func (c *portalServiceClient) CreateKeywords(ctx context.Context, req *connect.Request[v1.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error) {
+func (c *portalServiceClient) CreateKeywords(ctx context.Context, req *connect.Request[v1.CreateKeywordReq]) (*connect.Response[v1.CreateKeywordsRes], error) {
 	return c.createKeywords.CallUnary(ctx, req)
 }
 
 // AddSource calls doota.portal.v1.PortalService.AddSource.
-func (c *portalServiceClient) AddSource(ctx context.Context, req *connect.Request[v1.AddSourceRequest]) (*connect.Response[emptypb.Empty], error) {
+func (c *portalServiceClient) AddSource(ctx context.Context, req *connect.Request[v1.AddSourceRequest]) (*connect.Response[v11.Source], error) {
 	return c.addSource.CallUnary(ctx, req)
 }
 
@@ -401,8 +401,8 @@ type PortalServiceHandler interface {
 	SocialLoginCallback(context.Context, *connect.Request[v1.OauthCallbackRequest]) (*connect.Response[v1.JWT], error)
 	GetIntegrations(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.Integrations], error)
 	// Reddit
-	CreateKeywords(context.Context, *connect.Request[v1.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error)
-	AddSource(context.Context, *connect.Request[v1.AddSourceRequest]) (*connect.Response[emptypb.Empty], error)
+	CreateKeywords(context.Context, *connect.Request[v1.CreateKeywordReq]) (*connect.Response[v1.CreateKeywordsRes], error)
+	AddSource(context.Context, *connect.Request[v1.AddSourceRequest]) (*connect.Response[v11.Source], error)
 	GetSources(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetSourceResponse], error)
 	RemoveSource(context.Context, *connect.Request[v1.RemoveSourceRequest]) (*connect.Response[emptypb.Empty], error)
 	GetRelevantLeads(context.Context, *connect.Request[v1.GetRelevantLeadsRequest]) (*connect.Response[v1.GetLeadsResponse], error)
@@ -624,11 +624,11 @@ func (UnimplementedPortalServiceHandler) GetIntegrations(context.Context, *conne
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.GetIntegrations is not implemented"))
 }
 
-func (UnimplementedPortalServiceHandler) CreateKeywords(context.Context, *connect.Request[v1.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error) {
+func (UnimplementedPortalServiceHandler) CreateKeywords(context.Context, *connect.Request[v1.CreateKeywordReq]) (*connect.Response[v1.CreateKeywordsRes], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.CreateKeywords is not implemented"))
 }
 
-func (UnimplementedPortalServiceHandler) AddSource(context.Context, *connect.Request[v1.AddSourceRequest]) (*connect.Response[emptypb.Empty], error) {
+func (UnimplementedPortalServiceHandler) AddSource(context.Context, *connect.Request[v1.AddSourceRequest]) (*connect.Response[v11.Source], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.AddSource is not implemented"))
 }
 
