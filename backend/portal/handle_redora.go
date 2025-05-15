@@ -62,6 +62,10 @@ func (p *Portal) CreateOrEditProject(ctx context.Context, c *connect.Request[pbp
 		return nil, status.New(codes.InvalidArgument, "project target persona should be at least 10 characters").Err()
 	}
 
+	if !strings.HasPrefix(c.Msg.Website, "http://") && !strings.HasPrefix(c.Msg.Website, "https://") {
+		c.Msg.Website = "https://" + c.Msg.Website
+	}
+
 	// Validate website URL
 	_, err = url.ParseRequestURI(c.Msg.Website)
 	if err != nil {

@@ -13,6 +13,7 @@ import (
 	"github.com/streamingfast/dstore"
 	"golang.org/x/oauth2"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/streamingfast/logging"
@@ -76,6 +77,8 @@ func (b *DependenciesBuilder) WithDataStore(pgDSN string) *DependenciesBuilder {
 }
 
 func (b *DependenciesBuilder) WithGoogle(clientId, clientSecret, redirectUrl string) *DependenciesBuilder {
+	redirectUrl = strings.Replace(redirectUrl, "auth/callback/login", "callback/login", 0)
+
 	b.GoogleConfig = &GoogleConfig{
 		ClientID:     clientId,
 		ClientSecret: clientSecret,
