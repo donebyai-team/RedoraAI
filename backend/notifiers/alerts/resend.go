@@ -13,7 +13,12 @@ type ResendNotifier struct {
 	db     datastore.Repository
 }
 
-func NewResendNotifier(apiKey string, db datastore.Repository, logger *zap.Logger) *ResendNotifier {
+func (r ResendNotifier) SendTrackingError(ctx context.Context, trackingID, project string, err error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func NewResendNotifier(apiKey string, db datastore.Repository, logger *zap.Logger) AlertNotifier {
 	return &ResendNotifier{Client: resend.NewClient(apiKey), db: db}
 }
 
@@ -21,6 +26,10 @@ func (r ResendNotifier) SendLeadsSummary(ctx context.Context, summary LeadSummar
 	users, err := r.db.GetUsersByOrgID(ctx, summary.OrgID)
 	if err != nil {
 		return err
+	}
+
+	if len(users) == 0 {
+		return nil
 	}
 
 	to := make([]string, 0, len(users))
@@ -34,11 +43,11 @@ func (r ResendNotifier) SendLeadsSummary(ctx context.Context, summary LeadSummar
 		<html>
 		<body style="font-family: Arial, sans-serif; background-color: #f7f9fc; padding: 20px;">
 		  <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 30px; border-radius: 8px;">
-		    <h2>Daily Lead Summary — <strong>RedoraAI</strong></h2>
+		    <h2>Daily Reddit Posts Summary — <strong>RedoraAI</strong></h2>
 		    <p><strong>Product:</strong> %s</p>
 		    <p><strong>Posts Analyzed:</strong> %d</p>
 		    <p><strong>Automated Comments Posted:</strong> %d</p>
-		    <p><strong>Leads Found:</strong> <strong>%d</strong></p>
+		    <p><strong>Relevant Posts Found:</strong> <strong>%d</strong></p>
 		    <p>🔗 <a href="%s">View all leads in your dashboard</a></p>
 		    <hr>
 		    <footer style="font-size: 12px; color: #888;">

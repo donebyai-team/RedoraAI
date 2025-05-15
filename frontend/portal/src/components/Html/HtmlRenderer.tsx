@@ -70,6 +70,7 @@ const HtmlBodyRenderer = ({ htmlString }: { htmlString: string }) => {
 };
 
 const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ data }) => {
+  const processedData = data.replace(/\n/g, "\n\n");
   return (
     <ReactMarkdown
       components={{
@@ -78,7 +79,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ data }) => {
         ),
       }}
     >
-      {data}
+      {processedData}
     </ReactMarkdown>
   );
 }

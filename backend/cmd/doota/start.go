@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"github.com/shank318/doota/agents/redora"
 	"github.com/shank318/doota/agents/vana"
-	"github.com/shank318/doota/ai"
 	"github.com/shank318/doota/app"
 	"github.com/shank318/doota/auth"
 	"github.com/shank318/doota/integrations"
 	"github.com/shank318/doota/integrations/reddit"
+	"github.com/shank318/doota/models"
 	"github.com/shank318/doota/notifiers/alerts"
 	pbportal "github.com/shank318/doota/pb/doota/portal/v1"
 	"github.com/shank318/doota/portal"
@@ -35,6 +35,7 @@ var StartCmd = cli.Command(startCmdE,
 		flags.Duration("common-phone-call-ttl", 5*time.Minute, cli.FlagDescription(`TTL to set in redis for a phone call`))
 		flags.String("common-pubsub-project", "doota-local", "Google GCP Project")
 		flags.String("common-gpt-model", "redora-dev-gpt-4.1-mini-2025-04-14", "GPT Model to use for message creator and categorization")
+		flags.String("common-gpt-advance-model", "redora-dev-gpt-4.1-2025-04-14", "GPT Model to use for message creator and categorization")
 		flags.String("common-resend-api-key", "", "Resend email api key")
 		flags.String("common-openai-api-key", "", "OpenAI API key")
 		flags.String("common-openai-debug-store", "data/debugstore", "OpenAI debug store")
@@ -144,14 +145,15 @@ func openAILangsmithLegacyHandling(cmd *cobra.Command, prefix string) (string, s
 }
 
 func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
-	openaiApiKey, openaiOrganization, openaiDebugStore, langsmithApiKey, langsmithProject := openAILangsmithLegacyHandling(cmd, "common")
+	openaiApiKey, _, openaiDebugStore, langsmithApiKey, langsmithProject := openAILangsmithLegacyHandling(cmd, "common")
 	redisAddr := sflags.MustGetString(cmd, "redis-addr")
 	deps, err := app.NewDependenciesBuilder().
 		WithDataStore(sflags.MustGetString(cmd, "pg-dsn")).
 		WithKMSKeyPath(sflags.MustGetString(cmd, "jwt-kms-keypath")).
 		WithAI(
+			models.LLMModel(sflags.MustGetString(cmd, "common-gpt-model")),
+			models.LLMModel(sflags.MustGetString(cmd, "common-gpt-advance-model")),
 			openaiApiKey,
-			openaiOrganization,
 			openaiDebugStore,
 			langsmithApiKey,
 			langsmithProject,
@@ -169,11 +171,6 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 
 	logger := zlog.Named("spooler")
 
-	gptModel, err := ai.ParseGPTModel(sflags.MustGetString(cmd, "common-gpt-model"))
-	if err != nil {
-		return nil, fmt.Errorf("initiated extractor with invalid gpt model: %w", err)
-	}
-
 	redditOauthClient := reddit.NewRedditOauthClient(logger, deps.DataStore, sflags.MustGetString(cmd, "portal-reddit-client-id"), sflags.MustGetString(cmd, "portal-reddit-client-secret"), sflags.MustGetString(cmd, "portal-reddit-redirect-url"))
 
 	var isDev bool
@@ -184,7 +181,6 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 
 	tracker := redora.NewKeywordTrackerFactory(
 		isDev,
-		gptModel,
 		redditOauthClient,
 		deps.DataStore,
 		deps.AIClient,
@@ -197,7 +193,6 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 	return redora.New(
 		deps.DataStore,
 		deps.AIClient,
-		gptModel,
 		deps.ConversationState,
 		50,
 		10,
@@ -209,12 +204,13 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 }
 
 func vanaSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
-	openaiApiKey, openaiOrganization, openaiDebugStore, langsmithApiKey, langsmithProject := openAILangsmithLegacyHandling(cmd, "common")
+	openaiApiKey, _, openaiDebugStore, langsmithApiKey, langsmithProject := openAILangsmithLegacyHandling(cmd, "common")
 	deps, err := app.NewDependenciesBuilder().
 		WithDataStore(sflags.MustGetString(cmd, "pg-dsn")).
 		WithAI(
+			models.LLMModel(sflags.MustGetString(cmd, "common-gpt-model")),
+			models.LLMModel(sflags.MustGetString(cmd, "common-gpt-advance-model")),
 			openaiApiKey,
-			openaiOrganization,
 			openaiDebugStore,
 			langsmithApiKey,
 			langsmithProject,
@@ -232,18 +228,12 @@ func vanaSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 
 	logger := zlog.Named("spooler")
 
-	gptModel, err := ai.ParseGPTModel(sflags.MustGetString(cmd, "common-gpt-model"))
-	if err != nil {
-		return nil, fmt.Errorf("initiated extractor with invalid gpt model: %w", err)
-	}
-
 	integrationsFactory := integrations.NewFactory(deps.DataStore, logger)
-	caseInvestigator := vana.NewCaseInvestigator(gptModel, deps.DataStore, deps.AIClient, logger, deps.ConversationState)
+	caseInvestigator := vana.NewCaseInvestigator(deps.DataStore, deps.AIClient, logger, deps.ConversationState)
 
 	return vana.New(
 		deps.DataStore,
 		deps.AIClient,
-		gptModel,
 		deps.ConversationState,
 		caseInvestigator,
 		integrationsFactory,
@@ -256,7 +246,7 @@ func vanaSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 }
 
 func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
-	openaiApiKey, openaiOrganization, openaiDebugStore, langsmithApiKey, langsmithProject := openAILangsmithLegacyHandling(cmd, "common")
+	openaiApiKey, _, openaiDebugStore, langsmithApiKey, langsmithProject := openAILangsmithLegacyHandling(cmd, "common")
 	deps, err := app.NewDependenciesBuilder().
 		WithDataStore(sflags.MustGetString(cmd, "pg-dsn")).
 		WithKMSKeyPath(sflags.MustGetString(cmd, "jwt-kms-keypath")).
@@ -268,11 +258,17 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 			"tracker",
 		).
 		WithAI(
+			models.LLMModel(sflags.MustGetString(cmd, "common-gpt-model")),
+			models.LLMModel(sflags.MustGetString(cmd, "common-gpt-advance-model")),
 			openaiApiKey,
-			openaiOrganization,
 			openaiDebugStore,
 			langsmithApiKey,
 			langsmithProject,
+		).
+		WithGoogle(
+			sflags.MustGetString(cmd, "google-client-id"),
+			sflags.MustGetString(cmd, "google-client-secret"),
+			sflags.MustGetString(cmd, "portal-reddit-redirect-url"),
 		).
 		Build(cmd.Context(), zlog, tracer)
 	if err != nil {
@@ -289,14 +285,9 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 
 	logger := zlog.Named("portal")
 
-	gptModel, err := ai.ParseGPTModel(sflags.MustGetString(cmd, "common-gpt-model"))
-	if err != nil {
-		return nil, fmt.Errorf("initiated extractor with invalid gpt model: %w", err)
-	}
-
 	integrationsFactory := integrations.NewFactory(deps.DataStore, logger)
 
-	caseInvestigator := vana.NewCaseInvestigator(gptModel, deps.DataStore, deps.AIClient, logger, deps.ConversationState)
+	caseInvestigator := vana.NewCaseInvestigator(deps.DataStore, deps.AIClient, logger, deps.ConversationState)
 
 	vanaWebhookHandler := vana.NewVanaWebhookHandler(
 		deps.DataStore,
@@ -315,10 +306,11 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 
 	// TODO: Understand how to setup this as part of an auth use case
 	config := &pbportal.Config{
-		Auth0Domain:    authConfig.Auth0Domain,
-		Auth0ClientId:  authConfig.Auth0PortalClientID,
-		Auth0Scope:     "openid email",
-		FullStoryOrgId: sflags.MustGetString(cmd, "portal-fullstory-org-id"),
+		Auth0Domain:            authConfig.Auth0Domain,
+		Auth0ClientId:          authConfig.Auth0PortalClientID,
+		Auth0Scope:             "openid email",
+		FullStoryOrgId:         sflags.MustGetString(cmd, "portal-fullstory-org-id"),
+		GoogleAuth0CallbackUrl: sflags.MustGetString(cmd, "portal-reddit-redirect-url"),
 	}
 
 	authUsecase, err := services.NewAuthUsecase(cmd.Context(), authConfig, deps.DataStore, deps.AuthSigningKeyGetter, zlog)
@@ -329,14 +321,16 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 	redditOauthClient := reddit.NewRedditOauthClient(logger, deps.DataStore, sflags.MustGetString(cmd, "portal-reddit-client-id"), sflags.MustGetString(cmd, "portal-reddit-client-secret"), sflags.MustGetString(cmd, "portal-reddit-redirect-url"))
 
 	p := portal.New(
+		deps.AIClient,
 		redditOauthClient,
+		deps.GoogleClient,
 		authenticator,
 		state.NewRedisStore(sflags.MustGetString(cmd, "redis-addr"), zlog),
 		services.NewCustomerCaseServiceImpl(deps.DataStore),
 		authUsecase,
-		services.NewKeywordServiceImpl(deps.DataStore),
 		vanaWebhookHandler,
 		deps.DataStore,
+		deps.ConversationState,
 		sflags.MustGetString(cmd, "portal-http-listen-addr"),
 		deps.CorsURLRegexAllow,
 		config,

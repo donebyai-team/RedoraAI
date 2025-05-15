@@ -7,6 +7,7 @@ export enum LeadTabStatus {
     NEW = "new",
     COMPLETED = "completed",
     DISCARDED = "discarded",
+    LEAD = "lead"
 }
 
 // Define the types
@@ -14,6 +15,7 @@ interface LeadStateTyeps {
     newTabList: LeadTyeps[];
     completedTabList: LeadTyeps[];
     discardedTabList: LeadTyeps[];
+    leadsTabList: LeadTyeps[];
     selectedleadData: LeadTyeps | null;
     isLoading: boolean;
     activeTab: LeadTabStatus;
@@ -25,6 +27,7 @@ const initialState: LeadStateTyeps = {
     newTabList: [],
     completedTabList: [],
     discardedTabList: [],
+    leadsTabList: [],
     selectedleadData: null,
     isLoading: true,
     activeTab: LeadTabStatus.NEW,
@@ -45,6 +48,9 @@ const leadSlice = createSlice({
         setDiscardedTabList: (state, action: PayloadAction<LeadTyeps[]>) => {
             state.discardedTabList = action.payload;
         },
+        setLeadsTabList: (state, action: PayloadAction<LeadTyeps[]>) => {
+            state.leadsTabList = action.payload;
+        },
         setSelectedLeadData: (state, action: PayloadAction<LeadTyeps | null>) => {
             state.selectedleadData = action.payload;
         },
@@ -62,7 +68,7 @@ const leadSlice = createSlice({
 });
 
 // Export actions
-export const { setNewTabList, setCompletedList, setDiscardedTabList, setSelectedLeadData, setActiveTab, setError, setIsLoading } = leadSlice.actions;
+export const { setNewTabList, setCompletedList, setDiscardedTabList, setLeadsTabList, setSelectedLeadData, setActiveTab, setError, setIsLoading } = leadSlice.actions;
 
 // Export reducer
 export const leadReducer = leadSlice.reducer;

@@ -10,8 +10,11 @@ import (
 	"github.com/openai/openai-go/shared"
 	"github.com/shank318/doota/models"
 	"github.com/shank318/doota/utils"
+	"github.com/streamingfast/derr"
 	"github.com/streamingfast/dstore"
 	"go.uber.org/zap"
+	"net/http"
+	"strconv"
 	"strings"
 	"text/template"
 	"time"
@@ -20,9 +23,12 @@ import (
 const SEED = 42
 
 type Client struct {
-	model               openai.Client
-	langsmithConfig     LangsmithConfig
+	defaultLLMModel models.LLMModel
+	advanceLLMModel models.LLMModel
+	model           openai.Client
+	langsmithConfig LangsmithConfig
 	/**/ debugFileStore dstore.Store
+	log                 *zap.Logger
 }
 
 type LangsmithConfig struct {
@@ -49,10 +55,15 @@ type LangsmithConfig struct {
 //	}, nil
 //}
 
-func NewOpenAI(apiKey, openAIOrganization string, config LangsmithConfig, debugFileStore dstore.Store) (*Client, error) {
+func NewOpenAI(apiKey string, defaultLLMModel, advanceLLMModel models.LLMModel, config LangsmithConfig, debugFileStore dstore.Store, log *zap.Logger) (*Client, error) {
 	if apiKey == "" {
 		return nil, fmt.Errorf("openai api key is required, cannot be blank")
 	}
+
+	if len(strings.TrimSpace(string(defaultLLMModel))) == 0 {
+		return nil, fmt.Errorf("default llm model, cannot be blank")
+	}
+
 	//if openAIOrganization == "" {
 	//	return nil, fmt.Errorf("openai organization is required, cannot be blank")
 	//}
@@ -63,9 +74,16 @@ func NewOpenAI(apiKey, openAIOrganization string, config LangsmithConfig, debugF
 	)
 
 	return &Client{
-		model:          llmClient,
-		debugFileStore: debugFileStore,
+		model:           llmClient,
+		defaultLLMModel: defaultLLMModel,
+		advanceLLMModel: advanceLLMModel,
+		debugFileStore:  debugFileStore,
+		log:             log,
 	}, nil
+}
+
+func (c *Client) GetAdvanceModel() models.LLMModel {
+	return c.advanceLLMModel
 }
 
 func (c *Client) processTemplate(ctx context.Context, runID, path, tmplData string, vars map[string]any, logger *zap.Logger) (*bytes.Buffer, error) {
@@ -128,73 +146,216 @@ func (c *Client) getChatMessagesFromPrompt(ctx context.Context, runID string, p 
 	return c.buildChatMessages(ctx, runID, templates, logger, vars)
 }
 
+const MAX_RETRIES = 3
+
 func (c *Client) runChatCompletion(
 	ctx context.Context,
 	runID string,
-	model string,
+	model models.LLMModel,
 	userID string,
 	messages []openai.ChatCompletionMessageParamUnion,
 	responseFormat *openai.ChatCompletionNewParamsResponseFormatUnion,
 	logger *zap.Logger,
 	outputFile string,
 ) ([]byte, error) {
-	params := openai.ChatCompletionNewParams{
-		Model:          model,
-		Messages:       messages,
-		User:           openai.String(userID),
-		ResponseFormat: *responseFormat,
-	}
+	var output string
 
-	chatCompletion, err := c.model.Chat.Completions.New(ctx, params)
+	err := derr.RetryContext(ctx, MAX_RETRIES, func(ctx context.Context) error {
+		httpResponse := &http.Response{}
+		params := openai.ChatCompletionNewParams{
+			Model:          string(model),
+			Messages:       messages,
+			User:           openai.String(userID),
+			ResponseFormat: *responseFormat,
+		}
+
+		// Send the API request
+		chatCompletion, err := c.model.Chat.Completions.New(ctx, params, option.WithResponseInto(&httpResponse))
+
+		// Check if we hit rate limit even if there's an error
+		if httpResponse.StatusCode == http.StatusTooManyRequests {
+			c.log.Debug("rate limit hit (429), retrying after backoff", zap.String("model", string(model)))
+			retryAfter := httpResponse.Header.Get("Retry-After")
+			if retryAfter != "" {
+				if seconds, convErr := strconv.Atoi(retryAfter); convErr == nil {
+					time.Sleep(time.Duration(seconds) * time.Second)
+				} else {
+					time.Sleep(time.Minute)
+				}
+			} else {
+				time.Sleep(time.Minute)
+			}
+			return fmt.Errorf("[%s]rate limit hit (429), retrying after backoff", model)
+		}
+
+		if err != nil {
+			return fmt.Errorf("llm: %w", err)
+		}
+
+		// Proceed normally
+		if len(chatCompletion.Choices) == 0 {
+			return fmt.Errorf("llm: no chat completion found, model: %s", model)
+		}
+
+		// Optionally: check remaining rate limits
+		remainingRequests := httpResponse.Header.Get("x-ratelimit-remaining-requests")
+		remainingTokens := httpResponse.Header.Get("x-ratelimit-remaining-tokens")
+
+		reqRemaining, _ := strconv.Atoi(remainingRequests)
+		tokRemaining, _ := strconv.Atoi(remainingTokens)
+
+		if reqRemaining <= 1 || tokRemaining <= 2000 {
+			c.log.Debug("rate limit hit (remaining requests/tokens), waiting for 1min before next request", zap.String("model", string(model)))
+			time.Sleep(time.Minute)
+		}
+
+		// If rate limit not exhausted, proceed normally
+		output = chatCompletion.Choices[0].Message.Content
+		return nil
+	})
+
 	if err != nil {
-		return nil, fmt.Errorf("llm: %w", err)
+		return nil, fmt.Errorf("retry: %w", err)
 	}
 
-	if len(chatCompletion.Choices) == 0 {
-		return nil, fmt.Errorf("llm: no chat completion found, model: %s", model)
-	}
-
-	output := chatCompletion.Choices[0].Message.Content
-	output = strings.ReplaceAll(output, `\"`, `"`)
-
+	// Save output to the specified file
 	c.saveOutput(ctx, runID, outputFile, []byte(output), logger)
 
 	return []byte(output), nil
 }
 
-func (c *Client) IsRedditPostRelevant(ctx context.Context, project *models.Project, post *models.Lead, gptModel GPTModel, logger *zap.Logger) (*models.RedditPostRelevanceResponse, error) {
-	runID := fmt.Sprintf("%s-%s", project.ID, post.PostID)
-	vars := gptModel.GetRedditPostRelevancyVars(project, post)
+func (c *Client) SuggestKeywordsAndSubreddits(ctx context.Context, model models.LLMModel, project *models.Project, logger *zap.Logger) (*models.RedditKeywordSuggestionResult, *models.LLMModelUsage, error) {
+	runID := fmt.Sprintf("%s-%s", strings.ToLower(project.Name), project.ID)
+	vars := make(Variable)
+	vars["ProductName"] = project.Name
+	vars["ProductDescription"] = project.ProductDescription
+	vars["TargetCustomerPersona"] = project.CustomerPersona
+	llmModelToUse := c.defaultLLMModel
 
-	messages, responseFormat, err := c.buildChatMessages(ctx, runID, redditPostRelevancyTemplates, logger, vars)
+	if string(model) != "" {
+		llmModelToUse = model
+	}
+
+	messages, responseFormat, err := c.buildChatMessages(ctx, runID, keywordSuggestionRedditTemplates, logger, vars)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	output, err := c.runChatCompletion(
 		ctx,
 		runID,
-		gptModel.String(),
+		llmModelToUse,
 		project.OrganizationID,
+		messages,
+		responseFormat,
+		logger,
+		"reddit_keyword_suggestion.output",
+	)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var data models.RedditKeywordSuggestionResult
+	if err := json.Unmarshal(output, &data); err != nil {
+		return nil, nil, fmt.Errorf("unable to unmarshal response: %w", err)
+	}
+	return &data, &models.LLMModelUsage{Model: llmModelToUse}, nil
+}
+
+func (c *Client) GetSourceCommunityRulesEvaluation(ctx context.Context, model models.LLMModel, source *models.Source, logger *zap.Logger) (*models.RuleEvaluationResult, *models.LLMModelUsage, error) {
+	runID := fmt.Sprintf("%s-%s", strings.ToLower(utils.CleanSubredditName(source.Name)), source.OrgID)
+	vars := GetSubRedditRulesEvalVars(source)
+	llmModelToUse := c.defaultLLMModel
+	if string(model) != "" {
+		llmModelToUse = model
+	}
+
+	messages, responseFormat, err := c.buildChatMessages(ctx, runID, subredditRulesEvalTemplates, logger, vars)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	output, err := c.runChatCompletion(
+		ctx,
+		runID,
+		llmModelToUse,
+		source.OrgID,
+		messages,
+		responseFormat,
+		logger,
+		"subreddit_rules.output",
+	)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var data models.RuleEvaluationResult
+	if err := json.Unmarshal(output, &data); err != nil {
+		return nil, nil, fmt.Errorf("unable to unmarshal response: %w", err)
+	}
+	return &data, &models.LLMModelUsage{Model: llmModelToUse}, nil
+}
+
+type IsPostRelevantInput struct {
+	Project *models.Project `json:"project"`
+	Post    *models.Lead    `json:"post"`
+	Source  *models.Source  `json:"source"`
+}
+
+func (c *Client) IsRedditPostRelevant(ctx context.Context, model models.LLMModel, input IsPostRelevantInput, logger *zap.Logger) (*models.RedditPostRelevanceResponse, *models.LLMModelUsage, error) {
+	runID := fmt.Sprintf("%s-%s", input.Project.ID, input.Post.PostID)
+	out := make(Variable)
+	out["ProductName"] = input.Project.Name
+	out["ProductDescription"] = input.Project.ProductDescription
+	out["TargetCustomerPersona"] = input.Project.CustomerPersona
+
+	if input.Post.Title != nil {
+		out["Title"] = input.Post.Title
+	} else {
+		out["Title"] = "Comment"
+	}
+	out["Description"] = input.Post.Description
+	out["Author"] = input.Post.Author
+	if input.Source.Metadata.RulesEvaluation != nil {
+		out["ProductMentionAllowed"] = input.Source.Metadata.RulesEvaluation.ProductMentionAllowed
+	} else {
+		out["ProductMentionAllowed"] = true
+	}
+
+	llmModelToUse := c.defaultLLMModel
+	if string(model) != "" {
+		llmModelToUse = model
+	}
+
+	messages, responseFormat, err := c.buildChatMessages(ctx, runID, redditPostRelevancyTemplates, logger, out)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	output, err := c.runChatCompletion(
+		ctx,
+		runID,
+		llmModelToUse,
+		input.Project.OrganizationID,
 		messages,
 		responseFormat,
 		logger,
 		"reddit_post_relevancy.output",
 	)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	var data models.RedditPostRelevanceResponse
 	if err := json.Unmarshal(output, &data); err != nil {
-		return nil, fmt.Errorf("unable to unmarshal response: %w", err)
+		return nil, nil, fmt.Errorf("unable to unmarshal response: %w", err)
 	}
-	return &data, nil
+	return &data, &models.LLMModelUsage{Model: llmModelToUse}, nil
 }
 
-func (c *Client) CustomerCaseDecision(ctx context.Context, orgID string, lastConversation *models.Conversation, gptModel GPTModel, logger *zap.Logger) (*models.CaseDecisionResponse, error) {
+func (c *Client) CustomerCaseDecision(ctx context.Context, orgID string, lastConversation *models.Conversation, logger *zap.Logger) (*models.CaseDecisionResponse, error) {
 	runID := lastConversation.ID
-	vars := gptModel.GetCaseDecisionVars(lastConversation)
+	vars := GetCaseDecisionVars(lastConversation)
 
 	messages, responseFormat, err := c.buildChatMessages(ctx, runID, caseDecisionTemplates, logger, vars)
 	if err != nil {
@@ -204,7 +365,7 @@ func (c *Client) CustomerCaseDecision(ctx context.Context, orgID string, lastCon
 	output, err := c.runChatCompletion(
 		ctx,
 		runID,
-		gptModel.String(),
+		c.defaultLLMModel,
 		orgID,
 		messages,
 		responseFormat,
@@ -256,15 +417,20 @@ func (c *Client) RunPrompt(ctx context.Context, prefix string, prompt *Prompt, v
 		return nil, err
 	}
 
+	llmModelToUse := c.defaultLLMModel
+	if prompt.Model != "" {
+		llmModelToUse = prompt.Model
+	}
+
 	output, err := c.runChatCompletion(
 		ctx,
 		runID,
-		prompt.Model.String(),
+		llmModelToUse,
 		orgID,
 		messages,
 		responseFormat,
 		logger,
-		"reddit_post_relevancy.output",
+		fmt.Sprintf("%s.output", prefix),
 	)
 	if err != nil {
 		return nil, err

@@ -59,12 +59,15 @@ const (
 	// PortalServiceOauthCallbackProcedure is the fully-qualified name of the PortalService's
 	// OauthCallback RPC.
 	PortalServiceOauthCallbackProcedure = "/doota.portal.v1.PortalService/OauthCallback"
+	// PortalServiceSocialLoginCallbackProcedure is the fully-qualified name of the PortalService's
+	// SocialLoginCallback RPC.
+	PortalServiceSocialLoginCallbackProcedure = "/doota.portal.v1.PortalService/SocialLoginCallback"
 	// PortalServiceGetIntegrationsProcedure is the fully-qualified name of the PortalService's
 	// GetIntegrations RPC.
 	PortalServiceGetIntegrationsProcedure = "/doota.portal.v1.PortalService/GetIntegrations"
-	// PortalServiceCreateKeywordProcedure is the fully-qualified name of the PortalService's
-	// CreateKeyword RPC.
-	PortalServiceCreateKeywordProcedure = "/doota.portal.v1.PortalService/CreateKeyword"
+	// PortalServiceCreateKeywordsProcedure is the fully-qualified name of the PortalService's
+	// CreateKeywords RPC.
+	PortalServiceCreateKeywordsProcedure = "/doota.portal.v1.PortalService/CreateKeywords"
 	// PortalServiceAddSourceProcedure is the fully-qualified name of the PortalService's AddSource RPC.
 	PortalServiceAddSourceProcedure = "/doota.portal.v1.PortalService/AddSource"
 	// PortalServiceGetSourcesProcedure is the fully-qualified name of the PortalService's GetSources
@@ -82,9 +85,6 @@ const (
 	// PortalServiceUpdateLeadStatusProcedure is the fully-qualified name of the PortalService's
 	// UpdateLeadStatus RPC.
 	PortalServiceUpdateLeadStatusProcedure = "/doota.portal.v1.PortalService/UpdateLeadStatus"
-	// PortalServiceGetProjectsProcedure is the fully-qualified name of the PortalService's GetProjects
-	// RPC.
-	PortalServiceGetProjectsProcedure = "/doota.portal.v1.PortalService/GetProjects"
 	// PortalServiceCreateOrEditProjectProcedure is the fully-qualified name of the PortalService's
 	// CreateOrEditProject RPC.
 	PortalServiceCreateOrEditProjectProcedure = "/doota.portal.v1.PortalService/CreateOrEditProject"
@@ -102,15 +102,15 @@ var (
 	portalServicePasswordlessVerifyMethodDescriptor  = portalServiceServiceDescriptor.Methods().ByName("PasswordlessVerify")
 	portalServiceOauthAuthorizeMethodDescriptor      = portalServiceServiceDescriptor.Methods().ByName("OauthAuthorize")
 	portalServiceOauthCallbackMethodDescriptor       = portalServiceServiceDescriptor.Methods().ByName("OauthCallback")
+	portalServiceSocialLoginCallbackMethodDescriptor = portalServiceServiceDescriptor.Methods().ByName("SocialLoginCallback")
 	portalServiceGetIntegrationsMethodDescriptor     = portalServiceServiceDescriptor.Methods().ByName("GetIntegrations")
-	portalServiceCreateKeywordMethodDescriptor       = portalServiceServiceDescriptor.Methods().ByName("CreateKeyword")
+	portalServiceCreateKeywordsMethodDescriptor      = portalServiceServiceDescriptor.Methods().ByName("CreateKeywords")
 	portalServiceAddSourceMethodDescriptor           = portalServiceServiceDescriptor.Methods().ByName("AddSource")
 	portalServiceGetSourcesMethodDescriptor          = portalServiceServiceDescriptor.Methods().ByName("GetSources")
 	portalServiceRemoveSourceMethodDescriptor        = portalServiceServiceDescriptor.Methods().ByName("RemoveSource")
 	portalServiceGetRelevantLeadsMethodDescriptor    = portalServiceServiceDescriptor.Methods().ByName("GetRelevantLeads")
 	portalServiceGetLeadsByStatusMethodDescriptor    = portalServiceServiceDescriptor.Methods().ByName("GetLeadsByStatus")
 	portalServiceUpdateLeadStatusMethodDescriptor    = portalServiceServiceDescriptor.Methods().ByName("UpdateLeadStatus")
-	portalServiceGetProjectsMethodDescriptor         = portalServiceServiceDescriptor.Methods().ByName("GetProjects")
 	portalServiceCreateOrEditProjectMethodDescriptor = portalServiceServiceDescriptor.Methods().ByName("CreateOrEditProject")
 )
 
@@ -127,16 +127,16 @@ type PortalServiceClient interface {
 	PasswordlessVerify(context.Context, *connect.Request[v1.PasswordlessStartVerify]) (*connect.Response[v1.JWT], error)
 	OauthAuthorize(context.Context, *connect.Request[v1.OauthAuthorizeRequest]) (*connect.Response[v1.OauthAuthorizeResponse], error)
 	OauthCallback(context.Context, *connect.Request[v1.OauthCallbackRequest]) (*connect.Response[v1.OauthCallbackResponse], error)
+	SocialLoginCallback(context.Context, *connect.Request[v1.OauthCallbackRequest]) (*connect.Response[v1.JWT], error)
 	GetIntegrations(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.Integrations], error)
 	// Reddit
-	CreateKeyword(context.Context, *connect.Request[v1.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error)
+	CreateKeywords(context.Context, *connect.Request[v1.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error)
 	AddSource(context.Context, *connect.Request[v1.AddSourceRequest]) (*connect.Response[emptypb.Empty], error)
 	GetSources(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetSourceResponse], error)
 	RemoveSource(context.Context, *connect.Request[v1.RemoveSourceRequest]) (*connect.Response[emptypb.Empty], error)
 	GetRelevantLeads(context.Context, *connect.Request[v1.GetRelevantLeadsRequest]) (*connect.Response[v1.GetLeadsResponse], error)
 	GetLeadsByStatus(context.Context, *connect.Request[v1.GetLeadsByStatusRequest]) (*connect.Response[v1.GetLeadsResponse], error)
 	UpdateLeadStatus(context.Context, *connect.Request[v1.UpdateLeadStatusRequest]) (*connect.Response[emptypb.Empty], error)
-	GetProjects(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetProjectsResponse], error)
 	CreateOrEditProject(context.Context, *connect.Request[v1.CreateProjectRequest]) (*connect.Response[v11.Project], error)
 }
 
@@ -204,16 +204,22 @@ func NewPortalServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(portalServiceOauthCallbackMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
+		socialLoginCallback: connect.NewClient[v1.OauthCallbackRequest, v1.JWT](
+			httpClient,
+			baseURL+PortalServiceSocialLoginCallbackProcedure,
+			connect.WithSchema(portalServiceSocialLoginCallbackMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
 		getIntegrations: connect.NewClient[emptypb.Empty, v1.Integrations](
 			httpClient,
 			baseURL+PortalServiceGetIntegrationsProcedure,
 			connect.WithSchema(portalServiceGetIntegrationsMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
-		createKeyword: connect.NewClient[v1.CreateKeywordReq, emptypb.Empty](
+		createKeywords: connect.NewClient[v1.CreateKeywordReq, emptypb.Empty](
 			httpClient,
-			baseURL+PortalServiceCreateKeywordProcedure,
-			connect.WithSchema(portalServiceCreateKeywordMethodDescriptor),
+			baseURL+PortalServiceCreateKeywordsProcedure,
+			connect.WithSchema(portalServiceCreateKeywordsMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
 		addSource: connect.NewClient[v1.AddSourceRequest, emptypb.Empty](
@@ -252,12 +258,6 @@ func NewPortalServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(portalServiceUpdateLeadStatusMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
-		getProjects: connect.NewClient[emptypb.Empty, v1.GetProjectsResponse](
-			httpClient,
-			baseURL+PortalServiceGetProjectsProcedure,
-			connect.WithSchema(portalServiceGetProjectsMethodDescriptor),
-			connect.WithClientOptions(opts...),
-		),
 		createOrEditProject: connect.NewClient[v1.CreateProjectRequest, v11.Project](
 			httpClient,
 			baseURL+PortalServiceCreateOrEditProjectProcedure,
@@ -278,15 +278,15 @@ type portalServiceClient struct {
 	passwordlessVerify  *connect.Client[v1.PasswordlessStartVerify, v1.JWT]
 	oauthAuthorize      *connect.Client[v1.OauthAuthorizeRequest, v1.OauthAuthorizeResponse]
 	oauthCallback       *connect.Client[v1.OauthCallbackRequest, v1.OauthCallbackResponse]
+	socialLoginCallback *connect.Client[v1.OauthCallbackRequest, v1.JWT]
 	getIntegrations     *connect.Client[emptypb.Empty, v1.Integrations]
-	createKeyword       *connect.Client[v1.CreateKeywordReq, emptypb.Empty]
+	createKeywords      *connect.Client[v1.CreateKeywordReq, emptypb.Empty]
 	addSource           *connect.Client[v1.AddSourceRequest, emptypb.Empty]
 	getSources          *connect.Client[emptypb.Empty, v1.GetSourceResponse]
 	removeSource        *connect.Client[v1.RemoveSourceRequest, emptypb.Empty]
 	getRelevantLeads    *connect.Client[v1.GetRelevantLeadsRequest, v1.GetLeadsResponse]
 	getLeadsByStatus    *connect.Client[v1.GetLeadsByStatusRequest, v1.GetLeadsResponse]
 	updateLeadStatus    *connect.Client[v1.UpdateLeadStatusRequest, emptypb.Empty]
-	getProjects         *connect.Client[emptypb.Empty, v1.GetProjectsResponse]
 	createOrEditProject *connect.Client[v1.CreateProjectRequest, v11.Project]
 }
 
@@ -335,14 +335,19 @@ func (c *portalServiceClient) OauthCallback(ctx context.Context, req *connect.Re
 	return c.oauthCallback.CallUnary(ctx, req)
 }
 
+// SocialLoginCallback calls doota.portal.v1.PortalService.SocialLoginCallback.
+func (c *portalServiceClient) SocialLoginCallback(ctx context.Context, req *connect.Request[v1.OauthCallbackRequest]) (*connect.Response[v1.JWT], error) {
+	return c.socialLoginCallback.CallUnary(ctx, req)
+}
+
 // GetIntegrations calls doota.portal.v1.PortalService.GetIntegrations.
 func (c *portalServiceClient) GetIntegrations(ctx context.Context, req *connect.Request[emptypb.Empty]) (*connect.Response[v1.Integrations], error) {
 	return c.getIntegrations.CallUnary(ctx, req)
 }
 
-// CreateKeyword calls doota.portal.v1.PortalService.CreateKeyword.
-func (c *portalServiceClient) CreateKeyword(ctx context.Context, req *connect.Request[v1.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error) {
-	return c.createKeyword.CallUnary(ctx, req)
+// CreateKeywords calls doota.portal.v1.PortalService.CreateKeywords.
+func (c *portalServiceClient) CreateKeywords(ctx context.Context, req *connect.Request[v1.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error) {
+	return c.createKeywords.CallUnary(ctx, req)
 }
 
 // AddSource calls doota.portal.v1.PortalService.AddSource.
@@ -375,11 +380,6 @@ func (c *portalServiceClient) UpdateLeadStatus(ctx context.Context, req *connect
 	return c.updateLeadStatus.CallUnary(ctx, req)
 }
 
-// GetProjects calls doota.portal.v1.PortalService.GetProjects.
-func (c *portalServiceClient) GetProjects(ctx context.Context, req *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetProjectsResponse], error) {
-	return c.getProjects.CallUnary(ctx, req)
-}
-
 // CreateOrEditProject calls doota.portal.v1.PortalService.CreateOrEditProject.
 func (c *portalServiceClient) CreateOrEditProject(ctx context.Context, req *connect.Request[v1.CreateProjectRequest]) (*connect.Response[v11.Project], error) {
 	return c.createOrEditProject.CallUnary(ctx, req)
@@ -398,16 +398,16 @@ type PortalServiceHandler interface {
 	PasswordlessVerify(context.Context, *connect.Request[v1.PasswordlessStartVerify]) (*connect.Response[v1.JWT], error)
 	OauthAuthorize(context.Context, *connect.Request[v1.OauthAuthorizeRequest]) (*connect.Response[v1.OauthAuthorizeResponse], error)
 	OauthCallback(context.Context, *connect.Request[v1.OauthCallbackRequest]) (*connect.Response[v1.OauthCallbackResponse], error)
+	SocialLoginCallback(context.Context, *connect.Request[v1.OauthCallbackRequest]) (*connect.Response[v1.JWT], error)
 	GetIntegrations(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.Integrations], error)
 	// Reddit
-	CreateKeyword(context.Context, *connect.Request[v1.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error)
+	CreateKeywords(context.Context, *connect.Request[v1.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error)
 	AddSource(context.Context, *connect.Request[v1.AddSourceRequest]) (*connect.Response[emptypb.Empty], error)
 	GetSources(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetSourceResponse], error)
 	RemoveSource(context.Context, *connect.Request[v1.RemoveSourceRequest]) (*connect.Response[emptypb.Empty], error)
 	GetRelevantLeads(context.Context, *connect.Request[v1.GetRelevantLeadsRequest]) (*connect.Response[v1.GetLeadsResponse], error)
 	GetLeadsByStatus(context.Context, *connect.Request[v1.GetLeadsByStatusRequest]) (*connect.Response[v1.GetLeadsResponse], error)
 	UpdateLeadStatus(context.Context, *connect.Request[v1.UpdateLeadStatusRequest]) (*connect.Response[emptypb.Empty], error)
-	GetProjects(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetProjectsResponse], error)
 	CreateOrEditProject(context.Context, *connect.Request[v1.CreateProjectRequest]) (*connect.Response[v11.Project], error)
 }
 
@@ -471,16 +471,22 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(portalServiceOauthCallbackMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
+	portalServiceSocialLoginCallbackHandler := connect.NewUnaryHandler(
+		PortalServiceSocialLoginCallbackProcedure,
+		svc.SocialLoginCallback,
+		connect.WithSchema(portalServiceSocialLoginCallbackMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
 	portalServiceGetIntegrationsHandler := connect.NewUnaryHandler(
 		PortalServiceGetIntegrationsProcedure,
 		svc.GetIntegrations,
 		connect.WithSchema(portalServiceGetIntegrationsMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
-	portalServiceCreateKeywordHandler := connect.NewUnaryHandler(
-		PortalServiceCreateKeywordProcedure,
-		svc.CreateKeyword,
-		connect.WithSchema(portalServiceCreateKeywordMethodDescriptor),
+	portalServiceCreateKeywordsHandler := connect.NewUnaryHandler(
+		PortalServiceCreateKeywordsProcedure,
+		svc.CreateKeywords,
+		connect.WithSchema(portalServiceCreateKeywordsMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
 	portalServiceAddSourceHandler := connect.NewUnaryHandler(
@@ -519,12 +525,6 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(portalServiceUpdateLeadStatusMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
-	portalServiceGetProjectsHandler := connect.NewUnaryHandler(
-		PortalServiceGetProjectsProcedure,
-		svc.GetProjects,
-		connect.WithSchema(portalServiceGetProjectsMethodDescriptor),
-		connect.WithHandlerOptions(opts...),
-	)
 	portalServiceCreateOrEditProjectHandler := connect.NewUnaryHandler(
 		PortalServiceCreateOrEditProjectProcedure,
 		svc.CreateOrEditProject,
@@ -551,10 +551,12 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 			portalServiceOauthAuthorizeHandler.ServeHTTP(w, r)
 		case PortalServiceOauthCallbackProcedure:
 			portalServiceOauthCallbackHandler.ServeHTTP(w, r)
+		case PortalServiceSocialLoginCallbackProcedure:
+			portalServiceSocialLoginCallbackHandler.ServeHTTP(w, r)
 		case PortalServiceGetIntegrationsProcedure:
 			portalServiceGetIntegrationsHandler.ServeHTTP(w, r)
-		case PortalServiceCreateKeywordProcedure:
-			portalServiceCreateKeywordHandler.ServeHTTP(w, r)
+		case PortalServiceCreateKeywordsProcedure:
+			portalServiceCreateKeywordsHandler.ServeHTTP(w, r)
 		case PortalServiceAddSourceProcedure:
 			portalServiceAddSourceHandler.ServeHTTP(w, r)
 		case PortalServiceGetSourcesProcedure:
@@ -567,8 +569,6 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 			portalServiceGetLeadsByStatusHandler.ServeHTTP(w, r)
 		case PortalServiceUpdateLeadStatusProcedure:
 			portalServiceUpdateLeadStatusHandler.ServeHTTP(w, r)
-		case PortalServiceGetProjectsProcedure:
-			portalServiceGetProjectsHandler.ServeHTTP(w, r)
 		case PortalServiceCreateOrEditProjectProcedure:
 			portalServiceCreateOrEditProjectHandler.ServeHTTP(w, r)
 		default:
@@ -616,12 +616,16 @@ func (UnimplementedPortalServiceHandler) OauthCallback(context.Context, *connect
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.OauthCallback is not implemented"))
 }
 
+func (UnimplementedPortalServiceHandler) SocialLoginCallback(context.Context, *connect.Request[v1.OauthCallbackRequest]) (*connect.Response[v1.JWT], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.SocialLoginCallback is not implemented"))
+}
+
 func (UnimplementedPortalServiceHandler) GetIntegrations(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.Integrations], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.GetIntegrations is not implemented"))
 }
 
-func (UnimplementedPortalServiceHandler) CreateKeyword(context.Context, *connect.Request[v1.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.CreateKeyword is not implemented"))
+func (UnimplementedPortalServiceHandler) CreateKeywords(context.Context, *connect.Request[v1.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.CreateKeywords is not implemented"))
 }
 
 func (UnimplementedPortalServiceHandler) AddSource(context.Context, *connect.Request[v1.AddSourceRequest]) (*connect.Response[emptypb.Empty], error) {
@@ -646,10 +650,6 @@ func (UnimplementedPortalServiceHandler) GetLeadsByStatus(context.Context, *conn
 
 func (UnimplementedPortalServiceHandler) UpdateLeadStatus(context.Context, *connect.Request[v1.UpdateLeadStatusRequest]) (*connect.Response[emptypb.Empty], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.UpdateLeadStatus is not implemented"))
-}
-
-func (UnimplementedPortalServiceHandler) GetProjects(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetProjectsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.GetProjects is not implemented"))
 }
 
 func (UnimplementedPortalServiceHandler) CreateOrEditProject(context.Context, *connect.Request[v1.CreateProjectRequest]) (*connect.Response[v11.Project], error) {

@@ -44,5 +44,14 @@ func (p *Portal) Self(ctx context.Context, c *connect.Request[emptypb.Empty]) (*
 		return organizations[i].ID == actor.OrganizationID
 	})
 
-	return connect.NewResponse(new(pbportal.User).FromModel(user, organizations)), nil
+	projects, onboardingDone, err := p.getProjects(ctx, actor.OrganizationID)
+	if err != nil {
+		return nil, err
+	}
+
+	userProto := new(pbportal.User).FromModel(user, organizations)
+	userProto.Projects = projects
+	userProto.IsOnboardingDone = onboardingDone
+
+	return connect.NewResponse(userProto), nil
 }

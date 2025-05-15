@@ -4,7 +4,7 @@
 
 import type { GenEnum, GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv1";
 import type { Message } from "@bufbuild/protobuf";
-import type { Lead, LeadStatus, Project, ProjectSchema, Source } from "../../core/v1/core_pb";
+import type { Lead, LeadStatus, Project, ProjectSchema, Source, Subscription } from "../../core/v1/core_pb";
 import type { EmptySchema, Timestamp } from "@bufbuild/protobuf/wkt";
 
 /**
@@ -49,27 +49,6 @@ export declare type CreateProjectRequest = Message<"doota.portal.v1.CreateProjec
 export declare const CreateProjectRequestSchema: GenMessage<CreateProjectRequest>;
 
 /**
- * @generated from message doota.portal.v1.GetProjectsResponse
- */
-export declare type GetProjectsResponse = Message<"doota.portal.v1.GetProjectsResponse"> & {
-  /**
-   * @generated from field: repeated doota.core.v1.Project projects = 1;
-   */
-  projects: Project[];
-
-  /**
-   * @generated from field: bool is_onboarding_done = 2;
-   */
-  isOnboardingDone: boolean;
-};
-
-/**
- * Describes the message doota.portal.v1.GetProjectsResponse.
- * Use `create(GetProjectsResponseSchema)` to create a new message.
- */
-export declare const GetProjectsResponseSchema: GenMessage<GetProjectsResponse>;
-
-/**
  * @generated from message doota.portal.v1.UpdateLeadStatusRequest
  */
 export declare type UpdateLeadStatusRequest = Message<"doota.portal.v1.UpdateLeadStatusRequest"> & {
@@ -98,6 +77,11 @@ export declare type GetLeadsByStatusRequest = Message<"doota.portal.v1.GetLeadsB
    * @generated from field: doota.core.v1.LeadStatus status = 1;
    */
   status: LeadStatus;
+
+  /**
+   * @generated from field: int32 page_no = 3;
+   */
+  pageNo: number;
 };
 
 /**
@@ -119,6 +103,11 @@ export declare type GetRelevantLeadsRequest = Message<"doota.portal.v1.GetReleva
    * @generated from field: float relevancy_score = 2;
    */
   relevancyScore: number;
+
+  /**
+   * @generated from field: int32 page_no = 3;
+   */
+  pageNo: number;
 };
 
 /**
@@ -239,9 +228,9 @@ export declare const CreateCustomerCaseReqSchema: GenMessage<CreateCustomerCaseR
  */
 export declare type CreateKeywordReq = Message<"doota.portal.v1.CreateKeywordReq"> & {
   /**
-   * @generated from field: string keyword = 1;
+   * @generated from field: repeated string keywords = 1;
    */
-  keyword: string;
+  keywords: string[];
 };
 
 /**
@@ -450,6 +439,16 @@ export declare type User = Message<"doota.portal.v1.User"> & {
    * @generated from field: google.protobuf.Timestamp created_at = 10;
    */
   createdAt?: Timestamp;
+
+  /**
+   * @generated from field: repeated doota.core.v1.Project projects = 11;
+   */
+  projects: Project[];
+
+  /**
+   * @generated from field: bool is_onboarding_done = 12;
+   */
+  isOnboardingDone: boolean;
 };
 
 /**
@@ -572,6 +571,10 @@ export declare const OrganizationSchema: GenMessage<Organization>;
  * @generated from message doota.portal.v1.OrganizationFeatureFlags
  */
 export declare type OrganizationFeatureFlags = Message<"doota.portal.v1.OrganizationFeatureFlags"> & {
+  /**
+   * @generated from field: doota.core.v1.Subscription subscription = 1;
+   */
+  subscription?: Subscription;
 };
 
 /**
@@ -959,6 +962,14 @@ export declare const PortalService: GenService<{
     output: typeof OauthCallbackResponseSchema;
   },
   /**
+   * @generated from rpc doota.portal.v1.PortalService.SocialLoginCallback
+   */
+  socialLoginCallback: {
+    methodKind: "unary";
+    input: typeof OauthCallbackRequestSchema;
+    output: typeof JWTSchema;
+  },
+  /**
    * @generated from rpc doota.portal.v1.PortalService.GetIntegrations
    */
   getIntegrations: {
@@ -969,9 +980,9 @@ export declare const PortalService: GenService<{
   /**
    * Reddit
    *
-   * @generated from rpc doota.portal.v1.PortalService.CreateKeyword
+   * @generated from rpc doota.portal.v1.PortalService.CreateKeywords
    */
-  createKeyword: {
+  createKeywords: {
     methodKind: "unary";
     input: typeof CreateKeywordReqSchema;
     output: typeof EmptySchema;
@@ -1023,14 +1034,6 @@ export declare const PortalService: GenService<{
     methodKind: "unary";
     input: typeof UpdateLeadStatusRequestSchema;
     output: typeof EmptySchema;
-  },
-  /**
-   * @generated from rpc doota.portal.v1.PortalService.GetProjects
-   */
-  getProjects: {
-    methodKind: "unary";
-    input: typeof EmptySchema;
-    output: typeof GetProjectsResponseSchema;
   },
   /**
    * @generated from rpc doota.portal.v1.PortalService.CreateOrEditProject

@@ -12,7 +12,8 @@ const defaultClients = createClients(
   },
   {
     Get: () => Promise.resolve(undefined),
-    Set: async () => {}
+    Set: async () => {},
+    Del: async () => {}
   }
 )
 

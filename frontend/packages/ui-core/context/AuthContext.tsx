@@ -120,6 +120,7 @@ export const BaseAuthProvider: FC<Props> = ({
   const handleLogout = async () => {
     setUser(null)
     await tokenStore.Del()
+    await organizationStore.Del()
 
     if (onLogoutCompleted) {
       onLogoutCompleted()

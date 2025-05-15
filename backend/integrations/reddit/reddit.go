@@ -15,9 +15,10 @@ import (
 )
 
 const (
-	redditAPIBase  = "https://oauth.reddit.com"
-	redditAuthURL  = "https://www.reddit.com/api/v1/authorize"
-	redditTokenURL = "https://www.reddit.com/api/v1/access_token"
+	redditAPIBase        = "https://oauth.reddit.com"
+	redditAPINonAuthBase = "https://www.reddit.com"
+	redditAuthURL        = "https://www.reddit.com/api/v1/authorize"
+	redditTokenURL       = "https://www.reddit.com/api/v1/access_token"
 )
 
 type unAuthorizedErrorCallback func(ctx context.Context)
@@ -35,6 +36,14 @@ func NewClientWithConfig(config *models.RedditConfig, logger *zap.Logger) *Clien
 	return &Client{
 		baseURL:    redditAPIBase,
 		config:     config,
+		logger:     logger,
+		httpClient: newHTTPClient(),
+	}
+}
+
+func NewClientWithOutConfig(logger *zap.Logger) *Client {
+	return &Client{
+		baseURL:    redditAPINonAuthBase,
 		logger:     logger,
 		httpClient: newHTTPClient(),
 	}

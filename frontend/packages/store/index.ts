@@ -9,4 +9,5 @@ export interface TokenStore {
 export interface OrganizationStore {
   Set(org: Organization): Promise<void>
   Get(): Promise<Organization | undefined>
+  Del(): Promise<void>
 }

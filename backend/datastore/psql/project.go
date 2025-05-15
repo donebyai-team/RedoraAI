@@ -34,6 +34,7 @@ func (r *Database) CreateProject(ctx context.Context, project *models.Project) (
 		"customer_persona": project.CustomerPersona,
 		"goals":            project.EngagementGoals,
 		"website":          project.WebsiteURL,
+		"metadata":         project.Metadata,
 	})
 
 	if err != nil {
@@ -54,6 +55,7 @@ func (r *Database) UpdateProject(ctx context.Context, project *models.Project) (
 		"customer_persona": project.CustomerPersona,
 		"id":               project.ID,
 		"website":          project.WebsiteURL,
+		"metadata":         project.Metadata,
 	})
 
 	if err != nil {

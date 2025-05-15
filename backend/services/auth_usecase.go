@@ -1,17 +1,17 @@
 package services
 
 import (
+	"connectrpc.com/connect"
 	"context"
 	"errors"
 	"fmt"
-
-	"connectrpc.com/connect"
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/shank318/doota/auth"
 	"github.com/shank318/doota/auth/crypto"
 	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/models"
 	pbportal "github.com/shank318/doota/pb/doota/portal/v1"
+	"github.com/shank318/doota/utils"
 	"github.com/streamingfast/logging"
 	"go.uber.org/zap"
 )
@@ -41,6 +41,15 @@ func (a *AuthUsecase) StartPasswordless(ctx context.Context, email string, ip st
 		return fmt.Errorf("failed to initiate passwordless flow: %w", err)
 	}
 	return nil
+}
+
+func (a *AuthUsecase) SignUser(ctx context.Context, email string) (*pbportal.JWT, error) {
+	logger := logging.Logger(ctx, a.logger)
+	jwt, err := a.getUser(ctx, email, "", true, logger)
+	if err != nil {
+		return nil, fmt.Errorf("get user: %w", err)
+	}
+	return jwt, nil
 }
 
 func (a *AuthUsecase) VerifyPasswordless(ctx context.Context, email string, code string, ip string) (*pbportal.JWT, error) {
@@ -111,31 +120,65 @@ func (p *AuthUsecase) decodeIDToken(idToken *oidc.IDToken, nonce *string) (*Auth
 	}, nil
 }
 
+func (a *AuthUsecase) createUserForEmail(ctx context.Context, email string, emailVerified bool, logger *zap.Logger) (*models.User, error) {
+	orgName := utils.GetOrganizationName(email)
+
+	org, err := a.db.GetOrganizationByName(ctx, orgName)
+	if err != nil && !errors.Is(err, datastore.NotFound) {
+		logger.Error("failed to get organization", zap.Error(err), zap.String("org_name", orgName))
+		return nil, fmt.Errorf("unable to get organization: %w", err)
+	}
+
+	if org == nil {
+		org, err = a.db.CreateOrganization(ctx, &models.Organization{
+			Name:         orgName,
+			FeatureFlags: models.OrganizationFeatureFlags{EnableAutoComment: true},
+		})
+		if err != nil {
+			logger.Error("failed to create organization", zap.Error(err), zap.String("org_name", orgName))
+			return nil, fmt.Errorf("unable to create organization: %w", err)
+		}
+	}
+
+	user := &models.User{
+		Email:          email,
+		EmailVerified:  emailVerified,
+		OrganizationID: org.ID,
+		Role:           models.UserRoleADMIN,
+		State:          models.UserStateACTIVE,
+	}
+
+	createdUser, err := a.db.CreateUser(ctx, user)
+	if err != nil {
+		logger.Error("failed to create user", zap.Error(err), zap.String("email", email))
+		return nil, fmt.Errorf("unable to create user: %w", err)
+	}
+
+	return createdUser, nil
+}
+
 func (a *AuthUsecase) getUser(ctx context.Context, email, externalAuthProviderID string, emailVerified bool, logger *zap.Logger) (*pbportal.JWT, error) {
 	user, err := a.db.GetUserByEmail(ctx, email)
-	if err != nil && err != datastore.NotFound {
-		logger.Warn("failed to get user", zap.Error(err),
-			zap.String("external_id", externalAuthProviderID),
-			zap.String("email", email),
-		)
+	switch {
+	case err == nil:
+		// user found, continue
+	case errors.Is(err, datastore.NotFound):
+		user, err = a.createUserForEmail(ctx, email, emailVerified, logger)
+		if err != nil {
+			return nil, err
+		}
+	default:
+		logger.Warn("failed to get user", zap.Error(err), zap.String("email", email))
 		return nil, fmt.Errorf("unable to get user: %w", err)
 	}
 
-	if err != nil {
-		if errors.Is(err, datastore.NotFound) {
-			return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("User account not found, please contact your system administrator"))
-		}
-
-		return nil, fmt.Errorf("unable to retrieved user: %w", err)
-	}
-
-	resp, err := a.getJWTToken(ctx, user)
+	token, err := a.getJWTToken(ctx, user)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create token for user credentials: %w", err)
 	}
 
 	logger.Info("jwt issued", zap.String("user_id", user.ID))
-	return resp, nil
+	return token, nil
 }
 
 func (a *AuthUsecase) getJWTToken(ctx context.Context, user *models.User) (*pbportal.JWT, error) {

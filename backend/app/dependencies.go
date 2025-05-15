@@ -8,7 +8,10 @@ import (
 	"github.com/shank318/doota/auth"
 	"github.com/shank318/doota/auth/crypto"
 	"github.com/shank318/doota/datastore"
+	google2 "github.com/shank318/doota/integrations/google"
+	"github.com/shank318/doota/models"
 	"github.com/streamingfast/dstore"
+	"golang.org/x/oauth2"
 	"regexp"
 	"time"
 
@@ -16,6 +19,14 @@ import (
 	"go.uber.org/dig"
 	"go.uber.org/zap"
 )
+
+type GoogleConfig struct {
+	ClientID     string
+	ClientSecret string
+	RedirectURL  string
+	Scopes       []string
+	Endpoint     oauth2.Endpoint
+}
 
 type DependenciesBuilder struct {
 	PGDSN              string
@@ -26,8 +37,8 @@ type DependenciesBuilder struct {
 	Processor          bool
 	AIConfig           *AIConfig
 	ConversationState  *conversationState
-
-	dig *dig.Container
+	GoogleConfig       *GoogleConfig
+	dig                *dig.Container
 }
 
 func NewDependenciesBuilder() *DependenciesBuilder {
@@ -48,6 +59,8 @@ type AIConfig struct {
 	OpenAIDebugLogsStore string
 	LangsmithApiKey      string
 	LangsmithProject     string
+	DefaultLLMModel      models.LLMModel
+	AdvanceLLMModel      models.LLMModel
 }
 
 func (b *DependenciesBuilder) mustProvide(constructor interface{}) {
@@ -62,6 +75,15 @@ func (b *DependenciesBuilder) WithDataStore(pgDSN string) *DependenciesBuilder {
 	return b
 }
 
+func (b *DependenciesBuilder) WithGoogle(clientId, clientSecret, redirectUrl string) *DependenciesBuilder {
+	b.GoogleConfig = &GoogleConfig{
+		ClientID:     clientId,
+		ClientSecret: clientSecret,
+		RedirectURL:  fmt.Sprintf("%s/login", redirectUrl),
+	}
+	return b
+}
+
 func (b *DependenciesBuilder) WithConversationState(phoneCallStateTTL time.Duration, redisAddr, namespace, prefix string) *DependenciesBuilder {
 	b.ConversationState = &conversationState{
 		redisAddr,
@@ -71,13 +93,14 @@ func (b *DependenciesBuilder) WithConversationState(phoneCallStateTTL time.Durat
 	return b
 }
 
-func (b *DependenciesBuilder) WithAI(openAIKey string, openAIOrganization string, openAIDebugLogsStore string, langsmithApiKey string, langsmithProject string) *DependenciesBuilder {
+func (b *DependenciesBuilder) WithAI(defaultLLMModel, advanceLLMModel models.LLMModel, openAIKey string, openAIDebugLogsStore string, langsmithApiKey string, langsmithProject string) *DependenciesBuilder {
 	b.AIConfig = &AIConfig{
 		OpenAIKey:            openAIKey,
-		OpenAIOrganization:   openAIOrganization,
 		OpenAIDebugLogsStore: openAIDebugLogsStore,
 		LangsmithApiKey:      langsmithApiKey,
 		LangsmithProject:     langsmithProject,
+		DefaultLLMModel:      defaultLLMModel,
+		AdvanceLLMModel:      advanceLLMModel,
 	}
 	return b
 }
@@ -144,16 +167,25 @@ func (b *DependenciesBuilder) Build(ctx context.Context, logger *zap.Logger, tra
 
 		out.AIClient, err = ai.NewOpenAI(
 			b.AIConfig.OpenAIKey,
-			b.AIConfig.OpenAIOrganization,
+			b.AIConfig.DefaultLLMModel,
+			b.AIConfig.AdvanceLLMModel,
 			ai.LangsmithConfig{
 				ApiKey:      b.AIConfig.LangsmithApiKey,
 				ProjectName: b.AIConfig.LangsmithProject,
 			},
 			debugStore,
+			logger,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("unable to create openai client: %w", err)
 		}
+	}
+
+	if b.GoogleConfig != nil {
+		logger.Info("setting up google",
+			zap.Reflect("client_id", b.GoogleConfig.ClientID),
+		)
+		out.GoogleClient = google2.NewOauthClient(b.GoogleConfig.ClientID, b.GoogleConfig.ClientSecret, b.GoogleConfig.RedirectURL, logger)
 	}
 
 	if b.ConversationState != nil {
@@ -174,5 +206,6 @@ type Dependencies struct {
 	dootaDepMissing []string
 
 	AIClient          *ai.Client
+	GoogleClient      *google2.OauthClient
 	ConversationState state.ConversationState
 }

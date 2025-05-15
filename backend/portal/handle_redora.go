@@ -11,11 +11,13 @@ import (
 	pbportal "github.com/shank318/doota/pb/doota/portal/v1"
 	"github.com/shank318/doota/services"
 	"github.com/shank318/doota/utils"
+	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 func (p *Portal) getProject(ctx context.Context, headers http.Header, orgID string) (string, error) {
@@ -67,6 +69,7 @@ func (p *Portal) CreateOrEditProject(ctx context.Context, c *connect.Request[pbp
 	}
 
 	var project *models.Project
+	shouldSuggestKeywords := true
 
 	if c.Msg.Id != "" {
 		existingProject, err := p.db.GetProject(ctx, c.Msg.Id)
@@ -86,18 +89,26 @@ func (p *Portal) CreateOrEditProject(ctx context.Context, c *connect.Request[pbp
 			}
 		}
 
+		// suggest only if any of these field changes
+		if (existingProject.Name == c.Msg.Name &&
+			existingProject.ProductDescription == c.Msg.Description &&
+			existingProject.CustomerPersona == c.Msg.TargetPersona) &&
+			(len(existingProject.Metadata.SuggestedSubReddits) != 0 || len(existingProject.Metadata.SuggestedKeywords) != 0) {
+			shouldSuggestKeywords = false
+		}
+
 		project, err = p.db.UpdateProject(ctx, &models.Project{
 			OrganizationID:     actor.OrganizationID,
 			Name:               c.Msg.Name,
 			ProductDescription: c.Msg.Description,
 			CustomerPersona:    c.Msg.TargetPersona,
 			WebsiteURL:         c.Msg.Website,
+			Metadata:           existingProject.Metadata,
 			ID:                 existingProject.ID,
 		})
 		if err != nil {
 			return nil, err
 		}
-
 	} else {
 		project, err = p.db.GetProjectByName(ctx, c.Msg.Name, actor.OrganizationID)
 		if err != nil && !errors.Is(err, datastore.NotFound) {
@@ -121,80 +132,96 @@ func (p *Portal) CreateOrEditProject(ctx context.Context, c *connect.Request[pbp
 		}
 	}
 
-	return connect.NewResponse(&pbcore.Project{
-		Id:            project.ID,
-		Name:          project.Name,
-		Description:   project.ProductDescription,
-		Website:       project.WebsiteURL,
-		TargetPersona: project.CustomerPersona,
-	}), nil
+	if shouldSuggestKeywords {
+		p.logger.Info("suggesting keywords", zap.String("project_id", project.ID))
+		suggestions, usage, err := p.aiClient.SuggestKeywordsAndSubreddits(ctx, p.aiClient.GetAdvanceModel(), project, p.logger)
+		if err != nil {
+			p.logger.Error("failed to get keyword suggestions", zap.Error(err))
+		}
+
+		if suggestions != nil {
+			p.logger.Info("adding keyword suggestions",
+				zap.String("model_used", string(usage.Model)),
+				zap.Int("num_suggestions", len(suggestions.Keywords)),
+				zap.Int("num_subreddits", len(suggestions.Subreddits)))
+
+			for _, keyword := range suggestions.Keywords {
+				if keyword.Keyword == "" {
+					continue
+				}
+				project.Metadata.SuggestedKeywords = append(project.Metadata.SuggestedKeywords, keyword.Keyword)
+			}
+
+			for _, subreddit := range suggestions.Subreddits {
+				if subreddit.Subreddit == "" {
+					continue
+				}
+				if !strings.HasPrefix(subreddit.Subreddit, "r/") {
+					subreddit.Subreddit = "r/" + subreddit.Subreddit
+				}
+
+				project.Metadata.SuggestedSubReddits = append(project.Metadata.SuggestedSubReddits, subreddit.Subreddit)
+			}
+
+			// Update project metadata
+			p.db.UpdateProject(ctx, project)
+		}
+	}
+
+	projectProto, err := p.projectToProto(ctx, project)
+	if err != nil {
+		return nil, err
+	}
+
+	return connect.NewResponse(projectProto), nil
 }
 
-func (p *Portal) GetProjects(ctx context.Context, c *connect.Request[emptypb.Empty]) (*connect.Response[pbportal.GetProjectsResponse], error) {
-	actor, err := p.gethAuthContext(ctx)
+func (p *Portal) getProjects(ctx context.Context, orgID string) ([]*pbcore.Project, bool, error) {
+	projects, err := p.db.GetProjects(ctx, orgID)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
-	projects, err := p.db.GetProjects(ctx, actor.OrganizationID)
-	if err != nil {
-		return nil, err
-	}
-
-	projectsProto := make([]*pbcore.Project, 0, len(projects))
+	projectsProtos := make([]*pbcore.Project, 0, len(projects))
 	isOnboardingDone := false
 	for _, project := range projects {
-		keywords, err := p.db.GetKeywords(ctx, project.ID)
+		projectProto, err := p.projectToProto(ctx, project)
 		if err != nil {
-			return nil, err
+			return nil, isOnboardingDone, err
 		}
 
-		keywordsProto := make([]*pbcore.Keyword, 0, len(keywords))
-		for _, keyword := range keywords {
-			keywordsProto = append(keywordsProto, &pbcore.Keyword{
-				Id:   keyword.ID,
-				Name: keyword.Keyword,
-			})
-		}
-
-		sources, err := p.db.GetSourcesByProject(ctx, project.ID)
-		if err != nil {
-			return nil, err
-		}
-
-		sourcesProto := make([]*pbcore.Source, 0, len(sources))
-		for _, source := range sources {
-			sourcesProto = append(sourcesProto, &pbcore.Source{
-				Id:   source.ID,
-				Name: source.Name,
-			})
-		}
-
-		if len(sources) > 0 && len(keywords) > 0 {
+		if len(projectProto.Sources) > 0 && len(projectProto.Keywords) > 0 {
 			isOnboardingDone = true
 		}
 
-		projectsProto = append(projectsProto, &pbcore.Project{
-			Id:            project.ID,
-			Name:          project.Name,
-			Description:   project.ProductDescription,
-			Website:       project.WebsiteURL,
-			TargetPersona: project.CustomerPersona,
-			Keywords:      keywordsProto,
-			Sources:       sourcesProto,
-		})
+		projectsProtos = append(projectsProtos, projectProto)
 	}
 
-	return connect.NewResponse(&pbportal.GetProjectsResponse{
-		Projects:         projectsProto,
-		IsOnboardingDone: isOnboardingDone,
-	}), nil
+	return projectsProtos, isOnboardingDone, nil
 }
 
-func (p *Portal) CreateKeyword(ctx context.Context, c *connect.Request[pbportal.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error) {
+func (p *Portal) projectToProto(ctx context.Context, project *models.Project) (*pbcore.Project, error) {
+	keywords, err := p.db.GetKeywords(ctx, project.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	sources, err := p.db.GetSourcesByProject(ctx, project.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return new(pbcore.Project).FromModel(project, sources, keywords), nil
+}
+
+func (p *Portal) CreateKeywords(ctx context.Context, c *connect.Request[pbportal.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error) {
 	actor, err := p.gethAuthContext(ctx)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(c.Msg.Keywords) == 0 {
+		return nil, status.New(codes.InvalidArgument, "at least one keyword is required").Err()
 	}
 
 	projectID, err := p.getProject(ctx, c.Header(), actor.OrganizationID)
@@ -202,12 +229,14 @@ func (p *Portal) CreateKeyword(ctx context.Context, c *connect.Request[pbportal.
 		return nil, err
 	}
 
-	req := services.CreateKeyword{
-		Keyword:   c.Msg.Keyword,
-		ProjectID: projectID,
+	for _, keyword := range c.Msg.Keywords {
+		err = utils.ValidateKeyword(keyword)
+		if err != nil {
+			return nil, connect.NewError(connect.CodeInvalidArgument, err)
+		}
 	}
 
-	_, err = p.keywordService.CreateKeyword(ctx, &req)
+	err = p.db.CreateKeywords(ctx, projectID, c.Msg.Keywords)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to create keyword: %w", err))
 	}
@@ -226,17 +255,18 @@ func (p *Portal) AddSource(ctx context.Context, c *connect.Request[pbportal.AddS
 		return nil, err
 	}
 
-	redditClient, err := p.redditOauthClient.NewRedditClient(ctx, actor.OrganizationID)
+	redditClient, err := p.redditOauthClient.NewRedditClient(ctx, actor.OrganizationID, false)
 	if err != nil {
 		return nil, err
 	}
-	redditService := services.NewRedditService(p.logger, p.db, redditClient)
+	redditService := services.NewRedditService(p.logger, p.db, redditClient, p.aiClient, p.cache)
 	err = redditService.CreateSubReddit(ctx, &models.Source{
 		ProjectID: projectID,
 		Name:      utils.CleanSubredditName(c.Msg.Name),
+		OrgID:     actor.OrganizationID,
 	})
 	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to add subreddit: %w", err))
+		return nil, err
 	}
 
 	return connect.NewResponse(&emptypb.Empty{}), nil
@@ -253,7 +283,7 @@ func (p *Portal) GetSources(ctx context.Context, c *connect.Request[emptypb.Empt
 		return nil, err
 	}
 
-	redditService := services.NewRedditService(p.logger, p.db, nil)
+	redditService := services.NewRedditService(p.logger, p.db, nil, nil, nil)
 	sources, err := redditService.GetSubReddits(ctx, projectID)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to get subreddits: %w", err))
@@ -267,16 +297,12 @@ func (p *Portal) GetSources(ctx context.Context, c *connect.Request[emptypb.Empt
 }
 
 func (p *Portal) RemoveSource(ctx context.Context, c *connect.Request[pbportal.RemoveSourceRequest]) (*connect.Response[emptypb.Empty], error) {
-	actor, err := p.gethAuthContext(ctx)
+	_, err := p.gethAuthContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	redditClient, err := p.redditOauthClient.NewRedditClient(ctx, actor.OrganizationID)
-	if err != nil {
-		return nil, err
-	}
-	redditService := services.NewRedditService(p.logger, p.db, redditClient)
+	redditService := services.NewRedditService(p.logger, p.db, nil, nil, nil)
 	err = redditService.RemoveSubReddit(ctx, c.Msg.Id)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to add subreddit: %w", err))
@@ -301,18 +327,35 @@ func (p *Portal) GetRelevantLeads(ctx context.Context, c *connect.Request[pbport
 		subReddits = append(subReddits, *c.Msg.SubReddit)
 	}
 
-	leads, err := p.db.GetLeadsByRelevancy(ctx, projectID, c.Msg.RelevancyScore, subReddits)
+	leads, err := p.db.GetLeadsByRelevancy(ctx, projectID, datastore.LeadsFilter{
+		RelevancyScore: c.Msg.RelevancyScore,
+		Sources:        subReddits,
+		Limit:          pageCount,
+		Offset:         int(c.Msg.PageNo),
+	})
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to fetch leads: %w", err))
 	}
 
 	leadsProto := make([]*pbcore.Lead, 0, len(leads))
 	for _, lead := range leads {
-		leadsProto = append(leadsProto, new(pbcore.Lead).FromModel(lead))
+		leadsProto = append(leadsProto, new(pbcore.Lead).FromModel(redactPlatformOnlyMetadata(actor.Role, lead)))
 	}
 
 	return connect.NewResponse(&pbportal.GetLeadsResponse{Leads: leadsProto}), nil
 }
+
+func redactPlatformOnlyMetadata(role models.UserRole, lead *models.AugmentedLead) *models.AugmentedLead {
+	if role != models.UserRolePLATFORMADMIN {
+		lead.LeadMetadata.RelevancyLLMModel = ""
+		lead.LeadMetadata.CommentLLMModel = ""
+		lead.LeadMetadata.DMLLMModel = ""
+		lead.LeadMetadata.LLMModelResponseOverriddenBy = ""
+	}
+	return lead
+}
+
+const pageCount = 30
 
 func (p *Portal) GetLeadsByStatus(ctx context.Context, c *connect.Request[pbportal.GetLeadsByStatusRequest]) (*connect.Response[pbportal.GetLeadsResponse], error) {
 	actor, err := p.gethAuthContext(ctx)
@@ -329,15 +372,18 @@ func (p *Portal) GetLeadsByStatus(ctx context.Context, c *connect.Request[pbport
 	if err != nil {
 		return nil, err
 	}
-
-	leads, err := p.db.GetLeadsByStatus(ctx, projectID, status)
+	leads, err := p.db.GetLeadsByStatus(ctx, projectID, datastore.LeadsFilter{
+		Status: status,
+		Limit:  pageCount,
+		Offset: int(c.Msg.PageNo),
+	})
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to fetch leads: %w", err))
 	}
 
 	leadsProto := make([]*pbcore.Lead, 0, len(leads))
 	for _, lead := range leads {
-		leadsProto = append(leadsProto, new(pbcore.Lead).FromModel(lead))
+		leadsProto = append(leadsProto, new(pbcore.Lead).FromModel(redactPlatformOnlyMetadata(actor.Role, lead)))
 	}
 
 	return connect.NewResponse(&pbportal.GetLeadsResponse{Leads: leadsProto}), nil

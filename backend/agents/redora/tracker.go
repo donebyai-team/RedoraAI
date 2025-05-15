@@ -17,7 +17,6 @@ type KeywordTracker interface {
 }
 
 type KeywordTrackerFactory struct {
-	gptModel          ai.GPTModel
 	db                datastore.Repository
 	aiClient          *ai.Client
 	logger            *zap.Logger
@@ -30,7 +29,6 @@ type KeywordTrackerFactory struct {
 
 func NewKeywordTrackerFactory(
 	isDev bool,
-	gptModel ai.GPTModel,
 	redditOauthClient *reddit.OauthClient,
 	db datastore.Repository,
 	aiClient *ai.Client,
@@ -39,7 +37,6 @@ func NewKeywordTrackerFactory(
 	slackNotifier alerts.AlertNotifier,
 	emailNotifier alerts.AlertNotifier) *KeywordTrackerFactory {
 	return &KeywordTrackerFactory{
-		gptModel:          gptModel,
 		db:                db,
 		aiClient:          aiClient,
 		logger:            logger,
@@ -54,7 +51,6 @@ func NewKeywordTrackerFactory(
 func (f *KeywordTrackerFactory) GetKeywordTrackerBySource(sourceType models.SourceType) KeywordTracker {
 	return newRedditKeywordTracker(
 		f.isDev,
-		f.gptModel,
 		f.redditOauthClient,
 		f.db,
 		f.aiClient,

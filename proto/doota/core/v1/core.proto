@@ -92,6 +92,10 @@ message LeadMetadata {
   string author_url = 11;
   string dm_url = 12;
   string automated_comment_url = 13;
+  string comment_llm_model = 14;
+  string dm_llm_model = 15;
+  string relevancy_llm_model = 16;
+  string llm_model_response_overridden_by = 17;
 }
 
 message Lead {
@@ -116,6 +120,7 @@ enum LeadStatus {
   NEW = 0;
   NOT_RELEVANT = 1;
   COMPLETED = 3;
+  LEAD = 4;
 }
 
 enum LeadType {
@@ -136,4 +141,37 @@ message Project {
   string target_persona = 5;
   repeated Keyword keywords = 6;
   repeated Source sources = 7;
+  repeated string suggested_keywords = 8;
+  repeated string suggested_sources = 9;
+}
+
+enum SubscriptionStatus {
+  SUBSCRIPTION_STATUS_ACTIVE = 0;
+  SUBSCRIPTION_STATUS_EXPIRED = 1;
+  SUBSCRIPTION_STATUS_FAILED = 2;
+  SUBSCRIPTION_STATUS_CREATED= 3;
+}
+
+enum SubscriptionPlanID {
+  SUBSCRIPTION_PLAN_UNKNOWN = 0;
+  SUBSCRIPTION_PLAN_FREE = 1;
+  SUBSCRIPTION_PLAN_FOUNDER = 2;
+  SUBSCRIPTION_PLAN_AGENCY = 3;
+  SUBSCRIPTION_PLAN_GROWTH = 4;
+}
+
+message UsageLimit {
+  int32 per_day = 1;
+  int32 per_month = 2;
+}
+
+message Subscription {
+  SubscriptionStatus status = 1;
+  int32 max_keywords = 2;
+  int32 max_sources = 3;
+  UsageLimit comments =4;
+  UsageLimit dm = 5;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp expires_at = 7;
+  SubscriptionPlanID plan_id = 8;
 }

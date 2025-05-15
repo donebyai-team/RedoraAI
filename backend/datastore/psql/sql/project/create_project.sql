@@ -1,2 +1,2 @@
-INSERT INTO projects (name, organization_id, description,customer_persona, goals, website)
-VALUES (:name, :organization_id,:description,:customer_persona,:goals, :website) RETURNING id;
+INSERT INTO projects (name, organization_id, description,customer_persona, goals, website, metadata)
+VALUES (:name, :organization_id,:description,:customer_persona,:goals, :website, :metadata) RETURNING id;

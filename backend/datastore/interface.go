@@ -3,6 +3,7 @@ package datastore
 import (
 	"context"
 	"errors"
+	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 	"github.com/shank318/doota/models"
 	"time"
@@ -32,6 +33,7 @@ type Repository interface {
 	KeywordRepository
 	ProjectRepository
 	LeadInteractionRepository
+	SubscriptionRepository
 }
 
 type OrganizationRepository interface {
@@ -40,6 +42,11 @@ type OrganizationRepository interface {
 	GetOrganizations(context.Context) ([]*models.Organization, error)
 	GetOrganizationById(context.Context, string) (*models.Organization, error)
 	GetOrganizationByName(context.Context, string) (*models.Organization, error)
+}
+
+type SubscriptionRepository interface {
+	CreateSubscription(ctx context.Context, sub *models.Subscription, tx *sqlx.Tx) (*models.Subscription, error)
+	GetSubscriptionByOrgID(ctx context.Context, orgID string) (*models.Subscription, error)
 }
 
 type IntegrationRepository interface {
@@ -80,6 +87,7 @@ type ProjectRepository interface {
 
 type SourceRepository interface {
 	AddSource(ctx context.Context, subreddit *models.Source) (*models.Source, error)
+	UpdateSource(ctx context.Context, subreddit *models.Source) error
 	GetSourceByName(ctx context.Context, url, orgID string) (*models.Source, error)
 	DeleteSourceByID(ctx context.Context, id string) error
 	GetSourceByID(ctx context.Context, ID string) (*models.Source, error)
@@ -92,9 +100,17 @@ type LeadInteractionRepository interface {
 	GetLeadInteractions(ctx context.Context, projectID string, start, end time.Time) ([]*models.LeadInteraction, error)
 }
 
+type LeadsFilter struct {
+	RelevancyScore float32
+	Sources        []string
+	Status         models.LeadStatus
+	Limit          int
+	Offset         int
+}
+
 type LeadRepository interface {
-	GetLeadsByStatus(ctx context.Context, projectID string, status models.LeadStatus) ([]*models.AugmentedLead, error)
-	GetLeadsByRelevancy(ctx context.Context, projectID string, relevancy float32, sources []string) ([]*models.AugmentedLead, error)
+	GetLeadsByStatus(ctx context.Context, projectID string, filter LeadsFilter) ([]*models.AugmentedLead, error)
+	GetLeadsByRelevancy(ctx context.Context, projectID string, filter LeadsFilter) ([]*models.AugmentedLead, error)
 	GetLeadByPostID(ctx context.Context, projectID, postID string) (*models.Lead, error)
 	GetLeadByCommentID(ctx context.Context, projectID, commentID string) (*models.Lead, error)
 	CreateLead(ctx context.Context, reddit *models.Lead) (*models.Lead, error)
@@ -105,7 +121,8 @@ type LeadRepository interface {
 
 type KeywordRepository interface {
 	GetKeywords(ctx context.Context, projectID string) ([]*models.Keyword, error)
-	CreateKeyword(ctx context.Context, keyword *models.Keyword) (*models.Keyword, error)
+	CreateKeywords(ctx context.Context, projectID string, keywords []string) error
+	RemoveKeyword(ctx context.Context, projectID, keywordID string) error
 	GetKeywordTrackers(ctx context.Context) ([]*models.AugmentedKeywordTracker, error)
 	UpdatKeywordTrackerLastTrackedAt(ctx context.Context, id string) error
 	CreateKeywordTracker(ctx context.Context, tracker *models.KeywordTracker) (*models.KeywordTracker, error)

@@ -16,7 +16,6 @@ import (
 type Spooler struct {
 	*shutter.Shutter
 	dbPollingInterval time.Duration
-	gptModel          ai.GPTModel
 	db                datastore.Repository
 	aiClient          *ai.Client
 	queue             chan *models.AugmentedKeywordTracker
@@ -31,7 +30,6 @@ type Spooler struct {
 func New(
 	db datastore.Repository,
 	aiClient *ai.Client,
-	gptModel ai.GPTModel,
 	state state.ConversationState,
 	bufferSize int,
 	maxParallelCalls uint64,
@@ -43,7 +41,6 @@ func New(
 	return &Spooler{
 		Shutter:           shutter.New(),
 		db:                db,
-		gptModel:          gptModel,
 		state:             state,
 		maxParallelCalls:  maxParallelCalls,
 		aiClient:          aiClient,
@@ -58,7 +55,9 @@ func New(
 
 func (s *Spooler) Run(ctx context.Context) error {
 	go s.runLoop(ctx)
-	go s.pollKeywordTrackers(ctx)
+	if !s.keywordTracker.isDev {
+		go s.pollKeywordTrackers(ctx)
+	}
 	return nil
 }
 
@@ -93,6 +92,7 @@ func (s *Spooler) runLoop(ctx context.Context) {
 func (s *Spooler) processKeywordsTracking(ctx context.Context, tracker *models.AugmentedKeywordTracker) error {
 	logger := s.logger.With(
 		zap.String("project_id", tracker.Project.ID),
+		zap.String("source", tracker.Source.Name),
 		zap.String("tracker_id", tracker.GetID()))
 
 	logger.Debug("processing tracker", zap.Int("queue_size", len(s.queue)))
@@ -121,7 +121,6 @@ func (s *Spooler) processKeywordsTracking(ctx context.Context, tracker *models.A
 				s.logger.Error("failed to release lock on keyword tracker", zap.Error(err))
 			}
 		}()
-
 		keywordTracker := s.keywordTracker.GetKeywordTrackerBySource(tracker.Source.SourceType)
 		if err := keywordTracker.WithLogger(logger).TrackKeyword(ctx, tracker); err != nil {
 			logger.Error("failed to track keyword", zap.Error(err))

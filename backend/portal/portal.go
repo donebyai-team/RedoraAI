@@ -2,6 +2,9 @@ package portal
 
 import (
 	"context"
+	state2 "github.com/shank318/doota/agents/state"
+	"github.com/shank318/doota/ai"
+	google2 "github.com/shank318/doota/integrations/google"
 	"github.com/shank318/doota/integrations/reddit"
 	"github.com/shank318/doota/portal/state"
 	"regexp"
@@ -31,20 +34,24 @@ type Portal struct {
 	authenticator       *auth.Authenticator
 	vanaWebhookHandler  agents.WebhookHandler
 	customerCaseService services.CustomerCaseService
-	keywordService      services.KeywordService
 	authStateStore      state.AuthStateStore
 	redditOauthClient   *reddit.OauthClient
+	googleOauthClient   *google2.OauthClient
+	aiClient            *ai.Client
+	cache               state2.ConversationState
 }
 
 func New(
+	aiClient *ai.Client,
 	redditOauthClient *reddit.OauthClient,
+	googleOauthClient *google2.OauthClient,
 	authenticator *auth.Authenticator,
 	authStateStore state.AuthStateStore,
 	customerCaseService services.CustomerCaseService,
 	authUsecase *services.AuthUsecase,
-	keywordService services.KeywordService,
 	vanaWebhookHandler agents.WebhookHandler,
 	db datastore.Repository,
+	cache state2.ConversationState,
 	httpListenAddr string,
 	corsURLRegexAllow *regexp.Regexp,
 	config *pbportal.Config,
@@ -54,7 +61,9 @@ func New(
 	tracer logging.Tracer,
 ) *Portal {
 	return &Portal{
+		aiClient:            aiClient,
 		redditOauthClient:   redditOauthClient,
+		googleOauthClient:   googleOauthClient,
 		authStateStore:      authStateStore,
 		authUsecase:         authUsecase,
 		Shutter:             shutter.New(),
@@ -62,8 +71,8 @@ func New(
 		authenticator:       authenticator,
 		vanaWebhookHandler:  vanaWebhookHandler,
 		customerCaseService: customerCaseService,
-		keywordService:      keywordService,
 		db:                  db,
+		cache:               cache,
 		httpListenAddr:      httpListenAddr,
 		corsURLRegexAllow:   corsURLRegexAllow,
 		domainWhitelist:     domainWhitelist,

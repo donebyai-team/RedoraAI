@@ -39,9 +39,10 @@ import { isActivePath } from '../utils/url'
 import { useDebounce } from '@doota/ui-core/hooks/useDebounce';
 import { setRelevancyScore, setSubReddit } from '../../store/Params/ParamsSlice'
 import { useRedditIntegrationStatus } from './Leads/Tabs/useRedditIntegrationStatus'
-import { LeadTabStatus, setActiveTab, setCompletedList, setDiscardedTabList, setIsLoading, setNewTabList, setSelectedLeadData } from '../../store/Lead/leadSlice'
-import { LeadStatus } from '@doota/pb/doota/core/v1/core_pb'
+import { LeadTabStatus, setActiveTab, setCompletedList, setDiscardedTabList, setIsLoading, setLeadsTabList, setNewTabList, setSelectedLeadData } from '../../store/Lead/leadSlice'
+import { Lead, LeadStatus } from '@doota/pb/doota/core/v1/core_pb'
 import { GetLeadsResponse } from '@doota/pb/doota/portal/v1/portal_pb'
+import { isSameDay } from './Leads/Tabs/NewTab'
 
 export const LoadigSkeletons = ({ count, height }: { count: number, height: number | string }) => (
   [...Array(count)].map((_, i) => (
@@ -67,6 +68,7 @@ const NavBar: FC = () => {
   const [relevancy_score, setRelevancy_Score] = useState<number>(relevancyScore);
   const { isConnected, loading: isLoadingRedditIntegrationStatus } = useRedditIntegrationStatus();
   const canChangeOrg = user && isPlatformAdmin(user) && user.organizations.length > 1;
+  const DEFAULT_RESET_RELEVENCY_SCORE = 90;
 
   const onChangeCommitted = useCallback((key: string, value: number | string) => {
     if (key === 'relevancy_score') {
@@ -153,8 +155,8 @@ const NavBar: FC = () => {
 
   const handleResetFilters = () => {
     // Reset any other filters here
-    debouncedOnChangeCommitted('relevancy_score', 70);
-    setRelevancy_Score(70);
+    debouncedOnChangeCommitted('relevancy_score', DEFAULT_RESET_RELEVENCY_SCORE);
+    setRelevancy_Score(DEFAULT_RESET_RELEVENCY_SCORE);
     debouncedOnChangeCommitted('currentActiveSubRedditId', "");
   }
 
@@ -181,12 +183,17 @@ const NavBar: FC = () => {
         // After relevant leads are fetched, trigger completed and discarded leads
         const completedResult = await getAllLeadsByStatus(LeadStatus.COMPLETED);
         const discardedResult = await getAllLeadsByStatus(LeadStatus.NOT_RELEVANT);
+        const leadsResult = await getAllLeadsByStatus(LeadStatus.LEAD);
 
         dispatch(setCompletedList(completedResult.leads ?? []));
         dispatch(setDiscardedTabList(discardedResult?.leads ?? []));
+        dispatch(setLeadsTabList(leadsResult?.leads ?? []));
 
-        // Set the first lead only once after all API calls are complete
-        if (allLeads.length > 0) {
+        // if the new leads is empty and completedResult is not empty then set active tab as COMPLETED
+        if (allLeads.length === 0 && completedResult.leads?.length > 0) {
+          dispatch(setActiveTab(LeadTabStatus.COMPLETED));
+          dispatch(setSelectedLeadData(completedResult.leads[0]));
+        } else if (allLeads.length > 0) {
           dispatch(setSelectedLeadData(allLeads[0])); // Set the first lead as selected
         }
 
@@ -216,11 +223,24 @@ const NavBar: FC = () => {
 
   const newTabListLoaded = useMemo(() => newTabList.length > 0 && !isLoading, [newTabList, isLoading]);
 
+  const getLeadsCreatedToday = (leads: Lead[]): Lead[] => {
+    return leads.filter(lead => lead.createdAt && isSameDay(lead.createdAt));
+  };
+
+  const countLeadsCreatedToday = (leads: Lead[]): number => {
+    return leads.reduce((count, lead) => {
+      if (lead.createdAt && isSameDay(lead.createdAt)) {
+        return count + 1;
+      }
+      return count;
+    }, 0);
+  };
+
   const countItem = useCallback((id: string) => {
     if (!newTabListLoaded) return 0;
-    return id === "inbox"
-      ? newTabList.length
-      : newTabList.reduce((count, ele) => ele.sourceId === id ? count + 1 : count, 0);
+    return id === "posts"
+      ? getLeadsCreatedToday(newTabList).length
+      : getLeadsCreatedToday(newTabList).reduce((count, ele) => ele.sourceId === id ? count + 1 : count, 0);
   }, [newTabListLoaded, newTabList]);
 
   return (<>
@@ -294,7 +314,7 @@ const NavBar: FC = () => {
         </Box>
         <Divider sx={{ bgcolor: "#2d3748" }} />
 
-        {/* Inbox */}
+        {/* Posts */}
         <List
           sx={{
             m: 2,
@@ -326,7 +346,7 @@ const NavBar: FC = () => {
             onClick={() => handleMenuClick()}
             secondaryAction={
               <Badge
-                badgeContent={countItem("inbox")}
+                badgeContent={countItem("posts")}
                 color="warning"
                 sx={{
                   "& .MuiBadge-badge": {
@@ -355,7 +375,7 @@ const NavBar: FC = () => {
               <ListItemIcon sx={{ minWidth: "auto", mr: 2 }}>
                 <MailIcon />
               </ListItemIcon>
-              <ListItemText primary={`Inbox`} />
+              <ListItemText primary={`Posts`} />
             </ListItemButton>
           </ListItem>
         </List>
@@ -399,6 +419,8 @@ const NavBar: FC = () => {
           <Slider
             value={relevancy_score}
             onChange={handleRelevancyChange}
+            min={70}
+            step={10}
             sx={{
               color: "#FF9800",
               "& .MuiSlider-thumb": {

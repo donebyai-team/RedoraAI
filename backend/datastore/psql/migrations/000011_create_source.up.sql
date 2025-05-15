@@ -17,6 +17,8 @@ CREATE TABLE sources
 ALTER TABLE sources ADD CONSTRAINT fk_sources FOREIGN KEY (project_id) REFERENCES projects (id);
 CREATE UNIQUE INDEX idx1_sources ON sources (project_id, external_id, deleted_at);
 CREATE INDEX idx2_sources ON sources (project_id, external_id);
+CREATE INDEX idx_sources_project_id_deleted_at_null ON sources (project_id) WHERE deleted_at IS NULL;
+
 
 
 CREATE TRIGGER trigger_record_changed_on_sources

@@ -4,11 +4,6 @@ import AuthGuard from '../../../components/guard/AuthGuard'
 import { DashboardLayout } from "../../../components/DashboardLayout";
 import OnboardingGuard from '../../../components/guard/OnboardingGuard';
 
-export const metadata = {
-  title: 'RedoraAI',
-  description: ''
-}
-
 export const AuthLoading = () => (
   <Box
     sx={{

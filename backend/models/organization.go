@@ -23,7 +23,18 @@ func (o *Organization) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
 
 // TODO: Move it to a better place
 type OrganizationFeatureFlags struct {
-	EnableAutoComment bool `json:"enable_auto_comment"`
+	EnableAutoComment bool          `json:"enable_auto_comment"`
+	CommentLLMModel   LLMModel      `json:"comment_llm_model"`
+	DMLLMModel        LLMModel      `json:"dm_llm_model"`
+	RelevancyLLMModel LLMModel      `json:"relevancy_llm_model"`
+	Subscription      *Subscription `json:"subscription"` // storing here for faster access
+}
+
+func (b OrganizationFeatureFlags) IsSubscriptionExpired() bool {
+	if b.Subscription == nil {
+		return false
+	}
+	return b.Subscription.IsExpired()
 }
 
 func (b OrganizationFeatureFlags) Value() (driver.Value, error) {
