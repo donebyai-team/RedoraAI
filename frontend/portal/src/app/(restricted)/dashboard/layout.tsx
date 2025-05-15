@@ -22,10 +22,10 @@ export const AuthLoading = () => (
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <OnboardingGuard fallback={<AuthLoading />}>
-      <AuthGuard fallback={<AuthLoading />}>
+    <AuthGuard fallback={<AuthLoading />}>
+      <OnboardingGuard fallback={<AuthLoading />}>
         <DashboardLayout>{children}</DashboardLayout>
-      </AuthGuard>
-    </OnboardingGuard>
+      </OnboardingGuard>
+    </AuthGuard>
   )
 }
