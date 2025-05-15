@@ -163,6 +163,7 @@ export default function SelectSourcesStep() {
                             label="Add Subreddit To Track"
                             placeholder="choose relevant subreddits to track keywords"
                             onKeyDown={handleKeyDown}
+                            disabled={isLoading || loadingSubredditId !== null}
                         />
                     )}
                     renderTags={(_, getTagProps) => (
@@ -239,7 +240,7 @@ export default function SelectSourcesStep() {
                                         label={subreddit}
                                         onClick={() => handleAddSubreddit(subreddit)}
                                         size="small"
-                                        disabled={isLoading}
+                                        disabled={isLoading || loadingSubredditId !== null}
                                         deleteIcon={
                                             isLoading ? (
                                                 <Box

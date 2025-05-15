@@ -8,7 +8,7 @@ export type SourcesTypes = {
   name: string
 }
 
-type ProjectTypes = {
+export type ProjectTypes = {
   id?: string
   name: string
   description: string
@@ -24,12 +24,16 @@ interface StepperState {
   activeStep: number
   skipped: number[]
   projects: ProjectTypes | null
+  isOnboardingDone: boolean | null
+  loading: boolean
 }
 
 const initialState: StepperState = {
   activeStep: 0,
   skipped: [],
-  projects: null
+  projects: null,
+  isOnboardingDone: null,
+  loading: false
 }
 
 const stepperSlice = createSlice({
@@ -58,10 +62,16 @@ const stepperSlice = createSlice({
     },
     setProjects: (state, action: PayloadAction<ProjectTypes>) => {
       state.projects = action.payload
+    },
+    setIsOnboardingDone: (state, action: PayloadAction<boolean | null>) => {
+      state.isOnboardingDone = action.payload
+    },
+    setLoading: (state, action: PayloadAction<boolean>) => {
+      state.loading = action.payload
     }
   }
 })
 
-export const { nextStep, prevStep, resetStepper, skipStep, setStep, setProjects } = stepperSlice.actions
+export const { nextStep, prevStep, resetStepper, skipStep, setStep, setProjects, setIsOnboardingDone, setLoading } = stepperSlice.actions
 
 export const stepperReducer = stepperSlice.reducer

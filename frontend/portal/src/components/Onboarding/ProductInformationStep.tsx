@@ -37,20 +37,20 @@ type FieldConfig = {
 const fields: FieldConfig[] = [
     {
         name: "website",
-        label: "Product Website",
-        placeholder: "https://example.com",
-        rules: { required: "Product website is required" },
+        label: "Website URL",
+        placeholder: "donebyai.team",
+        rules: { required: "Website url is required" },
     },
     {
         name: "name",
         label: "Product Name",
-        placeholder: "e.g., My Awesome Product",
+        placeholder: "e.g., MiraAI",
         rules: { required: "Product name is required" },
     },
     {
         name: "description",
         label: "Product Description",
-        placeholder: "Describe your product and its key features...",
+        placeholder: "MiraAI talks to your inbound leads over SMS and WhatsApp like a human, qualifying prospects and scheduling calls with your sales team.",
         rules: { required: "Description is required" },
         multiline: true,
         rows: 3,
@@ -182,9 +182,7 @@ export default function ProductInformationStep() {
                                 rows={field.rows}
                                 disabled={isLoading || loadingMeta}
                                 error={!!errors[field.name]}
-                                helperText={
-                                    errors[field.name]?.message ?? field.helperText
-                                }
+                                helperText={errors[field.name]?.message ?? field.helperText}
                                 FormHelperTextProps={{
                                     sx: { ml: 1.5, fontSize: "0.75rem" },
                                 }}

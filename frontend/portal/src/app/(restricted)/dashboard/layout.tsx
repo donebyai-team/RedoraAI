@@ -2,7 +2,6 @@ import Box from '@mui/material/Box'
 import { FallbackSpinner } from '../../../atoms/FallbackSpinner'
 import AuthGuard from '../../../components/guard/AuthGuard'
 import { DashboardLayout } from "../../../components/DashboardLayout";
-import OnboardingGuard from '../../../components/guard/OnboardingGuard';
 
 export const AuthLoading = () => (
   <Box
@@ -22,10 +21,8 @@ export const AuthLoading = () => (
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <OnboardingGuard fallback={<AuthLoading />}>
-      <AuthGuard fallback={<AuthLoading />}>
-        <DashboardLayout>{children}</DashboardLayout>
-      </AuthGuard>
-    </OnboardingGuard>
+    <AuthGuard fallback={<AuthLoading />}>
+      <DashboardLayout>{children}</DashboardLayout>
+    </AuthGuard>
   )
 }
