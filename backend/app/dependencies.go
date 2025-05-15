@@ -82,7 +82,7 @@ func (b *DependenciesBuilder) WithGoogle(clientId, clientSecret, redirectUrl str
 	b.GoogleConfig = &GoogleConfig{
 		ClientID:     clientId,
 		ClientSecret: clientSecret,
-		RedirectURL:  fmt.Sprintf("%s/login", redirectUrl),
+		RedirectURL:  redirectUrl,
 	}
 	return b
 }
