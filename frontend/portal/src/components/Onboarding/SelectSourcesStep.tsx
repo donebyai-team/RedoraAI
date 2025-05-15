@@ -63,23 +63,20 @@ export default function SelectSourcesStep() {
         if (!trimmed) return;
 
         const plainName = trimmed.replace(/^r\//i, "");
-        const nameToSend = trimmed.startsWith("r/") ? trimmed : `r/${plainName}`;
+        const nameToSend = `r/${plainName}`;
 
         if (sources.some((s) => s.name.toLowerCase() === plainName.toLowerCase()) ||
             pendingSources.includes(plainName.toLowerCase())) {
-            toast.error(`r/${plainName} is already being tracked`);
+            toast.error(`${nameToSend} is already being tracked`);
             return;
         }
 
-        // Add to pending pills
         setPendingSources((prev) => [...prev, plainName.toLowerCase()]);
+        setLoadingSubredditId(plainName);
         setInputValue("");
 
         try {
             const result = await portalClient.addSource({ name: nameToSend });
-
-            // const updatedProjects = await portalClient.self({});
-            // const updatedSources = updatedProjects.project?.[0].sources.map(source => ({ id: source.id, name: source.name })) ?? [];
             const updatedSources = [...sources, result];
 
             setValue("sources", updatedSources);
@@ -90,8 +87,10 @@ export default function SelectSourcesStep() {
             const message = err?.response?.data?.message || err.message || "Failed to add";
             toast.error(message);
         } finally {
-            // Remove from pending either way
-            setPendingSources((prev) => prev.filter((name) => name !== plainName.toLowerCase()));
+            setPendingSources((prev) =>
+                prev.filter((name) => name !== plainName.toLowerCase())
+            );
+            setLoadingSubredditId(null);
         }
     };
 
@@ -152,16 +151,17 @@ export default function SelectSourcesStep() {
             const plainName = subreddit.replace(/^r\//i, "").toLowerCase();
             return !sources.some((s) => s.name.toLowerCase() === plainName);
         }
-    );
+    );    
 
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
             <Stack spacing={3} mb={5} gap={4}>
                 <Autocomplete
+                    key={`${sources.length}-${pendingSources.length}`}
                     multiple
                     freeSolo
                     options={[]}
-                    value={sources.map((s) => s.name)}
+                    value={[...sources.map((s) => s.name), ...pendingSources]}
                     inputValue={inputValue}
                     onInputChange={(_, newInputValue) => setInputValue(newInputValue)}
                     onChange={() => { }}
@@ -174,7 +174,7 @@ export default function SelectSourcesStep() {
                             disabled={isLoading || loadingSubredditId !== null}
                         />
                     )}
-                    renderTags={(_, getTagProps) => (
+                    renderTags={(_tagValues, getTagProps) => (
                         <>
                             {sources.map((option, index) => {
                                 const isLoading = loadingSubredditId === option.id;
@@ -230,7 +230,6 @@ export default function SelectSourcesStep() {
                             ))}
                         </>
                     )}
-
                 />
 
                 {filteredSuggestions.length > 0 && (
