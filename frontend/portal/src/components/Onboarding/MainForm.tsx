@@ -19,15 +19,15 @@ import { AuthLoading } from '../../app/(restricted)/dashboard/layout';
 export const steps = [
     {
         label: 'Product Details',
-        description: 'Tell Redora about your product, who it’s for, and who you want to reach. You can update this anytime.'
+        description: 'Your business details in brief'
     },
     {
         label: 'Track Keywords',
-        description: 'Choose keywords to track across Reddit.'
+        description: 'Choose keywords to track.'
     },
     {
         label: 'Select SubReddits',
-        description: 'Select subreddits you want to monitor.'
+        description: 'Subreddits you want to monitor.'
     },
 ];
 
