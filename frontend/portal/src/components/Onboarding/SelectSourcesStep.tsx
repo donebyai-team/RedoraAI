@@ -76,13 +76,16 @@ export default function SelectSourcesStep() {
         setInputValue("");
 
         try {
-            await portalClient.addSource({ name: nameToSend });
+            const result = await portalClient.addSource({ name: nameToSend });
 
             // const updatedProjects = await portalClient.self({});
             // const updatedSources = updatedProjects.project?.[0].sources.map(source => ({ id: source.id, name: source.name })) ?? [];
-            const updatedSources = [...sources];
+            const updatedSources = [...sources, result];
 
             setValue("sources", updatedSources);
+            if (project) {
+                dispatch(setProject({ ...project, sources: updatedSources }));
+            }
         } catch (err: any) {
             const message = err?.response?.data?.message || err.message || "Failed to add";
             toast.error(message);
@@ -104,6 +107,9 @@ export default function SelectSourcesStep() {
 
             setValue("sources", updatedSources);
             // toast.success(`Removed r/${source.name}`);
+            if (project) {
+                dispatch(setProject({ ...project, sources: updatedSources }));
+            }
 
         } catch (err: any) {
             const message = err?.response?.data?.message || err.message || "Failed to remove";

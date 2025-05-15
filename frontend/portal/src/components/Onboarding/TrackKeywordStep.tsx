@@ -98,9 +98,9 @@ export default function TrackKeywordStep() {
         setIsLoading(true);
 
         try {
-            await portalClient.createKeywords({ keywords: data.keywords });
+            const result = await portalClient.createKeywords({ keywords: data.keywords });
 
-            dispatch(setProject({ ...project, keywords: data.keywords }));
+            dispatch(setProject({ ...project, keywords: result.keywords }));
             dispatch(nextStep());
         } catch (err: any) {
             const message = err?.response?.data?.message || err.message || "Something went wrong";
