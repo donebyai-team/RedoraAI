@@ -138,16 +138,6 @@ export default function ProductInformationStep() {
             };
 
             const result = await portalClient.createOrEditProject(body);
-            // const newPayload = {
-            //     ...project,
-            //     id: result.id ?? project?.id,
-            //     name: result.name,
-            //     description: result.description,
-            //     website: result.website,
-            //     targetPersona: result.targetPersona,
-            //     suggestedKeywords: result?.suggestedKeywords ?? [],
-            //     suggestedSources: result?.suggestedSources ?? [],
-            // };
             dispatch(setProject(result));
             dispatch(nextStep());
         } catch (err: any) {
