@@ -31,7 +31,7 @@ export const steps = [
     },
 ];
 
-export default function ManinForm() {
+export default function OnboadingForm() {
 
     const activeStep = useAppSelector((state: RootState) => state.stepper.activeStep);
     const { skipped, loading } = useAppSelector((state: RootState) => state.stepper);

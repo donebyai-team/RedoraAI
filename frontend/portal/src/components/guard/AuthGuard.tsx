@@ -7,11 +7,11 @@ import { browserTokenStore } from '@doota/ui-core/provider/BrowserStores'
 import { routes } from '@doota/ui-core/routing'
 import { useAppDispatch } from '../../../store/hooks'
 import {
-  ProjectTypes,
   setIsOnboardingDone,
-  setProjects,
+  setProject,
   setStep,
 } from '../../../store/Onboarding/OnboardingSlice'
+import { Project } from '@doota/pb/doota/core/v1/core_pb'
 
 interface AuthGuardProps {
   children: ReactNode
@@ -25,7 +25,8 @@ const AuthGuard = ({ children, fallback }: AuthGuardProps) => {
   const dispatch = useAppDispatch()
   const [isReady, setIsReady] = useState(false)
 
-  function calculateNextStep(data: ProjectTypes): number {
+  function calculateNextStep(data: Project | null): number {
+    if (!data) return 0;
     const { id, website, name, description, targetPersona, keywords, sources } = data
     const hasBasicInfo = Boolean(id && website && name && description && targetPersona)
     const hasKeywords = Array.isArray(keywords) && keywords.length > 0
@@ -52,21 +53,9 @@ const AuthGuard = ({ children, fallback }: AuthGuardProps) => {
         const data = user.projects?.[0]
         const isOnboardingDone = user.isOnboardingDone
 
-        const newData = {
-          id: data?.id ?? "",
-          name: data?.name ?? "",
-          description: data?.description ?? "",
-          website: data?.website ?? "",
-          targetPersona: data?.targetPersona ?? "",
-          keywords: data?.keywords?.map(keyword => keyword.name) ?? [],
-          sources: data?.sources?.map(source => ({ id: source.id, name: source.name })) ?? [],
-          suggestedKeywords: data?.suggestedKeywords ?? [],
-          suggestedSources: data?.suggestedSources ?? [],
-        }
-
-        const nextStep = calculateNextStep(newData)
+        const nextStep = calculateNextStep(data)
         dispatch(setIsOnboardingDone(isOnboardingDone))
-        dispatch(setProjects(newData))
+        dispatch(setProject(data))
         dispatch(setStep(nextStep))
 
         if (!isOnboardingDone && !path.startsWith(routes.app.auth.onboarding)) {
