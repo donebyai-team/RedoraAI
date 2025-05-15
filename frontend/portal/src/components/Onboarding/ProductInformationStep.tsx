@@ -11,7 +11,7 @@ import { useAppSelector } from "../../../store/hooks";
 import { RootState } from "../../../store/store";
 import { steps } from "./MainForm";
 import { useDispatch } from "react-redux";
-import { nextStep, prevStep, setProjects } from "../../../store/Onboarding/OnboardingSlice";
+import { nextStep, prevStep, setProject } from "../../../store/Onboarding/OnboardingSlice";
 import { useEffect, useState, useCallback } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useClientsContext } from "@doota/ui-core/context/ClientContext";
@@ -37,20 +37,20 @@ type FieldConfig = {
 const fields: FieldConfig[] = [
     {
         name: "website",
-        label: "Product Website",
-        placeholder: "https://example.com",
-        rules: { required: "Product website is required" },
+        label: "Website URL",
+        placeholder: "donebyai.team",
+        rules: { required: "Website url is required" },
     },
     {
         name: "name",
         label: "Product Name",
-        placeholder: "e.g., My Awesome Product",
+        placeholder: "e.g., MiraAI",
         rules: { required: "Product name is required" },
     },
     {
         name: "description",
         label: "Product Description",
-        placeholder: "Describe your product and its key features...",
+        placeholder: "MiraAI talks to your inbound leads over SMS and WhatsApp like a human, qualifying prospects and scheduling calls with your sales team.",
         rules: { required: "Description is required" },
         multiline: true,
         rows: 3,
@@ -70,7 +70,7 @@ const fields: FieldConfig[] = [
 export default function ProductInformationStep() {
     const dispatch = useDispatch();
     const activeStep = useAppSelector((state: RootState) => state.stepper.activeStep);
-    const projects = useAppSelector((state: RootState) => state.stepper.projects);
+    const project = useAppSelector((state: RootState) => state.stepper.project);
     const { portalClient } = useClientsContext();
 
     const {
@@ -82,10 +82,10 @@ export default function ProductInformationStep() {
         watch,
     } = useForm<ProductFormValues>({
         defaultValues: {
-            website: projects?.website ?? "",
-            name: projects?.name ?? "",
-            description: projects?.description ?? "",
-            targetPersona: projects?.targetPersona ?? "",
+            website: project?.website ?? "",
+            name: project?.name ?? "",
+            description: project?.description ?? "",
+            targetPersona: project?.targetPersona ?? "",
         },
     });
 
@@ -120,37 +120,35 @@ export default function ProductInformationStep() {
 
     useEffect(() => {
         const timer = setTimeout(() => {
-            if (website && website !== projects?.website) {
+            if (website && website !== project?.website) {
                 fetchMeta(website);
             }
         }, 700);
 
         return () => clearTimeout(timer);
-    }, [website, projects?.website, fetchMeta]);
+    }, [website, project?.website, fetchMeta]);
 
     const onSubmit = async (data: ProductFormValues) => {
         setIsLoading(true);
 
         try {
             const body = {
-                ...(projects?.id && { id: projects.id }),
+                ...(project?.id && { id: project.id }),
                 ...data,
             };
 
             const result = await portalClient.createOrEditProject(body);
-            const newPayload = {
-                ...projects,
-                id: result.id ?? projects?.id,
-                name: result.name,
-                description: result.description,
-                website: result.website,
-                targetPersona: result.targetPersona,
-                suggestedKeywords: result?.suggestedKeywords ?? [],
-                suggestedSources: result?.suggestedSources ?? [],
-                // suggestedKeywords: ["SEO AI", "DEV"],
-                // suggestedSources: ["r/php", "r/java", "r/laravel"],
-            };
-            dispatch(setProjects(newPayload));
+            // const newPayload = {
+            //     ...project,
+            //     id: result.id ?? project?.id,
+            //     name: result.name,
+            //     description: result.description,
+            //     website: result.website,
+            //     targetPersona: result.targetPersona,
+            //     suggestedKeywords: result?.suggestedKeywords ?? [],
+            //     suggestedSources: result?.suggestedSources ?? [],
+            // };
+            dispatch(setProject(result));
             dispatch(nextStep());
         } catch (err: any) {
             const message = err?.response?.data?.message || err.message || "Something went wrong";
@@ -182,9 +180,7 @@ export default function ProductInformationStep() {
                                 rows={field.rows}
                                 disabled={isLoading || loadingMeta}
                                 error={!!errors[field.name]}
-                                helperText={
-                                    errors[field.name]?.message ?? field.helperText
-                                }
+                                helperText={errors[field.name]?.message ?? field.helperText}
                                 FormHelperTextProps={{
                                     sx: { ml: 1.5, fontSize: "0.75rem" },
                                 }}

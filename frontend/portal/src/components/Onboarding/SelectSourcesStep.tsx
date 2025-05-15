@@ -19,8 +19,7 @@ import { steps } from "./MainForm";
 import { useDispatch } from "react-redux";
 import {
     prevStep,
-    setProjects,
-    SourcesTypes,
+    setProject,
 } from "../../../store/Onboarding/OnboardingSlice";
 import React, { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
@@ -28,17 +27,18 @@ import { useClientsContext } from "@doota/ui-core/context/ClientContext";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { routes } from "@doota/ui-core/routing";
+import { Source } from "@doota/pb/doota/core/v1/core_pb";
 
 interface SubredditFormValues {
-    sources: SourcesTypes[];
+    sources: Source[];
 }
 
 export default function SelectSourcesStep() {
     const dispatch = useDispatch();
     const routers = useRouter();
     const activeStep = useAppSelector((state: RootState) => state.stepper.activeStep);
-    const projects = useAppSelector((state: RootState) => state.stepper.projects);
-    const listOfSuggestedSources = projects?.suggestedSources ?? [];
+    const project = useAppSelector((state: RootState) => state.stepper.project);
+    const listOfSuggestedSources = project?.suggestedSources ?? [];
     const { portalClient } = useClientsContext();
 
     const [loadingSubredditId, setLoadingSubredditId] = useState<string | null>(null);
@@ -52,7 +52,7 @@ export default function SelectSourcesStep() {
         setValue,
     } = useForm<SubredditFormValues>({
         defaultValues: {
-            sources: projects?.sources ?? [],
+            sources: project?.sources ?? [],
         },
     });
 
@@ -76,12 +76,16 @@ export default function SelectSourcesStep() {
         setInputValue("");
 
         try {
-            await portalClient.addSource({ name: nameToSend });
+            const result = await portalClient.addSource({ name: nameToSend });
 
-            const updatedProjects = await portalClient.self({});
-            const updatedSources = updatedProjects.projects?.[0].sources.map(source => ({ id: source.id, name: source.name })) ?? [];
+            // const updatedProjects = await portalClient.self({});
+            // const updatedSources = updatedProjects.project?.[0].sources.map(source => ({ id: source.id, name: source.name })) ?? [];
+            const updatedSources = [...sources, result];
 
             setValue("sources", updatedSources);
+            if (project) {
+                dispatch(setProject({ ...project, sources: updatedSources }));
+            }
         } catch (err: any) {
             const message = err?.response?.data?.message || err.message || "Failed to add";
             toast.error(message);
@@ -91,17 +95,21 @@ export default function SelectSourcesStep() {
         }
     };
 
-    const handleRemoveSubreddit = async (source: SourcesTypes) => {
+    const handleRemoveSubreddit = async (source: Source) => {
         setLoadingSubredditId(source.id);
         try {
             await portalClient.removeSource({ id: source.id });
 
             // 🔥 Get fresh list after remove
-            const updatedProjects = await portalClient.self({});
-            const updatedSources = updatedProjects.projects?.[0].sources.map(source => ({ id: source.id, name: source.name })) ?? [];
+            // const updatedProjects = await portalClient.self({});
+            // const updatedSources = updatedProjects.project?.[0].sources.map(source => ({ id: source.id, name: source.name })) ?? [];
+            const updatedSources = sources.filter((item) => item.id !== source.id);
 
             setValue("sources", updatedSources);
             // toast.success(`Removed r/${source.name}`);
+            if (project) {
+                dispatch(setProject({ ...project, sources: updatedSources }));
+            }
 
         } catch (err: any) {
             const message = err?.response?.data?.message || err.message || "Failed to remove";
@@ -113,11 +121,11 @@ export default function SelectSourcesStep() {
 
     const onSubmit = useCallback(
         async (data: SubredditFormValues) => {
-            if (!projects) return;
+            if (!project) return;
             setIsLoading(true);
 
             try {
-                dispatch(setProjects({ ...projects, sources: data.sources }));
+                dispatch(setProject({ ...project, sources: data.sources }));
                 // toast.success("Sources saved successfully");
                 routers.push(routes.app.home);
             } catch (err: any) {
@@ -127,7 +135,7 @@ export default function SelectSourcesStep() {
                 setIsLoading(false);
             }
         },
-        [dispatch, portalClient, projects, routers]  // Add router to dependencies
+        [dispatch, portalClient, project, routers]  // Add router to dependencies
     );
 
     const handleBack = useCallback(() => dispatch(prevStep()), [dispatch]);
@@ -163,6 +171,7 @@ export default function SelectSourcesStep() {
                             label="Add Subreddit To Track"
                             placeholder="choose relevant subreddits to track keywords"
                             onKeyDown={handleKeyDown}
+                            disabled={isLoading || loadingSubredditId !== null}
                         />
                     )}
                     renderTags={(_, getTagProps) => (
@@ -227,7 +236,7 @@ export default function SelectSourcesStep() {
                 {filteredSuggestions.length > 0 && (
                     <Paper variant="outlined" sx={{ p: 2, bgcolor: 'background.default' }}>
                         <Typography variant="subtitle2" gutterBottom>
-                            {`Suggested subreddit as per ${projects?.name}`}
+                            {`Suggested subreddit as per ${project?.name}`}
                         </Typography>
                         <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
                             {filteredSuggestions.map((subreddit) => {
@@ -239,7 +248,7 @@ export default function SelectSourcesStep() {
                                         label={subreddit}
                                         onClick={() => handleAddSubreddit(subreddit)}
                                         size="small"
-                                        disabled={isLoading}
+                                        disabled={isLoading || loadingSubredditId !== null}
                                         deleteIcon={
                                             isLoading ? (
                                                 <Box

@@ -34,10 +34,10 @@ const StepContent: React.FC<StepContentProps> = ({ step, stepLength }) => {
                 <Box p={5}>
                     <StepCounter />
                     <Typography variant="h5" gutterBottom color="primary" mb={3}>
-                        Product Information
+                        Product Details
                     </Typography>
                     <Typography color="text.secondary" mb={5}>
-                        Tell us about your product to help us track relevant discussions.
+                        Tell Redora about your product, who it’s for, and who you want to reach. You can update this anytime.
                     </Typography>
 
                     <ProductInformationStep />
@@ -64,10 +64,10 @@ const StepContent: React.FC<StepContentProps> = ({ step, stepLength }) => {
                 <Box p={5}>
                     <StepCounter />
                     <Typography variant="h5" gutterBottom color="primary">
-                        Select Sources
+                        Select SubReddits
                     </Typography>
                     <Typography color="text.secondary" sx={{ mb: 4 }}>
-                        Choose your source where you want to track your keywords.
+                        Select subreddits you want to monitor.
                     </Typography>
 
                     <SelectSourcesStep />

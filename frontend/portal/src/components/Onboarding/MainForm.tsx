@@ -12,90 +12,33 @@ import {
 import { Container } from '@mui/system';
 import StepContent from './StepContent';
 import CustomStepIcon from './CustomStepIcon';
-import { useOnboardingStatus } from '../../hooks/useOnboardingStatus';
 import { useAppSelector } from '../../../store/hooks';
 import { RootState } from '../../../store/store';
 import { AuthLoading } from '../../app/(restricted)/dashboard/layout';
-import { useEffect, useState } from 'react';
-import { useDispatch } from 'react-redux';
-import { setProjects, setStep } from '../../../store/Onboarding/OnboardingSlice';
 
 export const steps = [
     {
-        label: 'Product Information',
-        description: 'Enter your product details and basic information.'
+        label: 'Product Details',
+        description: 'Tell Redora about your product, who it’s for, and who you want to reach. You can update this anytime.'
     },
     {
         label: 'Track Keywords',
         description: 'Choose keywords to track across Reddit.'
     },
     {
-        label: 'Select Sources',
-        description: 'Select sources to monitor for your keywords.'
+        label: 'Select SubReddits',
+        description: 'Select subreddits you want to monitor.'
     },
-    // {
-    //     label: 'Connect Reddit',
-    //     description: 'Connect your Reddit account to start tracking.'
-    // }
 ];
 
-export default function ManinForm() {
+export default function OnboadingForm() {
 
-    const { loading, data, error } = useOnboardingStatus();
-    const dispatch = useDispatch();
     const activeStep = useAppSelector((state: RootState) => state.stepper.activeStep);
-    const skipped = useAppSelector((state: RootState) => state.stepper.skipped);
-    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const { skipped, loading } = useAppSelector((state: RootState) => state.stepper);
 
     const isStepSkipped = (step: number) => skipped.includes(step);
 
-    useEffect(() => {
-        const handleStepNavigation = async () => {
-            if (loading || error || !data) return;
-
-            setIsLoading(true);
-
-            // Step 1: Set projects in store
-            const newData = {
-                id: data?.id ?? "",
-                name: data?.name ?? "",
-                description: data?.description ?? "",
-                website: data?.website ?? "",
-                targetPersona: data?.targetPersona ?? "",
-                keywords: data?.keywords?.map(keyword => keyword.name) ?? [],
-                sources: data?.sources?.map(source => ({ id: source.id, name: source.name })) ?? [],
-                suggestedKeywords: data?.suggestedKeywords ?? [],
-                suggestedSources: data?.suggestedSources ?? [],
-            };
-            dispatch(setProjects(newData));
-
-            // Step 2: Run all checks
-            const { id, website, name, description, targetPersona, keywords, sources } = data;
-
-            const hasBasicInfo = Boolean(id && website && name && description && targetPersona);
-            const hasKeywords = Array.isArray(keywords) && keywords.length > 0;
-            const hasSources = Array.isArray(sources) && sources.length > 0;
-
-            await new Promise((resolve) => setTimeout(resolve, 500));
-
-            // Step 3: Determine final step based on all conditions
-            let nextStep = 0;
-            if (hasBasicInfo && hasKeywords && hasSources) {
-                nextStep = 2;
-            } else if (hasBasicInfo && hasKeywords) {
-                nextStep = 2;
-            } else if (hasBasicInfo) {
-                nextStep = 1;
-            }
-            // Step 4: Set active step
-            dispatch(setStep(nextStep));
-            setIsLoading(false);
-        };
-
-        handleStepNavigation();
-    }, [loading, data, error, dispatch]);
-
-    if (loading || isLoading) {
+    if (loading) {
         return <AuthLoading />
     }
 
