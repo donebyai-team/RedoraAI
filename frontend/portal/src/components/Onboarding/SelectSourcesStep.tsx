@@ -20,6 +20,7 @@ import { useDispatch } from "react-redux";
 import {
     prevStep,
     setProject,
+    setIsOnboardingDone
 } from "../../../store/Onboarding/OnboardingSlice";
 import React, { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
@@ -28,6 +29,7 @@ import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { routes } from "@doota/ui-core/routing";
 import { Source } from "@doota/pb/doota/core/v1/core_pb";
+import { useAuth } from "@doota/ui-core/hooks/useAuth";
 
 interface SubredditFormValues {
     sources: Source[];
@@ -36,6 +38,7 @@ interface SubredditFormValues {
 export default function SelectSourcesStep() {
     const dispatch = useDispatch();
     const routers = useRouter();
+    const { user } = useAuth()
     const activeStep = useAppSelector((state: RootState) => state.stepper.activeStep);
     const project = useAppSelector((state: RootState) => state.stepper.project);
     const listOfSuggestedSources = project?.suggestedSources ?? [];
@@ -125,7 +128,12 @@ export default function SelectSourcesStep() {
             setIsLoading(true);
 
             try {
-                dispatch(setProject({ ...project, sources: data.sources }));
+                dispatch(setProject(project));
+                dispatch(setIsOnboardingDone(true));
+                if (user) {
+                    user.isOnboardingDone = true;
+                    user.projects = [...user.projects, project];
+                }
                 // toast.success("Sources saved successfully");
                 routers.push(routes.app.home);
             } catch (err: any) {
