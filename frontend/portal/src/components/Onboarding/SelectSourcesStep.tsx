@@ -124,6 +124,7 @@ export default function SelectSourcesStep() {
 
     const onSubmit = useCallback(
         async (data: SubredditFormValues) => {
+            console.log(data);
             if (!project) return;
             setIsLoading(true);
 
