@@ -77,7 +77,7 @@ func (b *DependenciesBuilder) WithDataStore(pgDSN string) *DependenciesBuilder {
 }
 
 func (b *DependenciesBuilder) WithGoogle(clientId, clientSecret, redirectUrl string) *DependenciesBuilder {
-	redirectUrl = strings.Replace(redirectUrl, "auth/callback", "callback/login", 0)
+	redirectUrl = strings.Replace(redirectUrl, "auth/callback", "callback/login", 1)
 
 	b.GoogleConfig = &GoogleConfig{
 		ClientID:     clientId,
