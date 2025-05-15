@@ -4,7 +4,7 @@
 
 import type { GenEnum, GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv1";
 import type { Message } from "@bufbuild/protobuf";
-import type { Lead, LeadStatus, Project, ProjectSchema, Source } from "../../core/v1/core_pb";
+import type { Lead, LeadStatus, Project, ProjectSchema, Source, Subscription } from "../../core/v1/core_pb";
 import type { EmptySchema, Timestamp } from "@bufbuild/protobuf/wkt";
 
 /**
@@ -571,6 +571,10 @@ export declare const OrganizationSchema: GenMessage<Organization>;
  * @generated from message doota.portal.v1.OrganizationFeatureFlags
  */
 export declare type OrganizationFeatureFlags = Message<"doota.portal.v1.OrganizationFeatureFlags"> & {
+  /**
+   * @generated from field: doota.core.v1.Subscription subscription = 1;
+   */
+  subscription?: Subscription;
 };
 
 /**

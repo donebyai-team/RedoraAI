@@ -3,6 +3,7 @@ package psql
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/shank318/doota/models"
 )
@@ -15,14 +16,27 @@ func init() {
 		"organization/query_all_organizations.sql",
 		"organization/query_organization_by_id.sql",
 		"organization/query_organization_by_name.sql",
+		"subscription/create_subscription.sql",
 	})
 }
 
 func (r *Database) CreateOrganization(ctx context.Context, organization *models.Organization) (*models.Organization, error) {
-	stmt := r.mustGetStmt("organization/create_organization.sql")
+	tx, err := r.BeginTxx(ctx, nil)
+	if err != nil {
+		return nil, fmt.Errorf("begin transaction: %w", err)
+	}
+	defer func() {
+		err = executePotentialRollback(tx, err)
+	}()
+
+	stmt := r.mustGetTxStmt(ctx, "organization/create_organization.sql", tx)
 	var id string
 
-	err := stmt.GetContext(ctx, &id, map[string]interface{}{
+	// Create a free sub and store it in a feature flag for faster access
+	subscription := createFreeSubscription()
+	organization.FeatureFlags.Subscription = subscription
+
+	err = stmt.GetContext(ctx, &id, map[string]interface{}{
 		"name":          organization.Name,
 		"feature_flags": organization.FeatureFlags,
 	})
@@ -30,7 +44,32 @@ func (r *Database) CreateOrganization(ctx context.Context, organization *models.
 		return nil, fmt.Errorf("failed to create organization: %w", err)
 	}
 	organization.ID = id
+
+	subscription.OrganizationID = id
+	// Create subscription
+	_, err = r.CreateSubscription(ctx, subscription, tx)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("commit transaction: %w", err)
+	}
+
 	return organization, nil
+}
+
+func createFreeSubscription() *models.Subscription {
+	plan := models.RedoraPlans[models.SubscriptionPlanTypeFREE]
+	now := time.Now()
+	expiresAt := now.Add(time.Duration(plan.Interval) * 24 * time.Hour)
+	return &models.Subscription{
+		Amount:    plan.Price,
+		PlanID:    models.SubscriptionPlanTypeFREE,
+		Status:    models.SubscriptionStatusACTIVE,
+		Metadata:  plan.Metadata,
+		ExpiresAt: expiresAt,
+	}
 }
 
 func (r *Database) UpdateOrganization(ctx context.Context, org *models.Organization) error {

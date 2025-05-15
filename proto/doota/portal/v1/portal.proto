@@ -171,7 +171,9 @@ message Organization {
   .google.protobuf.Timestamp created_at = 4;
 }
 
-message OrganizationFeatureFlags {}
+message OrganizationFeatureFlags {
+  core.v1.Subscription subscription = 1;
+}
 
 message Integration {
   string id = 1;

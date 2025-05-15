@@ -421,6 +421,78 @@ export declare type Project = Message<"doota.core.v1.Project"> & {
 export declare const ProjectSchema: GenMessage<Project>;
 
 /**
+ * @generated from message doota.core.v1.UsageLimit
+ */
+export declare type UsageLimit = Message<"doota.core.v1.UsageLimit"> & {
+  /**
+   * @generated from field: int32 per_day = 1;
+   */
+  perDay: number;
+
+  /**
+   * @generated from field: int32 per_month = 2;
+   */
+  perMonth: number;
+};
+
+/**
+ * Describes the message doota.core.v1.UsageLimit.
+ * Use `create(UsageLimitSchema)` to create a new message.
+ */
+export declare const UsageLimitSchema: GenMessage<UsageLimit>;
+
+/**
+ * @generated from message doota.core.v1.Subscription
+ */
+export declare type Subscription = Message<"doota.core.v1.Subscription"> & {
+  /**
+   * @generated from field: doota.core.v1.SubscriptionStatus status = 1;
+   */
+  status: SubscriptionStatus;
+
+  /**
+   * @generated from field: int32 max_keywords = 2;
+   */
+  maxKeywords: number;
+
+  /**
+   * @generated from field: int32 max_sources = 3;
+   */
+  maxSources: number;
+
+  /**
+   * @generated from field: doota.core.v1.UsageLimit comments = 4;
+   */
+  comments?: UsageLimit;
+
+  /**
+   * @generated from field: doota.core.v1.UsageLimit dm = 5;
+   */
+  dm?: UsageLimit;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp created_at = 6;
+   */
+  createdAt?: Timestamp;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp expires_at = 7;
+   */
+  expiresAt?: Timestamp;
+
+  /**
+   * @generated from field: doota.core.v1.SubscriptionPlanID plan_id = 8;
+   */
+  planId: SubscriptionPlanID;
+};
+
+/**
+ * Describes the message doota.core.v1.Subscription.
+ * Use `create(SubscriptionSchema)` to create a new message.
+ */
+export declare const SubscriptionSchema: GenMessage<Subscription>;
+
+/**
  * @generated from enum doota.core.v1.PlatformError
  */
 export enum PlatformError {
@@ -554,4 +626,69 @@ export enum LeadType {
  * Describes the enum doota.core.v1.LeadType.
  */
 export declare const LeadTypeSchema: GenEnum<LeadType>;
+
+/**
+ * @generated from enum doota.core.v1.SubscriptionStatus
+ */
+export enum SubscriptionStatus {
+  /**
+   * @generated from enum value: SUBSCRIPTION_STATUS_ACTIVE = 0;
+   */
+  ACTIVE = 0,
+
+  /**
+   * @generated from enum value: SUBSCRIPTION_STATUS_EXPIRED = 1;
+   */
+  EXPIRED = 1,
+
+  /**
+   * @generated from enum value: SUBSCRIPTION_STATUS_FAILED = 2;
+   */
+  FAILED = 2,
+
+  /**
+   * @generated from enum value: SUBSCRIPTION_STATUS_CREATED = 3;
+   */
+  CREATED = 3,
+}
+
+/**
+ * Describes the enum doota.core.v1.SubscriptionStatus.
+ */
+export declare const SubscriptionStatusSchema: GenEnum<SubscriptionStatus>;
+
+/**
+ * @generated from enum doota.core.v1.SubscriptionPlanID
+ */
+export enum SubscriptionPlanID {
+  /**
+   * @generated from enum value: SUBSCRIPTION_PLAN_UNKNOWN = 0;
+   */
+  SUBSCRIPTION_PLAN_UNKNOWN = 0,
+
+  /**
+   * @generated from enum value: SUBSCRIPTION_PLAN_FREE = 1;
+   */
+  SUBSCRIPTION_PLAN_FREE = 1,
+
+  /**
+   * @generated from enum value: SUBSCRIPTION_PLAN_FOUNDER = 2;
+   */
+  SUBSCRIPTION_PLAN_FOUNDER = 2,
+
+  /**
+   * @generated from enum value: SUBSCRIPTION_PLAN_AGENCY = 3;
+   */
+  SUBSCRIPTION_PLAN_AGENCY = 3,
+
+  /**
+   * @generated from enum value: SUBSCRIPTION_PLAN_GROWTH = 4;
+   */
+  SUBSCRIPTION_PLAN_GROWTH = 4,
+}
+
+/**
+ * Describes the enum doota.core.v1.SubscriptionPlanID.
+ */
+export declare const SubscriptionPlanIDSchema: GenEnum<SubscriptionPlanID>;
 

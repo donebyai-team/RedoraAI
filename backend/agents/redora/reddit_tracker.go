@@ -381,9 +381,9 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 		}
 
 		// Send automated comment
-		if tracker.Organization.FeatureFlags.EnableAutoComment &&
-			//pbcore.IsGoodForEngagement(redditLead.Intents) &&
-			redditLead.RelevancyScore >= defaultRelevancyScore &&
+		//if tracker.Organization.FeatureFlags.EnableAutoComment &&
+		//pbcore.IsGoodForEngagement(redditLead.Intents) &&
+		if redditLead.RelevancyScore >= defaultRelevancyScore &&
 			len(strings.TrimSpace(redditLead.LeadMetadata.SuggestedComment)) > 0 {
 			leadInteraction, err := automatedInteractionService.SendComment(ctx, &interactions.SendCommentInfo{
 				LeadID:        redditLead.ID,

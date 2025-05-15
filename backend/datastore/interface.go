@@ -3,6 +3,7 @@ package datastore
 import (
 	"context"
 	"errors"
+	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 	"github.com/shank318/doota/models"
 	"time"
@@ -32,6 +33,7 @@ type Repository interface {
 	KeywordRepository
 	ProjectRepository
 	LeadInteractionRepository
+	SubscriptionRepository
 }
 
 type OrganizationRepository interface {
@@ -40,6 +42,11 @@ type OrganizationRepository interface {
 	GetOrganizations(context.Context) ([]*models.Organization, error)
 	GetOrganizationById(context.Context, string) (*models.Organization, error)
 	GetOrganizationByName(context.Context, string) (*models.Organization, error)
+}
+
+type SubscriptionRepository interface {
+	CreateSubscription(ctx context.Context, sub *models.Subscription, tx *sqlx.Tx) (*models.Subscription, error)
+	GetSubscriptionByOrgID(ctx context.Context, orgID string) (*models.Subscription, error)
 }
 
 type IntegrationRepository interface {
