@@ -13,15 +13,23 @@ export const routes = {
   app: {
     home: '/dashboard/leads',
     settings: {
-      account: '/dashboard/settings/account',
+      account: '/dashboard/settings/integrations',
       security: '/dashboard/settings/security',
-      notification: '/dashboard/settings/notification'
+      notification: '/dashboard/settings/notification',
+      edit_product: '/dashboard/settings/product'
     },
     auth: {
       login: '/auth/login',
       callback: '/auth/callback',
-      onboarding: '/onboarding',
+      onboarding: '/onboarding'
     },
     serverError: '/500'
   }
+}
+
+export const isPublicRoute = (path: string): boolean => {
+  const publicRoutes = [routes.app.auth.login, routes.app.auth.callback]
+  return publicRoutes.some(route => {
+    return path.startsWith(route)
+  })
 }
