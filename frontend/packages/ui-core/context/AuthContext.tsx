@@ -16,6 +16,7 @@ export type AuthValuesType = {
   refreshSession: () => Promise<void>
 
   setOrganization: (org: Organization) => Promise<void>
+  setUser: React.Dispatch<React.SetStateAction<User | null>>
 }
 
 // ** Defaults
@@ -27,7 +28,8 @@ const defaultProvider: AuthValuesType = {
   login: () => Promise.resolve(),
   logout: () => Promise.resolve(),
 
-  setOrganization: () => Promise.resolve()
+  setOrganization: () => Promise.resolve(),
+  setUser: () => { }
 }
 
 export const AuthContext = createContext<AuthValuesType>(defaultProvider)
@@ -152,7 +154,8 @@ export const BaseAuthProvider: FC<Props> = ({
     setOrganization: async (org: Organization) => {
       await organizationStore.Set(org)
       setOrganization(org)
-    }
+    },
+    setUser
   }
 
   return <AuthContext.Provider value={values}>{children}</AuthContext.Provider>

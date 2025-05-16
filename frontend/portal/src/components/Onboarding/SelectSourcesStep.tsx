@@ -38,7 +38,7 @@ interface SubredditFormValues {
 export default function SelectSourcesStep() {
     const dispatch = useDispatch();
     const routers = useRouter();
-    const { user } = useAuth()
+    const { setUser } = useAuth()
     const activeStep = useAppSelector((state: RootState) => state.stepper.activeStep);
     const project = useAppSelector((state: RootState) => state.stepper.project);
     const listOfSuggestedSources = project?.suggestedSources ?? [];
@@ -130,10 +130,11 @@ export default function SelectSourcesStep() {
             try {
                 dispatch(setProject(project));
                 dispatch(setIsOnboardingDone(true));
-                if (user) {
-                    user.isOnboardingDone = true;
-                    user.projects = [...user.projects, project];
-                }
+                setUser(prev => prev ? { 
+                    ...prev,
+                    isOnboardingDone: true,
+                    projects: [...prev.projects, project]
+                } : null);
                 // toast.success("Sources saved successfully");
                 routers.push(routes.app.home);
             } catch (err: any) {
@@ -160,7 +161,7 @@ export default function SelectSourcesStep() {
             const plainName = subreddit.replace(/^r\//i, "").toLowerCase();
             return !sources.some((s) => s.name.toLowerCase() === plainName);
         }
-    );    
+    );
 
     return (
         <form onSubmit={handleSubmit(onSubmit)}>
