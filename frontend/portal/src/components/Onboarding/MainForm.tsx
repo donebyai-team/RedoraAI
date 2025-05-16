@@ -15,6 +15,9 @@ import CustomStepIcon from './CustomStepIcon';
 import { useAppSelector } from '../../../store/hooks';
 import { RootState } from '../../../store/store';
 import { AuthLoading } from '../../app/(restricted)/dashboard/layout';
+import { isActivePath } from '../../utils/url';
+import { routes } from '@doota/ui-core/routing';
+import { usePathname } from 'next/navigation';
 
 export const steps = [
     {
@@ -34,18 +37,19 @@ export const steps = [
 export default function OnboadingForm() {
 
     const activeStep = useAppSelector((state: RootState) => state.stepper.activeStep);
+    const pathname = usePathname();
     const { skipped, loading } = useAppSelector((state: RootState) => state.stepper);
-
     const isStepSkipped = (step: number) => skipped.includes(step);
+    const isEditProduct = isActivePath(routes.app.settings.edit_product, pathname);
 
     if (loading) {
         return <AuthLoading />
     }
 
     return (<>
-        <Box sx={{ width: "100%", height: "100%" }}>
+        <Box sx={{ width: "100%", height: isEditProduct ? "90vh" : "100%", ...(isEditProduct && { display: "flex", flexDirection: "column", justifyContent: "center" }) }}>
             <Box
-                className="min-h-screen flex flex-col justify-center"
+                className={isEditProduct ? "" : "min-h-screen flex flex-col justify-center"}
                 sx={{ py: { xs: 2, sm: 4, md: 6 }, background: '#f9fafb' }}
             >
                 <Container maxWidth="md">

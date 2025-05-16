@@ -27,6 +27,7 @@ import {
   Settings as SettingsIcon,
   RestartAlt as RestartAltIcon,
   DeleteOutline,
+  Edit as EditIcon
 } from "@mui/icons-material"
 import { usePathname, useRouter } from 'next/navigation';
 // import AddSubredditDialog from './AddSubredditDialog';
@@ -43,6 +44,7 @@ import { LeadTabStatus, setActiveTab, setCompletedList, setDiscardedTabList, set
 import { Lead, LeadStatus } from '@doota/pb/doota/core/v1/core_pb'
 import { GetLeadsResponse } from '@doota/pb/doota/portal/v1/portal_pb'
 import { isSameDay } from './Leads/Tabs/NewTab'
+import { setStep } from '../../store/Onboarding/OnboardingSlice'
 
 export const LoadigSkeletons = ({ count, height }: { count: number, height: number | string }) => (
   [...Array(count)].map((_, i) => (
@@ -160,7 +162,14 @@ const NavBar: FC = () => {
     debouncedOnChangeCommitted('currentActiveSubRedditId', "");
   }
 
-  const isleads = isActivePath('/dashboard/leads', pathname);
+  const handleEditProductClick = () => {
+    dispatch(setStep(0))
+    router.push(routes.app.settings.edit_product);
+  };
+
+  const isleads = isActivePath(routes.app.home, pathname);
+  const isEditProduct = isActivePath(routes.app.settings.edit_product, pathname);
+  const isIntegrations = isActivePath(routes.app.settings.account, pathname);
 
   const subRedditsLoaded = useMemo(() => subredditList.length > 0 && !loading, [subredditList, loading]);
 
@@ -227,14 +236,14 @@ const NavBar: FC = () => {
     return leads.filter(lead => lead.createdAt && isSameDay(lead.createdAt));
   };
 
-  const countLeadsCreatedToday = (leads: Lead[]): number => {
-    return leads.reduce((count, lead) => {
-      if (lead.createdAt && isSameDay(lead.createdAt)) {
-        return count + 1;
-      }
-      return count;
-    }, 0);
-  };
+  // const countLeadsCreatedToday = (leads: Lead[]): number => {
+  //   return leads.reduce((count, lead) => {
+  //     if (lead.createdAt && isSameDay(lead.createdAt)) {
+  //       return count + 1;
+  //     }
+  //     return count;
+  //   }, 0);
+  // };
 
   const countItem = useCallback((id: string) => {
     if (!newTabListLoaded) return 0;
@@ -380,205 +389,208 @@ const NavBar: FC = () => {
           </ListItem>
         </List>
 
-        {/* Filters */}
-        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2, mx: 4.5 }}>
-          <Typography variant="subtitle2" sx={{ color: "#9ca3af" }}>
-            FILTERS
-          </Typography>
-          <Tooltip
-            title="Reset all filters"
-            placement="right"
-            TransitionComponent={Fade}
-            TransitionProps={{ timeout: 600 }}
-            arrow
-          >
-            <IconButton
-              size="small"
-              onClick={handleResetFilters}
-              aria-label="Reset filters"
-              sx={{
-                color: "#9ca3af",
-                "&:hover": {
-                  color: "primary",
-                  backgroundColor: "rgba(63, 81, 181, 0.04)",
-                },
-              }}
-            >
-              <RestartAltIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        </Box>
-
-        <Box sx={{ mb: 3, mx: 4.5 }}>
-          <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-            <Typography variant="body2" sx={{ color: "#9ca3af" }}>Relevancy</Typography>
-            <Typography variant="body2" sx={{ color: "#9ca3af" }}>
-              {relevancy_score}%
+        {isleads && <>
+          {/* Filters */}
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2, mx: 4.5 }}>
+            <Typography variant="subtitle2" sx={{ color: "#9ca3af" }}>
+              FILTERS
             </Typography>
+            <Tooltip
+              title="Reset all filters"
+              placement="right"
+              TransitionComponent={Fade}
+              TransitionProps={{ timeout: 600 }}
+              arrow
+            >
+              <IconButton
+                size="small"
+                onClick={handleResetFilters}
+                aria-label="Reset filters"
+                sx={{
+                  color: "#9ca3af",
+                  "&:hover": {
+                    color: "primary",
+                    backgroundColor: "rgba(63, 81, 181, 0.04)",
+                  },
+                }}
+              >
+                <RestartAltIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
           </Box>
-          <Slider
-            value={relevancy_score}
-            onChange={handleRelevancyChange}
-            min={70}
-            step={10}
-            sx={{
-              color: "#FF9800",
-              "& .MuiSlider-thumb": {
-                width: 16,
-                height: 16,
-              },
-            }}
-          />
-        </Box>
 
-        {/* Filter by Subreddit */}
-        <Typography variant="subtitle2" sx={{ mb: 2, mx: 4.5, color: "#9ca3af" }}>
-          FILTER BY SUBREDDIT
-        </Typography>
-
-        {(loading || isLoadingRedditIntegrationStatus) ?
-          <Box sx={{ display: 'flex', px: 2, flexDirection: "column", alignItems: "center", height: "100%", width: "100%", gap: 2 }}>
-            <LoadigSkeletons count={3} height={40} />
-          </Box>
-          :
-          subredditList?.length > 0 ?
-            <List sx={{ px: 2, mb: "auto", display: "flex", flexDirection: "column", alignItems: "center", gap: 1.5 }}>
-              {subredditList.map((ele, index) => (
-                <ListItem
-                  key={index}
-                  disablePadding
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    width: "100%",
-                    borderRadius: 1.5,
-                    px: 4,
-                    bgcolor: isMenuActive(ele.id) ? "#1f2937" : "",
-                    boxShadow: isMenuActive(ele.id) ? "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px" : "",
-                    "&:hover": {
-                      backgroundColor: "#1f2937",
-                      "& .MuiListItemIcon-root, & .MuiListItemText-primary": {
-                        color: isMenuActive(ele.id) ? "white" : "#d1d5db",
-                      },
-                    },
-                    "& .hover-icon": {
-                      color: "#d1d5db"
-                    },
-                    "&:hover .hover-icon": {
-                      opacity: 1,
-                      color: "white"
-                    },
-                    "& .MuiListItemSecondaryAction-root": {
-                      right: "8px",
-                    },
-                  }}
-                  onClick={() => handleSubRedditsClick(ele)}
-                  secondaryAction={
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 5, width: "auto" }}>
-                      <Badge
-                        badgeContent={countItem(ele.id)}
-                        color="warning"
-                        sx={{
-                          "& .MuiBadge-badge": {
-                            bgcolor: "#FF9800",
-                            color: "white",
-                            fontWeight: "bold",
-                          },
-                        }}
-                        max={Infinity}
-                      />
-                      <IconButton
-                        edge="end"
-                        className="hover-icon"
-                        disableRipple
-                        sx={{
-                          opacity: 0,
-                          transition: "opacity 0.2s ease",
-                        }}
-                        onClick={handleClick}
-                        size="small"
-                        aria-controls={open1 ? 'account-menu' : undefined}
-                        aria-haspopup="true"
-                        aria-expanded={open1 ? 'true' : undefined}
-                      >
-                        <MoreVertIcon fontSize="small" />
-                      </IconButton>
-                      <Menu
-                        anchorEl={anchorEl}
-                        id="account-menu"
-                        open={open1}
-                        onClose={handleClose1}
-                        onClick={handleClose1}
-                        slotProps={{
-                          paper: {
-                            elevation: 0,
-                            sx: {
-                              overflow: 'visible',
-                              filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
-                              mt: 1.5,
-                              '& .MuiAvatar-root': {
-                                width: 32,
-                                height: 32,
-                                ml: -0.5,
-                                mr: 1,
-                              },
-                              '&::before': {
-                                content: '""',
-                                display: 'block',
-                                position: 'absolute',
-                                top: 0,
-                                right: 14,
-                                width: 10,
-                                height: 10,
-                                bgcolor: 'background.paper',
-                                transform: 'translateY(-50%) rotate(45deg)',
-                                zIndex: 0,
-                              },
-                            },
-                          },
-                        }}
-                        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-                      >
-                        <MenuItem onClick={handleClose1}>
-                          <DeleteOutline /> {`Remove`}
-                        </MenuItem>
-                      </Menu>
-                    </Box>
-                  }
-                >
-                  <ListItemButton
-                    sx={{
-                      flexGrow: 1,
-                      px: 0,
-                      paddingRight: 0,
-                      "&:hover": {
-                        backgroundColor: "transparent"
-                      },
-                      "& .MuiListItemIcon-root, & .MuiListItemText-primary": {
-                        color: isMenuActive(ele.id) ? "white" : "#d1d5db",
-                      },
-                    }}
-                  >
-                    <ListItemText primary={`${ele.name}`} />
-                  </ListItemButton>
-                </ListItem>
-              ))}
-            </List>
-            :
-            <Box sx={{ display: 'flex', flexDirection: "column", alignItems: "center", height: "100%", width: "100%", mt: 3 }}>
-              <Typography variant="subtitle2" color="text.secondary">
-                {`No subreddits avalable.`}
+          <Box sx={{ mb: 3, mx: 4.5 }}>
+            <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
+              <Typography variant="body2" sx={{ color: "#9ca3af" }}>Relevancy</Typography>
+              <Typography variant="body2" sx={{ color: "#9ca3af" }}>
+                {relevancy_score}%
               </Typography>
             </Box>
-        }
+            <Slider
+              value={relevancy_score}
+              onChange={handleRelevancyChange}
+              min={70}
+              step={10}
+              sx={{
+                color: "#FF9800",
+                "& .MuiSlider-thumb": {
+                  width: 16,
+                  height: 16,
+                },
+              }}
+            />
+          </Box>
+
+          {/* Filter by Subreddit */}
+          <Typography variant="subtitle2" sx={{ mb: 2, mx: 4.5, color: "#9ca3af" }}>
+            FILTER BY SUBREDDIT
+          </Typography>
+
+          {(loading || isLoadingRedditIntegrationStatus) ?
+            <Box sx={{ display: 'flex', px: 2, flexDirection: "column", alignItems: "center", height: "100%", width: "100%", gap: 2 }}>
+              <LoadigSkeletons count={3} height={40} />
+            </Box>
+            :
+            subredditList?.length > 0 ?
+              <List sx={{ px: 2, mb: "auto", display: "flex", flexDirection: "column", alignItems: "center", gap: 1.5 }}>
+                {subredditList.map((ele, index) => (
+                  <ListItem
+                    key={index}
+                    disablePadding
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      width: "100%",
+                      borderRadius: 1.5,
+                      px: 4,
+                      bgcolor: isMenuActive(ele.id) ? "#1f2937" : "",
+                      boxShadow: isMenuActive(ele.id) ? "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px" : "",
+                      "&:hover": {
+                        backgroundColor: "#1f2937",
+                        "& .MuiListItemIcon-root, & .MuiListItemText-primary": {
+                          color: isMenuActive(ele.id) ? "white" : "#d1d5db",
+                        },
+                      },
+                      "& .hover-icon": {
+                        color: "#d1d5db"
+                      },
+                      "&:hover .hover-icon": {
+                        opacity: 1,
+                        color: "white"
+                      },
+                      "& .MuiListItemSecondaryAction-root": {
+                        right: "8px",
+                      },
+                    }}
+                    onClick={() => handleSubRedditsClick(ele)}
+                    secondaryAction={
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 5, width: "auto" }}>
+                        <Badge
+                          badgeContent={countItem(ele.id)}
+                          color="warning"
+                          sx={{
+                            "& .MuiBadge-badge": {
+                              bgcolor: "#FF9800",
+                              color: "white",
+                              fontWeight: "bold",
+                            },
+                          }}
+                          max={Infinity}
+                        />
+                        <IconButton
+                          edge="end"
+                          className="hover-icon"
+                          disableRipple
+                          sx={{
+                            opacity: 0,
+                            transition: "opacity 0.2s ease",
+                          }}
+                          onClick={handleClick}
+                          size="small"
+                          aria-controls={open1 ? 'account-menu' : undefined}
+                          aria-haspopup="true"
+                          aria-expanded={open1 ? 'true' : undefined}
+                        >
+                          <MoreVertIcon fontSize="small" />
+                        </IconButton>
+                        <Menu
+                          anchorEl={anchorEl}
+                          id="account-menu"
+                          open={open1}
+                          onClose={handleClose1}
+                          onClick={handleClose1}
+                          slotProps={{
+                            paper: {
+                              elevation: 0,
+                              sx: {
+                                overflow: 'visible',
+                                filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
+                                mt: 1.5,
+                                '& .MuiAvatar-root': {
+                                  width: 32,
+                                  height: 32,
+                                  ml: -0.5,
+                                  mr: 1,
+                                },
+                                '&::before': {
+                                  content: '""',
+                                  display: 'block',
+                                  position: 'absolute',
+                                  top: 0,
+                                  right: 14,
+                                  width: 10,
+                                  height: 10,
+                                  bgcolor: 'background.paper',
+                                  transform: 'translateY(-50%) rotate(45deg)',
+                                  zIndex: 0,
+                                },
+                              },
+                            },
+                          }}
+                          transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                          anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                        >
+                          <MenuItem onClick={handleClose1}>
+                            <DeleteOutline /> {`Remove`}
+                          </MenuItem>
+                        </Menu>
+                      </Box>
+                    }
+                  >
+                    <ListItemButton
+                      sx={{
+                        flexGrow: 1,
+                        px: 0,
+                        paddingRight: 0,
+                        "&:hover": {
+                          backgroundColor: "transparent"
+                        },
+                        "& .MuiListItemIcon-root, & .MuiListItemText-primary": {
+                          color: isMenuActive(ele.id) ? "white" : "#d1d5db",
+                        },
+                      }}
+                    >
+                      <ListItemText primary={`${ele.name}`} />
+                    </ListItemButton>
+                  </ListItem>
+                ))}
+              </List>
+              :
+              <Box sx={{ display: 'flex', flexDirection: "column", alignItems: "center", height: "100%", width: "100%", mt: 3 }}>
+                <Typography variant="subtitle2" sx={{ color: "#9ca3af" }}>
+                  {`No subreddits avalable.`}
+                </Typography>
+              </Box>
+          }
+        </>}
 
         {/* Bottom Actions */}
-        <Box sx={{ mt: 2 }}>
+        <Box sx={{ mt: isleads ? 2 : "auto" }}>
           <Divider sx={{ mb: 2, bgcolor: "#2d3748" }} />
           <List disablePadding sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1.5, mx: 2 }}>
-            {/* <ListItem onClick={handleOpenDialog} disablePadding sx={{ "&:hover": { backgroundColor: "#F0F5FF" } }}>
+            {/* 
+              <ListItem onClick={handleOpenDialog} disablePadding sx={{ "&:hover": { backgroundColor: "#F0F5FF" } }}>
                 <ListItemButton sx={{ borderRadius: 1.5 }}>
                   <ListItemIcon sx={{ minWidth: 40 }}>
                     <AddIcon />
@@ -591,9 +603,53 @@ const NavBar: FC = () => {
                     }
                   />
                 </ListItemButton>
-              </ListItem> */}
+              </ListItem> 
+            */}
 
-            {/* Navigation */}
+            {/* Edit Produdct */}
+            <ListItem
+              disablePadding
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                width: "100%",
+                borderRadius: 1.5,
+                bgcolor: isEditProduct ? "#1f2937" : "",
+                boxShadow: isEditProduct ? "rgba(0, 0, 0, 0.05) 0px 1px 2px 0px" : "",
+                "&:hover": {
+                  backgroundColor: "#1f2937",
+                  "& .MuiListItemIcon-root, & .MuiListItemText-primary": {
+                    color: isEditProduct ? "white" : "#d1d5db",
+                  },
+                },
+                "& .MuiListItemSecondaryAction-root": {
+                  right: "26px",
+                },
+              }}
+              onClick={() => handleEditProductClick()}
+            >
+              <ListItemButton
+                sx={{
+                  flexGrow: 1,
+                  pl: 2,
+                  "&:hover": {
+                    backgroundColor: "transparent",
+                  },
+                  // Apply white color when active
+                  "& .MuiListItemIcon-root, & .MuiListItemText-primary": {
+                    color: isEditProduct ? "white" : "#d1d5db",
+                  },
+                }}
+              >
+                <ListItemIcon sx={{ minWidth: "auto", mr: 2 }}>
+                  <EditIcon />
+                </ListItemIcon>
+                <ListItemText primary={`Edit Product`} />
+              </ListItemButton>
+            </ListItem>
+
+            {/* Integrations */}
             {user && isAdmin(user) && (<>
               <ListItem
                 component={Link}
@@ -605,12 +661,17 @@ const NavBar: FC = () => {
                   justifyContent: "space-between",
                   width: "100%",
                   borderRadius: 1.5,
+                  bgcolor: isIntegrations ? "#1f2937" : "",
+                  boxShadow: isIntegrations ? "rgba(0, 0, 0, 0.05) 0px 1px 2px 0px" : "",
                   "&:hover": {
                     backgroundColor: "#1f2937",
                     "& .MuiListItemIcon-root, & .MuiListItemText-primary": {
-                      color: "#d1d5db",
+                      color: isIntegrations ? "white" : "#d1d5db",
                     },
-                  }
+                  },
+                  "& .MuiListItemSecondaryAction-root": {
+                    right: "26px",
+                  },
                 }}
               >
                 <ListItemButton
@@ -620,15 +681,16 @@ const NavBar: FC = () => {
                     "&:hover": {
                       backgroundColor: "transparent",
                     },
+                    // Apply white color when active
                     "& .MuiListItemIcon-root, & .MuiListItemText-primary": {
-                      color: "#d1d5db",
+                      color: isIntegrations ? "white" : "#d1d5db",
                     },
                   }}
                 >
                   <ListItemIcon sx={{ minWidth: "auto", mr: 2 }}>
                     <SettingsIcon />
                   </ListItemIcon>
-                  <ListItemText primary={`Settings`} />
+                  <ListItemText primary={`Integrations`} />
                 </ListItemButton>
               </ListItem>
             </>)}

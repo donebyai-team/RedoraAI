@@ -19,4 +19,5 @@ ai/testdata
 frontend/extension/chrome/loadlogic-chrome-extension.zip
 frontend/extension/chrome/loadlogic-chrome-extension.*.zip
 backend/cmd/doota/doota
+backend/cmd/doota/data/*
 redora-infra/.terraform
