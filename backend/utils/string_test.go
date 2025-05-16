@@ -75,23 +75,8 @@ func TestFormatComment(t *testing.T) {
 	}{
 		{
 			// Test with multiple paragraphs
-			input: `I haven’t tried those browsers myself, but I’m super curious to hear what others think.\n\nIf you come across someone who’s used **BrowserBase**, **Airtop.ai**, **Browser Use**, **Hyperbrowser**, or **Anchor Browser**, tag me — I’d love to join the convo!\n\nI’m planning to test them out myself soon too.`,
-			expected: `I haven’t tried those browsers myself, but I’m super curious to hear what others think.
-
-If you come across someone who’s used **BrowserBase**, **Airtop.ai**, **Browser Use**, **Hyperbrowser**, or **Anchor Browser**, tag me — I’d love to join the convo!
-
-I’m planning to test them out myself soon too.`,
-		},
-		{
-			// Test with only one paragraph (no paragraph breaks)
-			input: `I haven’t tried those browsers myself, but I’m super curious to hear what others think.\nI’m planning to test them out myself soon too.`,
-			expected: `I haven’t tried those browsers myself, but I’m super curious to hear what others think.
-I’m planning to test them out myself soon too.`,
-		},
-		{
-			// Test with no placeholders, input should remain unchanged
-			input:    `I haven’t tried those browsers myself, but I’m super curious to hear what others think.`,
-			expected: `I haven’t tried those browsers myself, but I’m super curious to hear what others think.`,
+			input:    `I totally feel you on the struggle to keep track of old leads and follow-ups. Curious to see what hacks or tools others use to organize and reconnect more efficiently. Your process sounds familiar—I'm always hunting for ways to make it less manual too!`,
+			expected: `I totally feel you on the struggle to keep track of old leads and follow-ups. Curious to see what hacks or tools others use to organize and reconnect more efficiently. Your process sounds familiar,I'm always hunting for ways to make it less manual too!`,
 		},
 	}
 

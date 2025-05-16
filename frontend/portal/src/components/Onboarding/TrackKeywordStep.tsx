@@ -19,7 +19,7 @@ import { useDispatch } from "react-redux";
 import {
     nextStep,
     prevStep,
-    setProjects,
+    setProject,
 } from "../../../store/Onboarding/OnboardingSlice";
 import { useState, useCallback } from "react";
 import { useForm, Controller } from "react-hook-form";
@@ -34,8 +34,8 @@ interface TrackKeywordFormValues {
 export default function TrackKeywordStep() {
     const dispatch = useDispatch();
     const activeStep = useAppSelector((state: RootState) => state.stepper.activeStep);
-    const projects = useAppSelector((state: RootState) => state.stepper.projects);
-    const listOfSuggestedKeywords = projects?.suggestedKeywords ?? [];
+    const project = useAppSelector((state: RootState) => state.stepper.project);
+    const listOfSuggestedKeywords = project?.suggestedKeywords ?? [];
     const { portalClient } = useClientsContext();
     const [isLoading, setIsLoading] = useState(false);
 
@@ -46,7 +46,7 @@ export default function TrackKeywordStep() {
         setValue,
     } = useForm<TrackKeywordFormValues>({
         defaultValues: {
-            keywords: projects?.keywords ?? [],
+            keywords: project?.keywords.map((keyword) => keyword.name) ?? [],
             newKeyword: "",
         },
     });
@@ -94,13 +94,13 @@ export default function TrackKeywordStep() {
     }, [keywords, setValue]);
 
     const onSubmit = useCallback(async (data: TrackKeywordFormValues) => {
-        if (!projects) return;
+        if (!project) return;
         setIsLoading(true);
 
         try {
-            await portalClient.createKeywords({ keywords: data.keywords });
+            const result = await portalClient.createKeywords({ keywords: data.keywords });
 
-            dispatch(setProjects({ ...projects, keywords: data.keywords }));
+            dispatch(setProject({ ...project, keywords: result.keywords }));
             dispatch(nextStep());
         } catch (err: any) {
             const message = err?.response?.data?.message || err.message || "Something went wrong";
@@ -108,7 +108,7 @@ export default function TrackKeywordStep() {
         } finally {
             setIsLoading(false);
         }
-    }, [dispatch, portalClient, projects]);
+    }, [dispatch, portalClient, project]);
 
     const handleBack = useCallback(() => dispatch(prevStep()), [dispatch]);
 
@@ -181,7 +181,7 @@ export default function TrackKeywordStep() {
                             gutterBottom
                             sx={{ fontWeight: 500 }}
                         >
-                            {`Suggested Keywords as per ${projects?.name}`}
+                            {`Suggested Keywords as per ${project?.name}`}
                         </Typography>
                         <Stack
                             direction="row"

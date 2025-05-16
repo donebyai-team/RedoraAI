@@ -72,6 +72,9 @@ func FormatComment(input string) string {
 	re := regexp.MustCompile(`\n{2,}`)
 	input = re.ReplaceAllString(input, "\n")
 
+	// Replace em dashes with commas
+	input = strings.ReplaceAll(input, "—", ",")
+
 	return input
 }
 

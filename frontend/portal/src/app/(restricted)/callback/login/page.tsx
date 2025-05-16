@@ -1,12 +1,12 @@
 'use client'
 
 import { routes } from '@doota/ui-core/routing'
-import { FallbackSpinner } from '../../../../../atoms/FallbackSpinner'
+import { FallbackSpinner } from '../../../../atoms/FallbackSpinner'
 import { useSearchParams } from 'next/navigation'
 import { useEffect } from 'react'
-import { portalClient } from '../../../../../services/grpc'
+import { portalClient } from '../../../../services/grpc'
 import { useRouter } from 'next/navigation'
-import { log } from '../../../../../services/logger'
+import { log } from '../../../../services/logger'
 import { useAuth } from '@doota/ui-core/hooks/useAuth'
 
 

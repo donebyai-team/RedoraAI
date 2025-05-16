@@ -1,35 +1,20 @@
 import { Project } from '@doota/pb/doota/core/v1/core_pb'
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 
-export type ProjectsTypes = Project | null
-
-export type SourcesTypes = {
-  id: string
-  name: string
-}
-
-type ProjectTypes = {
-  id?: string
-  name: string
-  description: string
-  website: string
-  targetPersona: string
-  keywords?: string[]
-  sources?: SourcesTypes[]
-  suggestedKeywords?: string[]
-  suggestedSources?: string[]
-}
-
 interface StepperState {
   activeStep: number
   skipped: number[]
-  projects: ProjectTypes | null
+  project: Project | null
+  isOnboardingDone: boolean | null
+  loading: boolean
 }
 
 const initialState: StepperState = {
   activeStep: 0,
   skipped: [],
-  projects: null
+  project: null,
+  isOnboardingDone: null,
+  loading: false
 }
 
 const stepperSlice = createSlice({
@@ -56,12 +41,19 @@ const stepperSlice = createSlice({
     setStep: (state, action: PayloadAction<number>) => {
       state.activeStep = action.payload
     },
-    setProjects: (state, action: PayloadAction<ProjectTypes>) => {
-      state.projects = action.payload
+    setProject: (state, action: PayloadAction<Project>) => {
+      state.project = action.payload
+    },
+    setIsOnboardingDone: (state, action: PayloadAction<boolean | null>) => {
+      state.isOnboardingDone = action.payload
+    },
+    setLoading: (state, action: PayloadAction<boolean>) => {
+      state.loading = action.payload
     }
   }
 })
 
-export const { nextStep, prevStep, resetStepper, skipStep, setStep, setProjects } = stepperSlice.actions
+export const { nextStep, prevStep, resetStepper, skipStep, setStep, setProject, setIsOnboardingDone, setLoading } =
+  stepperSlice.actions
 
 export const stepperReducer = stepperSlice.reducer

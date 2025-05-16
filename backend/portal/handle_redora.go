@@ -62,6 +62,10 @@ func (p *Portal) CreateOrEditProject(ctx context.Context, c *connect.Request[pbp
 		return nil, status.New(codes.InvalidArgument, "project target persona should be at least 10 characters").Err()
 	}
 
+	if !strings.HasPrefix(c.Msg.Website, "http://") && !strings.HasPrefix(c.Msg.Website, "https://") {
+		c.Msg.Website = "https://" + c.Msg.Website
+	}
+
 	// Validate website URL
 	_, err = url.ParseRequestURI(c.Msg.Website)
 	if err != nil {
@@ -214,7 +218,7 @@ func (p *Portal) projectToProto(ctx context.Context, project *models.Project) (*
 	return new(pbcore.Project).FromModel(project, sources, keywords), nil
 }
 
-func (p *Portal) CreateKeywords(ctx context.Context, c *connect.Request[pbportal.CreateKeywordReq]) (*connect.Response[emptypb.Empty], error) {
+func (p *Portal) CreateKeywords(ctx context.Context, c *connect.Request[pbportal.CreateKeywordReq]) (*connect.Response[pbportal.CreateKeywordsRes], error) {
 	actor, err := p.gethAuthContext(ctx)
 	if err != nil {
 		return nil, err
@@ -245,10 +249,20 @@ func (p *Portal) CreateKeywords(ctx context.Context, c *connect.Request[pbportal
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to create keyword: %w", err))
 	}
 
-	return connect.NewResponse(&emptypb.Empty{}), nil
+	keywords, err := p.db.GetKeywords(ctx, projectID)
+	if err != nil {
+		return nil, err
+	}
+
+	keywordProto := make([]*pbcore.Keyword, 0, len(keywords))
+	for _, keyword := range keywords {
+		keywordProto = append(keywordProto, new(pbcore.Keyword).FromModel(keyword))
+	}
+
+	return connect.NewResponse(&pbportal.CreateKeywordsRes{Keywords: keywordProto}), nil
 }
 
-func (p *Portal) AddSource(ctx context.Context, c *connect.Request[pbportal.AddSourceRequest]) (*connect.Response[emptypb.Empty], error) {
+func (p *Portal) AddSource(ctx context.Context, c *connect.Request[pbportal.AddSourceRequest]) (*connect.Response[pbcore.Source], error) {
 	actor, err := p.gethAuthContext(ctx)
 	if err != nil {
 		return nil, err
@@ -273,16 +287,18 @@ func (p *Portal) AddSource(ctx context.Context, c *connect.Request[pbportal.AddS
 		return nil, err
 	}
 	redditService := services.NewRedditService(p.logger, p.db, redditClient, p.aiClient, p.cache)
-	err = redditService.CreateSubReddit(ctx, &models.Source{
+
+	source := &models.Source{
 		ProjectID: projectID,
 		Name:      utils.CleanSubredditName(c.Msg.Name),
 		OrgID:     actor.OrganizationID,
-	})
+	}
+	err = redditService.CreateSubReddit(ctx, source)
 	if err != nil {
 		return nil, err
 	}
 
-	return connect.NewResponse(&emptypb.Empty{}), nil
+	return connect.NewResponse(new(pbcore.Source).FromModel(source, new(pbcore.Source_RedditMetadata).FromModel(&source.Metadata))), nil
 }
 
 func (p *Portal) GetSources(ctx context.Context, c *connect.Request[emptypb.Empty]) (*connect.Response[pbportal.GetSourceResponse], error) {
