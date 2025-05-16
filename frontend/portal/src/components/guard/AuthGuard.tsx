@@ -12,6 +12,7 @@ import {
   setStep,
 } from '../../../store/Onboarding/OnboardingSlice'
 import { Project } from '@doota/pb/doota/core/v1/core_pb'
+import { isActivePath } from '../../utils/url'
 
 interface AuthGuardProps {
   children: ReactNode
@@ -24,6 +25,8 @@ const AuthGuard = ({ children, fallback }: AuthGuardProps) => {
   const path = usePathname()
   const dispatch = useAppDispatch()
   const [isReady, setIsReady] = useState(false)
+
+  const isEditProduct = isActivePath(routes.app.settings.edit_product, path);
 
   function calculateNextStep(data: Project | null): number {
     if (!data) return 0;
@@ -56,7 +59,9 @@ const AuthGuard = ({ children, fallback }: AuthGuardProps) => {
         const nextStep = calculateNextStep(data)
         dispatch(setIsOnboardingDone(isOnboardingDone))
         dispatch(setProject(data))
-        dispatch(setStep(nextStep))
+        if (!isEditProduct) {
+          dispatch(setStep(nextStep))
+        }
 
         if (!isOnboardingDone && !path.startsWith(routes.app.auth.onboarding)) {
           router.replace(routes.app.auth.onboarding)
@@ -72,7 +77,7 @@ const AuthGuard = ({ children, fallback }: AuthGuardProps) => {
     }
 
     checkAuthAndSetup()
-  }, [authLoading, user, path, dispatch, router])
+  }, [authLoading, user, path, dispatch, router, isEditProduct])
 
   // Strict block on rendering until ready
   if (!isReady) {
