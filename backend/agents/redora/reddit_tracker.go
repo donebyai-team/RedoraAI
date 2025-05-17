@@ -65,6 +65,9 @@ func (s *redditKeywordTracker) WithLogger(logger *zap.Logger) KeywordTracker {
 
 func (s *redditKeywordTracker) TrackKeyword(ctx context.Context, tracker *models.AugmentedKeywordTracker) error {
 	redditClient, err := s.redditOauthClient.NewRedditClient(ctx, tracker.Project.OrganizationID, true)
+	if err != nil && errors.Is(err, datastore.IntegrationNotFoundOrActive) {
+		return nil
+	}
 	if err != nil {
 		return err
 	}
@@ -254,7 +257,7 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 			continue
 		}
 		if err == nil && lead != nil {
-			s.logger.Info("post already exists", zap.String("post_id", post.ID))
+			s.logger.Debug("post already exists", zap.String("post_id", post.ID))
 			continue
 		}
 		// Post doesn't exist, keep it

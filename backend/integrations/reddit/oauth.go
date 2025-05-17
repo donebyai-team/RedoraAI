@@ -1,7 +1,6 @@
 package reddit
 
 import (
-	"connectrpc.com/connect"
 	"context"
 	"encoding/json"
 	"errors"
@@ -67,7 +66,7 @@ func (r *OauthClient) NewRedditClient(ctx context.Context, orgID string, forceAu
 		if !forceAuth {
 			return NewClientWithOutConfig(r.logger), nil
 		}
-		return nil, connect.NewError(connect.CodeNotFound, errors.New("reddit integration not configured"))
+		return nil, datastore.IntegrationNotFoundOrActive
 	}
 
 	if err != nil {
@@ -75,7 +74,7 @@ func (r *OauthClient) NewRedditClient(ctx context.Context, orgID string, forceAu
 	}
 
 	if integration.State != models.IntegrationStateACTIVE {
-		return nil, fmt.Errorf("reddit integration not active")
+		return nil, datastore.IntegrationNotFoundOrActive
 	}
 
 	client := &Client{
