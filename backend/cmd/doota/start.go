@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/shank318/doota/agents/redora"
+	"github.com/shank318/doota/agents/redora/interactions"
 	"github.com/shank318/doota/agents/vana"
 	"github.com/shank318/doota/app"
 	"github.com/shank318/doota/auth"
@@ -190,8 +191,16 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		alerts.NewResendNotifier(sflags.MustGetString(cmd, "common-resend-api-key"), deps.DataStore, logger),
 	)
 
+	interactionsSpooler := interactions.NewSpooler(
+		deps.DataStore,
+		interactions.NewRedditInteractions(redditOauthClient, deps.DataStore, logger),
+		nil,
+		5*time.Minute,
+		logger)
+
 	return redora.New(
 		deps.DataStore,
+		interactionsSpooler,
 		deps.AIClient,
 		deps.ConversationState,
 		50,

@@ -14,6 +14,8 @@ import (
 const (
 	// LeadInteractionStatusCREATED is a LeadInteractionStatus of type CREATED.
 	LeadInteractionStatusCREATED LeadInteractionStatus = "CREATED"
+	// LeadInteractionStatusPROCESSING is a LeadInteractionStatus of type PROCESSING.
+	LeadInteractionStatusPROCESSING LeadInteractionStatus = "PROCESSING"
 	// LeadInteractionStatusSENT is a LeadInteractionStatus of type SENT.
 	LeadInteractionStatusSENT LeadInteractionStatus = "SENT"
 	// LeadInteractionStatusFAILED is a LeadInteractionStatus of type FAILED.
@@ -37,10 +39,11 @@ func (x LeadInteractionStatus) IsValid() bool {
 }
 
 var _LeadInteractionStatusValue = map[string]LeadInteractionStatus{
-	"CREATED": LeadInteractionStatusCREATED,
-	"SENT":    LeadInteractionStatusSENT,
-	"FAILED":  LeadInteractionStatusFAILED,
-	"REMOVED": LeadInteractionStatusREMOVED,
+	"CREATED":    LeadInteractionStatusCREATED,
+	"PROCESSING": LeadInteractionStatusPROCESSING,
+	"SENT":       LeadInteractionStatusSENT,
+	"FAILED":     LeadInteractionStatusFAILED,
+	"REMOVED":    LeadInteractionStatusREMOVED,
 }
 
 // ParseLeadInteractionStatus attempts to convert a string to a LeadInteractionStatus.

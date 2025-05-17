@@ -11,6 +11,7 @@ import (
 	"golang.org/x/oauth2"
 	"io"
 	"net/http"
+	"sync"
 )
 
 type OauthClient struct {
@@ -20,6 +21,9 @@ type OauthClient struct {
 	config       *oauth2.Config
 	db           datastore.Repository
 	httpClient   *http.Client
+
+	mu          sync.Mutex
+	clientCache map[string]*Client // orgID -> RedditClient
 }
 
 type userAgentTransport struct {
@@ -49,17 +53,41 @@ func NewRedditOauthClient(logger *zap.Logger, db datastore.Repository, clientID,
 			base: http.DefaultTransport,
 		},
 	}
-	return &OauthClient{
+
+	oauthClient := &OauthClient{
 		clientID:     clientID,
 		clientSecret: clientSecret,
 		config:       config,
 		logger:       logger,
 		db:           db,
 		httpClient:   client,
+		clientCache:  make(map[string]*Client),
 	}
+	return oauthClient
 }
 
-func (r *OauthClient) NewRedditClient(ctx context.Context, orgID string, forceAuth bool) (*Client, error) {
+// GetOrCreate returns a cached RedditClient or creates it if needed
+func (c *OauthClient) GetOrCreate(ctx context.Context, orgID string, forceAuth bool) (*Client, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if client, ok := c.clientCache[orgID]; ok {
+		return client, nil
+	}
+
+	client, err := c.newRedditClient(ctx, orgID, forceAuth)
+	if err != nil {
+		return nil, err
+	}
+
+	// Do not cache if auth is not required
+	if !forceAuth {
+		c.clientCache[orgID] = client
+	}
+	return client, nil
+}
+
+func (r *OauthClient) newRedditClient(ctx context.Context, orgID string, forceAuth bool) (*Client, error) {
 	integration, err := r.db.GetIntegrationByOrgAndType(ctx, orgID, models.IntegrationTypeREDDIT)
 	if err != nil && errors.Is(err, datastore.NotFound) {
 		// If forceAuth is false and integration doesn't exist, return a client with no config.

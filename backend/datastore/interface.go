@@ -97,7 +97,9 @@ type SourceRepository interface {
 type LeadInteractionRepository interface {
 	CreateLeadInteraction(ctx context.Context, reddit *models.LeadInteraction) (*models.LeadInteraction, error)
 	UpdateLeadInteraction(ctx context.Context, reddit *models.LeadInteraction) error
-	GetLeadInteractions(ctx context.Context, projectID string, start, end time.Time) ([]*models.LeadInteraction, error)
+	GetLeadInteractions(ctx context.Context, projectID string, status models.LeadInteractionStatus, start, end time.Time) ([]*models.LeadInteraction, error)
+	GetLeadInteractionsToExecute(ctx context.Context, statuses []models.LeadInteractionStatus) ([]*models.LeadInteraction, error)
+	SetLeadInteractionStatusProcessing(ctx context.Context, id string) error
 }
 
 type LeadsFilter struct {

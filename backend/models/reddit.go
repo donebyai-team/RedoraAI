@@ -246,26 +246,30 @@ func (b *LeadMetadata) Scan(value interface{}) error {
 // ENUM(DM, COMMENT, LIKE)
 type LeadInteractionType string
 
-// ENUM(CREATED, SENT, FAILED, REMOVED)
+// ENUM(CREATED, PROCESSING, SENT, FAILED, REMOVED)
 type LeadInteractionStatus string
 
 type LeadInteraction struct {
-	ID        string                   `db:"id"`
-	ProjectID string                   `db:"project_id"`
-	LeadID    string                   `db:"lead_id"`
-	Type      LeadInteractionType      `db:"type"`
-	From      string                   `db:"from_user"`
-	To        string                   `db:"to_user"`
-	Status    LeadInteractionStatus    `db:"status"`
-	Reason    string                   `db:"reason"`
-	Metadata  LeadInteractionsMetadata `db:"metadata"`
-	CreatedAt time.Time                `db:"created_at"`
-	UpdatedAt *time.Time               `db:"updated_at"`
+	ID           string                   `db:"id"`
+	ProjectID    string                   `db:"project_id"`
+	LeadID       string                   `db:"lead_id"`
+	Type         LeadInteractionType      `db:"type"`
+	From         string                   `db:"from_user"`
+	To           string                   `db:"to_user"`
+	Status       LeadInteractionStatus    `db:"status"`
+	Reason       string                   `db:"reason"`
+	Metadata     LeadInteractionsMetadata `db:"metadata"`
+	ScheduledAt  *time.Time               `db:"schedule_at"`
+	CreatedAt    time.Time                `db:"created_at"`
+	UpdatedAt    *time.Time               `db:"updated_at"`
+	Organization *Organization            `db:"-"`
 }
 
 type LeadInteractionsMetadata struct {
-	Permalink   string `json:"permalink"`
-	ReferenceID string `json:"referenceID"`
+	Permalink     string `json:"permalink"`
+	ReferenceID   string `json:"referenceID"`
+	Comment       string `json:"comment"`
+	SubRedditName string `json:"subreddit_name"`
 }
 
 func (b LeadInteractionsMetadata) Value() (driver.Value, error) {

@@ -2,6 +2,7 @@ package redora
 
 import (
 	"context"
+	"github.com/shank318/doota/agents/redora/interactions"
 	"github.com/shank318/doota/agents/state"
 	"github.com/shank318/doota/ai"
 	"github.com/shank318/doota/datastore"
@@ -52,6 +53,7 @@ func (f *KeywordTrackerFactory) GetKeywordTrackerBySource(sourceType models.Sour
 	return newRedditKeywordTracker(
 		f.isDev,
 		f.redditOauthClient,
+		interactions.NewRedditInteractions(f.redditOauthClient, f.db, f.logger),
 		f.db,
 		f.aiClient,
 		f.logger,

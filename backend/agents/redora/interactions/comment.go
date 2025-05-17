@@ -2,59 +2,40 @@ package interactions
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/integrations/reddit"
 	"github.com/shank318/doota/models"
 	"github.com/shank318/doota/utils"
 	"go.uber.org/zap"
+	"math/rand"
+	"time"
 )
 
-type SendCommentInfo struct {
-	LeadID        string
-	ProjectID     string
-	SubredditName string
-	Comment       string
-	UserName      string
-	ThingID       string
-}
-
 type AutomatedInteractions interface {
-	SendComment(ctx context.Context, leadInteraction *SendCommentInfo) (*models.LeadInteraction, error)
+	ScheduleComment(ctx context.Context, leadInteraction *models.LeadInteraction) (*models.LeadInteraction, error)
+	SendComment(ctx context.Context, interaction *models.LeadInteraction) (err error)
+	GetInteractionsPerDay(ctx context.Context, projectID string, status models.LeadInteractionStatus) ([]*models.LeadInteraction, error)
 }
 
 type redditInteractions struct {
-	redditClient *reddit.Client
-	db           datastore.Repository
-	logger       *zap.Logger
+	db                datastore.Repository
+	redditOauthClient *reddit.OauthClient
+	logger            *zap.Logger
 }
 
-func NewRedditInteractions(redditClient *reddit.Client, db datastore.Repository, logger *zap.Logger) AutomatedInteractions {
-	return &redditInteractions{redditClient: redditClient, db: db, logger: logger}
+func (r redditInteractions) GetInteractionsPerDay(ctx context.Context, projectID string, status models.LeadInteractionStatus) ([]*models.LeadInteraction, error) {
+	today := time.Now().UTC().Truncate(24 * time.Hour)
+	tomorrow := today.Add(24 * time.Hour)
+	return r.db.GetLeadInteractions(ctx, projectID, status, today, tomorrow)
 }
 
-func (r redditInteractions) SendComment(ctx context.Context, info *SendCommentInfo) (intr *models.LeadInteraction, err error) {
-	r.logger.Info("creating interaction",
-		zap.String("type", models.LeadInteractionTypeCOMMENT.String()),
-		zap.String("thing_id", info.ThingID),
-	)
+func NewRedditInteractions(redditOauthClient *reddit.OauthClient, db datastore.Repository, logger *zap.Logger) AutomatedInteractions {
+	return &redditInteractions{redditOauthClient: redditOauthClient, db: db, logger: logger}
+}
 
-	info.SubredditName = utils.CleanSubredditName(info.SubredditName)
-
-	intr = &models.LeadInteraction{
-		ProjectID: info.ProjectID,
-		LeadID:    info.LeadID,
-		Type:      models.LeadInteractionTypeCOMMENT,
-		From:      info.UserName,
-		To:        info.ThingID,
-		Metadata:  models.LeadInteractionsMetadata{},
-	}
-
-	interaction, err := r.db.CreateLeadInteraction(ctx, intr)
-	if err != nil {
-		return intr, fmt.Errorf("failed to create lead interaction: %w", err)
-	}
-
+func (r redditInteractions) SendComment(ctx context.Context, interaction *models.LeadInteraction) (err error) {
 	defer func() {
 		// Always update interaction at the end
 		updateErr := r.db.UpdateLeadInteraction(ctx, interaction)
@@ -63,17 +44,36 @@ func (r redditInteractions) SendComment(ctx context.Context, info *SendCommentIn
 		}
 	}()
 
-	if err = r.redditClient.JoinSubreddit(ctx, info.SubredditName); err != nil {
+	redditClient, err := r.redditOauthClient.GetOrCreate(ctx, interaction.Organization.ID, true)
+	if err != nil {
+		if errors.Is(err, datastore.IntegrationNotFoundOrActive) {
+			interaction.Status = models.LeadInteractionStatusFAILED
+			interaction.Reason = "integration not found or inactive"
+			return nil
+		}
+	}
+
+	redditLead, err := r.db.GetLeadByID(ctx, interaction.ProjectID, interaction.LeadID)
+	if err != nil {
+		return err
+	}
+
+	err = r.db.SetLeadInteractionStatusProcessing(ctx, interaction.ID)
+	if err != nil {
+		return err
+	}
+
+	if err = redditClient.JoinSubreddit(ctx, utils.CleanSubredditName(redditLead.LeadMetadata.SubRedditPrefixed)); err != nil {
 		interaction.Reason = fmt.Sprintf("failed to join subreddit: %v", err)
 		interaction.Status = models.LeadInteractionStatusFAILED
-		return intr, err
+		return err
 	}
 
 	var comment *reddit.Comment
-	if comment, err = r.redditClient.PostComment(ctx, fmt.Sprintf("t3_%s", info.ThingID), utils.FormatComment(info.Comment)); err != nil {
+	if comment, err = redditClient.PostComment(ctx, fmt.Sprintf("t3_%s", interaction.To), utils.FormatComment(redditLead.LeadMetadata.SuggestedComment)); err != nil {
 		interaction.Reason = fmt.Sprintf("failed to post comment: %v", err)
 		interaction.Status = models.LeadInteractionStatusFAILED
-		return intr, err
+		return err
 	}
 
 	if comment == nil {
@@ -83,8 +83,102 @@ func (r redditInteractions) SendComment(ctx context.Context, info *SendCommentIn
 		interaction.Status = models.LeadInteractionStatusSENT
 		interaction.Reason = ""
 		interaction.Metadata.ReferenceID = comment.ID
-		interaction.Metadata.Permalink = fmt.Sprintf("r/%s/comments/%s/comment/%s", info.SubredditName, info.ThingID, comment.ID)
+		interaction.Metadata.Permalink = fmt.Sprintf("r/%s/comments/%s/comment/%s", interaction.Metadata.SubRedditName, interaction.To, comment.ID)
+
+		redditLead.LeadMetadata.AutomatedCommentURL = fmt.Sprintf("https://www.reddit.com/%s", interaction.Metadata.Permalink)
+		redditLead.Status = models.LeadStatusCOMPLETED
+		updateError := r.db.UpdateLeadStatus(ctx, redditLead)
+		if updateError != nil {
+			r.logger.Warn("failed to update lead status for automated comment", zap.Error(err), zap.String("lead_id", redditLead.ID))
+		}
 	}
 
-	return intr, nil
+	return nil
+}
+
+func (r redditInteractions) ScheduleComment(ctx context.Context, info *models.LeadInteraction) (*models.LeadInteraction, error) {
+	r.logger.Info("creating interaction",
+		zap.String("type", models.LeadInteractionTypeCOMMENT.String()),
+		zap.String("thing_id", info.To),
+	)
+
+	interactions, err := r.GetInteractionsPerDay(ctx, info.ProjectID, models.LeadInteractionStatusCREATED)
+	if err != nil {
+		return nil, err
+	}
+	// Check if daily limits are reached
+
+	scheduledAt, err := getNextAvailableScheduleTimeRandomBucket(time.Now().UTC(), interactions, 5*time.Minute, 1)
+	if err != nil {
+		return nil, err
+	}
+
+	info.ScheduledAt = utils.Ptr(scheduledAt)
+
+	return r.db.CreateLeadInteraction(ctx, info)
+}
+
+func getNextAvailableScheduleTimeRandomBucket(
+	now time.Time,
+	existingScheduled []*models.LeadInteraction,
+	bucketSize time.Duration,
+	maxPerBucket int,
+) (time.Time, error) {
+	if bucketSize <= 0 {
+		return time.Time{}, errors.New("bucket size must be > 0")
+	}
+
+	rand.Seed(time.Now().UnixNano())
+
+	for dayOffset := 0; dayOffset < 30; dayOffset++ {
+		day := now.AddDate(0, 0, dayOffset)
+		startOfDay := time.Date(day.Year(), day.Month(), day.Day(), 0, 0, 0, 0, time.UTC)
+
+		bucketCount := int(24 * time.Hour / bucketSize)
+		buckets := make([]int, bucketCount)
+
+		// Fill buckets for that day
+		for _, i := range existingScheduled {
+			if i.ScheduledAt == nil {
+				continue
+			}
+			t := i.ScheduledAt.UTC()
+			if t.Year() == day.Year() && t.YearDay() == day.YearDay() {
+				offset := t.Sub(startOfDay)
+				bucketIndex := int(offset / bucketSize)
+				if bucketIndex >= 0 && bucketIndex < bucketCount {
+					buckets[bucketIndex]++
+				}
+			}
+		}
+
+		startBucket := 0
+		if dayOffset == 0 {
+			startBucket = int(now.Sub(startOfDay) / bucketSize)
+		}
+
+		// Collect all available buckets >= startBucket
+		availableBuckets := []int{}
+		for b := startBucket; b < bucketCount; b++ {
+			if buckets[b] < maxPerBucket {
+				availableBuckets = append(availableBuckets, b)
+			}
+		}
+
+		if len(availableBuckets) > 0 {
+			// Pick one bucket randomly
+			bucketIndex := availableBuckets[rand.Intn(len(availableBuckets))]
+			bucketStart := startOfDay.Add(time.Duration(bucketIndex) * bucketSize)
+			randomOffset := time.Duration(rand.Int63n(int64(bucketSize)))
+			scheduledTime := bucketStart.Add(randomOffset)
+
+			if scheduledTime.Before(now) {
+				scheduledTime = now.Add(time.Minute)
+			}
+
+			return scheduledTime, nil
+		}
+	}
+
+	return time.Time{}, errors.New("no available slots for scheduling within 30 days")
 }

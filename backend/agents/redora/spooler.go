@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/shank318/doota/agents"
+	"github.com/shank318/doota/agents/redora/interactions"
 	"github.com/shank318/doota/agents/state"
 	"github.com/shank318/doota/ai"
 	"github.com/shank318/doota/datastore"
@@ -15,20 +16,22 @@ import (
 
 type Spooler struct {
 	*shutter.Shutter
-	dbPollingInterval time.Duration
-	db                datastore.Repository
-	aiClient          *ai.Client
-	queue             chan *models.AugmentedKeywordTracker
-	queued            *agents.QueuedMap[string, bool]
-	state             state.ConversationState
-	appIsReady        func() bool
-	maxParallelCalls  uint64
-	keywordTracker    *KeywordTrackerFactory
-	logger            *zap.Logger
+	interactionSpooler *interactions.Spooler
+	dbPollingInterval  time.Duration
+	db                 datastore.Repository
+	aiClient           *ai.Client
+	queue              chan *models.AugmentedKeywordTracker
+	queued             *agents.QueuedMap[string, bool]
+	state              state.ConversationState
+	appIsReady         func() bool
+	maxParallelCalls   uint64
+	keywordTracker     *KeywordTrackerFactory
+	logger             *zap.Logger
 }
 
 func New(
 	db datastore.Repository,
+	interactionSpooler *interactions.Spooler,
 	aiClient *ai.Client,
 	state state.ConversationState,
 	bufferSize int,
@@ -39,17 +42,18 @@ func New(
 	logger *zap.Logger,
 ) *Spooler {
 	return &Spooler{
-		Shutter:           shutter.New(),
-		db:                db,
-		state:             state,
-		maxParallelCalls:  maxParallelCalls,
-		aiClient:          aiClient,
-		dbPollingInterval: dbPollingInterval,
-		appIsReady:        isShuttingDown,
-		queue:             make(chan *models.AugmentedKeywordTracker, bufferSize),
-		queued:            agents.NewQueuedMap[string, bool](bufferSize),
-		logger:            logger,
-		keywordTracker:    keywordTracker,
+		Shutter:            shutter.New(),
+		interactionSpooler: interactionSpooler,
+		db:                 db,
+		state:              state,
+		maxParallelCalls:   maxParallelCalls,
+		aiClient:           aiClient,
+		dbPollingInterval:  dbPollingInterval,
+		appIsReady:         isShuttingDown,
+		queue:              make(chan *models.AugmentedKeywordTracker, bufferSize),
+		queued:             agents.NewQueuedMap[string, bool](bufferSize),
+		logger:             logger,
+		keywordTracker:     keywordTracker,
 	}
 }
 
@@ -58,6 +62,9 @@ func (s *Spooler) Run(ctx context.Context) error {
 	if !s.keywordTracker.isDev {
 		go s.pollKeywordTrackers(ctx)
 	}
+
+	go s.interactionSpooler.Start(ctx)
+
 	return nil
 }
 

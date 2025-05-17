@@ -282,7 +282,7 @@ func (p *Portal) AddSource(ctx context.Context, c *connect.Request[pbportal.AddS
 		return nil, status.New(codes.InvalidArgument, "maximum 5 sources are allowed").Err()
 	}
 
-	redditClient, err := p.redditOauthClient.NewRedditClient(ctx, actor.OrganizationID, false)
+	redditClient, err := p.redditOauthClient.GetOrCreate(ctx, actor.OrganizationID, false)
 	if err != nil {
 		return nil, err
 	}

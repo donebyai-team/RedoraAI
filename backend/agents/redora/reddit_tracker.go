@@ -19,19 +19,21 @@ import (
 )
 
 type redditKeywordTracker struct {
-	db                datastore.Repository
-	aiClient          *ai.Client
-	logger            *zap.Logger
-	state             state.ConversationState
-	redditOauthClient *reddit.OauthClient
-	isDev             bool
-	slackNotifier     alerts.AlertNotifier
-	emailNotifier     alerts.AlertNotifier
+	db                    datastore.Repository
+	aiClient              *ai.Client
+	logger                *zap.Logger
+	automatedInteractions interactions.AutomatedInteractions
+	state                 state.ConversationState
+	redditOauthClient     *reddit.OauthClient
+	isDev                 bool
+	slackNotifier         alerts.AlertNotifier
+	emailNotifier         alerts.AlertNotifier
 }
 
 func newRedditKeywordTracker(
 	isDev bool,
 	redditOauthClient *reddit.OauthClient,
+	automatedInteractions interactions.AutomatedInteractions,
 	db datastore.Repository,
 	aiClient *ai.Client,
 	logger *zap.Logger,
@@ -39,32 +41,34 @@ func newRedditKeywordTracker(
 	slackNotifier alerts.AlertNotifier,
 	emailNotifier alerts.AlertNotifier) KeywordTracker {
 	return &redditKeywordTracker{
-		db:                db,
-		aiClient:          aiClient,
-		logger:            logger,
-		state:             state,
-		redditOauthClient: redditOauthClient,
-		isDev:             isDev,
-		slackNotifier:     slackNotifier,
-		emailNotifier:     emailNotifier,
+		db:                    db,
+		aiClient:              aiClient,
+		logger:                logger,
+		state:                 state,
+		redditOauthClient:     redditOauthClient,
+		automatedInteractions: automatedInteractions,
+		isDev:                 isDev,
+		slackNotifier:         slackNotifier,
+		emailNotifier:         emailNotifier,
 	}
 }
 
 func (s *redditKeywordTracker) WithLogger(logger *zap.Logger) KeywordTracker {
 	return &redditKeywordTracker{
-		db:                s.db,
-		aiClient:          s.aiClient,
-		logger:            logger,
-		state:             s.state,
-		redditOauthClient: s.redditOauthClient,
-		isDev:             s.isDev,
-		slackNotifier:     s.slackNotifier,
-		emailNotifier:     s.emailNotifier,
+		db:                    s.db,
+		aiClient:              s.aiClient,
+		logger:                logger,
+		state:                 s.state,
+		redditOauthClient:     s.redditOauthClient,
+		isDev:                 s.isDev,
+		automatedInteractions: s.automatedInteractions,
+		slackNotifier:         s.slackNotifier,
+		emailNotifier:         s.emailNotifier,
 	}
 }
 
 func (s *redditKeywordTracker) TrackKeyword(ctx context.Context, tracker *models.AugmentedKeywordTracker) error {
-	redditClient, err := s.redditOauthClient.NewRedditClient(ctx, tracker.Project.OrganizationID, true)
+	redditClient, err := s.redditOauthClient.GetOrCreate(ctx, tracker.Project.OrganizationID, true)
 	if err != nil && errors.Is(err, datastore.IntegrationNotFoundOrActive) {
 		return nil
 	}
@@ -155,7 +159,7 @@ func (s *redditKeywordTracker) sendAlert(ctx context.Context, project *models.Pr
 			return
 		}
 
-		totalCommentsSent, err := s.getLeadInteractionCountOfTheDay(ctx, project.ID)
+		totalCommentsSent, err := s.automatedInteractions.GetInteractionsPerDay(ctx, project.ID, models.LeadInteractionStatusSENT)
 		if err != nil {
 			s.logger.Error("failed to get leads interaction count", zap.Error(err))
 			return
@@ -166,7 +170,7 @@ func (s *redditKeywordTracker) sendAlert(ctx context.Context, project *models.Pr
 			OrgID:              project.OrganizationID,
 			ProjectName:        project.Name,
 			TotalPostsAnalysed: totalPostsAnalysed,
-			TotalCommentsSent:  totalCommentsSent,
+			TotalCommentsSent:  uint32(len(totalCommentsSent)),
 			DailyCount:         dailyCount,
 		})
 		if err != nil {
@@ -177,7 +181,7 @@ func (s *redditKeywordTracker) sendAlert(ctx context.Context, project *models.Pr
 			OrgID:              project.OrganizationID,
 			ProjectName:        project.Name,
 			TotalPostsAnalysed: totalPostsAnalysed,
-			TotalCommentsSent:  totalCommentsSent,
+			TotalCommentsSent:  uint32(len(totalCommentsSent)),
 			DailyCount:         dailyCount,
 		})
 		if err != nil {
@@ -212,8 +216,6 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 	source := tracker.Source
 	// to make it available downstream
 	source.OrgID = project.OrganizationID
-
-	automatedInteractionService := interactions.NewRedditInteractions(redditClient, s.db, s.logger)
 
 	// We will try to keep searching until we reach the max relevant posts per day >= defaultRelevancyScore
 	if ok, err := s.isMaxLeadLimitReached(ctx, project.ID, defaultRelevancyScore); err != nil || ok {
@@ -388,24 +390,14 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 		//pbcore.IsGoodForEngagement(redditLead.Intents) &&
 		if redditLead.RelevancyScore >= defaultRelevancyScore &&
 			len(strings.TrimSpace(redditLead.LeadMetadata.SuggestedComment)) > 0 {
-			leadInteraction, err := automatedInteractionService.SendComment(ctx, &interactions.SendCommentInfo{
-				LeadID:        redditLead.ID,
-				ProjectID:     redditLead.ProjectID,
-				SubredditName: redditLead.LeadMetadata.SubRedditPrefixed,
-				Comment:       redditLead.LeadMetadata.SuggestedComment,
-				UserName:      redditClient.GetConfig().Name,
-				ThingID:       redditLead.PostID,
+			_, err := s.automatedInteractions.ScheduleComment(ctx, &models.LeadInteraction{
+				LeadID:    redditLead.ID,
+				ProjectID: redditLead.ProjectID,
+				From:      redditClient.GetConfig().Name,
+				To:        redditLead.PostID,
 			})
 			if err != nil {
 				s.logger.Warn("failed to send automated comment", zap.Error(err), zap.String("post_id", post.ID))
-			}
-			if leadInteraction != nil && leadInteraction.Metadata.ReferenceID != "" {
-				redditLead.LeadMetadata.AutomatedCommentURL = fmt.Sprintf("https://www.reddit.com/%s", leadInteraction.Metadata.Permalink)
-				redditLead.Status = models.LeadStatusCOMPLETED
-				err := s.db.UpdateLeadStatus(ctx, redditLead)
-				if err != nil {
-					s.logger.Warn("failed to update lead status for automated comment", zap.Error(err), zap.String("post_id", post.ID))
-				}
 			}
 		}
 
@@ -456,16 +448,6 @@ func (s *redditKeywordTracker) getLeadsCountOfTheDay(ctx context.Context, projec
 		return 0, err
 	}
 	return leadsData.Count, nil
-}
-
-func (s *redditKeywordTracker) getLeadInteractionCountOfTheDay(ctx context.Context, projectID string) (uint32, error) {
-	today := time.Now().UTC().Truncate(24 * time.Hour)
-	tomorrow := today.Add(24 * time.Hour)
-	leadsData, err := s.db.GetLeadInteractions(ctx, projectID, today, tomorrow)
-	if err != nil {
-		return 0, err
-	}
-	return uint32(len(leadsData)), nil
 }
 
 const (

@@ -5,7 +5,8 @@ INSERT INTO lead_interactions (
     from_user,
     to_user,
     reason,
-    metadata)
+    metadata,
+    schedule_at)
 VALUES (
            :project_id,
            :lead_id,
@@ -13,5 +14,6 @@ VALUES (
            :from_user,
            :to_user,
            :reason,
-           :metadata)
+           :metadata,
+           :schedule_at)
     RETURNING id;
