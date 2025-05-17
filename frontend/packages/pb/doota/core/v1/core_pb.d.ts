@@ -249,6 +249,11 @@ export declare type LeadMetadata = Message<"doota.core.v1.LeadMetadata"> & {
    * @generated from field: string llm_model_response_overridden_by = 17;
    */
   llmModelResponseOverriddenBy: string;
+
+  /**
+   * @generated from field: optional google.protobuf.Timestamp comment_scheduled_at = 18;
+   */
+  commentScheduledAt?: Timestamp;
 };
 
 /**

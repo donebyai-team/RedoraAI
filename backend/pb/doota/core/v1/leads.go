@@ -94,6 +94,9 @@ func (u *LeadMetadata) FromModel(metadata models.LeadMetadata) *LeadMetadata {
 	u.DmLlmModel = string(metadata.DMLLMModel)
 	u.CommentLlmModel = string(metadata.CommentLLMModel)
 	u.LlmModelResponseOverriddenBy = string(metadata.LLMModelResponseOverriddenBy)
+	if metadata.CommentScheduledAt != nil {
+		u.CommentScheduledAt = timestamppb.New(*metadata.CommentScheduledAt)
+	}
 	return u
 }
 

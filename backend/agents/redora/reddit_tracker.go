@@ -390,7 +390,7 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 		//pbcore.IsGoodForEngagement(redditLead.Intents) &&
 		if redditLead.RelevancyScore >= defaultRelevancyScore &&
 			len(strings.TrimSpace(redditLead.LeadMetadata.SuggestedComment)) > 0 {
-			_, err := s.automatedInteractions.ScheduleComment(ctx, &models.LeadInteraction{
+			interaction, err := s.automatedInteractions.ScheduleComment(ctx, &models.LeadInteraction{
 				LeadID:    redditLead.ID,
 				ProjectID: redditLead.ProjectID,
 				From:      redditClient.GetConfig().Name,
@@ -398,6 +398,11 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 			})
 			if err != nil {
 				s.logger.Warn("failed to send automated comment", zap.Error(err), zap.String("post_id", post.ID))
+			}
+			redditLead.LeadMetadata.CommentScheduledAt = interaction.ScheduledAt
+			err = s.db.UpdateLeadStatus(ctx, redditLead)
+			if err != nil {
+				s.logger.Warn("failed to update lead status", zap.Error(err), zap.String("post_id", post.ID))
 			}
 		}
 

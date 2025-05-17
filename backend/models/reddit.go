@@ -215,24 +215,25 @@ type LeadsData struct {
 }
 
 type LeadMetadata struct {
-	ChainOfThought                 string   `json:"chain_of_thought"`
-	SuggestedComment               string   `json:"suggested_comment"`
-	SuggestedDM                    string   `json:"suggested_dm"`
-	ChainOfThoughtSuggestedComment string   `json:"chain_of_thought_suggested_comment"`
-	ChainOfThoughtSuggestedDM      string   `json:"chain_of_thought_dm"`
-	AppliedRules                   []string `json:"applied_rules"`
-	Ups                            int64    `json:"ups"`
-	NoOfComments                   int64    `json:"no_of_comments"`
-	PostURL                        string   `json:"post_url"`
-	AuthorURL                      string   `json:"author_url"`
-	DmURL                          string   `json:"dm_url"`
-	SelfTextHTML                   string   `json:"description_html"`
-	SubRedditPrefixed              string   `json:"subreddit_prefixed"`
-	AutomatedCommentURL            string   `json:"automated_comment_url"`
-	CommentLLMModel                LLMModel `json:"comment_llm_model"`
-	DMLLMModel                     LLMModel `json:"dm_llm_model"`
-	RelevancyLLMModel              LLMModel `json:"relevancy_llm_model"`
-	LLMModelResponseOverriddenBy   LLMModel `json:"llm_model_response_overridden_by"`
+	ChainOfThought                 string     `json:"chain_of_thought"`
+	SuggestedComment               string     `json:"suggested_comment"`
+	SuggestedDM                    string     `json:"suggested_dm"`
+	ChainOfThoughtSuggestedComment string     `json:"chain_of_thought_suggested_comment"`
+	ChainOfThoughtSuggestedDM      string     `json:"chain_of_thought_dm"`
+	AppliedRules                   []string   `json:"applied_rules"`
+	Ups                            int64      `json:"ups"`
+	NoOfComments                   int64      `json:"no_of_comments"`
+	PostURL                        string     `json:"post_url"`
+	AuthorURL                      string     `json:"author_url"`
+	DmURL                          string     `json:"dm_url"`
+	SelfTextHTML                   string     `json:"description_html"`
+	SubRedditPrefixed              string     `json:"subreddit_prefixed"`
+	AutomatedCommentURL            string     `json:"automated_comment_url"`
+	CommentScheduledAt             *time.Time `json:"comment_scheduled_at"`
+	CommentLLMModel                LLMModel   `json:"comment_llm_model"`
+	DMLLMModel                     LLMModel   `json:"dm_llm_model"`
+	RelevancyLLMModel              LLMModel   `json:"relevancy_llm_model"`
+	LLMModelResponseOverriddenBy   LLMModel   `json:"llm_model_response_overridden_by"`
 }
 
 func (b LeadMetadata) Value() (driver.Value, error) {
