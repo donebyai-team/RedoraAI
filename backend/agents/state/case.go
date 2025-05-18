@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -76,7 +77,12 @@ func (r *customerCaseState) Acquire(ctx context.Context, organizationID, uniqueI
 		return fmt.Errorf("marshalling : %w", err)
 	}
 
-	ok, err := r.redisClient.SetNX(ctx, key, data, r.customerCaseRunningTTL).Result()
+	ttl := r.customerCaseRunningTTL
+	if strings.Contains(uniqueID, "interactions") {
+		ttl = 2 * time.Minute
+	}
+
+	ok, err := r.redisClient.SetNX(ctx, key, data, ttl).Result()
 	if err != nil {
 		return fmt.Errorf("redis error: %w", err)
 	}
