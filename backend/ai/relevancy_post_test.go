@@ -43,7 +43,7 @@ func TestRelevancyOutputFormatting(t *testing.T) {
 				Name: "bigseo",
 				Metadata: models.SubRedditMetadata{
 					RulesEvaluation: &models.RuleEvaluationResult{
-						ProductMentionAllowed: false,
+						ProductMentionAllowed: true,
 					},
 				},
 			},

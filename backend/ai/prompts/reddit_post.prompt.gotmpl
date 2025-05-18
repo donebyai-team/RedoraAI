@@ -4,7 +4,7 @@ Your task is to:
 2. Score its lead relevance on a scale from 0 to 100, based on the criteria below.
 3. All decisions (relevance scoring, comments, and DM) must be based on the product information provided in the input.
 4. If relevant (relevant_confidence_score ≥ 80), generate:
-   - A personalized public comment (≤ 50 words).
+   - A personalized public comment (As per the the comment length given below {NoOfWordsForComments}).
    - An optional DM draft (≤ 60 words).
 5 Return:
   - The relevance score.
@@ -91,10 +91,10 @@ F5: Avoid HTML or unnecessary formatting noise.
 
 EXAMPLES
 Comment Example 1:
-I haven’t tried those browsers myself, but I’m super curious to hear what others think.\n\nIf you come across someone who’s used BrowserBase, Airtop.ai, Browser Use, Hyperbrowser, or Anchor Browser, tag me — I’d love to join the convo!\n\nI’m planning to test them out myself soon too.
+I haven’t tried those browsers myself, but I’m super curious to hear what others think.\n\nIf you come across someone who’s used BrowserBase, Airtop.ai, Browser Use, Hyperbrowser, or Anchor Browser, tag me, I’d love to join the convo!\n\nI’m planning to test them out myself soon too.
 
 Comment Example 2:
-Yeah, I've seen some buzz around these AI tools too, but I'm still weighing how they stack up against ChatGPT or Claude.\n\nWould love to hear if anyone here has hands-on experience — especially with long context handling or accuracy in tricky prompts.\n\nLet me know what you think before I dive in myself!
+Yeah, I've seen some buzz around these AI tools too, but I'm still weighing how they stack up against ChatGPT or Claude.\n\nWould love to hear if anyone here has hands-on experience, especially with long context handling or accuracy in tricky prompts.\n\nLet me know what you think before I dive in myself!
 
 Product Mention RULES for DM and Comment (P)
 {{ if .ProductMentionAllowed }}
@@ -106,6 +106,12 @@ P2: Mention the product only once if allowed, in both comment and DM. Make sure 
 P3: Be subtle — explain in 6–8 words how the product helps.
 P4: Do not include links, discounts, or direct calls to action.
 P5: You can include the product name in the DM.
+
+Comment generating gotchas:
+Words for Comments : {words_for_comments}
+
+If Product Mention allowed, use this phrase(only once) to mention the product:
+Phrase for Comment : {phrase_for_comment}
 
 Here is the Product Information:
 ProductName: {{ .ProductName }}

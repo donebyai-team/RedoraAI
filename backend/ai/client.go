@@ -13,6 +13,7 @@ import (
 	"github.com/streamingfast/derr"
 	"github.com/streamingfast/dstore"
 	"go.uber.org/zap"
+	"math/rand"
 	"net/http"
 	"strconv"
 	"strings"
@@ -302,6 +303,25 @@ type IsPostRelevantInput struct {
 	Source  *models.Source  `json:"source"`
 }
 
+var commentIntroPhrases = []string{
+	"I’ve been working on something that might help",
+	"We’re building a tool that’s tackling this problem",
+	"This is exactly what we’re trying to solve",
+	"I’ve been exploring this through a product we're building",
+	"Something we’re building could be useful here",
+	"We’ve been working on a solution in this space",
+	"Our team is building something around this challenge",
+	"A project I’m involved in addresses this issue",
+	"I recently started working on a tool related to this",
+	"This happens to be something my team is building for",
+	"We’re actively solving this in something we're building",
+	"This is right in the area we're building for",
+}
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
+
 func (c *Client) IsRedditPostRelevant(ctx context.Context, model models.LLMModel, input IsPostRelevantInput, logger *zap.Logger) (*models.RedditPostRelevanceResponse, *models.LLMModelUsage, error) {
 	runID := fmt.Sprintf("%s-%s", input.Project.ID, input.Post.PostID)
 	out := make(Variable)
@@ -320,6 +340,14 @@ func (c *Client) IsRedditPostRelevant(ctx context.Context, model models.LLMModel
 		out["ProductMentionAllowed"] = input.Source.Metadata.RulesEvaluation.ProductMentionAllowed
 	} else {
 		out["ProductMentionAllowed"] = true
+	}
+
+	// Word count: random number between 50 and 120
+	out["WordsForComment"] = rand.Intn(71) + 50
+
+	// Only assign PhraseForComment if product mention is allowed
+	if allowed, ok := out["ProductMentionAllowed"].(bool); ok && allowed {
+		out["PhraseForComment"] = commentIntroPhrases[rand.Intn(len(commentIntroPhrases))]
 	}
 
 	llmModelToUse := c.defaultLLMModel
