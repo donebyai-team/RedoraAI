@@ -159,7 +159,7 @@ func (s *redditKeywordTracker) sendAlert(ctx context.Context, project *models.Pr
 			return
 		}
 
-		totalCommentsSent, err := s.automatedInteractions.GetInteractionsPerDay(ctx, project.ID, models.LeadInteractionStatusSENT)
+		totalCommentsSent, err := s.automatedInteractions.GetInteractionsPerDay(ctx, project.ID, models.LeadInteractionStatusCREATED)
 		if err != nil {
 			s.logger.Error("failed to get leads interaction count", zap.Error(err))
 			return

@@ -68,7 +68,7 @@ func (s *SlackNotifier) SendLeadsSummary(ctx context.Context, summary LeadSummar
 		"*📊 Daily Reddit Posts Summary — RedoraAI*\n"+
 			"*Product:* %s\n"+
 			"*Posts Analyzed:* %d\n"+
-			"*Automated Comments Posted:* %d\n"+
+			"*Automated Comments Scheduled:* %d\n"+
 			"*Relevant Posts Found:* *%d*\n\n"+
 			"🔗 <%s|View all posts in your dashboard>",
 		summary.ProjectName,
