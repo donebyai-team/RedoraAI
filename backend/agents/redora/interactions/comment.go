@@ -62,8 +62,8 @@ func (r redditInteractions) SendComment(ctx context.Context, interaction *models
 	if err != nil {
 		return err
 	}
-
-	if err = redditClient.JoinSubreddit(ctx, utils.CleanSubredditName(redditLead.LeadMetadata.SubRedditPrefixed)); err != nil {
+	subRedditName := utils.CleanSubredditName(redditLead.LeadMetadata.SubRedditPrefixed)
+	if err = redditClient.JoinSubreddit(ctx, subRedditName); err != nil {
 		interaction.Reason = fmt.Sprintf("failed to join subreddit: %v", err)
 		interaction.Status = models.LeadInteractionStatusFAILED
 		return err
@@ -83,7 +83,7 @@ func (r redditInteractions) SendComment(ctx context.Context, interaction *models
 		interaction.Status = models.LeadInteractionStatusSENT
 		interaction.Reason = ""
 		interaction.Metadata.ReferenceID = comment.ID
-		interaction.Metadata.Permalink = fmt.Sprintf("r/%s/comments/%s/comment/%s", interaction.Metadata.SubRedditName, interaction.To, comment.ID)
+		interaction.Metadata.Permalink = fmt.Sprintf("r/%s/comments/%s/comment/%s", subRedditName, interaction.To, comment.ID)
 
 		redditLead.LeadMetadata.AutomatedCommentURL = fmt.Sprintf("https://www.reddit.com/%s", interaction.Metadata.Permalink)
 		redditLead.Status = models.LeadStatusCOMPLETED
