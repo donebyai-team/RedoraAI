@@ -397,7 +397,7 @@ func redactPlatformOnlyMetadata(role models.UserRole, lead *models.AugmentedLead
 	return lead
 }
 
-const pageCount = 30
+const pageCount = 200
 
 func (p *Portal) GetLeadsByStatus(ctx context.Context, c *connect.Request[pbportal.GetLeadsByStatusRequest]) (*connect.Response[pbportal.GetLeadsResponse], error) {
 	actor, err := p.gethAuthContext(ctx)
@@ -418,7 +418,7 @@ func (p *Portal) GetLeadsByStatus(ctx context.Context, c *connect.Request[pbport
 		Status:    status,
 		Limit:     pageCount,
 		DateRange: c.Msg.DateRange,
-		Offset:    int(c.Msg.PageNo),
+		Offset:    int(c.Msg.PageNo), // starting with 0
 	})
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to fetch leads: %w", err))
