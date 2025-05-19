@@ -76,6 +76,10 @@ const LeadsPostDetails = () => {
     return selectedleadData?.createdAt ? formateDate(selectedleadData.createdAt) : "N/A";
   }, [selectedleadData?.createdAt]);
 
+  const formattedScheduledAt = useMemo(() => {
+    return selectedleadData?.metadata?.commentScheduledAt ? formateDate(selectedleadData.metadata.commentScheduledAt) : "N/A";
+  }, [selectedleadData?.metadata?.commentScheduledAt]);
+
   const handleCloseLeadDetail = useCallback(() => {
     dispatch(setSelectedLeadData(null));
   }, [dispatch]);
@@ -322,14 +326,21 @@ const LeadsPostDetails = () => {
                           <Box sx={{ display: "flex", alignItems: "center" }}>
                             <Star sx={{ color: "#e25a9e", mr: 1 }} />
                             <Typography color="#e25a9e" fontWeight="medium">
-                              {selectedleadData.metadata?.automatedCommentUrl ? "Commented By AI" : "Suggested comment"}
+                              {selectedleadData?.metadata?.automatedCommentUrl
+                                ? "Commented By AI"
+                                : selectedleadData?.metadata?.commentScheduledAt
+                                  ? "Scheduled by AI"
+                                  : "Suggested Comment"}
                             </Typography>
                           </Box>
-                          {(selectedleadData.metadata?.automatedCommentUrl && (
+
+                          {(selectedleadData?.metadata?.automatedCommentUrl || selectedleadData?.metadata?.commentScheduledAt) && (
                             <Typography variant="body2" color="text.secondary">
-                              {formattedDateCreatedAt}
+                              {selectedleadData?.metadata?.automatedCommentUrl
+                                ? formattedDateCreatedAt
+                                : formattedScheduledAt}
                             </Typography>
-                          ))}
+                          )}
                         </Box>
 
                         <Typography variant="body1" sx={{ mb: 2 }}>
