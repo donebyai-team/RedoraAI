@@ -349,6 +349,7 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		isAppReady,
 		zlog.Named("portal"),
 		tracer,
+		alertNotifier,
 	)
 	return p, nil
 }

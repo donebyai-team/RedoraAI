@@ -6,6 +6,7 @@ import (
 	"github.com/shank318/doota/ai"
 	google2 "github.com/shank318/doota/integrations/google"
 	"github.com/shank318/doota/integrations/reddit"
+	"github.com/shank318/doota/notifiers/alerts"
 	"github.com/shank318/doota/portal/state"
 	"regexp"
 
@@ -39,6 +40,7 @@ type Portal struct {
 	googleOauthClient   *google2.OauthClient
 	aiClient            *ai.Client
 	cache               state2.ConversationState
+	alertNotifier       alerts.AlertNotifier
 }
 
 func New(
@@ -59,6 +61,7 @@ func New(
 	isAppReady func() bool,
 	logger *zap.Logger,
 	tracer logging.Tracer,
+	alertNotifier alerts.AlertNotifier,
 ) *Portal {
 	return &Portal{
 		aiClient:            aiClient,
@@ -79,6 +82,7 @@ func New(
 		isAppReady:          isAppReady,
 		logger:              logger.Named("portal"),
 		tracer:              tracer,
+		alertNotifier:       alertNotifier,
 	}
 }
 

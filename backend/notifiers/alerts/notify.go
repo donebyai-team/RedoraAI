@@ -28,6 +28,7 @@ type AlertNotifier interface {
 	SendTrackingError(ctx context.Context, trackingID, project string, err error)
 	SendLeadsSummaryEmail(ctx context.Context, summary LeadSummary) error
 	SendNewUserAlert(ctx context.Context, orgName string)
+	SendNewProductAddedAlert(ctx context.Context, productName, website string)
 }
 
 type SlackNotifier struct {
@@ -55,6 +56,18 @@ func (s *SlackNotifier) SendTrackingError(ctx context.Context, trackingID, proje
 		"*TrackerID:* %s\n"+
 		"*Error:* %s", project, trackingID, err.Error())
 	err = s.send(ctx, msg, alertsChannel)
+	if err != nil {
+		s.logger.Error("failed to send error alert to redora channel", zap.Error(err))
+		return
+	}
+}
+
+func (s *SlackNotifier) SendNewProductAddedAlert(ctx context.Context, productName, website string) {
+	msg := fmt.Sprintf("*New Product Added*\n "+
+		"*Product:* %s\n"+
+		"*Website:* %s\n"+
+		productName, website)
+	err := s.send(ctx, msg, redoraChannel)
 	if err != nil {
 		s.logger.Error("failed to send error alert to redora channel", zap.Error(err))
 		return
