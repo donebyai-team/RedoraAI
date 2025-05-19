@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	pbportal "github.com/shank318/doota/pb/doota/portal/v1"
 	"log"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -193,4 +195,61 @@ func (i *customerCaseState) setKey(ctx context.Context, key string, value interf
 		return fmt.Errorf("set key: %w", cmd.Err())
 	}
 	return nil
+}
+
+var checkAndIncrementLua = redis.NewScript(`
+    local current = redis.call("HGET", KEYS[1], ARGV[1])
+    if not current then current = 0 else current = tonumber(current) end
+
+    if current < tonumber(ARGV[2]) then
+        redis.call("HINCRBY", KEYS[1], ARGV[1], 1)
+        return 1
+    else
+        return 0
+    end
+`)
+
+func (r *customerCaseState) CheckIfUnderLimitAndIncrement(ctx context.Context, redisKey string, field string, limit int64, expiry time.Duration) (bool, error) {
+	redisKey = callRunningKey(r.namespace, r.prefix, redisKey)
+	// Set TTL only if not already set
+	ttl, err := r.redisClient.TTL(ctx, redisKey).Result()
+	if err == nil && ttl < 0 {
+		r.redisClient.Expire(ctx, redisKey, expiry)
+	}
+
+	// Run Lua script atomically
+	res, err := checkAndIncrementLua.Run(ctx, r.redisClient, []string{redisKey}, field, limit).Int()
+	if err != nil {
+		return false, err
+	}
+	return res == 1, nil
+}
+
+func (r *customerCaseState) RollbackCounter(ctx context.Context, redisKey, field string) error {
+	redisKey = callRunningKey(r.namespace, r.prefix, redisKey)
+	return r.redisClient.HIncrBy(ctx, redisKey, field, -1).Err()
+}
+
+func (r *customerCaseState) GetLeadAnalysisCounters(ctx context.Context, redisKey string) (*pbportal.LeadAnalysis, error) {
+	redisKey = callRunningKey(r.namespace, r.prefix, redisKey)
+	data, err := r.redisClient.HGetAll(ctx, redisKey).Result()
+	if err != nil {
+		return nil, err
+	}
+
+	convert := func(val string) uint32 {
+		if i, err := strconv.ParseUint(val, 10, 32); err == nil {
+			return uint32(i)
+		}
+		return 0
+	}
+
+	return &pbportal.LeadAnalysis{
+		PostsTracked:       convert(data["posts_tracked"]),
+		RelevantPostsFound: convert(data["relevant_posts"]),
+		CommentSent:        convert(data["comment_sent"]),
+		CommentScheduled:   convert(data["comment_scheduled"]),
+		DmSent:             convert(data["dm_sent"]),
+		DmScheduled:        convert(data["dm_scheduled"]),
+	}, nil
 }

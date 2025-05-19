@@ -59,7 +59,7 @@ func New(
 
 func (s *Spooler) Run(ctx context.Context) error {
 	go s.runLoop(ctx)
-	if !s.keywordTracker.isDev {
+	if s.keywordTracker.isDev {
 		go s.pollKeywordTrackers(ctx)
 	}
 
