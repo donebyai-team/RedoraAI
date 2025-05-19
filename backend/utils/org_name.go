@@ -8,6 +8,23 @@ import (
 	"unicode"
 )
 
+const (
+	MaxProductNameWords = 3
+	MaxProductNameChars = 30
+	MinProductNameChars = 3
+)
+
+func IsValidProductName(name string) bool {
+	length := len(name)
+	if length < MinProductNameChars || length > MaxProductNameChars {
+		return false
+	}
+	if len(strings.Fields(name)) > MaxProductNameWords {
+		return false
+	}
+	return true
+}
+
 func GetOrganizationName(email string) string {
 	genericDomains := map[string]struct{}{
 		"gmail.com":      {},
