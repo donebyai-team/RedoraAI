@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/shank318/doota/agents/redora"
 	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/models"
 	pbcore "github.com/shank318/doota/pb/doota/core/v1"
@@ -374,7 +375,15 @@ func (p *Portal) GetRelevantLeads(ctx context.Context, c *connect.Request[pbport
 		leadsProto = append(leadsProto, new(pbcore.Lead).FromModel(redactPlatformOnlyMetadata(actor.Role, lead)))
 	}
 
-	return connect.NewResponse(&pbportal.GetLeadsResponse{Leads: leadsProto}), nil
+	analysis, err := redora.NewLeadAnalysis(p.db, p.logger).GenerateLeadAnalysis(ctx, projectID)
+	if err != nil {
+		return nil, err
+	}
+
+	return connect.NewResponse(&pbportal.GetLeadsResponse{
+		Leads:    leadsProto,
+		Analysis: analysis,
+	}), nil
 }
 
 func redactPlatformOnlyMetadata(role models.UserRole, lead *models.AugmentedLead) *models.AugmentedLead {

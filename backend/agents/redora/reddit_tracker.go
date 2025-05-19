@@ -142,32 +142,18 @@ func (s *redditKeywordTracker) sendAlert(ctx context.Context, project *models.Pr
 	// Send alert
 	if done {
 		s.logger.Info("daily tracking summary for project", zap.String("project_name", project.Name))
-		// daily count not to not be highly relevant and hence using a different relevancy score
-		dailyCount, err := s.getLeadsCountOfTheDay(ctx, project.ID, dailyPostsRelevancyScore)
+		analysis, err := NewLeadAnalysis(s.db, s.logger).GenerateLeadAnalysis(ctx, project.ID)
 		if err != nil {
-			s.logger.Error("failed to get leads count", zap.Error(err))
+			s.logger.Error("failed to generate lead analysis", zap.Error(err))
 			return
 		}
-
-		totalPostsAnalysed, err := s.getLeadsCountOfTheDay(ctx, project.ID, 0)
-		if err != nil {
-			s.logger.Error("failed to get leads count", zap.Error(err))
-			return
-		}
-
-		totalCommentsSent, err := s.automatedInteractions.GetInteractionsPerDay(ctx, project.ID, models.LeadInteractionStatusCREATED)
-		if err != nil {
-			s.logger.Error("failed to get leads interaction count", zap.Error(err))
-			return
-		}
-
 		// Send alert on redora
 		err = s.alertNotifier.SendLeadsSummary(ctx, alerts.LeadSummary{
 			OrgID:              project.OrganizationID,
 			ProjectName:        project.Name,
-			TotalPostsAnalysed: totalPostsAnalysed,
-			TotalCommentsSent:  uint32(len(totalCommentsSent)),
-			DailyCount:         dailyCount,
+			TotalPostsAnalysed: analysis.PostsTracked,
+			TotalCommentsSent:  analysis.CommentScheduled,
+			DailyCount:         analysis.RelevantPostsFound,
 		})
 		if err != nil {
 			s.logger.Error("failed to send slack notification", zap.Error(err))
@@ -176,9 +162,9 @@ func (s *redditKeywordTracker) sendAlert(ctx context.Context, project *models.Pr
 		err = s.alertNotifier.SendLeadsSummaryEmail(ctx, alerts.LeadSummary{
 			OrgID:              project.OrganizationID,
 			ProjectName:        project.Name,
-			TotalPostsAnalysed: totalPostsAnalysed,
-			TotalCommentsSent:  uint32(len(totalCommentsSent)),
-			DailyCount:         dailyCount,
+			TotalPostsAnalysed: analysis.PostsTracked,
+			TotalCommentsSent:  analysis.CommentScheduled,
+			DailyCount:         analysis.RelevantPostsFound,
 		})
 		if err != nil {
 			s.logger.Error("failed to send email notification", zap.Error(err))

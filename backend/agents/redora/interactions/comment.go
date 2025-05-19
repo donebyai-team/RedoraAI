@@ -31,7 +31,7 @@ func (r redditInteractions) GetInteractionsPerDay(ctx context.Context, projectID
 	return r.db.GetLeadInteractions(ctx, projectID, status, today, tomorrow)
 }
 
-func NewRedditInteractions(redditOauthClient *reddit.OauthClient, db datastore.Repository, logger *zap.Logger) AutomatedInteractions {
+func NewRedditInteractions(db datastore.Repository, redditOauthClient *reddit.OauthClient, logger *zap.Logger) AutomatedInteractions {
 	return &redditInteractions{redditOauthClient: redditOauthClient, db: db, logger: logger}
 }
 

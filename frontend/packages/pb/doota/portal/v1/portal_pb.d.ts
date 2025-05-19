@@ -140,6 +140,11 @@ export declare type GetLeadsResponse = Message<"doota.portal.v1.GetLeadsResponse
    * @generated from field: repeated doota.core.v1.Lead leads = 1;
    */
   leads: Lead[];
+
+  /**
+   * @generated from field: doota.portal.v1.LeadAnalysis analysis = 2;
+   */
+  analysis?: LeadAnalysis;
 };
 
 /**
@@ -147,6 +152,47 @@ export declare type GetLeadsResponse = Message<"doota.portal.v1.GetLeadsResponse
  * Use `create(GetLeadsResponseSchema)` to create a new message.
  */
 export declare const GetLeadsResponseSchema: GenMessage<GetLeadsResponse>;
+
+/**
+ * @generated from message doota.portal.v1.LeadAnalysis
+ */
+export declare type LeadAnalysis = Message<"doota.portal.v1.LeadAnalysis"> & {
+  /**
+   * @generated from field: uint32 posts_tracked = 1;
+   */
+  postsTracked: number;
+
+  /**
+   * @generated from field: uint32 relevant_posts_found = 2;
+   */
+  relevantPostsFound: number;
+
+  /**
+   * @generated from field: uint32 comment_sent = 3;
+   */
+  commentSent: number;
+
+  /**
+   * @generated from field: uint32 comment_scheduled = 4;
+   */
+  commentScheduled: number;
+
+  /**
+   * @generated from field: uint32 dm_sent = 5;
+   */
+  dmSent: number;
+
+  /**
+   * @generated from field: uint32 dm_scheduled = 6;
+   */
+  dmScheduled: number;
+};
+
+/**
+ * Describes the message doota.portal.v1.LeadAnalysis.
+ * Use `create(LeadAnalysisSchema)` to create a new message.
+ */
+export declare const LeadAnalysisSchema: GenMessage<LeadAnalysis>;
 
 /**
  * @generated from message doota.portal.v1.AddSourceRequest

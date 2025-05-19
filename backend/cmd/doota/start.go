@@ -193,7 +193,7 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 	interactionsSpooler := interactions.NewSpooler(
 		deps.DataStore,
 		deps.ConversationState,
-		interactions.NewRedditInteractions(redditOauthClient, deps.DataStore, logger),
+		interactions.NewRedditInteractions(deps.DataStore, redditOauthClient, logger),
 		nil,
 		4*time.Minute,
 		logger)

@@ -64,6 +64,16 @@ message GetRelevantLeadsRequest {
 
 message GetLeadsResponse {
   repeated doota.core.v1.Lead leads = 1;
+  LeadAnalysis analysis = 2;
+}
+
+message LeadAnalysis {
+  uint32 posts_tracked = 1;
+  uint32 relevant_posts_found = 2;
+  uint32 comment_sent = 3;
+  uint32 comment_scheduled = 4;
+  uint32 dm_sent = 5;
+  uint32 dm_scheduled = 6;
 }
 
 message AddSourceRequest {
