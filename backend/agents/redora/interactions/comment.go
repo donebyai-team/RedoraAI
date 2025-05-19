@@ -100,6 +100,7 @@ func (r redditInteractions) ScheduleComment(ctx context.Context, info *models.Le
 		zap.String("type", models.LeadInteractionTypeCOMMENT.String()),
 		zap.String("thing_id", info.To),
 	)
+	info.Type = models.LeadInteractionTypeCOMMENT
 
 	interactions, err := r.GetInteractions(ctx, info.ProjectID, models.LeadInteractionStatusCREATED, pbportal.DateRangeFilter_DATE_RANGE_TODAY)
 	if err != nil {
