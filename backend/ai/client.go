@@ -343,7 +343,7 @@ func (c *Client) IsRedditPostRelevant(ctx context.Context, model models.LLMModel
 	}
 
 	// Word count: random number between 50 and 120
-	out["WordsForComment"] = rand.Intn(71) + 50
+	out["WordsForComment"] = rand.Intn(51) + 50
 
 	// Only assign PhraseForComment if product mention is allowed
 	if allowed, ok := out["ProductMentionAllowed"].(bool); ok && allowed {

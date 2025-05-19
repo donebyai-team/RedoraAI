@@ -4,7 +4,7 @@ Your task is to:
 2. Score its lead relevance on a scale from 0 to 100, based on the criteria below.
 3. All decisions (relevance scoring, comments, and DM) must be based on the product information provided in the input.
 4. If relevant (relevant_confidence_score ≥ 80), generate:
-   - A personalized public comment (As per the the comment length given below {NoOfWordsForComments}).
+   - A personalized public comment.
    - An optional DM draft (≤ 60 words).
 5 Return:
   - The relevance score.
@@ -83,7 +83,7 @@ E11: Avoid using em dashes (—). Use commas or periods instead for clarity and 
 
 FORMATTING RULES (F)
 For final output structure, useful for rendering or post-processing.
-F1: Keep sentences and paragraphs short and readable.
+F1: Break the comment or DM into short sentences and paragraphs to make it readable.
 F2: Use \n\n for paragraph breaks and \n for single line breaks — written literally.
 F3: Do not use real line breaks or escaped characters like \\n.
 F4: Use Reddit Markdown syntax (e.g. **bold**, *italic*) naturally.
@@ -108,7 +108,7 @@ P4: Do not include links, discounts, or direct calls to action.
 P5: You can include the product name in the DM.
 
 Comment generating gotchas:
-Words for Comments : {words_for_comments}
+Words for Comments : {words_for_comments}, Keep the Formatting rules in mind
 
 If Product Mention allowed, use this phrase(only once) to mention the product:
 Phrase for Comment : {phrase_for_comment}
