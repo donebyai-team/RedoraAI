@@ -1,0 +1,223 @@
+"use client";
+
+import { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  // ArrowUp,
+  // MessageSquare,
+  Search,
+  // Bell,
+  // User,
+  // Filter,
+  // Send,
+  // Save,
+  // X,
+  Clock
+} from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
+import { SummaryCards } from "@/components/dashboard/SummaryCards";
+import { LeadFeed } from "@/components/dashboard/LeadFeed";
+import { FilterControls } from "@/components/dashboard/FilterControls";
+import { SidebarSettings } from "@/components/dashboard/SidebarSettings";
+import { RelevancyScoreSidebar } from "@/components/dashboard/RelevancyScoreSidebar";
+import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+import { DashboardFooter } from "@/components/dashboard/DashboardFooter";
+import { RedditAccount } from "@/components/reddit-accounts/RedditAccountBadge";
+
+export default function Dashboard() {
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Sample Reddit accounts
+  const redditAccounts: RedditAccount[] = [
+    {
+      id: "account1",
+      username: "redora_official",
+      karma: 2345,
+      status: { isActive: true },
+      isDefault: true
+    },
+    {
+      id: "account2",
+      username: "saas_helper",
+      karma: 986,
+      status: { isActive: true }
+    },
+    {
+      id: "account3",
+      username: "marketing_pro",
+      karma: 75,
+      status: { isActive: true, hasLowKarma: true }
+    },
+    {
+      id: "account4",
+      username: "startup_advisor",
+      karma: 542,
+      status: { isActive: false, cooldownMinutes: 35 }
+    },
+    {
+      id: "account5",
+      username: "b2b_expert",
+      karma: 1203,
+      status: { isActive: false, isFlagged: true }
+    },
+  ];
+
+  const [defaultAccountId, setDefaultAccountId] = useState<string>("account1");
+  const [postAccountAssignments, setPostAccountAssignments] = useState<Record<string, string>>({});
+  console.log(postAccountAssignments);
+
+  const handleAction = (action: string, postId: string) => {
+    console.log(postId);
+    // Demo function to handle actions like commenting, sending DM, etc.
+    setIsLoading(true);
+
+    setTimeout(() => {
+      setIsLoading(false);
+
+      if (action === "comment") {
+        toast({
+          title: "Comment posted",
+          description: "Your comment has been posted successfully.",
+        });
+      } else if (action === "dm") {
+        toast({
+          title: "Message sent",
+          description: "Your direct message has been sent.",
+        });
+      } else if (action === "save") {
+        toast({
+          title: "Post saved",
+          description: "This post has been saved for later.",
+        });
+      } else if (action === "skip") {
+        toast({
+          title: "Post skipped",
+          description: "This post has been marked as skipped.",
+        });
+      }
+    }, 1000);
+  };
+
+  const handleDefaultAccountChange = (accountId: string) => {
+    setDefaultAccountId(accountId);
+  };
+
+  const handlePostAccountChange = (postId: string, accountId: string) => {
+    setPostAccountAssignments(prev => ({
+      ...prev,
+      [postId]: accountId
+    }));
+  };
+
+  return (
+    <>
+      <DashboardHeader />
+
+      <div className="flex-1 overflow-auto">
+        <main className="container mx-auto px-4 py-6 md:px-6">
+          <div className="flex flex-col lg:flex-row gap-6">
+            {/* Main content area */}
+            <div className="flex-1 flex flex-col">
+              <div className="space-y-2 mb-6">
+                <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">Redora AI Dashboard</h1>
+                <p className="text-muted-foreground">
+                  Track and engage with potential leads from Reddit based on your keywords and subreddits.
+                </p>
+              </div>
+
+              <SummaryCards />
+
+              <div className="flex-1 flex flex-col space-y-4 mt-6">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-background/95 py-2">
+                  <h2 className="text-xl font-semibold">Active Leads</h2>
+                  <FilterControls />
+                </div>
+
+                {isLoading ? (
+                  <div className="space-y-4">
+                    {[...Array(3)].map((_, i) => (
+                      <Card key={i} className="border-primary/10 shadow-md">
+                        <CardContent className="p-6">
+                          <div className="space-y-2">
+                            <Skeleton className="h-4 w-[200px]" />
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-[80%]" />
+                            <div className="flex gap-2 pt-2">
+                              <Skeleton className="h-9 w-20" />
+                              <Skeleton className="h-9 w-20" />
+                              <Skeleton className="h-9 w-20" />
+                              <Skeleton className="h-9 w-20" />
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex-1">
+                    <LeadFeed
+                      onAction={handleAction}
+                      redditAccounts={redditAccounts}
+                      defaultAccountId={defaultAccountId}
+                      onAccountChange={handlePostAccountChange}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Sidebar */}
+            <div className="lg:w-[300px] space-y-6">
+              <RelevancyScoreSidebar
+                accounts={redditAccounts}
+                defaultAccountId={defaultAccountId}
+                onDefaultAccountChange={handleDefaultAccountChange}
+              />
+
+              <Card className="border-primary/10 shadow-md">
+                <CardContent className="p-6">
+                  <Tabs defaultValue="keywords">
+                    <TabsList className="w-full mb-4 bg-secondary/50">
+                      <TabsTrigger className="flex-1 data-[state=active]:bg-primary/10 data-[state=active]:text-primary" value="keywords">Keywords</TabsTrigger>
+                      <TabsTrigger className="flex-1 data-[state=active]:bg-primary/10 data-[state=active]:text-primary" value="subreddits">Subreddits</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="keywords" className="space-y-4">
+                      <SidebarSettings type="keywords" />
+                    </TabsContent>
+                    <TabsContent value="subreddits" className="space-y-4">
+                      <SidebarSettings type="subreddits" />
+                    </TabsContent>
+                  </Tabs>
+                </CardContent>
+              </Card>
+
+              <Card className="border-primary/10 bg-gradient-to-br from-background to-secondary/30 shadow-md">
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-medium mb-4">Tips</h3>
+                  <div className="space-y-4 text-sm">
+                    <div className="flex gap-2 items-start">
+                      <div className="bg-primary/10 p-2 rounded-full">
+                        <Search className="h-4 w-4 text-primary" />
+                      </div>
+                      <p>We score every post based on how well it matches your ideal customer and their pain points.</p>
+                    </div>
+                    <div className="flex gap-2 items-start">
+                      <div className="bg-primary/10 p-2 rounded-full">
+                        <Clock className="h-4 w-4 text-primary" />
+                      </div>
+                      <p>Redora scans Reddit 24/7 so you never miss a potential buyer conversation.</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </main>
+      </div>
+
+      <DashboardFooter />
+    </>
+  );
+}
