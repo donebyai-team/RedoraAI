@@ -10,6 +10,7 @@ import (
 	"github.com/shank318/doota/auth/crypto"
 	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/models"
+	"github.com/shank318/doota/notifiers/alerts"
 	pbportal "github.com/shank318/doota/pb/doota/portal/v1"
 	"github.com/shank318/doota/utils"
 	"github.com/streamingfast/logging"
@@ -17,23 +18,25 @@ import (
 )
 
 type AuthUsecase struct {
-	auth0  *auth0
-	db     datastore.Repository
-	signer crypto.SigningKeyGetter
-	logger *zap.Logger
+	auth0         *auth0
+	db            datastore.Repository
+	signer        crypto.SigningKeyGetter
+	logger        *zap.Logger
+	alertNotifier alerts.AlertNotifier
 }
 
-func NewAuthUsecase(ctx context.Context, auth0Config *Auth0Config, db datastore.Repository, signingAPIKeyGetter crypto.SigningKeyGetter, logger *zap.Logger) (*AuthUsecase, error) {
+func NewAuthUsecase(ctx context.Context, auth0Config *Auth0Config, db datastore.Repository, signingAPIKeyGetter crypto.SigningKeyGetter, alertNotifier alerts.AlertNotifier, logger *zap.Logger) (*AuthUsecase, error) {
 	auth0, err := newAuth0(ctx, auth0Config, logger)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create auth0: %w", err)
 	}
 
 	return &AuthUsecase{
-		auth0:  auth0,
-		db:     db,
-		signer: signingAPIKeyGetter,
-		logger: logger,
+		auth0:         auth0,
+		db:            db,
+		signer:        signingAPIKeyGetter,
+		alertNotifier: alertNotifier,
+		logger:        logger,
 	}, nil
 }
 func (a *AuthUsecase) StartPasswordless(ctx context.Context, email string, ip string) error {
@@ -153,6 +156,9 @@ func (a *AuthUsecase) createUserForEmail(ctx context.Context, email string, emai
 		logger.Error("failed to create user", zap.Error(err), zap.String("email", email))
 		return nil, fmt.Errorf("unable to create user: %w", err)
 	}
+
+	// notify admin
+	go a.alertNotifier.SendNewUserAlert(context.Background(), createdUser.Email)
 
 	return createdUser, nil
 }

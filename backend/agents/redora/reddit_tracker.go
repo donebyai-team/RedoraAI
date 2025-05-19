@@ -26,8 +26,7 @@ type redditKeywordTracker struct {
 	state                 state.ConversationState
 	redditOauthClient     *reddit.OauthClient
 	isDev                 bool
-	slackNotifier         alerts.AlertNotifier
-	emailNotifier         alerts.AlertNotifier
+	alertNotifier         alerts.AlertNotifier
 }
 
 func newRedditKeywordTracker(
@@ -38,8 +37,7 @@ func newRedditKeywordTracker(
 	aiClient *ai.Client,
 	logger *zap.Logger,
 	state state.ConversationState,
-	slackNotifier alerts.AlertNotifier,
-	emailNotifier alerts.AlertNotifier) KeywordTracker {
+	alertNotifier alerts.AlertNotifier) KeywordTracker {
 	return &redditKeywordTracker{
 		db:                    db,
 		aiClient:              aiClient,
@@ -48,8 +46,7 @@ func newRedditKeywordTracker(
 		redditOauthClient:     redditOauthClient,
 		automatedInteractions: automatedInteractions,
 		isDev:                 isDev,
-		slackNotifier:         slackNotifier,
-		emailNotifier:         emailNotifier,
+		alertNotifier:         alertNotifier,
 	}
 }
 
@@ -62,8 +59,7 @@ func (s *redditKeywordTracker) WithLogger(logger *zap.Logger) KeywordTracker {
 		redditOauthClient:     s.redditOauthClient,
 		isDev:                 s.isDev,
 		automatedInteractions: s.automatedInteractions,
-		slackNotifier:         s.slackNotifier,
-		emailNotifier:         s.emailNotifier,
+		alertNotifier:         s.alertNotifier,
 	}
 }
 
@@ -78,7 +74,7 @@ func (s *redditKeywordTracker) TrackKeyword(ctx context.Context, tracker *models
 
 	err = s.searchLeadsFromPosts(ctx, tracker, redditClient)
 	if err != nil {
-		s.slackNotifier.SendTrackingError(ctx, tracker.GetID(), tracker.Project.Name, err)
+		s.alertNotifier.SendTrackingError(ctx, tracker.GetID(), tracker.Project.Name, err)
 		return err
 	}
 
@@ -166,7 +162,7 @@ func (s *redditKeywordTracker) sendAlert(ctx context.Context, project *models.Pr
 		}
 
 		// Send alert on redora
-		err = s.slackNotifier.SendLeadsSummary(ctx, alerts.LeadSummary{
+		err = s.alertNotifier.SendLeadsSummary(ctx, alerts.LeadSummary{
 			OrgID:              project.OrganizationID,
 			ProjectName:        project.Name,
 			TotalPostsAnalysed: totalPostsAnalysed,
@@ -177,7 +173,7 @@ func (s *redditKeywordTracker) sendAlert(ctx context.Context, project *models.Pr
 			s.logger.Error("failed to send slack notification", zap.Error(err))
 		}
 
-		err = s.emailNotifier.SendLeadsSummary(ctx, alerts.LeadSummary{
+		err = s.alertNotifier.SendLeadsSummaryEmail(ctx, alerts.LeadSummary{
 			OrgID:              project.OrganizationID,
 			ProjectName:        project.Name,
 			TotalPostsAnalysed: totalPostsAnalysed,

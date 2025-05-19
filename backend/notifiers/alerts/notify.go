@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/resend/resend-go/v2"
 	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/models"
 	"go.uber.org/zap"
@@ -25,19 +26,23 @@ type LeadSummary struct {
 type AlertNotifier interface {
 	SendLeadsSummary(ctx context.Context, summary LeadSummary) error
 	SendTrackingError(ctx context.Context, trackingID, project string, err error)
+	SendLeadsSummaryEmail(ctx context.Context, summary LeadSummary) error
+	SendNewUserAlert(ctx context.Context, orgName string)
 }
 
 type SlackNotifier struct {
-	Client *http.Client
-	db     datastore.Repository
-	logger *zap.Logger
+	SlackClient  *http.Client
+	ResendClient *resend.Client
+	db           datastore.Repository
+	logger       *zap.Logger
 }
 
-func NewSlackNotifier(db datastore.Repository, logger *zap.Logger) AlertNotifier {
+func NewSlackNotifier(resendAPIKey string, db datastore.Repository, logger *zap.Logger) AlertNotifier {
 	return &SlackNotifier{
-		db:     db,
-		logger: logger,
-		Client: &http.Client{Timeout: 10 * time.Second},
+		db:           db,
+		logger:       logger,
+		SlackClient:  &http.Client{Timeout: 10 * time.Second},
+		ResendClient: resend.NewClient(resendAPIKey),
 	}
 }
 
@@ -54,6 +59,65 @@ func (s *SlackNotifier) SendTrackingError(ctx context.Context, trackingID, proje
 		s.logger.Error("failed to send error alert to redora channel", zap.Error(err))
 		return
 	}
+}
+
+func (s *SlackNotifier) SendNewUserAlert(ctx context.Context, email string) {
+	msg := fmt.Sprintf("*New User Onboarded*\n " +
+		"*Name:* %s\n" +
+		email)
+	err := s.send(ctx, msg, redoraChannel)
+	if err != nil {
+		s.logger.Error("failed to send error alert to redora channel", zap.Error(err))
+		return
+	}
+}
+
+func (s *SlackNotifier) SendLeadsSummaryEmail(ctx context.Context, summary LeadSummary) error {
+	users, err := s.db.GetUsersByOrgID(ctx, summary.OrgID)
+	if err != nil {
+		return err
+	}
+
+	if len(users) == 0 {
+		return nil
+	}
+
+	to := make([]string, 0, len(users))
+
+	for _, user := range users {
+		to = append(to, user.Email)
+	}
+
+	htmlBody := fmt.Sprintf(`
+		<!DOCTYPE html>
+		<html>
+		<body style="font-family: Arial, sans-serif; background-color: #f7f9fc; padding: 20px;">
+		  <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 30px; border-radius: 8px;">
+		    <h2>Daily Reddit Posts Summary — <strong>RedoraAI</strong></h2>
+		    <p><strong>Product:</strong> %s</p>
+		    <p><strong>Posts Analyzed:</strong> %d</p>
+		    <p><strong>Automated Comments Scheduled:</strong> %d</p>
+		    <p><strong>Relevant Posts Found:</strong> <strong>%d</strong></p>
+		    <p>🔗 <a href="%s">View all leads in your dashboard</a></p>
+		    <hr>
+		    <footer style="font-size: 12px; color: #888;">
+		      <p><strong>RedoraAI</strong> — AI for Intelligent Lead Generation</p>
+		      <p>Need help? <a href="mailto:shashank@donebyai.team">shashank@donebyai.team</a></p>
+		    </footer>
+		  </div>
+		</body>
+		</html>
+	`, summary.ProjectName, summary.TotalPostsAnalysed, summary.TotalCommentsSent, summary.DailyCount, "https://app.redoraai.com/dashboard/leads")
+
+	params := &resend.SendEmailRequest{
+		From:    "RedoraAI <leads@alerts.redoraai.com>",
+		To:      to,
+		Subject: "📊Daily Lead Summary",
+		Html:    htmlBody,
+	}
+
+	_, err = s.ResendClient.Emails.Send(params)
+	return err
 }
 
 func (s *SlackNotifier) SendLeadsSummary(ctx context.Context, summary LeadSummary) error {
@@ -114,7 +178,7 @@ func (s *SlackNotifier) send(ctx context.Context, message string, webhook string
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := s.Client.Do(req)
+	resp, err := s.SlackClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("send Slack message: %w", err)
 	}

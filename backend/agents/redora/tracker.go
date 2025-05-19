@@ -24,8 +24,7 @@ type KeywordTrackerFactory struct {
 	state             state.ConversationState
 	redditOauthClient *reddit.OauthClient
 	isDev             bool
-	slackNotifier     alerts.AlertNotifier
-	emailNotifier     alerts.AlertNotifier
+	alertNotifier     alerts.AlertNotifier
 }
 
 func NewKeywordTrackerFactory(
@@ -35,8 +34,7 @@ func NewKeywordTrackerFactory(
 	aiClient *ai.Client,
 	logger *zap.Logger,
 	state state.ConversationState,
-	slackNotifier alerts.AlertNotifier,
-	emailNotifier alerts.AlertNotifier) *KeywordTrackerFactory {
+	alertNotifier alerts.AlertNotifier) *KeywordTrackerFactory {
 	return &KeywordTrackerFactory{
 		db:                db,
 		aiClient:          aiClient,
@@ -44,8 +42,7 @@ func NewKeywordTrackerFactory(
 		state:             state,
 		redditOauthClient: redditOauthClient,
 		isDev:             isDev,
-		slackNotifier:     slackNotifier,
-		emailNotifier:     emailNotifier,
+		alertNotifier:     alertNotifier,
 	}
 }
 
@@ -57,5 +54,5 @@ func (f *KeywordTrackerFactory) GetKeywordTrackerBySource(sourceType models.Sour
 		f.db,
 		f.aiClient,
 		f.logger,
-		f.state, f.slackNotifier, f.emailNotifier)
+		f.state, f.alertNotifier)
 }

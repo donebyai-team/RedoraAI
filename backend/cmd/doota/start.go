@@ -187,8 +187,7 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		deps.AIClient,
 		logger,
 		deps.ConversationState,
-		alerts.NewSlackNotifier(deps.DataStore, logger),
-		alerts.NewResendNotifier(sflags.MustGetString(cmd, "common-resend-api-key"), deps.DataStore, logger),
+		alerts.NewSlackNotifier(sflags.MustGetString(cmd, "common-resend-api-key"), deps.DataStore, logger),
 	)
 
 	interactionsSpooler := interactions.NewSpooler(
@@ -323,7 +322,9 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		GoogleAuth0CallbackUrl: sflags.MustGetString(cmd, "portal-reddit-redirect-url"),
 	}
 
-	authUsecase, err := services.NewAuthUsecase(cmd.Context(), authConfig, deps.DataStore, deps.AuthSigningKeyGetter, zlog)
+	alertNotifier := alerts.NewSlackNotifier(sflags.MustGetString(cmd, "common-resend-api-key"), deps.DataStore, logger)
+
+	authUsecase, err := services.NewAuthUsecase(cmd.Context(), authConfig, deps.DataStore, deps.AuthSigningKeyGetter, alertNotifier, zlog)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create auth usecase: %w", err)
 	}
