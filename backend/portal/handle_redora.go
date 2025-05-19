@@ -364,6 +364,7 @@ func (p *Portal) GetRelevantLeads(ctx context.Context, c *connect.Request[pbport
 		RelevancyScore: c.Msg.RelevancyScore,
 		Sources:        subReddits,
 		Limit:          pageCount,
+		DateRange:      c.Msg.DateRange,
 		Offset:         int(c.Msg.PageNo),
 	})
 	if err != nil {
@@ -375,7 +376,7 @@ func (p *Portal) GetRelevantLeads(ctx context.Context, c *connect.Request[pbport
 		leadsProto = append(leadsProto, new(pbcore.Lead).FromModel(redactPlatformOnlyMetadata(actor.Role, lead)))
 	}
 
-	analysis, err := redora.NewLeadAnalysis(p.db, p.logger).GenerateLeadAnalysis(ctx, projectID)
+	analysis, err := redora.NewLeadAnalysis(p.db, p.logger).GenerateLeadAnalysis(ctx, projectID, c.Msg.DateRange)
 	if err != nil {
 		return nil, err
 	}
@@ -414,9 +415,10 @@ func (p *Portal) GetLeadsByStatus(ctx context.Context, c *connect.Request[pbport
 		return nil, err
 	}
 	leads, err := p.db.GetLeadsByStatus(ctx, projectID, datastore.LeadsFilter{
-		Status: status,
-		Limit:  pageCount,
-		Offset: int(c.Msg.PageNo),
+		Status:    status,
+		Limit:     pageCount,
+		DateRange: c.Msg.DateRange,
+		Offset:    int(c.Msg.PageNo),
 	})
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to fetch leads: %w", err))

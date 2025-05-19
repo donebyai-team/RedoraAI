@@ -98,6 +98,11 @@ export declare type GetLeadsByStatusRequest = Message<"doota.portal.v1.GetLeadsB
    * @generated from field: int32 page_no = 3;
    */
   pageNo: number;
+
+  /**
+   * @generated from field: doota.portal.v1.DateRangeFilter date_range = 4;
+   */
+  dateRange: DateRangeFilter;
 };
 
 /**
@@ -124,6 +129,11 @@ export declare type GetRelevantLeadsRequest = Message<"doota.portal.v1.GetReleva
    * @generated from field: int32 page_no = 3;
    */
   pageNo: number;
+
+  /**
+   * @generated from field: doota.portal.v1.DateRangeFilter date_range = 4;
+   */
+  dateRange: DateRangeFilter;
 };
 
 /**
@@ -834,6 +844,36 @@ export declare type OauthCallbackResponse = Message<"doota.portal.v1.OauthCallba
  * Use `create(OauthCallbackResponseSchema)` to create a new message.
  */
 export declare const OauthCallbackResponseSchema: GenMessage<OauthCallbackResponse>;
+
+/**
+ * @generated from enum doota.portal.v1.DateRangeFilter
+ */
+export enum DateRangeFilter {
+  /**
+   * @generated from enum value: DATE_RANGE_UNSPECIFIED = 0;
+   */
+  DATE_RANGE_UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: DATE_RANGE_TODAY = 1;
+   */
+  DATE_RANGE_TODAY = 1,
+
+  /**
+   * @generated from enum value: DATE_RANGE_YESTERDAY = 2;
+   */
+  DATE_RANGE_YESTERDAY = 2,
+
+  /**
+   * @generated from enum value: DATE_RANGE_7_DAYS = 3;
+   */
+  DATE_RANGE_7_DAYS = 3,
+}
+
+/**
+ * Describes the enum doota.portal.v1.DateRangeFilter.
+ */
+export declare const DateRangeFilterSchema: GenEnum<DateRangeFilter>;
 
 /**
  * @generated from enum doota.portal.v1.OauthAuthorizeType

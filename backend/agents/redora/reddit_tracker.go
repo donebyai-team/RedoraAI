@@ -11,6 +11,7 @@ import (
 	"github.com/shank318/doota/integrations/reddit"
 	"github.com/shank318/doota/models"
 	"github.com/shank318/doota/notifiers/alerts"
+	pbportal "github.com/shank318/doota/pb/doota/portal/v1"
 	"github.com/shank318/doota/utils"
 	"go.uber.org/zap"
 	"sort"
@@ -142,7 +143,7 @@ func (s *redditKeywordTracker) sendAlert(ctx context.Context, project *models.Pr
 	// Send alert
 	if done {
 		s.logger.Info("daily tracking summary for project", zap.String("project_name", project.Name))
-		analysis, err := NewLeadAnalysis(s.db, s.logger).GenerateLeadAnalysis(ctx, project.ID)
+		analysis, err := NewLeadAnalysis(s.db, s.logger).GenerateLeadAnalysis(ctx, project.ID, pbportal.DateRangeFilter_DATE_RANGE_TODAY)
 		if err != nil {
 			s.logger.Error("failed to generate lead analysis", zap.Error(err))
 			return
@@ -414,23 +415,16 @@ func (s *redditKeywordTracker) isMaxLeadLimitReached(ctx context.Context, projec
 		return false, err
 	}
 
-	today := time.Now().UTC().Truncate(24 * time.Hour)
-	tomorrow := today.Add(24 * time.Hour)
-
 	if count >= maxLeadsPerDay {
 		s.logger.Info("reached max leads per day",
-			zap.Uint32("count", count),
-			zap.String("start_date", today.String()),
-			zap.String("end_date", tomorrow.String()))
+			zap.Uint32("count", count))
 		return true, nil
 	}
 	return false, nil
 }
 
 func (s *redditKeywordTracker) getLeadsCountOfTheDay(ctx context.Context, projectID string, relevancyScore int) (uint32, error) {
-	today := time.Now().UTC().Truncate(24 * time.Hour)
-	tomorrow := today.Add(24 * time.Hour)
-	leadsData, err := s.db.CountLeadByCreatedAt(ctx, projectID, relevancyScore, today, tomorrow)
+	leadsData, err := s.db.CountLeadByCreatedAt(ctx, projectID, relevancyScore, pbportal.DateRangeFilter_DATE_RANGE_TODAY)
 	if err != nil {
 		return 0, err
 	}

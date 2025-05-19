@@ -7,7 +7,6 @@ import (
 	"github.com/shank318/doota/models"
 	pbportal "github.com/shank318/doota/pb/doota/portal/v1"
 	"go.uber.org/zap"
-	"time"
 )
 
 type LeadAnalysis struct {
@@ -23,34 +22,31 @@ func NewLeadAnalysis(db datastore.Repository, logger *zap.Logger) *LeadAnalysis 
 	}
 }
 
-func (a LeadAnalysis) GenerateLeadAnalysis(ctx context.Context, projectID string) (*pbportal.LeadAnalysis, error) {
+func (a LeadAnalysis) GenerateLeadAnalysis(ctx context.Context, projectID string, dateRange pbportal.DateRangeFilter) (*pbportal.LeadAnalysis, error) {
 	analysis := pbportal.LeadAnalysis{}
-	today := time.Now().UTC().Truncate(24 * time.Hour)
-	tomorrow := today.Add(24 * time.Hour)
-
 	// Relevant leads
-	leadsData, err := a.db.CountLeadByCreatedAt(ctx, projectID, dailyPostsRelevancyScore, today, tomorrow)
+	leadsData, err := a.db.CountLeadByCreatedAt(ctx, projectID, dailyPostsRelevancyScore, dateRange)
 	if err != nil {
 		return nil, err
 	}
 	analysis.RelevantPostsFound = leadsData.Count
 
 	// Total leads tracked
-	leadsData, err = a.db.CountLeadByCreatedAt(ctx, projectID, 0, today, tomorrow)
+	leadsData, err = a.db.CountLeadByCreatedAt(ctx, projectID, 0, dateRange)
 	if err != nil {
 		return nil, err
 	}
 	analysis.PostsTracked = leadsData.Count
 
 	// total comment scheduled
-	interactionsScheduled, err := a.automatedInteractions.GetInteractionsPerDay(ctx, projectID, models.LeadInteractionStatusCREATED)
+	interactionsScheduled, err := a.automatedInteractions.GetInteractions(ctx, projectID, models.LeadInteractionStatusCREATED, dateRange)
 	if err != nil {
 		return nil, err
 	}
 	analysis.CommentScheduled = uint32(len(interactionsScheduled))
 
 	// total comment sent
-	interactionsSent, err := a.automatedInteractions.GetInteractionsPerDay(ctx, projectID, models.LeadInteractionStatusSENT)
+	interactionsSent, err := a.automatedInteractions.GetInteractions(ctx, projectID, models.LeadInteractionStatusSENT, dateRange)
 	if err != nil {
 		return nil, err
 	}

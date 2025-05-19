@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/lib/pq"
 	"github.com/shank318/doota/models"
+	pbportal "github.com/shank318/doota/pb/doota/portal/v1"
 	"time"
 )
 
@@ -35,12 +36,13 @@ func (r *Database) CreateLeadInteraction(ctx context.Context, reddit *models.Lea
 	return reddit, err
 }
 
-func (r *Database) GetLeadInteractions(ctx context.Context, projectID string, status models.LeadInteractionStatus, start, end time.Time) ([]*models.LeadInteraction, error) {
+func (r *Database) GetLeadInteractions(ctx context.Context, projectID string, status models.LeadInteractionStatus, dateRange pbportal.DateRangeFilter) ([]*models.LeadInteraction, error) {
+	startDateTime, endDateTime := GetDateRange(dateRange, time.Now().UTC())
 	return getMany[models.LeadInteraction](ctx, r, "lead_interactions/query_interaction_by_project.sql", map[string]any{
-		"project_id": projectID,
-		"status":     status,
-		"start_date": start.Format(time.DateOnly),
-		"end_date":   end.Format(time.DateOnly),
+		"project_id":     projectID,
+		"status":         status,
+		"start_datetime": sqlNullTime(startDateTime),
+		"end_datetime":   sqlNullTime(endDateTime),
 	})
 }
 

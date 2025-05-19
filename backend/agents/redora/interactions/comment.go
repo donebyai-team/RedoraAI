@@ -7,6 +7,7 @@ import (
 	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/integrations/reddit"
 	"github.com/shank318/doota/models"
+	pbportal "github.com/shank318/doota/pb/doota/portal/v1"
 	"github.com/shank318/doota/utils"
 	"go.uber.org/zap"
 	"math/rand"
@@ -16,7 +17,7 @@ import (
 type AutomatedInteractions interface {
 	ScheduleComment(ctx context.Context, leadInteraction *models.LeadInteraction) (*models.LeadInteraction, error)
 	SendComment(ctx context.Context, interaction *models.LeadInteraction) (err error)
-	GetInteractionsPerDay(ctx context.Context, projectID string, status models.LeadInteractionStatus) ([]*models.LeadInteraction, error)
+	GetInteractions(ctx context.Context, projectID string, status models.LeadInteractionStatus, dateRange pbportal.DateRangeFilter) ([]*models.LeadInteraction, error)
 }
 
 type redditInteractions struct {
@@ -25,10 +26,8 @@ type redditInteractions struct {
 	logger            *zap.Logger
 }
 
-func (r redditInteractions) GetInteractionsPerDay(ctx context.Context, projectID string, status models.LeadInteractionStatus) ([]*models.LeadInteraction, error) {
-	today := time.Now().UTC().Truncate(24 * time.Hour)
-	tomorrow := today.Add(24 * time.Hour)
-	return r.db.GetLeadInteractions(ctx, projectID, status, today, tomorrow)
+func (r redditInteractions) GetInteractions(ctx context.Context, projectID string, status models.LeadInteractionStatus, dateRange pbportal.DateRangeFilter) ([]*models.LeadInteraction, error) {
+	return r.db.GetLeadInteractions(ctx, projectID, status, dateRange)
 }
 
 func NewRedditInteractions(db datastore.Repository, redditOauthClient *reddit.OauthClient, logger *zap.Logger) AutomatedInteractions {
@@ -102,7 +101,7 @@ func (r redditInteractions) ScheduleComment(ctx context.Context, info *models.Le
 		zap.String("thing_id", info.To),
 	)
 
-	interactions, err := r.GetInteractionsPerDay(ctx, info.ProjectID, models.LeadInteractionStatusCREATED)
+	interactions, err := r.GetInteractions(ctx, info.ProjectID, models.LeadInteractionStatusCREATED, pbportal.DateRangeFilter_DATE_RANGE_TODAY)
 	if err != nil {
 		return nil, err
 	}

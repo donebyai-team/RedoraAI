@@ -6,6 +6,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 	"github.com/shank318/doota/models"
+	pbportal "github.com/shank318/doota/pb/doota/portal/v1"
 	"time"
 )
 
@@ -97,7 +98,7 @@ type SourceRepository interface {
 type LeadInteractionRepository interface {
 	CreateLeadInteraction(ctx context.Context, reddit *models.LeadInteraction) (*models.LeadInteraction, error)
 	UpdateLeadInteraction(ctx context.Context, reddit *models.LeadInteraction) error
-	GetLeadInteractions(ctx context.Context, projectID string, status models.LeadInteractionStatus, start, end time.Time) ([]*models.LeadInteraction, error)
+	GetLeadInteractions(ctx context.Context, projectID string, status models.LeadInteractionStatus, dateRange pbportal.DateRangeFilter) ([]*models.LeadInteraction, error)
 	GetLeadInteractionsToExecute(ctx context.Context, statuses []models.LeadInteractionStatus) ([]*models.LeadInteraction, error)
 	SetLeadInteractionStatusProcessing(ctx context.Context, id string) error
 }
@@ -108,6 +109,7 @@ type LeadsFilter struct {
 	Status         models.LeadStatus
 	Limit          int
 	Offset         int
+	DateRange      pbportal.DateRangeFilter
 }
 
 type LeadRepository interface {
@@ -118,7 +120,7 @@ type LeadRepository interface {
 	CreateLead(ctx context.Context, reddit *models.Lead) (*models.Lead, error)
 	UpdateLeadStatus(ctx context.Context, lead *models.Lead) error
 	GetLeadByID(ctx context.Context, projectID, id string) (*models.Lead, error)
-	CountLeadByCreatedAt(ctx context.Context, projectID string, relevancyScore int, start, end time.Time) (*models.LeadsData, error)
+	CountLeadByCreatedAt(ctx context.Context, projectID string, relevancyScore int, dateRange pbportal.DateRangeFilter) (*models.LeadsData, error)
 }
 
 type KeywordRepository interface {

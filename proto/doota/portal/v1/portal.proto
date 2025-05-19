@@ -54,12 +54,21 @@ message UpdateLeadStatusRequest {
 message GetLeadsByStatusRequest {
   doota.core.v1.LeadStatus status = 1;
   int32 page_no = 3;
+  DateRangeFilter date_range = 4;
+}
+
+enum DateRangeFilter {
+  DATE_RANGE_UNSPECIFIED = 0;
+  DATE_RANGE_TODAY = 1;
+  DATE_RANGE_YESTERDAY = 2;
+  DATE_RANGE_7_DAYS = 3;
 }
 
 message GetRelevantLeadsRequest {
   optional string sub_reddit = 1;
   float relevancy_score = 2;
   int32 page_no = 3;
+  DateRangeFilter date_range = 4;
 }
 
 message GetLeadsResponse {
