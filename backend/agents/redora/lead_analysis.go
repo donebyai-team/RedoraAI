@@ -54,6 +54,6 @@ func (a LeadAnalysis) GenerateLeadAnalysis(ctx context.Context, projectID string
 	if err != nil {
 		return nil, err
 	}
-	analysis.CommentScheduled = uint32(len(interactionsSent))
+	analysis.CommentSent = uint32(len(interactionsSent))
 	return &analysis, nil
 }
