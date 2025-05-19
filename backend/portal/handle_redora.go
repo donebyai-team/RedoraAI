@@ -50,8 +50,8 @@ func (p *Portal) CreateOrEditProject(ctx context.Context, c *connect.Request[pbp
 		return nil, err
 	}
 
-	if len(c.Msg.Name) < 3 {
-		return nil, status.New(codes.InvalidArgument, "project name should be at least 3 character").Err()
+	if !utils.IsValidProductName(c.Msg.Name) {
+		return nil, status.New(codes.InvalidArgument, "project name should be between 3 and 30 characters or max 3 words").Err()
 	}
 
 	if len(c.Msg.Description) < 10 {

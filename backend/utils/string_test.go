@@ -136,3 +136,66 @@ func TestGetOrganizationName(t *testing.T) {
 		})
 	}
 }
+
+func TestIsValidProductName(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected bool
+	}{
+		{
+			name:     "Valid short name",
+			input:    "Notion",
+			expected: true,
+		},
+		{
+			name:     "Valid multi-word name",
+			input:    "Pixel Global",
+			expected: true,
+		},
+		{
+			name:     "Too many words",
+			input:    "Affordable Professional SEO Services",
+			expected: false,
+		},
+		{
+			name:     "Too many characters",
+			input:    "SuperLongMarketingProductWithWayTooManyCharacters",
+			expected: false,
+		},
+		{
+			name:     "Exactly at word and character limit",
+			input:    "Best Pixel App", // 3 words, under 30 chars
+			expected: true,
+		},
+		{
+			name:     "Too many words but under char limit",
+			input:    "Smart Productivity Organizer Tool",
+			expected: false,
+		},
+		{
+			name:     "Empty string",
+			input:    "",
+			expected: false,
+		},
+		{
+			name:     "Below minimum character length",
+			input:    "AI",
+			expected: false,
+		},
+		{
+			name:     "Exactly minimum character length",
+			input:    "Bot",
+			expected: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			actual := IsValidProductName(tt.input)
+			if actual != tt.expected {
+				t.Errorf("isValidProductName(%q) = %v; expected %v", tt.input, actual, tt.expected)
+			}
+		})
+	}
+}
