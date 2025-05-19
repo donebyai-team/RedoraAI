@@ -75,8 +75,10 @@ func TestFormatComment(t *testing.T) {
 	}{
 		{
 			// Test with multiple paragraphs
-			input:    `I totally feel you on the struggle to keep track of old leads and follow-ups. Curious to see what hacks or tools others use to organize and reconnect more efficiently. Your process sounds familiar—I'm always hunting for ways to make it less manual too!`,
-			expected: `I totally feel you on the struggle to keep track of old leads and follow-ups. Curious to see what hacks or tools others use to organize and reconnect more efficiently. Your process sounds familiar,I'm always hunting for ways to make it less manual too!`,
+			input: `Really appreciate the detailed breakdown of your options! \n\nI've seen local service businesses get good results blending a lean city-specific site with a strong content hub that shows off niche expertise. Sometimes that knowledge attracts referrals beyond your main market, which isn't a bad thing. \n\nCurious if you've started drafting any FAQ posts yet, or are you still mapping strategy?`,
+			expected: `Really appreciate the detailed breakdown of your options! 
+I've seen local service businesses get good results blending a lean city-specific site with a strong content hub that shows off niche expertise. Sometimes that knowledge attracts referrals beyond your main market, which isn't a bad thing. 
+Curious if you've started drafting any FAQ posts yet, or are you still mapping strategy?`,
 		},
 	}
 
