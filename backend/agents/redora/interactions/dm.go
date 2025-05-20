@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/models"
+	"github.com/shank318/doota/utils"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -89,7 +90,7 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 		Username: loginConfig.Username,
 		Password: loginConfig.Password,
 		To:       fmt.Sprintf("t2_%s", user.ID),
-		Message:  redditLead.LeadMetadata.SuggestedDM,
+		Message:  utils.FormatDM(redditLead.LeadMetadata.SuggestedDM),
 	}); err != nil {
 		interaction.Reason = fmt.Sprintf("failed to send DM: %v", err)
 		interaction.Status = models.LeadInteractionStatusFAILED

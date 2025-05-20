@@ -144,7 +144,7 @@ func (r browserless) tryLogin(page playwright.Page, params DMParams) error {
 	}
 	for name, selector := range selectors {
 		if _, err := page.WaitForSelector(selector, playwright.PageWaitForSelectorOptions{
-			Timeout: playwright.Float(4000),
+			Timeout: playwright.Float(5000),
 		}); err != nil {
 			return fmt.Errorf("%s selector wait failed: %w", name, err)
 		}
