@@ -80,25 +80,27 @@ func (s *SlackNotifier) SendUserActivity(ctx context.Context, activity, orgName,
 }
 
 func (s *SlackNotifier) SendNewProductAddedAlert(ctx context.Context, productName, website string) {
-	msg := fmt.Sprintf("*New Product Added*\n "+
-		"*Product:* %s\n"+
-		"*Website:* %s\n"+
-		productName, website)
-	err := s.send(ctx, msg, redoraChannel)
-	if err != nil {
-		s.logger.Error("failed to send error alert to redora channel", zap.Error(err))
-		return
+	msg := fmt.Sprintf(
+		"*New Product Added*\n"+
+			"*Product:* %s\n"+
+			"*Website:* %s",
+		productName, website,
+	)
+
+	if err := s.send(ctx, msg, redoraChannel); err != nil {
+		s.logger.Error("failed to send new product alert to Slack", zap.Error(err))
 	}
 }
 
 func (s *SlackNotifier) SendNewUserAlert(ctx context.Context, email string) {
-	msg := fmt.Sprintf("*New User Onboarded*\n " +
-		"*Name:* %s\n" +
-		email)
-	err := s.send(ctx, msg, redoraChannel)
-	if err != nil {
-		s.logger.Error("failed to send error alert to redora channel", zap.Error(err))
-		return
+	msg := fmt.Sprintf(
+		"*New User Onboarded*\n"+
+			"*Email:* %s",
+		email,
+	)
+
+	if err := s.send(ctx, msg, redoraChannel); err != nil {
+		s.logger.Error("failed to send new user alert to Slack", zap.Error(err))
 	}
 }
 
