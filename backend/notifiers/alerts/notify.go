@@ -28,6 +28,7 @@ type AlertNotifier interface {
 	SendTrackingError(ctx context.Context, trackingID, project string, err error)
 	SendLeadsSummaryEmail(ctx context.Context, summary LeadSummary) error
 	SendNewUserAlert(ctx context.Context, orgName string)
+	SendUserActivity(ctx context.Context, activity, orgName, redditUsername string)
 	SendNewProductAddedAlert(ctx context.Context, productName, website string)
 }
 
@@ -59,6 +60,22 @@ func (s *SlackNotifier) SendTrackingError(ctx context.Context, trackingID, proje
 	if err != nil {
 		s.logger.Error("failed to send error alert to redora channel", zap.Error(err))
 		return
+	}
+}
+
+func (s *SlackNotifier) SendUserActivity(ctx context.Context, activity, orgName, redditUsername string) {
+	redditURL := fmt.Sprintf("https://www.reddit.com/user/%s", redditUsername)
+
+	msg := fmt.Sprintf(
+		"*User Activity Recorded*\n"+
+			"*Activity:* %s\n"+
+			"*Organization:* %s\n"+
+			"🔗 <%s|Reddit Account>",
+		activity, orgName, redditURL,
+	)
+
+	if err := s.send(ctx, msg, redoraChannel); err != nil {
+		s.logger.Error("failed to send user activity to Slack", zap.Error(err))
 	}
 }
 

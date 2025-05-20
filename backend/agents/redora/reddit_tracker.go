@@ -381,7 +381,7 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 		if redditLead.RelevancyScore >= defaultRelevancyScore {
 			// schedule comment
 			if len(strings.TrimSpace(redditLead.LeadMetadata.SuggestedComment)) > 0 {
-				err := s.sendAutomatedComment(ctx, tracker.Organization, redditClient.GetConfig().Name, redditLead)
+				err := s.sendAutomatedComment(ctx, tracker.Organization, redditClient.GetConfig(), redditLead)
 				if err != nil {
 					s.logger.Error("failed to send automated comment", zap.Error(err), zap.String("post_id", post.ID))
 				}
@@ -424,7 +424,46 @@ const (
 	keyTrackedPostPerDay      = "posts_tracked"
 )
 
-func (s *redditKeywordTracker) sendAutomatedComment(ctx context.Context, org *models.Organization, fromUser string, redditLead *models.Lead) error {
+func (s *redditKeywordTracker) sendAutomatedComment(ctx context.Context, org *models.Organization, redditConfig *models.RedditConfig, redditLead *models.Lead) error {
+	isOldEnough := redditConfig.IsUserOldEnough(2)
+	autoCommentEnabled := org.FeatureFlags.EnableAutoComment
+
+	// Case 1: User is old enough, but auto comment is currently disabled — enable it
+	if isOldEnough && !autoCommentEnabled {
+		org.FeatureFlags.EnableAutoComment = true
+		activity := models.OrgActivityTypeCOMMENTENABLEDWARMEDUP
+		org.FeatureFlags.Activities = append(org.FeatureFlags.Activities, models.OrgActivity{
+			ActivityType: activity,
+			CreatedAt:    time.Now(),
+		})
+		if err := s.db.UpdateOrganization(ctx, org); err != nil {
+			return fmt.Errorf("failed to enable auto comment: %w", err)
+		}
+		s.logger.Info("enabled auto comment", zap.String("org_name", org.Name), zap.String("activity", activity.String()))
+		go s.alertNotifier.SendUserActivity(context.Background(), activity.String(), org.Name, redditConfig.Name)
+	}
+
+	// Case 2: User is not old enough, but auto comment is currently enabled — disable it
+	if !isOldEnough && autoCommentEnabled {
+		org.FeatureFlags.EnableAutoComment = false
+		activity := models.OrgActivityTypeCOMMENTDISABLEDACCOUNTAGENEW
+		org.FeatureFlags.Activities = append(org.FeatureFlags.Activities, models.OrgActivity{
+			ActivityType: activity,
+			CreatedAt:    time.Now(),
+		})
+		if err := s.db.UpdateOrganization(ctx, org); err != nil {
+			return fmt.Errorf("failed to disable auto comment: %w", err)
+		}
+		s.logger.Info("disabled auto comment", zap.String("org_name", org.Name), zap.String("activity", activity.String()))
+		go s.alertNotifier.SendUserActivity(context.Background(), activity.String(), org.Name, redditConfig.Name)
+	}
+
+	// Only proceed if commenting is enabled and user is old enough
+	if !(isOldEnough && org.FeatureFlags.EnableAutoComment) {
+		return nil // skip commenting
+	}
+
+	// Continue
 	redisKey := dailyCounterKey(org.ID)
 	shouldComment, err := s.state.CheckIfUnderLimitAndIncrement(ctx, redisKey, keyCommentScheduledPerDay, maxCommentsPerDay, 24*time.Hour)
 	if err != nil {
@@ -435,7 +474,7 @@ func (s *redditKeywordTracker) sendAutomatedComment(ctx context.Context, org *mo
 		interaction, err := s.automatedInteractions.ScheduleComment(ctx, &models.LeadInteraction{
 			LeadID:    redditLead.ID,
 			ProjectID: redditLead.ProjectID,
-			From:      fromUser,
+			From:      redditConfig.Name,
 			To:        redditLead.PostID,
 		})
 		if err != nil {

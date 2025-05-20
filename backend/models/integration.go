@@ -63,6 +63,18 @@ type RedditConfig struct {
 	ExpiresAt        time.Time `json:"expires_at"`
 }
 
+// IsUserOldEnough checks if the Reddit user is at least x weeks old.
+func (r *RedditConfig) IsUserOldEnough(weeks int) bool {
+	// Convert the CreatedUtc (which is in seconds since epoch) to time.Time
+	createdTime := time.Unix(int64(r.CreatedUtc), 0)
+
+	// Calculate how many weeks ago the account was created
+	duration := time.Since(createdTime)
+
+	// Compare to the threshold duration
+	return duration >= (time.Duration(weeks) * 7 * 24 * time.Hour)
+}
+
 func (i *RedditConfig) EncryptedData() []byte {
 	toEncrypt := struct {
 		AccessToken  string `json:"access_token"`
