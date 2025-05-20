@@ -36,15 +36,11 @@ interface LeadFeedProps {
   onAccountChange: (postId: string, accountId: string) => void;
 }
 
-export function LeadFeed({ 
-  onAction, 
-  redditAccounts = [], 
-  defaultAccountId,
-  onAccountChange 
-}: LeadFeedProps) {
+export function LeadFeed({ onAction, redditAccounts = [], defaultAccountId, onAccountChange }: LeadFeedProps) {
+
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [recentlyUsedAccounts, setRecentlyUsedAccounts] = useState<Record<string, Date>>({});
-  
+
   // Sample data with assigned Reddit accounts and last replied timestamp
   const posts: LeadPost[] = [
     {
@@ -98,27 +94,27 @@ export function LeadFeed({
   const updateRecentlyUsedAccounts = (postId: string) => {
     const post = posts.find(p => p.id === postId);
     if (!post) return;
-    
+
     setRecentlyUsedAccounts(prev => ({
       ...prev,
       [post.assignedAccountId]: new Date()
     }));
   };
-  
+
   // Handle action with recently used account tracking
   const handleAction = (action: string, postId: string) => {
     // Update recently used accounts
     if (action === 'comment' || action === 'dm') {
       updateRecentlyUsedAccounts(postId);
     }
-    
+
     // Call the original onAction handler
     onAction(action, postId);
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 0.9) return "text-green-500 bg-green-50";
-    if (score >= 0.7) return "text-amber-500 bg-amber-50";
+    if (score >= 90) return "text-green-500 bg-green-50";
+    if (score >= 70) return "text-amber-500 bg-amber-50";
     return "text-red-500 bg-red-50";
   };
 
@@ -134,39 +130,39 @@ export function LeadFeed({
   const isAccountValid = (postId: string) => {
     const post = posts.find(p => p.id === postId);
     if (!post) return false;
-    
+
     const account = redditAccounts.find(acc => acc.id === post.assignedAccountId);
     if (!account) return false;
-    
-    return !account.status.isBanned && 
-           !account.status.isFlagged && 
-           (!account.status.cooldownMinutes || account.status.cooldownMinutes <= 0);
+
+    return !account.status.isBanned &&
+      !account.status.isFlagged &&
+      (!account.status.cooldownMinutes || account.status.cooldownMinutes <= 0);
   };
-  
+
   // Function to suggest alternative account if current one was recently used
   const shouldSuggestAccountRotation = (post: LeadPost) => {
     const currentAccount = redditAccounts.find(acc => acc.id === post.assignedAccountId);
     if (!currentAccount) return false;
-    
+
     // If the account was used in the last hour
     const lastUsed = recentlyUsedAccounts[post.assignedAccountId];
     if (lastUsed && (new Date().getTime() - lastUsed.getTime()) < 60 * 60 * 1000) {
       // Find an available account that hasn't been used recently
-      const availableAccount = redditAccounts.find(acc => 
-        acc.id !== post.assignedAccountId && 
-        acc.status.isActive && 
-        !acc.status.isFlagged && 
-        !acc.status.isBanned && 
-        (!recentlyUsedAccounts[acc.id] || 
-         (new Date().getTime() - recentlyUsedAccounts[acc.id].getTime()) > 60 * 60 * 1000)
+      const availableAccount = redditAccounts.find(acc =>
+        acc.id !== post.assignedAccountId &&
+        acc.status.isActive &&
+        !acc.status.isFlagged &&
+        !acc.status.isBanned &&
+        (!recentlyUsedAccounts[acc.id] ||
+          (new Date().getTime() - recentlyUsedAccounts[acc.id].getTime()) > 60 * 60 * 1000)
       );
-      
+
       return !!availableAccount;
     }
-    
+
     return false;
   };
-  
+
   // Show account rotation toast when post has a recently used account
   useEffect(() => {
     posts.forEach(post => {
@@ -178,7 +174,7 @@ export function LeadFeed({
         });
       }
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -214,10 +210,10 @@ export function LeadFeed({
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Snippet and AI suggestion */}
                 <p className="text-sm text-muted-foreground">{post.snippet}</p>
-                
+
                 <div className="bg-secondary/50 rounded-md p-3">
                   <div className="flex items-center gap-2 text-sm font-medium mb-2">
                     <MessageSquare className="h-4 w-4" />
@@ -225,7 +221,7 @@ export function LeadFeed({
                   </div>
                   <p className="text-sm">{post.aiSuggestion}</p>
                 </div>
-                
+
                 {/* Expanded DM suggestion */}
                 {expandedId === post.id && (
                   <div className="bg-secondary/50 rounded-md p-3">
@@ -236,13 +232,13 @@ export function LeadFeed({
                     <p className="text-sm">{post.aiDmSuggestion}</p>
                   </div>
                 )}
-                
+
                 {/* Reddit account selector with rotation suggestion if needed */}
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2 text-sm">
                     <User className="h-4 w-4 text-muted-foreground" />
                     <span className="text-muted-foreground">Replying as:</span>
-                    
+
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -264,7 +260,7 @@ export function LeadFeed({
                         </TooltipTrigger>
                         <TooltipContent side="top">
                           <p className="text-xs max-w-[200px]">
-                            {shouldSuggestAccountRotation(post) 
+                            {shouldSuggestAccountRotation(post)
                               ? "This account was used recently. Consider rotating accounts to avoid rate limits."
                               : "Using multiple Reddit accounts helps avoid rate limits and boosts reach."}
                           </p>
@@ -272,7 +268,7 @@ export function LeadFeed({
                       </Tooltip>
                     </TooltipProvider>
                   </div>
-                  
+
                   {/* Show last replied time if available */}
                   {post.lastReplied && (
                     <span className="text-xs text-muted-foreground">
@@ -280,14 +276,14 @@ export function LeadFeed({
                     </span>
                   )}
                 </div>
-                
+
                 {/* Action buttons */}
                 <div className="flex flex-wrap gap-2 mt-2">
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <div>
-                          <button 
+                          <button
                             onClick={() => handleAction('comment', post.id)}
                             className="inline-flex items-center justify-center text-sm font-medium h-9 px-4 py-2 rounded-md border border-input bg-background hover:bg-accent disabled:opacity-50 disabled:pointer-events-none"
                             disabled={!isAccountValid(post.id)}
@@ -304,12 +300,12 @@ export function LeadFeed({
                       )}
                     </Tooltip>
                   </TooltipProvider>
-                  
+
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <div>
-                          <button 
+                          <button
                             onClick={() => handleAction('dm', post.id)}
                             className="inline-flex items-center justify-center text-sm font-medium h-9 px-4 py-2 rounded-md border border-input bg-background hover:bg-accent disabled:opacity-50 disabled:pointer-events-none"
                             disabled={!isAccountValid(post.id)}
@@ -326,24 +322,24 @@ export function LeadFeed({
                       )}
                     </Tooltip>
                   </TooltipProvider>
-                  
-                  <button 
+
+                  <button
                     onClick={() => handleAction('save', post.id)}
                     className="inline-flex items-center justify-center text-sm font-medium h-9 px-4 py-2 rounded-md border border-input bg-background hover:bg-accent"
                   >
                     <Save className="h-4 w-4 mr-2" />
                     Save
                   </button>
-                  
-                  <button 
+
+                  <button
                     onClick={() => handleAction('skip', post.id)}
                     className="inline-flex items-center justify-center text-sm font-medium h-9 px-4 py-2 rounded-md border border-input bg-background hover:bg-accent"
                   >
                     <X className="h-4 w-4 mr-2" />
                     Skip
                   </button>
-                  
-                  <button 
+
+                  <button
                     onClick={() => toggleExpand(post.id)}
                     className="ml-auto text-sm text-primary hover:underline"
                   >
@@ -362,21 +358,21 @@ export function LeadFeed({
 // Helper function to format time ago
 const timeAgo = (date: Date) => {
   const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
-  
+
   let interval = Math.floor(seconds / 31536000);
   if (interval >= 1) return `${interval} year${interval > 1 ? 's' : ''} ago`;
-  
+
   interval = Math.floor(seconds / 2592000);
   if (interval >= 1) return `${interval} month${interval > 1 ? 's' : ''} ago`;
-  
+
   interval = Math.floor(seconds / 86400);
   if (interval >= 1) return `${interval} day${interval > 1 ? 's' : ''} ago`;
-  
+
   interval = Math.floor(seconds / 3600);
   if (interval >= 1) return `${interval} hour${interval > 1 ? 's' : ''} ago`;
-  
+
   interval = Math.floor(seconds / 60);
   if (interval >= 1) return `${interval} minute${interval > 1 ? 's' : ''} ago`;
-  
+
   return `${Math.floor(seconds)} second${seconds !== 1 ? 's' : ''} ago`;
 };

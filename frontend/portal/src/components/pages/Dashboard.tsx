@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -25,9 +25,17 @@ import { RelevancyScoreSidebar } from "@/components/dashboard/RelevancyScoreSide
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { DashboardFooter } from "@/components/dashboard/DashboardFooter";
 import { RedditAccount } from "@/components/reddit-accounts/RedditAccountBadge";
+import { useClientsContext } from "@doota/ui-core/context/ClientContext";
+import { useAppDispatch, useAppSelector } from "../../../store/hooks";
+import { setError, setIsLoading, setNewTabList } from "../../../store/Lead/leadSlice";
+import { RootState } from "../../../store/store";
+import { DateRangeFilter, LeadAnalysis } from "@doota/pb/doota/portal/v1/portal_pb";
 
 export default function Dashboard() {
-  const [isLoading, setIsLoading] = useState(false);
+  const { portalClient } = useClientsContext()
+  const dispatch = useAppDispatch();
+  const { isLoading } = useAppSelector((state: RootState) => state.lead);
+  const { relevancyScore, subReddit } = useAppSelector((state: RootState) => state.parems);
 
   // Sample Reddit accounts
   const redditAccounts: RedditAccount[] = [
@@ -64,6 +72,8 @@ export default function Dashboard() {
     },
   ];
 
+  const [counts, setCounts] = useState<LeadAnalysis | undefined>(undefined);
+  const [dateRange, setDateRange] = useState<DateRangeFilter>(DateRangeFilter.DATE_RANGE_UNSPECIFIED);
   const [defaultAccountId, setDefaultAccountId] = useState<string>("account1");
   const [postAccountAssignments, setPostAccountAssignments] = useState<Record<string, string>>({});
   console.log(postAccountAssignments);
@@ -111,6 +121,50 @@ export default function Dashboard() {
     }));
   };
 
+  useEffect(() => {
+
+    const getAllRelevantLeads = async () => {
+      dispatch(setIsLoading(true));
+
+      try {
+        const result = await portalClient.getRelevantLeads({
+          ...(relevancyScore && { relevancyScore }),
+          ...(subReddit && { subReddit }),
+          dateRange,
+          // pageNo: 1,
+        });
+        const allLeads = result.leads ?? [];
+        const counts = result?.analysis;
+        setCounts(counts);
+        dispatch(setNewTabList(allLeads));
+
+      } catch (err: any) {
+        const message = err?.response?.data?.message || err.message || "Something went wrong";
+        toast({
+          title: "Error",
+          description: message,
+        });
+        dispatch(setError(message));
+      } finally {
+        dispatch(setIsLoading(false));
+      }
+    };
+
+    getAllRelevantLeads();
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [relevancyScore, subReddit, dateRange]);
+
+  const handleDateRangeChange = (value: string) => {
+    const map: Record<string, DateRangeFilter> = {
+      "1": DateRangeFilter.DATE_RANGE_TODAY,
+      "2": DateRangeFilter.DATE_RANGE_YESTERDAY,
+      "3": DateRangeFilter.DATE_RANGE_7_DAYS,
+    };
+
+    setDateRange(map[value] ?? DateRangeFilter.DATE_RANGE_UNSPECIFIED);
+  };
+
   return (
     <>
       <DashboardHeader />
@@ -127,12 +181,12 @@ export default function Dashboard() {
                 </p>
               </div>
 
-              <SummaryCards />
+              <SummaryCards counts={counts} />
 
               <div className="flex-1 flex flex-col space-y-4 mt-6">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-background/95 py-2">
                   <h2 className="text-xl font-semibold">Active Leads</h2>
-                  <FilterControls />
+                  <FilterControls onChange={handleDateRangeChange} />
                 </div>
 
                 {isLoading ? (

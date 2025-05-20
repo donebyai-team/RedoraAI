@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useCallback, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -17,6 +17,10 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Info } from "lucide-react";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { RootState } from "@/store/store";
+import { useDebounce } from "@doota/ui-core/hooks/useDebounce";
+import { setRelevancyScore } from "@/store/Params/ParamsSlice";
 
 interface RelevancyScoreSidebarProps {
   accounts?: RedditAccount[];
@@ -24,12 +28,24 @@ interface RelevancyScoreSidebarProps {
   onDefaultAccountChange?: (accountId: string) => void;
 }
 
-export function RelevancyScoreSidebar({
-  accounts = [],
-  defaultAccountId = "",
-  onDefaultAccountChange
-}: RelevancyScoreSidebarProps) {
+export function RelevancyScoreSidebar({ accounts = [], defaultAccountId = "", onDefaultAccountChange }: RelevancyScoreSidebarProps) {
   const defaultAccount = accounts.find(acc => acc.id === defaultAccountId);
+  const { relevancyScore } = useAppSelector((state: RootState) => state.parems);
+  const [relevancy_score, setRelevancy_Score] = useState<number>(relevancyScore);
+  const dispatch = useAppDispatch();
+
+  const onChangeCommitted = useCallback((key: string, value: number | string) => {
+    if (key === 'relevancy_score') {
+      dispatch(setRelevancyScore(value as number));
+    }
+  }, [dispatch]);
+
+  const debouncedOnChangeCommitted = useDebounce(onChangeCommitted, 700);
+
+  const handleRelevancyChange = (newValue: number[]): void => {
+    setRelevancy_Score(newValue[0]);
+    debouncedOnChangeCommitted('relevancy_score', newValue[0]);
+  }
 
   return (
     <Card className="border-primary/10 shadow-md">
@@ -40,9 +56,14 @@ export function RelevancyScoreSidebar({
         <div>
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium">Minimum Score</span>
-            <span className="text-sm font-medium">0.75</span>
+            <span className="text-sm font-medium">{relevancy_score}%</span>
           </div>
-          <Slider defaultValue={[0.75]} max={1} step={0.01} />
+          <Slider
+            value={[relevancy_score]}
+            onValueChange={handleRelevancyChange}
+            min={0}
+            step={10}
+          />
           <p className="mt-1 text-xs text-muted-foreground">
             Only show leads with score above this threshold
           </p>
