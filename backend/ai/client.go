@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/shared"
@@ -323,7 +324,7 @@ func init() {
 }
 
 func (c *Client) IsRedditPostRelevant(ctx context.Context, model models.LLMModel, input IsPostRelevantInput, logger *zap.Logger) (*models.RedditPostRelevanceResponse, *models.LLMModelUsage, error) {
-	runID := fmt.Sprintf("%s-%s", input.Project.ID, input.Post.PostID)
+	runID := fmt.Sprintf("%s-%s-%s", input.Project.ID, input.Post.PostID, uuid.New().String())
 	out := make(Variable)
 	out["ProductName"] = input.Project.Name
 	out["ProductDescription"] = input.Project.ProductDescription
