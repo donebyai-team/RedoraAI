@@ -38,6 +38,7 @@ var StartCmd = cli.Command(startCmdE,
 		flags.String("common-gpt-model", "redora-dev-gpt-4.1-mini-2025-04-14", "GPT Model to use for message creator and categorization")
 		flags.String("common-gpt-advance-model", "redora-dev-gpt-4.1-2025-04-14", "GPT Model to use for message creator and categorization")
 		flags.String("common-resend-api-key", "", "Resend email api key")
+		flags.String("common-browserless-api-key", "", "Browserless api key")
 		flags.String("common-openai-api-key", "", "OpenAI API key")
 		flags.String("common-openai-debug-store", "data/debugstore", "OpenAI debug store")
 		flags.String("common-openai-organization", "", "OpenAI Organization")
@@ -190,10 +191,23 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		alerts.NewSlackNotifier(sflags.MustGetString(cmd, "common-resend-api-key"), deps.DataStore, logger),
 	)
 
+	browserLessClient := interactions.NewBrowserlessClient(sflags.MustGetString(cmd, "common-browserless-api-key"))
+	interactionService := interactions.NewRedditInteractions(deps.DataStore, browserLessClient, redditOauthClient, logger)
+
+	//err = interactionService.SendDM(context.Background(), interactions.DMParams{
+	//	Username: "shank.agarwal318@gmail.com",
+	//	Password: "Shank@123",
+	//	To:       "t2_1ctydt6n8g",
+	//	Message:  "Hi",
+	//})
+	//if err != nil {
+	//	return nil, err
+	//}
+
 	interactionsSpooler := interactions.NewSpooler(
 		deps.DataStore,
 		deps.ConversationState,
-		interactions.NewRedditInteractions(deps.DataStore, redditOauthClient, logger),
+		interactionService,
 		nil,
 		4*time.Minute,
 		logger)
