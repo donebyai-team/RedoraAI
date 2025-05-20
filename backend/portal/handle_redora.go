@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/shank318/doota/agents/redora"
 	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/models"
 	pbcore "github.com/shank318/doota/pb/doota/core/v1"
@@ -363,6 +364,7 @@ func (p *Portal) GetRelevantLeads(ctx context.Context, c *connect.Request[pbport
 		RelevancyScore: c.Msg.RelevancyScore,
 		Sources:        subReddits,
 		Limit:          pageCount,
+		DateRange:      c.Msg.DateRange,
 		Offset:         int(c.Msg.PageNo),
 	})
 	if err != nil {
@@ -374,7 +376,15 @@ func (p *Portal) GetRelevantLeads(ctx context.Context, c *connect.Request[pbport
 		leadsProto = append(leadsProto, new(pbcore.Lead).FromModel(redactPlatformOnlyMetadata(actor.Role, lead)))
 	}
 
-	return connect.NewResponse(&pbportal.GetLeadsResponse{Leads: leadsProto}), nil
+	analysis, err := redora.NewLeadAnalysis(p.db, p.logger).GenerateLeadAnalysis(ctx, projectID, c.Msg.DateRange)
+	if err != nil {
+		return nil, err
+	}
+
+	return connect.NewResponse(&pbportal.GetLeadsResponse{
+		Leads:    leadsProto,
+		Analysis: analysis,
+	}), nil
 }
 
 func redactPlatformOnlyMetadata(role models.UserRole, lead *models.AugmentedLead) *models.AugmentedLead {
@@ -387,7 +397,7 @@ func redactPlatformOnlyMetadata(role models.UserRole, lead *models.AugmentedLead
 	return lead
 }
 
-const pageCount = 30
+const pageCount = 200
 
 func (p *Portal) GetLeadsByStatus(ctx context.Context, c *connect.Request[pbportal.GetLeadsByStatusRequest]) (*connect.Response[pbportal.GetLeadsResponse], error) {
 	actor, err := p.gethAuthContext(ctx)
@@ -405,9 +415,10 @@ func (p *Portal) GetLeadsByStatus(ctx context.Context, c *connect.Request[pbport
 		return nil, err
 	}
 	leads, err := p.db.GetLeadsByStatus(ctx, projectID, datastore.LeadsFilter{
-		Status: status,
-		Limit:  pageCount,
-		Offset: int(c.Msg.PageNo),
+		Status:    status,
+		Limit:     pageCount,
+		DateRange: c.Msg.DateRange,
+		Offset:    int(c.Msg.PageNo), // starting with 0
 	})
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to fetch leads: %w", err))

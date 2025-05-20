@@ -98,6 +98,11 @@ export declare type GetLeadsByStatusRequest = Message<"doota.portal.v1.GetLeadsB
    * @generated from field: int32 page_no = 3;
    */
   pageNo: number;
+
+  /**
+   * @generated from field: doota.portal.v1.DateRangeFilter date_range = 4;
+   */
+  dateRange: DateRangeFilter;
 };
 
 /**
@@ -124,6 +129,11 @@ export declare type GetRelevantLeadsRequest = Message<"doota.portal.v1.GetReleva
    * @generated from field: int32 page_no = 3;
    */
   pageNo: number;
+
+  /**
+   * @generated from field: doota.portal.v1.DateRangeFilter date_range = 4;
+   */
+  dateRange: DateRangeFilter;
 };
 
 /**
@@ -140,6 +150,11 @@ export declare type GetLeadsResponse = Message<"doota.portal.v1.GetLeadsResponse
    * @generated from field: repeated doota.core.v1.Lead leads = 1;
    */
   leads: Lead[];
+
+  /**
+   * @generated from field: doota.portal.v1.LeadAnalysis analysis = 2;
+   */
+  analysis?: LeadAnalysis;
 };
 
 /**
@@ -147,6 +162,47 @@ export declare type GetLeadsResponse = Message<"doota.portal.v1.GetLeadsResponse
  * Use `create(GetLeadsResponseSchema)` to create a new message.
  */
 export declare const GetLeadsResponseSchema: GenMessage<GetLeadsResponse>;
+
+/**
+ * @generated from message doota.portal.v1.LeadAnalysis
+ */
+export declare type LeadAnalysis = Message<"doota.portal.v1.LeadAnalysis"> & {
+  /**
+   * @generated from field: uint32 posts_tracked = 1;
+   */
+  postsTracked: number;
+
+  /**
+   * @generated from field: uint32 relevant_posts_found = 2;
+   */
+  relevantPostsFound: number;
+
+  /**
+   * @generated from field: uint32 comment_sent = 3;
+   */
+  commentSent: number;
+
+  /**
+   * @generated from field: uint32 comment_scheduled = 4;
+   */
+  commentScheduled: number;
+
+  /**
+   * @generated from field: uint32 dm_sent = 5;
+   */
+  dmSent: number;
+
+  /**
+   * @generated from field: uint32 dm_scheduled = 6;
+   */
+  dmScheduled: number;
+};
+
+/**
+ * Describes the message doota.portal.v1.LeadAnalysis.
+ * Use `create(LeadAnalysisSchema)` to create a new message.
+ */
+export declare const LeadAnalysisSchema: GenMessage<LeadAnalysis>;
 
 /**
  * @generated from message doota.portal.v1.AddSourceRequest
@@ -788,6 +844,36 @@ export declare type OauthCallbackResponse = Message<"doota.portal.v1.OauthCallba
  * Use `create(OauthCallbackResponseSchema)` to create a new message.
  */
 export declare const OauthCallbackResponseSchema: GenMessage<OauthCallbackResponse>;
+
+/**
+ * @generated from enum doota.portal.v1.DateRangeFilter
+ */
+export enum DateRangeFilter {
+  /**
+   * @generated from enum value: DATE_RANGE_UNSPECIFIED = 0;
+   */
+  DATE_RANGE_UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: DATE_RANGE_TODAY = 1;
+   */
+  DATE_RANGE_TODAY = 1,
+
+  /**
+   * @generated from enum value: DATE_RANGE_YESTERDAY = 2;
+   */
+  DATE_RANGE_YESTERDAY = 2,
+
+  /**
+   * @generated from enum value: DATE_RANGE_7_DAYS = 3;
+   */
+  DATE_RANGE_7_DAYS = 3,
+}
+
+/**
+ * Describes the enum doota.portal.v1.DateRangeFilter.
+ */
+export declare const DateRangeFilterSchema: GenEnum<DateRangeFilter>;
 
 /**
  * @generated from enum doota.portal.v1.OauthAuthorizeType

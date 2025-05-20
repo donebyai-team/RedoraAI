@@ -11,6 +11,7 @@ import (
 	"github.com/shank318/doota/integrations/reddit"
 	"github.com/shank318/doota/models"
 	"github.com/shank318/doota/notifiers/alerts"
+	pbportal "github.com/shank318/doota/pb/doota/portal/v1"
 	"github.com/shank318/doota/utils"
 	"go.uber.org/zap"
 	"sort"
@@ -142,32 +143,18 @@ func (s *redditKeywordTracker) sendAlert(ctx context.Context, project *models.Pr
 	// Send alert
 	if done {
 		s.logger.Info("daily tracking summary for project", zap.String("project_name", project.Name))
-		// daily count not to not be highly relevant and hence using a different relevancy score
-		dailyCount, err := s.getLeadsCountOfTheDay(ctx, project.ID, dailyPostsRelevancyScore)
+		analysis, err := NewLeadAnalysis(s.db, s.logger).GenerateLeadAnalysis(ctx, project.ID, pbportal.DateRangeFilter_DATE_RANGE_TODAY)
 		if err != nil {
-			s.logger.Error("failed to get leads count", zap.Error(err))
+			s.logger.Error("failed to generate lead analysis", zap.Error(err))
 			return
 		}
-
-		totalPostsAnalysed, err := s.getLeadsCountOfTheDay(ctx, project.ID, 0)
-		if err != nil {
-			s.logger.Error("failed to get leads count", zap.Error(err))
-			return
-		}
-
-		totalCommentsSent, err := s.automatedInteractions.GetInteractionsPerDay(ctx, project.ID, models.LeadInteractionStatusCREATED)
-		if err != nil {
-			s.logger.Error("failed to get leads interaction count", zap.Error(err))
-			return
-		}
-
 		// Send alert on redora
 		err = s.alertNotifier.SendLeadsSummary(ctx, alerts.LeadSummary{
 			OrgID:              project.OrganizationID,
 			ProjectName:        project.Name,
-			TotalPostsAnalysed: totalPostsAnalysed,
-			TotalCommentsSent:  uint32(len(totalCommentsSent)),
-			DailyCount:         dailyCount,
+			TotalPostsAnalysed: analysis.PostsTracked,
+			TotalCommentsSent:  analysis.CommentScheduled,
+			DailyCount:         analysis.RelevantPostsFound,
 		})
 		if err != nil {
 			s.logger.Error("failed to send slack notification", zap.Error(err))
@@ -176,9 +163,9 @@ func (s *redditKeywordTracker) sendAlert(ctx context.Context, project *models.Pr
 		err = s.alertNotifier.SendLeadsSummaryEmail(ctx, alerts.LeadSummary{
 			OrgID:              project.OrganizationID,
 			ProjectName:        project.Name,
-			TotalPostsAnalysed: totalPostsAnalysed,
-			TotalCommentsSent:  uint32(len(totalCommentsSent)),
-			DailyCount:         dailyCount,
+			TotalPostsAnalysed: analysis.PostsTracked,
+			TotalCommentsSent:  analysis.CommentScheduled,
+			DailyCount:         analysis.RelevantPostsFound,
 		})
 		if err != nil {
 			s.logger.Error("failed to send email notification", zap.Error(err))
@@ -214,7 +201,7 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 	source.OrgID = project.OrganizationID
 
 	// We will try to keep searching until we reach the max relevant posts per day >= defaultRelevancyScore
-	if ok, err := s.isMaxLeadLimitReached(ctx, project.ID, defaultRelevancyScore); err != nil || ok {
+	if ok, err := s.isMaxLeadLimitReached(ctx, project.OrganizationID); err != nil || ok {
 		return err
 	}
 
@@ -334,10 +321,6 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 			}
 
 			redditLead.RelevancyScore = relevanceResponse.IsRelevantConfidenceScore
-			if redditLead.RelevancyScore >= defaultRelevancyScore {
-				countPostsWithHighRelevancy++
-			}
-
 			redditLead.LeadMetadata.ChainOfThought = relevanceResponse.ChainOfThoughtIsRelevant
 			redditLead.LeadMetadata.SuggestedComment = relevanceResponse.SuggestedComment
 			redditLead.Intents = relevanceResponse.Intents
@@ -369,6 +352,19 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 			redditLead.Description = "[Redacted]"
 		}
 
+		// relevant posts
+		if redditLead.RelevancyScore >= defaultRelevancyScore {
+			countPostsWithHighRelevancy++
+			isAllowed, err := s.isMaxLeadLimitUnderLimit(ctx, tracker.Organization)
+			if err != nil {
+				return err
+			}
+			if !isAllowed {
+				s.logger.Info("max leads limit reached, skipping comment", zap.String("post_id", post.ID))
+				break
+			}
+		}
+
 		_, err = s.db.CreateLead(ctx, redditLead)
 		if err != nil {
 			if datastore.IsUniqueViolation(err) {
@@ -381,36 +377,36 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 			}
 		}
 
-		// Send automated comment
-		//if tracker.Organization.FeatureFlags.EnableAutoComment &&
-		//pbcore.IsGoodForEngagement(redditLead.Intents) &&
-		if redditLead.RelevancyScore >= defaultRelevancyScore &&
-			len(strings.TrimSpace(redditLead.LeadMetadata.SuggestedComment)) > 0 {
-			interaction, err := s.automatedInteractions.ScheduleComment(ctx, &models.LeadInteraction{
-				LeadID:    redditLead.ID,
-				ProjectID: redditLead.ProjectID,
-				From:      redditClient.GetConfig().Name,
-				To:        redditLead.PostID,
-			})
-			if err != nil {
-				s.logger.Warn("failed to send automated comment", zap.Error(err), zap.String("post_id", post.ID))
-			}
-			redditLead.LeadMetadata.CommentScheduledAt = interaction.ScheduledAt
-			err = s.db.UpdateLeadStatus(ctx, redditLead)
-			if err != nil {
-				s.logger.Warn("failed to update lead status", zap.Error(err), zap.String("post_id", post.ID))
+		// IMP: Make sure to send comment after saving the lead as we need lead id
+		if redditLead.RelevancyScore >= defaultRelevancyScore {
+			// schedule comment
+			if len(strings.TrimSpace(redditLead.LeadMetadata.SuggestedComment)) > 0 {
+				err := s.sendAutomatedComment(ctx, tracker.Organization, redditClient.GetConfig(), redditLead)
+				if err != nil {
+					s.logger.Error("failed to send automated comment", zap.Error(err), zap.String("post_id", post.ID))
+				}
 			}
 		}
 
+		// track max posts to track per day
+		shouldContinue, err := s.state.CheckIfUnderLimitAndIncrement(ctx, dailyCounterKey(project.OrganizationID), keyTrackedPostPerDay, maxPostsToTrackPerDay, 24*time.Hour)
+		if err != nil {
+			s.logger.Error("failed to check if daily_tracked_posts under limit and increment", zap.Error(err))
+		}
+
+		if !shouldContinue {
+			s.logger.Info("daily_tracked_posts limit reached, skipping tracking", zap.String("post_id", post.ID))
+			break
+		}
+
 		// We will try to keep searching until we reach the max relevant posts per day >= defaultRelevancyScore
-		ok, err := s.isMaxLeadLimitReached(ctx, project.ID, defaultRelevancyScore)
+		ok, err := s.isMaxLeadLimitReached(ctx, project.OrganizationID)
 		if err != nil || ok {
 			if err != nil {
 				return err
 			}
 			break
 		}
-
 	}
 
 	s.logger.Info("reddit_leads_summary",
@@ -422,33 +418,108 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 	return nil
 }
 
-func (s *redditKeywordTracker) isMaxLeadLimitReached(ctx context.Context, projectID string, relevancyScore int) (bool, error) {
-	count, err := s.getLeadsCountOfTheDay(ctx, projectID, relevancyScore)
+const (
+	keyCommentScheduledPerDay = "comment_scheduled"
+	keyRelevantLeadsPerDay    = "relevant_posts"
+	keyTrackedPostPerDay      = "posts_tracked"
+)
+
+func (s *redditKeywordTracker) sendAutomatedComment(ctx context.Context, org *models.Organization, redditConfig *models.RedditConfig, redditLead *models.Lead) error {
+	isOldEnough := redditConfig.IsUserOldEnough(2)
+	autoCommentEnabled := org.FeatureFlags.EnableAutoComment
+
+	// Case 1: User is old enough, but auto comment is currently disabled — enable it
+	if isOldEnough && !autoCommentEnabled {
+		org.FeatureFlags.EnableAutoComment = true
+		activity := models.OrgActivityTypeCOMMENTENABLEDWARMEDUP
+		org.FeatureFlags.Activities = append(org.FeatureFlags.Activities, models.OrgActivity{
+			ActivityType: activity,
+			CreatedAt:    time.Now(),
+		})
+		if err := s.db.UpdateOrganization(ctx, org); err != nil {
+			return fmt.Errorf("failed to enable auto comment: %w", err)
+		}
+		s.logger.Info("enabled auto comment", zap.String("org_name", org.Name), zap.String("activity", activity.String()))
+		go s.alertNotifier.SendUserActivity(context.Background(), activity.String(), org.Name, redditConfig.Name)
+	}
+
+	// Case 2: User is not old enough, but auto comment is currently enabled — disable it
+	if !isOldEnough && autoCommentEnabled {
+		org.FeatureFlags.EnableAutoComment = false
+		activity := models.OrgActivityTypeCOMMENTDISABLEDACCOUNTAGENEW
+		org.FeatureFlags.Activities = append(org.FeatureFlags.Activities, models.OrgActivity{
+			ActivityType: activity,
+			CreatedAt:    time.Now(),
+		})
+		if err := s.db.UpdateOrganization(ctx, org); err != nil {
+			return fmt.Errorf("failed to disable auto comment: %w", err)
+		}
+		s.logger.Info("disabled auto comment", zap.String("org_name", org.Name), zap.String("activity", activity.String()))
+		go s.alertNotifier.SendUserActivity(context.Background(), activity.String(), org.Name, redditConfig.Name)
+	}
+
+	// Only proceed if commenting is enabled and user is old enough
+	if !(isOldEnough && org.FeatureFlags.EnableAutoComment) {
+		return nil // skip commenting
+	}
+
+	// Continue
+	redisKey := dailyCounterKey(org.ID)
+	shouldComment, err := s.state.CheckIfUnderLimitAndIncrement(ctx, redisKey, keyCommentScheduledPerDay, maxCommentsPerDay, 24*time.Hour)
+	if err != nil {
+		return fmt.Errorf("failed to check if comment_scheduled under limit and increment: %w", err)
+	}
+
+	if shouldComment {
+		interaction, err := s.automatedInteractions.ScheduleComment(ctx, &models.LeadInteraction{
+			LeadID:    redditLead.ID,
+			ProjectID: redditLead.ProjectID,
+			From:      redditConfig.Name,
+			To:        redditLead.PostID,
+		})
+		if err != nil {
+			err := s.state.RollbackCounter(ctx, redisKey, keyCommentScheduledPerDay)
+			if err != nil {
+				s.logger.Error("failed to rollback counter", zap.Error(err))
+			}
+			return fmt.Errorf("failed to schedule comment: %w", err)
+		}
+
+		if interaction != nil {
+			redditLead.LeadMetadata.CommentScheduledAt = interaction.ScheduledAt
+			return s.db.UpdateLeadStatus(ctx, redditLead)
+		}
+	}
+
+	return nil
+}
+
+func dailyCounterKey(orgID string) string {
+	return fmt.Sprintf("org:%s:counters:%s", orgID, time.Now().UTC().Format("2006-01-02"))
+}
+
+func (s *redditKeywordTracker) isMaxLeadLimitUnderLimit(ctx context.Context, org *models.Organization) (bool, error) {
+	return s.state.CheckIfUnderLimitAndIncrement(ctx, dailyCounterKey(org.ID), keyRelevantLeadsPerDay, maxLeadsPerDay, 24*time.Hour)
+}
+
+func (s *redditKeywordTracker) isMaxLeadLimitReached(ctx context.Context, orgID string) (bool, error) {
+	dailyCounters, err := s.state.GetLeadAnalysisCounters(ctx, dailyCounterKey(orgID))
 	if err != nil {
 		return false, err
 	}
-
-	today := time.Now().UTC().Truncate(24 * time.Hour)
-	tomorrow := today.Add(24 * time.Hour)
-
-	if count >= maxLeadsPerDay {
+	if dailyCounters.RelevantPostsFound >= maxLeadsPerDay {
 		s.logger.Info("reached max leads per day",
-			zap.Uint32("count", count),
-			zap.String("start_date", today.String()),
-			zap.String("end_date", tomorrow.String()))
+			zap.Uint32("count", dailyCounters.RelevantPostsFound))
 		return true, nil
 	}
-	return false, nil
-}
 
-func (s *redditKeywordTracker) getLeadsCountOfTheDay(ctx context.Context, projectID string, relevancyScore int) (uint32, error) {
-	today := time.Now().UTC().Truncate(24 * time.Hour)
-	tomorrow := today.Add(24 * time.Hour)
-	leadsData, err := s.db.CountLeadByCreatedAt(ctx, projectID, relevancyScore, today, tomorrow)
-	if err != nil {
-		return 0, err
+	if dailyCounters.PostsTracked >= maxPostsToTrackPerDay {
+		s.logger.Info("reached max posts to track per day",
+			zap.Uint32("count", dailyCounters.PostsTracked))
+		return true, nil
 	}
-	return leadsData.Count, nil
+
+	return false, nil
 }
 
 const (
@@ -461,6 +532,8 @@ const (
 	dailyPostsRelevancyScore = 80
 	minRelevancyScore        = 70
 	defaultLLMFailedCount    = 3
+	maxCommentsPerDay        = 4
+	maxPostsToTrackPerDay    = 500
 )
 
 var systemAuthors = []string{"[deleted]", "AutoModerator"}

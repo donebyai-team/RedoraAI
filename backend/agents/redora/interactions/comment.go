@@ -7,6 +7,7 @@ import (
 	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/integrations/reddit"
 	"github.com/shank318/doota/models"
+	pbportal "github.com/shank318/doota/pb/doota/portal/v1"
 	"github.com/shank318/doota/utils"
 	"go.uber.org/zap"
 	"math/rand"
@@ -16,7 +17,7 @@ import (
 type AutomatedInteractions interface {
 	ScheduleComment(ctx context.Context, leadInteraction *models.LeadInteraction) (*models.LeadInteraction, error)
 	SendComment(ctx context.Context, interaction *models.LeadInteraction) (err error)
-	GetInteractionsPerDay(ctx context.Context, projectID string, status models.LeadInteractionStatus) ([]*models.LeadInteraction, error)
+	GetInteractions(ctx context.Context, projectID string, status models.LeadInteractionStatus, dateRange pbportal.DateRangeFilter) ([]*models.LeadInteraction, error)
 }
 
 type redditInteractions struct {
@@ -25,24 +26,40 @@ type redditInteractions struct {
 	logger            *zap.Logger
 }
 
-func (r redditInteractions) GetInteractionsPerDay(ctx context.Context, projectID string, status models.LeadInteractionStatus) ([]*models.LeadInteraction, error) {
-	today := time.Now().UTC().Truncate(24 * time.Hour)
-	tomorrow := today.Add(24 * time.Hour)
-	return r.db.GetLeadInteractions(ctx, projectID, status, today, tomorrow)
+func (r redditInteractions) GetInteractions(ctx context.Context, projectID string, status models.LeadInteractionStatus, dateRange pbportal.DateRangeFilter) ([]*models.LeadInteraction, error) {
+	return r.db.GetLeadInteractions(ctx, projectID, status, dateRange)
 }
 
-func NewRedditInteractions(redditOauthClient *reddit.OauthClient, db datastore.Repository, logger *zap.Logger) AutomatedInteractions {
+func NewRedditInteractions(db datastore.Repository, redditOauthClient *reddit.OauthClient, logger *zap.Logger) AutomatedInteractions {
 	return &redditInteractions{redditOauthClient: redditOauthClient, db: db, logger: logger}
 }
 
 func (r redditInteractions) SendComment(ctx context.Context, interaction *models.LeadInteraction) (err error) {
+	redditLead, err := r.db.GetLeadByID(ctx, interaction.ProjectID, interaction.LeadID)
+	if err != nil {
+		return err
+	}
+
 	defer func() {
 		// Always update interaction at the end
 		updateErr := r.db.UpdateLeadInteraction(ctx, interaction)
 		if updateErr != nil && err == nil {
 			err = fmt.Errorf("failed to update interaction: %w", updateErr)
 		}
+
+		redditLead.LeadMetadata.CommentScheduledAt = nil
+		updateError := r.db.UpdateLeadStatus(ctx, redditLead)
+		if updateError != nil {
+			r.logger.Warn("failed to update lead status for automated comment", zap.Error(err), zap.String("lead_id", redditLead.ID))
+		}
 	}()
+
+	// case: if auto comment disabled
+	if !interaction.Organization.FeatureFlags.EnableAutoComment {
+		interaction.Status = models.LeadInteractionStatusFAILED
+		interaction.Reason = "auto comment is disabled for this organization"
+		return nil
+	}
 
 	redditClient, err := r.redditOauthClient.GetOrCreate(ctx, interaction.Organization.ID, true)
 	if err != nil {
@@ -51,11 +68,6 @@ func (r redditInteractions) SendComment(ctx context.Context, interaction *models
 			interaction.Reason = "integration not found or inactive"
 			return nil
 		}
-	}
-
-	redditLead, err := r.db.GetLeadByID(ctx, interaction.ProjectID, interaction.LeadID)
-	if err != nil {
-		return err
 	}
 
 	err = r.db.SetLeadInteractionStatusProcessing(ctx, interaction.ID)
@@ -87,10 +99,6 @@ func (r redditInteractions) SendComment(ctx context.Context, interaction *models
 
 		redditLead.LeadMetadata.AutomatedCommentURL = fmt.Sprintf("https://www.reddit.com/%s", interaction.Metadata.Permalink)
 		redditLead.Status = models.LeadStatusCOMPLETED
-		updateError := r.db.UpdateLeadStatus(ctx, redditLead)
-		if updateError != nil {
-			r.logger.Warn("failed to update lead status for automated comment", zap.Error(err), zap.String("lead_id", redditLead.ID))
-		}
 	}
 
 	return nil
@@ -101,8 +109,9 @@ func (r redditInteractions) ScheduleComment(ctx context.Context, info *models.Le
 		zap.String("type", models.LeadInteractionTypeCOMMENT.String()),
 		zap.String("thing_id", info.To),
 	)
+	info.Type = models.LeadInteractionTypeCOMMENT
 
-	interactions, err := r.GetInteractionsPerDay(ctx, info.ProjectID, models.LeadInteractionStatusCREATED)
+	interactions, err := r.GetInteractions(ctx, info.ProjectID, models.LeadInteractionStatusCREATED, pbportal.DateRangeFilter_DATE_RANGE_TODAY)
 	if err != nil {
 		return nil, err
 	}

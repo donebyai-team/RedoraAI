@@ -24,10 +24,10 @@ import (
 const SEED = 42
 
 type Client struct {
-	defaultLLMModel models.LLMModel
-	advanceLLMModel models.LLMModel
-	model           openai.Client
-	langsmithConfig LangsmithConfig
+	defaultLLMModel     models.LLMModel
+	advanceLLMModel     models.LLMModel
+	model               openai.Client
+	langsmithConfig     LangsmithConfig
 	/**/ debugFileStore dstore.Store
 	log                 *zap.Logger
 }
@@ -342,8 +342,8 @@ func (c *Client) IsRedditPostRelevant(ctx context.Context, model models.LLMModel
 		out["ProductMentionAllowed"] = true
 	}
 
-	// Word count: random number between 50 and 120
-	out["WordsForComment"] = rand.Intn(51) + 50
+	// Word count: random number between 50 and 70
+	out["WordsForComment"] = rand.Intn(21) + 40
 
 	// Only assign PhraseForComment if product mention is allowed
 	if allowed, ok := out["ProductMentionAllowed"].(bool); ok && allowed {

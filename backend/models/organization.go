@@ -28,7 +28,18 @@ type OrganizationFeatureFlags struct {
 	DMLLMModel        LLMModel      `json:"dm_llm_model"`
 	RelevancyLLMModel LLMModel      `json:"relevancy_llm_model"`
 	Subscription      *Subscription `json:"subscription"` // storing here for faster access
+	Activities        []OrgActivity `json:"activities"`
 }
+
+type OrgActivity struct {
+	ActivityType OrgActivityType `json:"activity_type"`
+	CreatedAt    time.Time       `json:"created_at"`
+}
+
+//go:generate go-enum -f=$GOFILE
+
+// ENUM(COMMENT_DISABLED_ACCOUNT_AGE_NEW, COMMENT_DISABLED_LOW_KARMA, COMMENT_ENABLED_WARMED_UP)
+type OrgActivityType string
 
 func (b OrganizationFeatureFlags) IsSubscriptionExpired() bool {
 	if b.Subscription == nil {
