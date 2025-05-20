@@ -35,13 +35,31 @@ func NewRedditInteractions(db datastore.Repository, redditOauthClient *reddit.Oa
 }
 
 func (r redditInteractions) SendComment(ctx context.Context, interaction *models.LeadInteraction) (err error) {
+	redditLead, err := r.db.GetLeadByID(ctx, interaction.ProjectID, interaction.LeadID)
+	if err != nil {
+		return err
+	}
+
 	defer func() {
 		// Always update interaction at the end
 		updateErr := r.db.UpdateLeadInteraction(ctx, interaction)
 		if updateErr != nil && err == nil {
 			err = fmt.Errorf("failed to update interaction: %w", updateErr)
 		}
+
+		redditLead.LeadMetadata.CommentScheduledAt = nil
+		updateError := r.db.UpdateLeadStatus(ctx, redditLead)
+		if updateError != nil {
+			r.logger.Warn("failed to update lead status for automated comment", zap.Error(err), zap.String("lead_id", redditLead.ID))
+		}
 	}()
+
+	// case: if auto comment disabled
+	if !interaction.Organization.FeatureFlags.EnableAutoComment {
+		interaction.Status = models.LeadInteractionStatusFAILED
+		interaction.Reason = "auto comment is disabled for this organization"
+		return nil
+	}
 
 	redditClient, err := r.redditOauthClient.GetOrCreate(ctx, interaction.Organization.ID, true)
 	if err != nil {
@@ -50,11 +68,6 @@ func (r redditInteractions) SendComment(ctx context.Context, interaction *models
 			interaction.Reason = "integration not found or inactive"
 			return nil
 		}
-	}
-
-	redditLead, err := r.db.GetLeadByID(ctx, interaction.ProjectID, interaction.LeadID)
-	if err != nil {
-		return err
 	}
 
 	err = r.db.SetLeadInteractionStatusProcessing(ctx, interaction.ID)
@@ -86,10 +99,6 @@ func (r redditInteractions) SendComment(ctx context.Context, interaction *models
 
 		redditLead.LeadMetadata.AutomatedCommentURL = fmt.Sprintf("https://www.reddit.com/%s", interaction.Metadata.Permalink)
 		redditLead.Status = models.LeadStatusCOMPLETED
-		updateError := r.db.UpdateLeadStatus(ctx, redditLead)
-		if updateError != nil {
-			r.logger.Warn("failed to update lead status for automated comment", zap.Error(err), zap.String("lead_id", redditLead.ID))
-		}
 	}
 
 	return nil
