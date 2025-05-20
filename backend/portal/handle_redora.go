@@ -345,6 +345,21 @@ func (p *Portal) RemoveSource(ctx context.Context, c *connect.Request[pbportal.R
 }
 
 func (p *Portal) GetRelevantLeads(ctx context.Context, c *connect.Request[pbportal.GetRelevantLeadsRequest]) (*connect.Response[pbportal.GetLeadsResponse], error) {
+	status, err := models.ParseLeadStatus(c.Msg.Status.String())
+	if err != nil {
+		return nil, err
+	}
+
+	if status != models.LeadStatusNEW {
+		return p.GetLeadsByStatus(ctx, &connect.Request[pbportal.GetLeadsByStatusRequest]{
+			Msg: &pbportal.GetLeadsByStatusRequest{
+				Status:    c.Msg.Status,
+				PageNo:    c.Msg.PageNo,
+				DateRange: c.Msg.DateRange,
+			},
+		})
+	}
+
 	actor, err := p.gethAuthContext(ctx)
 	if err != nil {
 		return nil, err

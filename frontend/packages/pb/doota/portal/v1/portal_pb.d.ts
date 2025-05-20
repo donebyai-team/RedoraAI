@@ -134,6 +134,11 @@ export declare type GetRelevantLeadsRequest = Message<"doota.portal.v1.GetReleva
    * @generated from field: doota.portal.v1.DateRangeFilter date_range = 4;
    */
   dateRange: DateRangeFilter;
+
+  /**
+   * @generated from field: doota.core.v1.LeadStatus status = 5;
+   */
+  status: LeadStatus;
 };
 
 /**
