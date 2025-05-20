@@ -533,7 +533,7 @@ const (
 	minRelevancyScore        = 70
 	defaultLLMFailedCount    = 3
 	maxCommentsPerDay        = 4
-	maxPostsToTrackPerDay    = 500
+	maxPostsToTrackPerDay    = 600
 )
 
 var systemAuthors = []string{"[deleted]", "AutoModerator"}
