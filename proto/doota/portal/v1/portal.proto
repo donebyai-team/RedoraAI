@@ -32,6 +32,12 @@ service PortalService {
   rpc GetLeadsByStatus(GetLeadsByStatusRequest) returns (GetLeadsResponse);
   rpc UpdateLeadStatus(UpdateLeadStatusRequest) returns (.google.protobuf.Empty);
   rpc CreateOrEditProject(CreateProjectRequest) returns (doota.core.v1.Project);
+  rpc UpdateAutomationSettings(UpdateAutomationSettingRequest) returns (Organization);
+}
+
+message UpdateAutomationSettingRequest {
+  AutomationSetting dm = 1;
+  AutomationSetting comment = 2;
 }
 
 message CreateKeywordsRes {
@@ -197,6 +203,13 @@ message Organization {
 
 message OrganizationFeatureFlags {
   core.v1.Subscription subscription = 1;
+  AutomationSetting DM = 2;
+  AutomationSetting Comment = 3;
+}
+
+message AutomationSetting {
+  bool enabled = 1;
+  float relevancy_score = 2;
 }
 
 message Integration {

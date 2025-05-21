@@ -13,6 +13,27 @@ import type { EmptySchema, Timestamp } from "@bufbuild/protobuf/wkt";
 export declare const file_doota_portal_v1_portal: GenFile;
 
 /**
+ * @generated from message doota.portal.v1.UpdateAutomationSettingRequest
+ */
+export declare type UpdateAutomationSettingRequest = Message<"doota.portal.v1.UpdateAutomationSettingRequest"> & {
+  /**
+   * @generated from field: doota.portal.v1.AutomationSetting dm = 1;
+   */
+  dm?: AutomationSetting;
+
+  /**
+   * @generated from field: doota.portal.v1.AutomationSetting comment = 2;
+   */
+  comment?: AutomationSetting;
+};
+
+/**
+ * Describes the message doota.portal.v1.UpdateAutomationSettingRequest.
+ * Use `create(UpdateAutomationSettingRequestSchema)` to create a new message.
+ */
+export declare const UpdateAutomationSettingRequestSchema: GenMessage<UpdateAutomationSettingRequest>;
+
+/**
  * @generated from message doota.portal.v1.CreateKeywordsRes
  */
 export declare type CreateKeywordsRes = Message<"doota.portal.v1.CreateKeywordsRes"> & {
@@ -652,6 +673,16 @@ export declare type OrganizationFeatureFlags = Message<"doota.portal.v1.Organiza
    * @generated from field: doota.core.v1.Subscription subscription = 1;
    */
   subscription?: Subscription;
+
+  /**
+   * @generated from field: doota.portal.v1.AutomationSetting DM = 2;
+   */
+  DM?: AutomationSetting;
+
+  /**
+   * @generated from field: doota.portal.v1.AutomationSetting Comment = 3;
+   */
+  Comment?: AutomationSetting;
 };
 
 /**
@@ -659,6 +690,27 @@ export declare type OrganizationFeatureFlags = Message<"doota.portal.v1.Organiza
  * Use `create(OrganizationFeatureFlagsSchema)` to create a new message.
  */
 export declare const OrganizationFeatureFlagsSchema: GenMessage<OrganizationFeatureFlags>;
+
+/**
+ * @generated from message doota.portal.v1.AutomationSetting
+ */
+export declare type AutomationSetting = Message<"doota.portal.v1.AutomationSetting"> & {
+  /**
+   * @generated from field: bool enabled = 1;
+   */
+  enabled: boolean;
+
+  /**
+   * @generated from field: float relevancy_score = 2;
+   */
+  relevancyScore: number;
+};
+
+/**
+ * Describes the message doota.portal.v1.AutomationSetting.
+ * Use `create(AutomationSettingSchema)` to create a new message.
+ */
+export declare const AutomationSettingSchema: GenMessage<AutomationSetting>;
 
 /**
  * @generated from message doota.portal.v1.Integration
@@ -1149,6 +1201,14 @@ export declare const PortalService: GenService<{
     methodKind: "unary";
     input: typeof CreateProjectRequestSchema;
     output: typeof ProjectSchema;
+  },
+  /**
+   * @generated from rpc doota.portal.v1.PortalService.UpdateAutomationSettings
+   */
+  updateAutomationSettings: {
+    methodKind: "unary";
+    input: typeof UpdateAutomationSettingRequestSchema;
+    output: typeof OrganizationSchema;
   },
 }>;
 

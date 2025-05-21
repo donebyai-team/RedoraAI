@@ -5,17 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/playwright-community/playwright-go"
+	"github.com/shank318/doota/errorx"
 	"net/http"
 	"strings"
 )
-
-type LoginError struct {
-	Reason string
-}
-
-func (e *LoginError) Error() string {
-	return fmt.Sprintf("login failed: %s", e.Reason)
-}
 
 type browserless struct {
 	Token string
@@ -165,7 +158,7 @@ func (r browserless) tryLogin(page playwright.Page, params DMParams) error {
 	page.WaitForTimeout(3000)
 
 	if loginMsg := extractLoginErrors(page); loginMsg != "" {
-		return &LoginError{Reason: loginMsg}
+		return &errorx.LoginError{Reason: loginMsg}
 	}
 	return nil
 }

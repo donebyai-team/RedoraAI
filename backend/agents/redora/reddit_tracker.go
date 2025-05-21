@@ -8,6 +8,7 @@ import (
 	"github.com/shank318/doota/agents/state"
 	"github.com/shank318/doota/ai"
 	"github.com/shank318/doota/datastore"
+	"github.com/shank318/doota/errorx"
 	"github.com/shank318/doota/integrations/reddit"
 	"github.com/shank318/doota/models"
 	"github.com/shank318/doota/notifiers/alerts"
@@ -66,10 +67,16 @@ func (s *redditKeywordTracker) WithLogger(logger *zap.Logger) KeywordTracker {
 
 func (s *redditKeywordTracker) TrackKeyword(ctx context.Context, tracker *models.AugmentedKeywordTracker) error {
 	redditClient, err := s.redditOauthClient.GetOrCreate(ctx, tracker.Project.OrganizationID, true)
-	if err != nil && errors.Is(err, datastore.IntegrationNotFoundOrActive) {
-		return nil
-	}
 	if err != nil {
+		if errors.Is(err, datastore.IntegrationNotFoundOrActive) {
+			return nil
+		}
+		var refreshTokenErr *errorx.RefreshTokenError
+		if errors.As(err, &refreshTokenErr) {
+			// TODO: Mark project as inactive
+			s.logger.Warn("failed to refresh token, skipping tracking", zap.Error(refreshTokenErr))
+			return nil
+		}
 		return err
 	}
 
@@ -378,7 +385,11 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 		}
 
 		// IMP: Make sure to send comment after saving the lead as we need lead id
-		if redditLead.RelevancyScore >= defaultRelevancyScore {
+		commentRelevancyScore := tracker.Organization.FeatureFlags.RelevancyScoreComment
+		if commentRelevancyScore == 0 {
+			commentRelevancyScore = defaultRelevancyScore
+		}
+		if redditLead.RelevancyScore >= commentRelevancyScore && tracker.Organization.FeatureFlags.EnableAutoComment {
 			// schedule comment
 			if len(strings.TrimSpace(redditLead.LeadMetadata.SuggestedComment)) > 0 {
 				err := s.sendAutomatedComment(ctx, tracker.Organization, redditClient.GetConfig(), redditLead)
@@ -386,7 +397,13 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 					s.logger.Error("failed to send automated comment", zap.Error(err), zap.String("post_id", post.ID))
 				}
 			}
+		}
 
+		dmRelevancyScore := tracker.Organization.FeatureFlags.RelevancyScoreDM
+		if dmRelevancyScore == 0 {
+			dmRelevancyScore = defaultRelevancyScore
+		}
+		if redditLead.RelevancyScore >= dmRelevancyScore && tracker.Organization.FeatureFlags.EnableAutoDM {
 			// Schedule DM
 			if len(strings.TrimSpace(redditLead.LeadMetadata.SuggestedDM)) > 0 {
 				err := s.sendAutomatedDM(ctx, tracker.Organization, redditClient.GetConfig(), redditLead)

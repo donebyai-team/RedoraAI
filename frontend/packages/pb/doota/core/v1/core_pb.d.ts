@@ -254,6 +254,16 @@ export declare type LeadMetadata = Message<"doota.core.v1.LeadMetadata"> & {
    * @generated from field: optional google.protobuf.Timestamp comment_scheduled_at = 18;
    */
   commentScheduledAt?: Timestamp;
+
+  /**
+   * @generated from field: bool automated_dm_sent = 19;
+   */
+  automatedDmSent: boolean;
+
+  /**
+   * @generated from field: optional google.protobuf.Timestamp dm_scheduled_at = 20;
+   */
+  dmScheduledAt?: Timestamp;
 };
 
 /**

@@ -231,6 +231,7 @@ type LeadMetadata struct {
 	AutomatedCommentURL            string     `json:"automated_comment_url"`
 	CommentScheduledAt             *time.Time `json:"comment_scheduled_at"`
 	DMScheduledAt                  *time.Time `json:"dm_scheduled_at"`
+	AutomatedDMSent                bool       `json:"automated_dm_sent"`
 	CommentLLMModel                LLMModel   `json:"comment_llm_model"`
 	DMLLMModel                     LLMModel   `json:"dm_llm_model"`
 	RelevancyLLMModel              LLMModel   `json:"relevancy_llm_model"`
