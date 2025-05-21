@@ -412,6 +412,41 @@ func redactPlatformOnlyMetadata(role models.UserRole, lead *models.AugmentedLead
 	return lead
 }
 
+func (p *Portal) UpdateAutomationSettings(ctx context.Context, c *connect.Request[pbportal.UpdateAutomationSettingRequest]) (*connect.Response[pbportal.Organization], error) {
+	actor, err := p.gethAuthContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	org, err := p.db.GetOrganizationById(ctx, actor.OrganizationID)
+	if err != nil {
+		return nil, err
+	}
+
+	if c.Msg.Comment != nil {
+		if c.Msg.Comment.RelevancyScore < 80 {
+			return nil, status.New(codes.InvalidArgument, "relevancy score should be at least 80").Err()
+		}
+		org.FeatureFlags.EnableAutoComment = c.Msg.Comment.Enabled
+		org.FeatureFlags.RelevancyScoreComment = float64(c.Msg.Comment.RelevancyScore)
+	}
+
+	//if c.Msg.Dm != nil {
+	//	if c.Msg.Dm.RelevancyScore < 70 {
+	//		return nil, status.New(codes.InvalidArgument, "relevancy score should be at least 70").Err()
+	//	}
+	//	org.FeatureFlags.EnableAutoDM = c.Msg.Dm.Enabled
+	//	org.FeatureFlags.RelevancyScoreDM = float64(c.Msg.Dm.RelevancyScore)
+	//}
+
+	err = p.db.UpdateOrganization(ctx, org)
+	if err != nil {
+		return nil, err
+	}
+
+	return connect.NewResponse(new(pbportal.Organization).FromModel(org)), nil
+}
+
 const pageCount = 200
 
 func (p *Portal) GetLeadsByStatus(ctx context.Context, c *connect.Request[pbportal.GetLeadsByStatusRequest]) (*connect.Response[pbportal.GetLeadsResponse], error) {

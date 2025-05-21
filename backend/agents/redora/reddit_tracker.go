@@ -385,7 +385,11 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 		}
 
 		// IMP: Make sure to send comment after saving the lead as we need lead id
-		if redditLead.RelevancyScore >= defaultRelevancyScore {
+		commentRelevancyScore := tracker.Organization.FeatureFlags.RelevancyScoreComment
+		if commentRelevancyScore == 0 {
+			commentRelevancyScore = defaultRelevancyScore
+		}
+		if redditLead.RelevancyScore >= commentRelevancyScore && tracker.Organization.FeatureFlags.EnableAutoComment {
 			// schedule comment
 			if len(strings.TrimSpace(redditLead.LeadMetadata.SuggestedComment)) > 0 {
 				err := s.sendAutomatedComment(ctx, tracker.Organization, redditClient.GetConfig(), redditLead)
@@ -393,7 +397,13 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 					s.logger.Error("failed to send automated comment", zap.Error(err), zap.String("post_id", post.ID))
 				}
 			}
+		}
 
+		dmRelevancyScore := tracker.Organization.FeatureFlags.RelevancyScoreDM
+		if dmRelevancyScore == 0 {
+			dmRelevancyScore = defaultRelevancyScore
+		}
+		if redditLead.RelevancyScore >= dmRelevancyScore && tracker.Organization.FeatureFlags.EnableAutoDM {
 			// Schedule DM
 			if len(strings.TrimSpace(redditLead.LeadMetadata.SuggestedDM)) > 0 {
 				err := s.sendAutomatedDM(ctx, tracker.Organization, redditClient.GetConfig(), redditLead)

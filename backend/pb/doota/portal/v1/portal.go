@@ -39,6 +39,16 @@ func (o *Organization) FromModel(model *models.Organization) *Organization {
 	if model.FeatureFlags.Subscription != nil {
 		o.FeatureFlags.Subscription = new(pbcore.Subscription).FromModel(model.FeatureFlags.Subscription)
 	}
+	o.FeatureFlags.Comment = &AutomationSetting{
+		Enabled:        model.FeatureFlags.EnableAutoComment,
+		RelevancyScore: float32(model.FeatureFlags.RelevancyScoreComment),
+	}
+
+	o.FeatureFlags.DM = &AutomationSetting{
+		Enabled:        model.FeatureFlags.EnableAutoDM,
+		RelevancyScore: float32(model.FeatureFlags.RelevancyScoreDM),
+	}
+
 	o.CreatedAt = timestamppb.New(model.CreatedAt)
 	return o
 }
