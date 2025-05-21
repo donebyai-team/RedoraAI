@@ -11,6 +11,7 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"strings"
 )
 
 type DMParams struct {
@@ -31,6 +32,10 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 		return err
 	}
 
+	if strings.TrimSpace(utils.FormatDM(redditLead.LeadMetadata.SuggestedDM)) == "" {
+		return fmt.Errorf("no DM message found")
+	}
+
 	defer func() {
 		// Always update interaction at the end
 		updateErr := r.db.UpdateLeadInteraction(ctx, interaction)
@@ -44,6 +49,13 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 			r.logger.Warn("failed to update lead status for automated DM", zap.Error(err), zap.String("lead_id", redditLead.ID))
 		}
 	}()
+
+	if strings.TrimSpace(utils.FormatDM(redditLead.LeadMetadata.SuggestedDM)) == "" {
+		err := fmt.Errorf("no DM message found")
+		interaction.Status = models.LeadInteractionStatusFAILED
+		interaction.Reason = err.Error()
+		return err
+	}
 
 	// case: if auto DM disabled
 	if !interaction.Organization.FeatureFlags.EnableAutoDM {

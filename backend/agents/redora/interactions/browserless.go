@@ -66,7 +66,7 @@ func (r browserless) SendDM(params DMParams) error {
 	}
 
 	textarea, err := page.WaitForSelector("rs-message-composer textarea[name='message']", playwright.PageWaitForSelectorOptions{
-		Timeout: playwright.Float(4000),
+		Timeout: playwright.Float(5000),
 	})
 	if err != nil {
 		return fmt.Errorf("message textarea not found: %w", err)
@@ -77,7 +77,7 @@ func (r browserless) SendDM(params DMParams) error {
 	}
 
 	sendBtn, err := page.WaitForSelector("rs-message-composer button[aria-label='Send message']", playwright.PageWaitForSelectorOptions{
-		Timeout: playwright.Float(2500),
+		Timeout: playwright.Float(5000),
 	})
 	if err != nil {
 		return fmt.Errorf("send button not found: %w", err)
