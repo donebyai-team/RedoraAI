@@ -281,7 +281,7 @@ const NavBar: FC = () => {
                 disableHoverListener={canChangeOrg ? false : true}
               >
                 <div className='flex items-center gap-[4px] text-gray-100'>
-                  <div className=''>{currentOrg?.name}</div>
+                  <div className='max-w-[160px] overflow-hidden text-ellipsis'>{currentOrg?.name}</div>
                   {canChangeOrg && (
                     <div className={`inline-block`}>
                       <ChevronDown size={18} />
@@ -690,7 +690,7 @@ const NavBar: FC = () => {
                   <ListItemIcon sx={{ minWidth: "auto", mr: 2 }}>
                     <SettingsIcon />
                   </ListItemIcon>
-                  <ListItemText primary={`Integrations`} />
+                  <ListItemText primary={`Settings`} />
                 </ListItemButton>
               </ListItem>
             </>)}
