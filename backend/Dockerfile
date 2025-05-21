@@ -47,7 +47,7 @@ RUN apt-get update && apt-get install -y \
 RUN mkdir /app
 
 # Write the firebase config file
-echo "$GOOGLE_APPLICATION_CREDENTIALS_JSON" | base64 --decode > /app/firebase-config.json
+echo echo "$GOOGLE_APPLICATION_CREDENTIALS_JSON" | base64 --decode > /app/firebase-config.json
 
 
 COPY --from=builder /app/doota /app/doota
