@@ -65,21 +65,21 @@ func (r browserless) SendDM(params DMParams) error {
 		return fmt.Errorf("chat error: invalid user")
 	}
 
-	textarea, err := page.WaitForSelector("rs-message-composer textarea[name='message']", playwright.PageWaitForSelectorOptions{
+	locator := page.Locator("rs-message-composer textarea[name='message']")
+	if err := locator.WaitFor(playwright.LocatorWaitForOptions{
 		Timeout: playwright.Float(5000),
-	})
-	if err != nil {
+	}); err != nil {
 		return fmt.Errorf("message textarea not found: %w", err)
 	}
 
-	if err := textarea.Fill(params.Message); err != nil {
+	if err := locator.Fill(params.Message); err != nil {
 		return fmt.Errorf("filling message failed: %w", err)
 	}
 
-	sendBtn, err := page.WaitForSelector("rs-message-composer button[aria-label='Send message']", playwright.PageWaitForSelectorOptions{
+	sendBtn := page.Locator("rs-message-composer button[aria-label='Send message']")
+	if err := sendBtn.WaitFor(playwright.LocatorWaitForOptions{
 		Timeout: playwright.Float(5000),
-	})
-	if err != nil {
+	}); err != nil {
 		return fmt.Errorf("send button not found: %w", err)
 	}
 
@@ -132,32 +132,36 @@ func (r browserless) tryLogin(page playwright.Page, params DMParams) error {
 		return fmt.Errorf("navigate to login failed: %w", err)
 	}
 
-	selectors := map[string]string{
-		"username": "#login-username input[name='username']",
-		"password": "#login-password input[name='password']",
-		"button":   "button[type='button'] span:has-text('Log In')",
+	locators := map[string]playwright.Locator{
+		"username": page.Locator("#login-username input[name='username']"),
+		"password": page.Locator("#login-password input[name='password']"),
+		"button":   page.Locator("button.login"),
 	}
-	for name, selector := range selectors {
-		if _, err := page.WaitForSelector(selector, playwright.PageWaitForSelectorOptions{
+
+	// Wait for all locators
+	for name, locator := range locators {
+		if err := locator.WaitFor(playwright.LocatorWaitForOptions{
 			Timeout: playwright.Float(5000),
 		}); err != nil {
-			return fmt.Errorf("%s selector wait failed: %w", name, err)
+			return fmt.Errorf("%s locator wait failed: %w", name, err)
 		}
 	}
 
-	if err := page.Fill(selectors["username"], params.Username); err != nil {
+	// Fill inputs
+	if err := locators["username"].Fill(params.Username); err != nil {
 		return fmt.Errorf("fill username failed: %w", err)
 	}
-	if err := page.Fill(selectors["password"], params.Password); err != nil {
+	if err := locators["password"].Fill(params.Password); err != nil {
 		return fmt.Errorf("fill password failed: %w", err)
 	}
-
+	// Optional pause (but often unnecessary with locators)
 	page.WaitForTimeout(1000)
-	if err := page.Click(selectors["button"]); err != nil {
+
+	if err := locators["button"].Click(); err != nil {
 		return fmt.Errorf("login button click failed: %w", err)
 	}
 
-	page.WaitForTimeout(3000)
+	page.WaitForTimeout(3000) // You can replace this with a proper navigation wait
 
 	if loginMsg := extractLoginErrors(page); loginMsg != "" {
 		return &errorx.LoginError{Reason: loginMsg}
@@ -167,21 +171,23 @@ func (r browserless) tryLogin(page playwright.Page, params DMParams) error {
 
 func extractLoginErrors(page playwright.Page) string {
 	var errors []string
-	helperTexts, err := page.QuerySelectorAll("faceplate-form-helper-text")
+
+	helpers := page.Locator("faceplate-form-helper-text")
+	count, err := helpers.Count()
 	if err != nil {
 		return ""
 	}
 
-	for _, helper := range helperTexts {
-		shadow, err := helper.EvaluateHandle("el => el.shadowRoot?.querySelector('#helper-text')?.innerText")
+	for i := 0; i < count; i++ {
+		helper := helpers.Nth(i)
+
+		txt, err := helper.Evaluate(`el => el.shadowRoot?.querySelector("#helper-text")?.innerText`, nil)
 		if err != nil {
 			continue
 		}
-		if txt, err := shadow.JSONValue(); err == nil && txt != nil {
-			str := strings.TrimSpace(fmt.Sprintf("%v", txt))
-			if str != "" {
-				errors = append(errors, str)
-			}
+
+		if str, ok := txt.(string); ok && strings.TrimSpace(str) != "" {
+			errors = append(errors, strings.TrimSpace(str))
 		}
 	}
 
