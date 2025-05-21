@@ -79,6 +79,10 @@ func (r redditInteractions) SendComment(ctx context.Context, interaction *models
 			interaction.Status = models.LeadInteractionStatusFAILED
 			interaction.Reason = "integration not found or inactive"
 			return nil
+		} else {
+			interaction.Status = models.LeadInteractionStatusFAILED
+			interaction.Reason = err.Error()
+			return nil
 		}
 	}
 
