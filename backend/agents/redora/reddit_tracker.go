@@ -8,6 +8,7 @@ import (
 	"github.com/shank318/doota/agents/state"
 	"github.com/shank318/doota/ai"
 	"github.com/shank318/doota/datastore"
+	"github.com/shank318/doota/errorx"
 	"github.com/shank318/doota/integrations/reddit"
 	"github.com/shank318/doota/models"
 	"github.com/shank318/doota/notifiers/alerts"
@@ -66,10 +67,16 @@ func (s *redditKeywordTracker) WithLogger(logger *zap.Logger) KeywordTracker {
 
 func (s *redditKeywordTracker) TrackKeyword(ctx context.Context, tracker *models.AugmentedKeywordTracker) error {
 	redditClient, err := s.redditOauthClient.GetOrCreate(ctx, tracker.Project.OrganizationID, true)
-	if err != nil && errors.Is(err, datastore.IntegrationNotFoundOrActive) {
-		return nil
-	}
 	if err != nil {
+		if errors.Is(err, datastore.IntegrationNotFoundOrActive) {
+			return nil
+		}
+		var refreshTokenErr *errorx.RefreshTokenError
+		if errors.As(err, &refreshTokenErr) {
+			// TODO: Mark project as inactive
+			s.logger.Warn("failed to refresh token, skipping tracking", zap.Error(refreshTokenErr))
+			return nil
+		}
 		return err
 	}
 

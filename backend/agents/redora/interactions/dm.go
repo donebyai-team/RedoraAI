@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/shank318/doota/datastore"
+	"github.com/shank318/doota/errorx"
 	"github.com/shank318/doota/models"
 	"github.com/shank318/doota/utils"
 	"go.uber.org/zap"
@@ -120,7 +121,7 @@ func (r redditInteractions) CheckIfLogin(ctx context.Context, orgID string) erro
 		Username: loginConfig.Username,
 		Password: loginConfig.Password,
 	})
-	var loginErr *LoginError
+	var loginErr *errorx.LoginError
 	if err != nil && errors.As(err, &loginErr) {
 		r.logger.Warn("failed to login to reddit", zap.Error(err), zap.String("org_id", orgID))
 		return status.Error(codes.InvalidArgument, loginErr.Reason)

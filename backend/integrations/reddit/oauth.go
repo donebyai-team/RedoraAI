@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/shank318/doota/datastore"
+	"github.com/shank318/doota/errorx"
 	"github.com/shank318/doota/models"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
@@ -122,7 +123,7 @@ func (r *OauthClient) newRedditClient(ctx context.Context, orgID string, forceAu
 	if client.isTokenExpired() {
 		err := client.refreshToken(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("failed to refresh token: %w", err)
+			return nil, &errorx.RefreshTokenError{Reason: err.Error()}
 		}
 
 		// Update the credentials
