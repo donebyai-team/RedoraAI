@@ -54,6 +54,8 @@ const (
 	IntegrationTypeREDDIT IntegrationType = "REDDIT"
 	// IntegrationTypeSLACKWEBHOOK is a IntegrationType of type SLACK_WEBHOOK.
 	IntegrationTypeSLACKWEBHOOK IntegrationType = "SLACK_WEBHOOK"
+	// IntegrationTypeREDDITDMLOGIN is a IntegrationType of type REDDIT_DM_LOGIN.
+	IntegrationTypeREDDITDMLOGIN IntegrationType = "REDDIT_DM_LOGIN"
 )
 
 var ErrInvalidIntegrationType = errors.New("not a valid IntegrationType")
@@ -71,10 +73,11 @@ func (x IntegrationType) IsValid() bool {
 }
 
 var _IntegrationTypeValue = map[string]IntegrationType{
-	"VOICE_MILLIS":  IntegrationTypeVOICEMILLIS,
-	"VOICE_VAPI":    IntegrationTypeVOICEVAPI,
-	"REDDIT":        IntegrationTypeREDDIT,
-	"SLACK_WEBHOOK": IntegrationTypeSLACKWEBHOOK,
+	"VOICE_MILLIS":    IntegrationTypeVOICEMILLIS,
+	"VOICE_VAPI":      IntegrationTypeVOICEVAPI,
+	"REDDIT":          IntegrationTypeREDDIT,
+	"SLACK_WEBHOOK":   IntegrationTypeSLACKWEBHOOK,
+	"REDDIT_DM_LOGIN": IntegrationTypeREDDITDMLOGIN,
 }
 
 // ParseIntegrationType attempts to convert a string to a IntegrationType.

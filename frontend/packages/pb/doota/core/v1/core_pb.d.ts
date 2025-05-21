@@ -597,14 +597,14 @@ export enum LeadStatus {
   NOT_RELEVANT = 1,
 
   /**
-   * @generated from enum value: COMPLETED = 3;
+   * @generated from enum value: COMPLETED = 2;
    */
-  COMPLETED = 3,
+  COMPLETED = 2,
 
   /**
-   * @generated from enum value: LEAD = 4;
+   * @generated from enum value: LEAD = 3;
    */
-  LEAD = 4,
+  LEAD = 3,
 }
 
 /**

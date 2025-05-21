@@ -131,7 +131,7 @@ func (r *customerCaseState) ActiveCount(ctx context.Context) (uint64, error) {
 
 func (r *customerCaseState) Set(ctx context.Context, key string, data interface{}, ttl time.Duration) error {
 	key = callRunningKey(r.namespace, r.prefix, key)
-	if err := r.setKey(ctx, key, data, r.customerCaseRunningTTL); err != nil {
+	if err := r.setKey(ctx, key, data, ttl); err != nil {
 		return fmt.Errorf("set case state: %w", err)
 	}
 

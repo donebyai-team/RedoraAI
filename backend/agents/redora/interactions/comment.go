@@ -15,13 +15,17 @@ import (
 )
 
 type AutomatedInteractions interface {
+	CheckIfLogin(ctx context.Context, orgID string) error
+	SendDM(ctx context.Context, interaction *models.LeadInteraction) error
 	ScheduleComment(ctx context.Context, leadInteraction *models.LeadInteraction) (*models.LeadInteraction, error)
+	ScheduleDM(ctx context.Context, leadInteraction *models.LeadInteraction) (*models.LeadInteraction, error)
 	SendComment(ctx context.Context, interaction *models.LeadInteraction) (err error)
 	GetInteractions(ctx context.Context, projectID string, status models.LeadInteractionStatus, dateRange pbportal.DateRangeFilter) ([]*models.LeadInteraction, error)
 }
 
 type redditInteractions struct {
 	db                datastore.Repository
+	browserLessClient *browserless
 	redditOauthClient *reddit.OauthClient
 	logger            *zap.Logger
 }
@@ -30,11 +34,20 @@ func (r redditInteractions) GetInteractions(ctx context.Context, projectID strin
 	return r.db.GetLeadInteractions(ctx, projectID, status, dateRange)
 }
 
-func NewRedditInteractions(db datastore.Repository, redditOauthClient *reddit.OauthClient, logger *zap.Logger) AutomatedInteractions {
-	return &redditInteractions{redditOauthClient: redditOauthClient, db: db, logger: logger}
+func NewRedditInteractions(db datastore.Repository, browserLessClient *browserless, redditOauthClient *reddit.OauthClient, logger *zap.Logger) AutomatedInteractions {
+	return &redditInteractions{redditOauthClient: redditOauthClient, browserLessClient: browserLessClient, db: db, logger: logger}
+}
+
+func NewSimpleRedditInteractions(db datastore.Repository, logger *zap.Logger) AutomatedInteractions {
+	return &redditInteractions{db: db, logger: logger}
 }
 
 func (r redditInteractions) SendComment(ctx context.Context, interaction *models.LeadInteraction) (err error) {
+	if interaction.Type != models.LeadInteractionTypeCOMMENT {
+		return fmt.Errorf("interaction type is not comment")
+	}
+	r.logger.Info("sending reddit comment", zap.String("from", interaction.From))
+
 	redditLead, err := r.db.GetLeadByID(ctx, interaction.ProjectID, interaction.LeadID)
 	if err != nil {
 		return err
@@ -66,8 +79,11 @@ func (r redditInteractions) SendComment(ctx context.Context, interaction *models
 		if errors.Is(err, datastore.IntegrationNotFoundOrActive) {
 			interaction.Status = models.LeadInteractionStatusFAILED
 			interaction.Reason = "integration not found or inactive"
-			return nil
+		} else {
+			interaction.Status = models.LeadInteractionStatusFAILED
+			interaction.Reason = err.Error()
 		}
+		return err
 	}
 
 	err = r.db.SetLeadInteractionStatusProcessing(ctx, interaction.ID)
@@ -116,6 +132,28 @@ func (r redditInteractions) ScheduleComment(ctx context.Context, info *models.Le
 		return nil, err
 	}
 	// Check if daily limits are reached
+
+	scheduledAt, err := getNextAvailableScheduleTimeRandomBucket(time.Now().UTC(), interactions, 5*time.Minute, 1)
+	if err != nil {
+		return nil, err
+	}
+
+	info.ScheduledAt = utils.Ptr(scheduledAt)
+
+	return r.db.CreateLeadInteraction(ctx, info)
+}
+
+func (r redditInteractions) ScheduleDM(ctx context.Context, info *models.LeadInteraction) (*models.LeadInteraction, error) {
+	r.logger.Info("creating interaction",
+		zap.String("type", models.LeadInteractionTypeDM.String()),
+		zap.String("thing_id", info.To),
+	)
+	info.Type = models.LeadInteractionTypeDM
+
+	interactions, err := r.GetInteractions(ctx, info.ProjectID, models.LeadInteractionStatusCREATED, pbportal.DateRangeFilter_DATE_RANGE_TODAY)
+	if err != nil {
+		return nil, err
+	}
 
 	scheduledAt, err := getNextAvailableScheduleTimeRandomBucket(time.Now().UTC(), interactions, 5*time.Minute, 1)
 	if err != nil {

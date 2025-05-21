@@ -386,6 +386,14 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 					s.logger.Error("failed to send automated comment", zap.Error(err), zap.String("post_id", post.ID))
 				}
 			}
+
+			// Schedule DM
+			if len(strings.TrimSpace(redditLead.LeadMetadata.SuggestedDM)) > 0 {
+				err := s.sendAutomatedDM(ctx, tracker.Organization, redditClient.GetConfig(), redditLead)
+				if err != nil {
+					s.logger.Error("failed to send automated comment", zap.Error(err), zap.String("post_id", post.ID))
+				}
+			}
 		}
 
 		// track max posts to track per day
@@ -420,9 +428,45 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 
 const (
 	keyCommentScheduledPerDay = "comment_scheduled"
+	keyDMScheduledPerDay      = "dm_scheduled"
 	keyRelevantLeadsPerDay    = "relevant_posts"
 	keyTrackedPostPerDay      = "posts_tracked"
 )
+
+func (s *redditKeywordTracker) sendAutomatedDM(ctx context.Context, org *models.Organization, redditConfig *models.RedditConfig, redditLead *models.Lead) error {
+	if !org.FeatureFlags.EnableAutoDM {
+		return nil
+	}
+	// Continue
+	redisKey := dailyCounterKey(org.ID)
+	shouldDM, err := s.state.CheckIfUnderLimitAndIncrement(ctx, redisKey, keyDMScheduledPerDay, maxDMPerDay, 24*time.Hour)
+	if err != nil {
+		return fmt.Errorf("failed to check if dm_scheduled under limit and increment: %w", err)
+	}
+
+	if shouldDM {
+		interaction, err := s.automatedInteractions.ScheduleDM(ctx, &models.LeadInteraction{
+			LeadID:    redditLead.ID,
+			ProjectID: redditLead.ProjectID,
+			From:      redditConfig.Name,
+			To:        redditLead.Author,
+		})
+		if err != nil {
+			err := s.state.RollbackCounter(ctx, redisKey, keyDMScheduledPerDay)
+			if err != nil {
+				s.logger.Error("failed to rollback counter", zap.Error(err))
+			}
+			return fmt.Errorf("failed to schedule DM: %w", err)
+		}
+
+		if interaction != nil {
+			redditLead.LeadMetadata.DMScheduledAt = interaction.ScheduledAt
+			return s.db.UpdateLeadStatus(ctx, redditLead)
+		}
+	}
+
+	return nil
+}
 
 func (s *redditKeywordTracker) sendAutomatedComment(ctx context.Context, org *models.Organization, redditConfig *models.RedditConfig, redditLead *models.Lead) error {
 	isOldEnough := redditConfig.IsUserOldEnough(2)
@@ -533,7 +577,8 @@ const (
 	minRelevancyScore        = 70
 	defaultLLMFailedCount    = 3
 	maxCommentsPerDay        = 4
-	maxPostsToTrackPerDay    = 500
+	maxDMPerDay              = 10
+	maxPostsToTrackPerDay    = 600
 )
 
 var systemAuthors = []string{"[deleted]", "AutoModerator"}

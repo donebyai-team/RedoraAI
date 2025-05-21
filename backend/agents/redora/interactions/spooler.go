@@ -71,10 +71,19 @@ func (s *Spooler) processInteraction(ctx context.Context, tracker *models.LeadIn
 				s.logger.Error("failed to release lock on keyword tracker", zap.Error(err))
 			}
 		}()
-		err = s.automatedInteractions.SendComment(ctx, tracker)
-		if err != nil {
-			s.logger.Error("failed to send interaction", zap.String("interaction", tracker.ID), zap.Error(err))
+
+		if tracker.Type == models.LeadInteractionTypeCOMMENT {
+			err = s.automatedInteractions.SendComment(ctx, tracker)
+			if err != nil {
+				s.logger.Error("failed to send Comment interaction", zap.String("interaction", tracker.ID), zap.Error(err))
+			}
+		} else if tracker.Type == models.LeadInteractionTypeDM {
+			err = s.automatedInteractions.SendDM(ctx, tracker)
+			if err != nil {
+				s.logger.Error("failed to send DM interaction", zap.String("interaction", tracker.ID), zap.Error(err))
+			}
 		}
+
 	}()
 
 	return nil

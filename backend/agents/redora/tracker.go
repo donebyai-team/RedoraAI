@@ -50,7 +50,7 @@ func (f *KeywordTrackerFactory) GetKeywordTrackerBySource(sourceType models.Sour
 	return newRedditKeywordTracker(
 		f.isDev,
 		f.redditOauthClient,
-		interactions.NewRedditInteractions(f.db, f.redditOauthClient, f.logger),
+		interactions.NewSimpleRedditInteractions(f.db, f.logger),
 		f.db,
 		f.aiClient,
 		f.logger,

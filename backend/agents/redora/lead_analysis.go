@@ -17,7 +17,7 @@ type LeadAnalysis struct {
 
 func NewLeadAnalysis(db datastore.Repository, logger *zap.Logger) *LeadAnalysis {
 	return &LeadAnalysis{db: db,
-		automatedInteractions: interactions.NewRedditInteractions(db, nil, logger),
+		automatedInteractions: interactions.NewSimpleRedditInteractions(db, logger),
 		logger:                logger,
 	}
 }

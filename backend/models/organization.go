@@ -23,6 +23,7 @@ func (o *Organization) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
 
 // TODO: Move it to a better place
 type OrganizationFeatureFlags struct {
+	EnableAutoDM      bool          `json:"enable_auto_dm"`
 	EnableAutoComment bool          `json:"enable_auto_comment"`
 	CommentLLMModel   LLMModel      `json:"comment_llm_model"`
 	DMLLMModel        LLMModel      `json:"dm_llm_model"`

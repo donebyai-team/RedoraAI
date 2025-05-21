@@ -230,6 +230,7 @@ type LeadMetadata struct {
 	SubRedditPrefixed              string     `json:"subreddit_prefixed"`
 	AutomatedCommentURL            string     `json:"automated_comment_url"`
 	CommentScheduledAt             *time.Time `json:"comment_scheduled_at"`
+	DMScheduledAt                  *time.Time `json:"dm_scheduled_at"`
 	CommentLLMModel                LLMModel   `json:"comment_llm_model"`
 	DMLLMModel                     LLMModel   `json:"dm_llm_model"`
 	RelevancyLLMModel              LLMModel   `json:"relevancy_llm_model"`

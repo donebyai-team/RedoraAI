@@ -8,7 +8,7 @@ import (
 
 //go:generate go-enum -f=$GOFILE
 
-// ENUM(VOICE_MILLIS, VOICE_VAPI, REDDIT, SLACK_WEBHOOK)
+// ENUM(VOICE_MILLIS, VOICE_VAPI, REDDIT, SLACK_WEBHOOK, REDDIT_DM_LOGIN)
 type IntegrationType string
 
 // ENUM(ACTIVE, AUTH_REVOKED)
@@ -40,6 +40,55 @@ func SetIntegrationType[T Serializable](integration *Integration, integrationTyp
 var _ Serializable = (*VAPIConfig)(nil)
 
 var _ Serializable = (*RedditConfig)(nil)
+var _ Serializable = (*RedditDMLoginConfig)(nil)
+
+type RedditDMLoginConfig struct {
+	Username string `json:"username"`
+	Password string `json:"-"`
+}
+
+func (i *RedditDMLoginConfig) EncryptedData() []byte {
+	toEncrypt := struct {
+		Password string `json:"password"`
+	}{
+		Password: i.Password,
+	}
+	data, err := json.Marshal(toEncrypt)
+	if err != nil {
+		panic(err)
+	}
+	return data
+
+}
+
+func (i *RedditDMLoginConfig) PlainTextData() []byte {
+	data, err := json.Marshal(i)
+	if err != nil {
+		panic(err)
+	}
+	return data
+}
+
+func (i *Integration) GetRedditDMLoginConfig() *RedditDMLoginConfig {
+	if i.Type != IntegrationTypeREDDITDMLOGIN {
+		panic(fmt.Errorf("integration is not a reddit dm login integration"))
+	}
+
+	out := RedditDMLoginConfig{}
+	if err := json.Unmarshal([]byte(i.PlainTextConfig), &out); err != nil {
+		panic(fmt.Errorf("unable to unmarshal reddit config: %w", err))
+	}
+
+	encryptedData := struct {
+		Password string `json:"password"`
+	}{}
+
+	if err := json.Unmarshal([]byte(i.EncryptedConfig), &encryptedData); err != nil {
+		panic(fmt.Errorf("unable to unmarshal reddit config: %w", err))
+	}
+	out.Password = encryptedData.Password
+	return &out
+}
 
 type RedditConfig struct {
 	AccessToken      string    `json:"-"`

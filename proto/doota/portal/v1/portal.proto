@@ -69,6 +69,7 @@ message GetRelevantLeadsRequest {
   float relevancy_score = 2;
   int32 page_no = 3;
   DateRangeFilter date_range = 4;
+  doota.core.v1.LeadStatus status = 5;
 }
 
 message GetLeadsResponse {
