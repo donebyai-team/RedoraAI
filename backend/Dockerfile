@@ -26,23 +26,63 @@ FROM debian:bullseye-slim as bullseye-base
 
 ARG GOOGLE_APPLICATION_CREDENTIALS_JSON
 
-# Install dependencies + Node.js + Playwright
 RUN apt-get update && apt-get install -y \
-    ca-certificates \
-    curl \
-    gnupg \
-    wget \
     openssl \
-    git \
-    && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
-    && apt-get install -y nodejs \
-    && npm install -g playwright-core@1.52.0 \
+    ca-certificates \
+    # Install Node.js and npm for Playwright driver installation
+    nodejs \
+    npm \
+    # Add other necessary Playwright dependencies
+    libnss3 \
+    libnspr4 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libcups2 \
+    libdrm2 \
+    libgbm1 \
+    libgconf-2-4 \
+    libglapi-mesa \
+    libgtk-3-0 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxfixes3 \
+    libxrandr2 \
+    libxshmfence6 \
+    libxtst6 \
+    libappindicator1 \
+    libasound2 \
+    libdbus-glib-1-2 \
+    libgdk-pixbuf2.0-0 \
+    libgconf-2-4 \
+    libglib2.0-0 \
+    libnotify4 \
+    libxss1 \
+    libexpat1 \
+    libfontconfig1 \
+    libfreetype6 \
+    libjpeg62-turbo \
+    libpng16-16 \
+    libwebp6 \
+    libxi6 \
+    libxkbcommon0 \
+    libxcursor1 \
+    libxrandr2 \
+    libxrender1 \
+    libxshmfence6 \
+    libxtst6 \
+    fonts-liberation \
+    xdg-utils \
+    # Clean up apt caches
     && rm -rf /var/lib/apt/lists/*
 
-# *** IMPORTANT: Set PLAYWRIGHT_BROWSERS_PATH ***
-# This tells the Go Playwright library where to find the installed browsers.
-ENV PLAYWRIGHT_BROWSERS_PATH="/usr/local/lib/node_modules/playwright/.playwright"
-
+# Install Playwright drivers
+# We install the Playwright npm package globally to get the 'playwright' CLI tool
+# Then use 'playwright install' to download the drivers
+RUN npm install -g playwright@latest \
+    && playwright install --dry-run \
+    && playwright install --force-host-platform \
+    && playwright install --force-host-platform --install-dir /usr/local/share/playwright-browsers \
+    && rm -rf /root/.npm /tmp/*
 
 RUN mkdir -p /app
 
