@@ -34,11 +34,11 @@ RUN apt-get update && apt-get install -y \
     wget \
     openssl \
     git \
-    nodejs \
-    npm && \
-    npm install -g playwright && \
-    playwright install chromium && \
-    rm -rf /var/lib/apt/lists/*
+    && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y nodejs \
+    && npm install -g playwright \
+    && npx playwright install chromium \
+    && rm -rf /var/lib/apt/lists/*
 
 
 RUN mkdir -p /app
