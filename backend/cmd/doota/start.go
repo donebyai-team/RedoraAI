@@ -15,6 +15,7 @@ import (
 	"github.com/shank318/doota/portal"
 	"github.com/shank318/doota/portal/state"
 	"github.com/shank318/doota/services"
+	"github.com/streamingfast/dstore"
 	"os"
 	"regexp"
 	"strings"
@@ -41,6 +42,7 @@ var StartCmd = cli.Command(startCmdE,
 		flags.String("common-browserless-api-key", "", "Browserless api key")
 		flags.String("common-openai-api-key", "", "OpenAI API key")
 		flags.String("common-openai-debug-store", "data/debugstore", "OpenAI debug store")
+		flags.String("common-playwright-debug-store", "data/debugstore", "PlayWright debug store")
 		flags.String("common-openai-organization", "", "OpenAI Organization")
 		flags.String("common-langsmith-api-key", "", "Langsmith API key")
 		flags.String("common-langsmith-project", "", "Langsmith project name")
@@ -191,7 +193,12 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		alerts.NewSlackNotifier(sflags.MustGetString(cmd, "common-resend-api-key"), deps.DataStore, logger),
 	)
 
-	browserLessClient := interactions.NewBrowserlessClient(sflags.MustGetString(cmd, "common-browserless-api-key"))
+	debugStore, err := dstore.NewStore(sflags.MustGetString(cmd, "common-playwright-debug-store"), "", "", true)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create debug store: %w", err)
+	}
+
+	browserLessClient := interactions.NewBrowserlessClient(sflags.MustGetString(cmd, "common-browserless-api-key"), debugStore, logger)
 	interactionService := interactions.NewRedditInteractions(deps.DataStore, browserLessClient, redditOauthClient, logger)
 
 	//err = browserLessClient.SendDM(interactions.DMParams{
@@ -199,6 +206,7 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 	//	Password: "Adarsh@121097",
 	//	To:       "t2_2xy5yaww",
 	//	Message:  "Hidd",
+	//	ID:       "unique_id",
 	//})
 	//if err != nil {
 	//	return nil, err

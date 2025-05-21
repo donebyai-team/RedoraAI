@@ -2,25 +2,32 @@ package interactions
 
 import (
 	"bytes"
+	goCtx "context"
 	"encoding/json"
 	"fmt"
 	"github.com/playwright-community/playwright-go"
 	"github.com/shank318/doota/errorx"
+	"github.com/streamingfast/dstore"
+	"go.uber.org/zap"
 	"net/http"
 	"strings"
 )
 
 type browserless struct {
-	Token string
+	Token          string
+	logger         *zap.Logger
+	debugFileStore dstore.Store
 }
 
-func NewBrowserlessClient(token string) *browserless {
+func NewBrowserlessClient(token string, debugFileStore dstore.Store, logger *zap.Logger) *browserless {
 	err := playwright.Install(&playwright.RunOptions{SkipInstallBrowsers: true})
-	fmt.Println("playwrite", err)
-	return &browserless{Token: token}
+	if err != nil {
+		logger.Warn("failed to install playwright", zap.Error(err))
+	}
+	return &browserless{Token: token, logger: logger, debugFileStore: debugFileStore}
 }
 
-func (r browserless) SendDM(params DMParams) error {
+func (r browserless) SendDM(params DMParams) (err error) {
 	pw, err := playwright.Run()
 	if err != nil {
 		return fmt.Errorf("playwright start failed: %w", err)
@@ -48,12 +55,32 @@ func (r browserless) SendDM(params DMParams) error {
 		return fmt.Errorf("page creation failed: %w", err)
 	}
 
-	if err := r.tryLogin(page, params); err != nil {
+	// Screenshot on error (deferred)
+	defer func() {
+		if err != nil {
+			filePath := fmt.Sprintf("dm_error_%d.png", params.ID)
+
+			// Capture screenshot directly to memory (no need for file path)
+			byteData, screenShotErr := page.Screenshot(playwright.PageScreenshotOptions{
+				FullPage: playwright.Bool(true), // Optional: capture full page
+			})
+			if screenShotErr != nil {
+				r.logger.Warn("failed to take screenshot", zap.Error(screenShotErr))
+			} else {
+				buf := bytes.NewBuffer(byteData)
+				if errFileStore := r.debugFileStore.WriteObject(goCtx.Background(), filePath, buf); errFileStore != nil {
+					r.logger.Debug("failed to save screenshot", zap.Error(errFileStore), zap.String("output_name", filePath))
+				}
+			}
+		}
+	}()
+
+	if err = r.tryLogin(page, params); err != nil {
 		return err
 	}
 
 	chatURL := "https://chat.reddit.com/user/" + params.To
-	if _, err := page.Goto(chatURL, playwright.PageGotoOptions{Timeout: playwright.Float(10000)}); err != nil {
+	if _, err = page.Goto(chatURL, playwright.PageGotoOptions{Timeout: playwright.Float(10000)}); err != nil {
 		return fmt.Errorf("chat page navigation failed: %w", err)
 	}
 
@@ -67,24 +94,24 @@ func (r browserless) SendDM(params DMParams) error {
 
 	// Wait for slightly more time as it take time to load the chat
 	locator := page.Locator("rs-message-composer textarea[name='message']")
-	if err := locator.WaitFor(playwright.LocatorWaitForOptions{
+	if err = locator.WaitFor(playwright.LocatorWaitForOptions{
 		Timeout: playwright.Float(20000),
 	}); err != nil {
 		return fmt.Errorf("message textarea not found: %w", err)
 	}
 
-	if err := locator.Fill(params.Message); err != nil {
+	if err = locator.Fill(params.Message); err != nil {
 		return fmt.Errorf("filling message failed: %w", err)
 	}
 
 	sendBtn := page.Locator("rs-message-composer button[aria-label='Send message']")
-	if err := sendBtn.WaitFor(playwright.LocatorWaitForOptions{
+	if err = sendBtn.WaitFor(playwright.LocatorWaitForOptions{
 		Timeout: playwright.Float(5000),
 	}); err != nil {
 		return fmt.Errorf("send button not found: %w", err)
 	}
 
-	if err := sendBtn.Click(); err != nil {
+	if err = sendBtn.Click(); err != nil {
 		return fmt.Errorf("clicking send failed: %w", err)
 	}
 
@@ -92,7 +119,7 @@ func (r browserless) SendDM(params DMParams) error {
 	return nil
 }
 
-func (r browserless) CheckIfLogin(params DMParams) error {
+func (r browserless) CheckIfLogin(params DMParams) (err error) {
 	pw, err := playwright.Run()
 	if err != nil {
 		return fmt.Errorf("playwright start failed: %w", err)
@@ -120,7 +147,27 @@ func (r browserless) CheckIfLogin(params DMParams) error {
 		return fmt.Errorf("page creation failed: %w", err)
 	}
 
-	if err := r.tryLogin(page, params); err != nil {
+	// Screenshot on error (deferred)
+	defer func() {
+		if err != nil {
+			filePath := fmt.Sprintf("login_error_%d.png", params.ID)
+
+			// Capture screenshot directly to memory (no need for file path)
+			byteData, screenShotErr := page.Screenshot(playwright.PageScreenshotOptions{
+				FullPage: playwright.Bool(true), // Optional: capture full page
+			})
+			if screenShotErr != nil {
+				r.logger.Warn("failed to take screenshot", zap.Error(screenShotErr))
+			} else {
+				buf := bytes.NewBuffer(byteData)
+				if errFileStore := r.debugFileStore.WriteObject(goCtx.Background(), filePath, buf); errFileStore != nil {
+					r.logger.Debug("failed to save screenshot", zap.Error(errFileStore), zap.String("output_name", filePath))
+				}
+			}
+		}
+	}()
+
+	if err = r.tryLogin(page, params); err != nil {
 		return err
 	}
 	return nil

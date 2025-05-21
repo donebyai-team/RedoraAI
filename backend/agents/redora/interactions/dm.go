@@ -15,6 +15,7 @@ import (
 )
 
 type DMParams struct {
+	ID       string
 	Username string
 	Password string
 	To       string
@@ -130,6 +131,7 @@ func (r redditInteractions) CheckIfLogin(ctx context.Context, orgID string) erro
 
 	loginConfig := integration.GetRedditDMLoginConfig()
 	err = r.browserLessClient.CheckIfLogin(DMParams{
+		ID:       integration.ID,
 		Username: loginConfig.Username,
 		Password: loginConfig.Password,
 	})
