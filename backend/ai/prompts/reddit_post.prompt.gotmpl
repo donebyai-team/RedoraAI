@@ -97,30 +97,29 @@ Comment Example 2:
 Yeah, I've seen some buzz around these AI tools too, but I'm still weighing how they stack up against ChatGPT or Claude.\n\nWould love to hear if anyone here has hands-on experience, especially with long context handling or accuracy in tricky prompts.\n\nLet me know what you think before I dive in myself!
 
 Product Mention RULES for DM and Comment (P)
-{{ if .ProductMentionAllowed }}
-P1: You may mention the product name only if the post explicitly asks for a tool, recommendation, software, or alternative.
-{{ else }}
-P1: Do not mention the product name in the public comment, as moderators restrict promotional mentions. You may still include it in the DM.
-{{ end }}
-P2: Mention the product only once if allowed, in both comment and DM.
-P3: Be subtle — explain in 6–8 words how the product helps.
-P4: Do not include links, discounts, or direct calls to action.
-P5: You can include the product name in the DM.
+P1: You may mention the product name only if(ProductMentionAllowed = true) and the post explicitly asks for a tool, recommendation, software, or alternative.
+P2: Do not mention the product name if(ProductMentionAllowed = false) in the public comment, as moderators restrict promotional mentions. You may still include it in the DM.
+P3: Mention the product only once if allowed, in both comment and DM.
+P4: Be subtle — explain in 6–8 words how the product helps.
+P5: Do not include links, discounts, or direct calls to action.
+P6: You can always include the product name in the DM and start with a Hi.
+
+==== Below is the INPUT FORMATS on which you have to evaluate ====
+
+ProductMentionAllowed : {boolean value true or fall will be prvided}
 
 Comment generating gotchas:
 Words for Comments : {words_for_comments}, Keep the Formatting rules in mind
 
-If Product Mention allowed, use this phrase(only once) to mention the product:
+If Product Mention allowed, use this phrase(only once) along with the mention the of the ProductName:
 Phrase for Comment : {phrase_for_comment}
 
 Here is the Product Information:
-ProductName: {{ .ProductName }}
-ProductDescription: {{ .ProductDescription }}
+ProductName: {product_name}
+ProductDescription: {product_description}
 
 Product And Customer Target Persona:
-TargetCustomerPersona: {{ .TargetCustomerPersona }}
-
-Reddit post to evaluate FORMAT
+TargetCustomerPersona: {target_persona}
 
 Reddit Post:
 Title: {title}
