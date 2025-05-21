@@ -40,6 +40,10 @@ RUN apt-get update && apt-get install -y \
     && npx playwright install --with-deps chromium \
     && rm -rf /var/lib/apt/lists/*
 
+# *** IMPORTANT: Set PLAYWRIGHT_BROWSERS_PATH ***
+# This tells the Go Playwright library where to find the installed browsers.
+ENV PLAYWRIGHT_BROWSERS_PATH="/usr/local/lib/node_modules/playwright/.playwright"
+
 
 RUN mkdir -p /app
 
