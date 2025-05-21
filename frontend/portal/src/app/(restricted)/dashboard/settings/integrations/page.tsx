@@ -8,7 +8,7 @@ import TableContainer from '@mui/material/TableContainer'
 import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 import Paper from '@mui/material/Paper'
-import { useAuthUser } from '@doota/ui-core/hooks/useAuth'
+import { useAuth, useAuthUser } from '@doota/ui-core/hooks/useAuth'
 import { IntegrationType, Integration } from '@doota/pb/doota/portal/v1/portal_pb'
 import { FallbackSpinner } from '../../../../../atoms/FallbackSpinner'
 import { Button } from '../../../../../atoms/Button'
@@ -17,15 +17,89 @@ import { buildAppUrl } from '../../../../routes'
 import { routes } from '@doota/ui-core/routing'
 import { isAdmin } from '@doota/ui-core/helper/role'
 import { Box } from '@mui/system'
-import { AppBar, Toolbar, Typography } from '@mui/material'
+import { AppBar, Toolbar, Typography, Card, CardContent, Slider, Switch, styled } from '@mui/material'
 import {
   Reddit as RedditIcon,
 } from "@mui/icons-material"
+import toast from 'react-hot-toast'
+
+const StyledSlider = styled(Slider)(() => ({
+  color: '#111827', // Dark color for the track
+  height: 8,
+  '& .MuiSlider-track': {
+    border: 'none',
+    backgroundColor: '#111827',
+  },
+  '& .MuiSlider-thumb': {
+    height: 24,
+    width: 24,
+    backgroundColor: '#fff',
+    border: '2px solid currentColor',
+    '&:focus, &:hover, &.Mui-active, &.Mui-focusVisible': {
+      boxShadow: '0 0 0 8px rgba(0, 0, 0, 0.1)',
+    },
+  },
+  '& .MuiSlider-rail': {
+    color: '#d1d5db',
+    opacity: 1,
+  },
+}));
+
+const SaveButton = styled(Button)(() => ({
+  background: 'linear-gradient(90deg, #800080 0%, #9333ea 100%)',
+  color: 'white',
+  fontWeight: 'bold',
+  textTransform: 'none',
+  padding: '10px 24px',
+  marginTop: '12px',
+  borderRadius: '8px',
+  '&:hover': {
+    background: 'linear-gradient(90deg, #6b016b 0%, #7929c4 100%)',
+  },
+}));
+
+const CustomSwitch = styled(Switch)(() => ({
+  width: 42,
+  height: 26,
+  padding: 0,
+  '& .MuiSwitch-switchBase': {
+    padding: 0,
+    margin: 2,
+    transitionDuration: '300ms',
+    '&.Mui-checked': {
+      transform: 'translateX(16px)',
+      color: '#fff',
+      '& + .MuiSwitch-track': {
+        backgroundColor: '#111827',
+        opacity: 1,
+        border: 0,
+      },
+    },
+  },
+  '& .MuiSwitch-thumb': {
+    boxSizing: 'border-box',
+    width: 22,
+    height: 22,
+  },
+  '& .MuiSwitch-track': {
+    borderRadius: 26 / 2,
+    backgroundColor: '#a1a1aa',
+    opacity: 1,
+  },
+}));
 
 export default function Page() {
   const user = useAuthUser()
-  const [loading, setLoading] = useState(false)
-  const [integrations, setIntegrations] = useState<Integration[]>([]);
+  const { setUser, organization, setOrganization } = useAuth()
+
+  const [loading, setLoading] = useState(true)
+  const [integrations, setIntegrations] = useState<Integration[]>([])
+
+  const defaultRelevancyScore = organization?.featureFlags?.Comment?.relevancyScore ?? 90;
+  const defaultAutoComment = organization?.featureFlags?.Comment?.enabled ?? false;
+
+  const [relevancyScore, setRelevancyScore] = useState(defaultRelevancyScore)
+  const [autoComment, setAutoComment] = useState(defaultAutoComment)
 
   useEffect(() => {
     portalClient.getIntegrations({})
@@ -49,6 +123,38 @@ export default function Page() {
       .then(oAuthAuthorizeResp => {
         window.open(oAuthAuthorizeResp.authorizeUrl, '_self')
       })
+  }
+
+  const handleScoreChange = (_event: Event, newValue: number | number[]) => {
+    setRelevancyScore(newValue as number);
+  };
+
+  const handleSaveAutomation = async () => {
+    try {
+      const result = await portalClient.updateAutomationSettings({
+        comment: { enabled: autoComment, relevancyScore }
+      })
+
+      setOrganization(result);
+
+      setUser(prev => {
+        if (!prev) return prev
+        const updatedOrganizations = prev.organizations.map(org =>
+          org.id === result.id ? result : org
+        )
+        return { ...prev, organizations: updatedOrganizations }
+      })
+
+      toast.success("Automation settings updated successfully!")
+    } catch (err) {
+      if (err instanceof Error) {
+        const message = err.message || "Failed to update automation settings";
+        toast.error(message);
+      } else {
+        console.error("Unexpected error:", err)
+      }
+
+    }
   }
 
   if (loading) {
@@ -101,6 +207,56 @@ export default function Page() {
             </TableBody>
           </Table>
         </TableContainer>
+
+        <Card sx={{ p: 4, mt: 5 }} component={Paper}>
+          <CardContent>
+            <Box display="flex" alignItems="center" gap={1} mb={2}>
+              <Typography variant="h4" component="div" fontWeight="bold">
+                Automated Comments Settings
+              </Typography>
+            </Box>
+
+            <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+              Configure your automation preferences.
+            </Typography>
+
+            <Box mb={5}>
+              <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                <Typography variant="body1" fontWeight="medium">
+                  Minimum Relevancy Score: {relevancyScore}%
+                </Typography>
+              </Box>
+
+              <StyledSlider
+                value={relevancyScore}
+                onChange={handleScoreChange}
+                min={80}
+                max={100}
+                step={5}
+                aria-label="Relevancy Score"
+              />
+
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
+                RedoraAI will automatically post comments on posts ≥ Min Relevancy Score
+              </Typography>
+            </Box>
+
+            <Box display="flex" alignItems="center" py={2} mb={4}>
+              <CustomSwitch
+                checked={autoComment}
+                onChange={(e) => setAutoComment(e.target.checked)}
+              />
+              <Typography variant="body1" fontWeight="medium" ml={2.5}>
+                Enable Automated Comments
+              </Typography>
+            </Box>
+
+            <SaveButton onClick={handleSaveAutomation} variant="contained" size="large">
+              Save Automation Settings
+            </SaveButton>
+          </CardContent>
+        </Card>
+
       </Box>
     </Box>
   </>);
