@@ -46,6 +46,7 @@ func (r redditInteractions) SendComment(ctx context.Context, interaction *models
 	if interaction.Type != models.LeadInteractionTypeCOMMENT {
 		return fmt.Errorf("interaction type is not comment")
 	}
+	r.logger.Info("sending reddit comment", zap.String("from", interaction.From))
 
 	redditLead, err := r.db.GetLeadByID(ctx, interaction.ProjectID, interaction.LeadID)
 	if err != nil {
@@ -78,12 +79,11 @@ func (r redditInteractions) SendComment(ctx context.Context, interaction *models
 		if errors.Is(err, datastore.IntegrationNotFoundOrActive) {
 			interaction.Status = models.LeadInteractionStatusFAILED
 			interaction.Reason = "integration not found or inactive"
-			return nil
 		} else {
 			interaction.Status = models.LeadInteractionStatusFAILED
 			interaction.Reason = err.Error()
-			return nil
 		}
+		return err
 	}
 
 	err = r.db.SetLeadInteractionStatusProcessing(ctx, interaction.ID)

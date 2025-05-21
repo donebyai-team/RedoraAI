@@ -23,6 +23,7 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 	if interaction.Type != models.LeadInteractionTypeDM {
 		return fmt.Errorf("interaction type is not DM")
 	}
+	r.logger.Info("sending reddit DM", zap.String("from", interaction.From))
 
 	redditLead, err := r.db.GetLeadByID(ctx, interaction.ProjectID, interaction.LeadID)
 	if err != nil {
@@ -62,8 +63,11 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 		if errors.Is(err, datastore.IntegrationNotFoundOrActive) {
 			interaction.Status = models.LeadInteractionStatusFAILED
 			interaction.Reason = "integration not found or inactive"
-			return nil
+		} else {
+			interaction.Status = models.LeadInteractionStatusFAILED
+			interaction.Reason = err.Error()
 		}
+		return err
 	}
 
 	user, err := redditClient.GetUser(ctx, interaction.To)
