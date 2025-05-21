@@ -3,11 +3,6 @@ FROM --platform=$TARGETPLATFORM golang:1.23-bullseye AS builder
 
 WORKDIR /src
 
-# Declare build arguments for railway
-ARG GOOGLE_APPLICATION_CREDENTIALS_JSON
-RUN echo "$GOOGLE_APPLICATION_CREDENTIALS_JSON" | base64 --decode > /app/firebase-config.json
-
-
 ENV GOPRIVATE=github.com/shank318/doota
 ENV CGO_ENABLED=1
 ARG TARGETOS TARGETARCH
@@ -29,6 +24,8 @@ RUN --mount=type=cache,id=s/173fddb5-d411-4982-b2fa-9d04f96c13e1-/root/.cache/go
 
 FROM debian:bullseye-slim as bullseye-base
 
+ARG GOOGLE_APPLICATION_CREDENTIALS_JSON
+
 # Install dependencies + Node.js + Playwright
 RUN apt-get update && apt-get install -y \
     ca-certificates \
@@ -44,7 +41,7 @@ RUN apt-get update && apt-get install -y \
     rm -rf /var/lib/apt/lists/*
 
 
-RUN mkdir /app
+RUN mkdir -p /app
 
 # Write the firebase config file
 RUN echo "$GOOGLE_APPLICATION_CREDENTIALS_JSON" | base64 --decode > /app/firebase-config.json
