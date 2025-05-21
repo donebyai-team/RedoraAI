@@ -65,9 +65,10 @@ func (r browserless) SendDM(params DMParams) error {
 		return fmt.Errorf("chat error: invalid user")
 	}
 
+	// Wait for slightly more time as it take time to load the chat
 	locator := page.Locator("rs-message-composer textarea[name='message']")
 	if err := locator.WaitFor(playwright.LocatorWaitForOptions{
-		Timeout: playwright.Float(5000),
+		Timeout: playwright.Float(20000),
 	}); err != nil {
 		return fmt.Errorf("message textarea not found: %w", err)
 	}
