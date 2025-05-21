@@ -195,10 +195,10 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 	interactionService := interactions.NewRedditInteractions(deps.DataStore, browserLessClient, redditOauthClient, logger)
 
 	//err = browserLessClient.SendDM(interactions.DMParams{
-	//	Username: "shank.agarwal318@gmail.com",
-	//	Password: "Shank@123",
-	//	To:       "t2_1ctydt6n8g",
-	//	Message:  "Hi",
+	//	Username: "adarsh@miraa.io",
+	//	Password: "Adarsh@121097",
+	//	To:       "t2_2xy5yaww",
+	//	Message:  "Hidd",
 	//})
 	//if err != nil {
 	//	return nil, err
