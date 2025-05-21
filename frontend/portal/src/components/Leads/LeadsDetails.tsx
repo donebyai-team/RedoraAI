@@ -80,6 +80,10 @@ const LeadsPostDetails = () => {
     return selectedleadData?.metadata?.commentScheduledAt ? formateDate(selectedleadData.metadata.commentScheduledAt) : "N/A";
   }, [selectedleadData?.metadata?.commentScheduledAt]);
 
+  const formattedDMScheduledAt = useMemo(() => {
+    return selectedleadData?.metadata?.dmScheduledAt ? formateDate(selectedleadData.metadata.dmScheduledAt) : "N/A";
+  }, [selectedleadData?.metadata?.dmScheduledAt]);
+
   const handleCloseLeadDetail = useCallback(() => {
     dispatch(setSelectedLeadData(null));
   }, [dispatch]);
@@ -336,9 +340,7 @@ const LeadsPostDetails = () => {
 
                           {(selectedleadData?.metadata?.automatedCommentUrl || selectedleadData?.metadata?.commentScheduledAt) && (
                             <Typography variant="body2" color="text.secondary">
-                              {selectedleadData?.metadata?.automatedCommentUrl
-                                ? formattedDateCreatedAt
-                                : formattedScheduledAt}
+                              {formattedScheduledAt}
                             </Typography>
                           )}
                         </Box>
@@ -400,13 +402,28 @@ const LeadsPostDetails = () => {
                 {selectedleadData.metadata?.suggestedDm && (
                   <Card sx={{ flex: 1, borderRadius: 2, bgcolor: "#f3f4f6" }}>
                     <CardContent sx={{ p: 1.5, "&:last-child": { pb: 1.5 } }}>
-                      <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                        <Star sx={{ color: "#e25a9e", mr: 1 }} />
-                        <Typography color="#e25a9e" fontWeight="medium">Suggested DM</Typography>
+                      <Box>
+                        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+                          <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                            <Star sx={{ color: "#e25a9e", mr: 1 }} />
+                            <Typography color="#e25a9e" fontWeight="medium">
+                              {selectedleadData?.metadata?.automatedDmSent
+                                ? "DM Sent By AI"
+                                : selectedleadData?.metadata?.dmScheduledAt
+                                  ? "Scheduled by AI"
+                                  : "Suggested DM"}
+                            </Typography>
+                          </Box>
+                          {(selectedleadData?.metadata?.automatedDmSent || selectedleadData?.metadata?.dmScheduledAt) && (
+                            <Typography variant="body2" color="text.secondary">
+                              {formattedDMScheduledAt}
+                            </Typography>
+                          )}
+                        </Box>
+                        <Typography variant="body1" sx={{ mb: 2 }}>
+                          <MarkdownRenderer data={selectedleadData.metadata?.suggestedDm || ""} />
+                        </Typography>
                       </Box>
-                      <Typography variant="body1" sx={{ mb: 2 }}>
-                        <MarkdownRenderer data={selectedleadData.metadata?.suggestedDm || ""} />
-                      </Typography>
                       <Stack direction="row" justifyContent="end">
                         <Button
                           variant="contained"
@@ -436,8 +453,8 @@ const LeadsPostDetails = () => {
             )}
           </Box>
         </Paper>
-      </Box>
-    </ThemeProvider>
+      </Box >
+    </ThemeProvider >
   );
 };
 

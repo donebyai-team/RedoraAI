@@ -97,6 +97,10 @@ func (u *LeadMetadata) FromModel(metadata models.LeadMetadata) *LeadMetadata {
 	if metadata.CommentScheduledAt != nil {
 		u.CommentScheduledAt = timestamppb.New(*metadata.CommentScheduledAt)
 	}
+	if metadata.DMScheduledAt != nil {
+		u.DmScheduledAt = timestamppb.New(*metadata.DMScheduledAt)
+	}
+	u.AutomatedDmSent = metadata.AutomatedDMSent
 	return u
 }
 
