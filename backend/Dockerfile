@@ -29,56 +29,7 @@ ARG GOOGLE_APPLICATION_CREDENTIALS_JSON
 RUN apt-get update && apt-get install -y \
     openssl \
     ca-certificates \
-    # Install Node.js and npm for Playwright driver installation
-    nodejs \
-    npm \
-    # Add essential Playwright dependencies for Debian Bullseye
-    libnss3 \
-    libnspr4 \
-    libatk1.0-0 \
-    libatk-bridge2.0-0 \
-    libcups2 \
-    libdrm2 \
-    libgbm1 \
-    libgconf-2-4 \
-    libglapi-mesa \
-    libgtk-3-0 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxfixes3 \
-    libxrandr2 \
-    libxshmfence1 \
-    libxtst6 \
-    libappindicator1 \
-    libasound2 \
-    libdbus-glib-1-2 \
-    libgdk-pixbuf2.0-0 \
-    libglib2.0-0 \
-    libnotify4 \
-    libxss1 \
-    libexpat1 \
-    libfontconfig1 \
-    libfreetype6 \
-    libjpeg62-turbo \
-    libpng16-16 \
-    libwebp6 \
-    libxi6 \
-    libxkbcommon0 \
-    libxcursor1 \
-    libxrender1 \
-    fonts-liberation \
-    xdg-utils \
-    # Clean up apt caches
     && rm -rf /var/lib/apt/lists/*
-
-# Install Playwright drivers
-# We install the Playwright npm package globally to get the 'playwright' CLI tool
-# Then use 'playwright install' to download the drivers
-RUN npm install -g playwright@latest \
-    && playwright install --dry-run \
-    && playwright install --force-host-platform \
-    && playwright install --force-host-platform --install-dir /usr/local/share/playwright-browsers \
-    && rm -rf /root/.npm /tmp/*
 
 RUN mkdir -p /app
 

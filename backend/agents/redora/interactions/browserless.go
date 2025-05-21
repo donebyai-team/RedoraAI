@@ -15,6 +15,8 @@ type browserless struct {
 }
 
 func NewBrowserlessClient(token string) *browserless {
+	err := playwright.Install(&playwright.RunOptions{SkipInstallBrowsers: true})
+	fmt.Println("playwrite", err)
 	return &browserless{Token: token}
 }
 
