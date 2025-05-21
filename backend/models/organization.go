@@ -36,6 +36,22 @@ type OrganizationFeatureFlags struct {
 	Activities        []OrgActivity `json:"activities"`
 }
 
+const defaultRelevancyScore = 90
+
+func (f OrganizationFeatureFlags) GetRelevancyScoreDM() float64 {
+	if f.RelevancyScoreDM == 0 {
+		return defaultRelevancyScore
+	}
+	return f.RelevancyScoreDM
+}
+
+func (f OrganizationFeatureFlags) GetRelevancyScoreComment() float64 {
+	if f.RelevancyScoreDM == 0 {
+		return defaultRelevancyScore
+	}
+	return f.RelevancyScoreComment
+}
+
 type OrgActivity struct {
 	ActivityType OrgActivityType `json:"activity_type"`
 	CreatedAt    time.Time       `json:"created_at"`

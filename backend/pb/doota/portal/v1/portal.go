@@ -41,12 +41,12 @@ func (o *Organization) FromModel(model *models.Organization) *Organization {
 	}
 	o.FeatureFlags.Comment = &AutomationSetting{
 		Enabled:        model.FeatureFlags.EnableAutoComment,
-		RelevancyScore: float32(model.FeatureFlags.RelevancyScoreComment),
+		RelevancyScore: float32(model.FeatureFlags.GetRelevancyScoreComment()),
 	}
 
 	o.FeatureFlags.DM = &AutomationSetting{
 		Enabled:        model.FeatureFlags.EnableAutoDM,
-		RelevancyScore: float32(model.FeatureFlags.RelevancyScoreDM),
+		RelevancyScore: float32(model.FeatureFlags.GetRelevancyScoreDM()),
 	}
 
 	o.CreatedAt = timestamppb.New(model.CreatedAt)
