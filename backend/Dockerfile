@@ -32,7 +32,7 @@ RUN apt-get update && apt-get install -y \
     # Install Node.js and npm for Playwright driver installation
     nodejs \
     npm \
-    # Add other necessary Playwright dependencies
+    # Add essential Playwright dependencies for Debian Bullseye
     libnss3 \
     libnspr4 \
     libatk1.0-0 \
@@ -47,13 +47,12 @@ RUN apt-get update && apt-get install -y \
     libxdamage1 \
     libxfixes3 \
     libxrandr2 \
-    libxshmfence6 \
+    libxshmfence1 \
     libxtst6 \
     libappindicator1 \
     libasound2 \
     libdbus-glib-1-2 \
     libgdk-pixbuf2.0-0 \
-    libgconf-2-4 \
     libglib2.0-0 \
     libnotify4 \
     libxss1 \
@@ -66,10 +65,7 @@ RUN apt-get update && apt-get install -y \
     libxi6 \
     libxkbcommon0 \
     libxcursor1 \
-    libxrandr2 \
     libxrender1 \
-    libxshmfence6 \
-    libxtst6 \
     fonts-liberation \
     xdg-utils \
     # Clean up apt caches
