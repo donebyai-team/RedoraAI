@@ -241,16 +241,12 @@ func (r browserless) tryLogin(page playwright.Page, params DMParams) error {
 	}
 
 	// Fill inputs
-	if err := locators["username"].Type(params.Username, playwright.LocatorTypeOptions{
-		Delay: playwright.Float(100), // milliseconds between keystrokes
-	}); err != nil {
-		return fmt.Errorf("type username failed: %w", err)
+	if err := locators["username"].Fill(params.Username); err != nil {
+		return fmt.Errorf("fill username failed: %w", err)
 	}
 
-	if err := locators["password"].Type(params.Password, playwright.LocatorTypeOptions{
-		Delay: playwright.Float(100),
-	}); err != nil {
-		return fmt.Errorf("type password failed: %w", err)
+	if err := locators["password"].Fill(params.Password); err != nil {
+		return fmt.Errorf("fill password failed: %w", err)
 	}
 	// Optional pause (but often unnecessary with locators)
 	page.WaitForTimeout(1000)
