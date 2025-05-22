@@ -105,6 +105,7 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 	loginConfig := integration.GetRedditDMLoginConfig()
 
 	if err = r.browserLessClient.SendDM(DMParams{
+		ID:       integration.ID,
 		Username: loginConfig.Username,
 		Password: loginConfig.Password,
 		To:       fmt.Sprintf("t2_%s", user.ID),
