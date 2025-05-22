@@ -84,6 +84,20 @@ func (r browserless) SendDM(params DMParams) (err error) {
 		return fmt.Errorf("chat page navigation failed: %w", err)
 	}
 
+	// Capture a screenshot after redirecting to user
+	filePath := fmt.Sprintf("chat_%s.png", params.ID)
+	byteData, screenShotErr := page.Screenshot(playwright.PageScreenshotOptions{
+		FullPage: playwright.Bool(true), // Optional: capture full page
+	})
+	if screenShotErr != nil {
+		r.logger.Warn("failed to take chat screenshot", zap.Error(screenShotErr))
+	} else {
+		buf := bytes.NewBuffer(byteData)
+		if errFileStore := r.debugFileStore.WriteObject(goCtx.Background(), filePath, buf); errFileStore != nil {
+			r.logger.Debug("failed to save chat screenshot", zap.Error(errFileStore), zap.String("output_name", filePath))
+		}
+	}
+
 	if alert, _ := page.QuerySelector("faceplate-banner[appearance='error']"); alert != nil {
 		msg, _ := alert.GetAttribute("msg")
 		if msg != "" {
