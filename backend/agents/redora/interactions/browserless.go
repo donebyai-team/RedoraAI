@@ -309,9 +309,10 @@ type ReconnectResponse struct {
 	} `json:"data"`
 }
 
+//proxy(type: [document, xhr], country: US, sticky: true) { time }
+
 func (r browserless) getCDPUrl() (string, error) {
 	query := `mutation {
-		proxy(type: [document, xhr], country: US, sticky: true) { time }
 		goto(url: "https://www.reddit.com", waitUntil: firstContentfulPaint) {
 			status
 		}
