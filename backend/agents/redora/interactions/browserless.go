@@ -2,23 +2,32 @@ package interactions
 
 import (
 	"bytes"
+	goCtx "context"
 	"encoding/json"
 	"fmt"
 	"github.com/playwright-community/playwright-go"
 	"github.com/shank318/doota/errorx"
+	"github.com/streamingfast/dstore"
+	"go.uber.org/zap"
 	"net/http"
 	"strings"
 )
 
 type browserless struct {
-	Token string
+	Token          string
+	logger         *zap.Logger
+	debugFileStore dstore.Store
 }
 
-func NewBrowserlessClient(token string) *browserless {
-	return &browserless{Token: token}
+func NewBrowserlessClient(token string, debugFileStore dstore.Store, logger *zap.Logger) *browserless {
+	err := playwright.Install(&playwright.RunOptions{SkipInstallBrowsers: true})
+	if err != nil {
+		logger.Warn("failed to install playwright", zap.Error(err))
+	}
+	return &browserless{Token: token, logger: logger, debugFileStore: debugFileStore}
 }
 
-func (r browserless) SendDM(params DMParams) error {
+func (r browserless) SendDM(params DMParams) (err error) {
 	pw, err := playwright.Run()
 	if err != nil {
 		return fmt.Errorf("playwright start failed: %w", err)
@@ -46,13 +55,47 @@ func (r browserless) SendDM(params DMParams) error {
 		return fmt.Errorf("page creation failed: %w", err)
 	}
 
-	if err := r.tryLogin(page, params); err != nil {
+	// Screenshot on error (deferred)
+	defer func() {
+		if err != nil {
+			filePath := fmt.Sprintf("dm_%s.png", params.ID)
+
+			// Capture screenshot directly to memory (no need for file path)
+			byteData, screenShotErr := page.Screenshot(playwright.PageScreenshotOptions{
+				FullPage: playwright.Bool(true), // Optional: capture full page
+			})
+			if screenShotErr != nil {
+				r.logger.Warn("failed to take screenshot", zap.Error(screenShotErr))
+			} else {
+				buf := bytes.NewBuffer(byteData)
+				if errFileStore := r.debugFileStore.WriteObject(goCtx.Background(), filePath, buf); errFileStore != nil {
+					r.logger.Debug("failed to save screenshot", zap.Error(errFileStore), zap.String("output_name", filePath))
+				}
+			}
+		}
+	}()
+
+	if err = r.tryLogin(page, params); err != nil {
 		return err
 	}
 
 	chatURL := "https://chat.reddit.com/user/" + params.To
-	if _, err := page.Goto(chatURL, playwright.PageGotoOptions{Timeout: playwright.Float(10000)}); err != nil {
+	if _, err = page.Goto(chatURL, playwright.PageGotoOptions{Timeout: playwright.Float(10000)}); err != nil {
 		return fmt.Errorf("chat page navigation failed: %w", err)
+	}
+
+	// Capture a screenshot after redirecting to user
+	filePath := fmt.Sprintf("chat_%s.png", params.ID)
+	byteData, screenShotErr := page.Screenshot(playwright.PageScreenshotOptions{
+		FullPage: playwright.Bool(true), // Optional: capture full page
+	})
+	if screenShotErr != nil {
+		r.logger.Warn("failed to take chat screenshot", zap.Error(screenShotErr))
+	} else {
+		buf := bytes.NewBuffer(byteData)
+		if errFileStore := r.debugFileStore.WriteObject(goCtx.Background(), filePath, buf); errFileStore != nil {
+			r.logger.Debug("failed to save chat screenshot", zap.Error(errFileStore), zap.String("output_name", filePath))
+		}
 	}
 
 	if alert, _ := page.QuerySelector("faceplate-banner[appearance='error']"); alert != nil {
@@ -63,25 +106,26 @@ func (r browserless) SendDM(params DMParams) error {
 		return fmt.Errorf("chat error: invalid user")
 	}
 
-	textarea, err := page.WaitForSelector("rs-message-composer textarea[name='message']", playwright.PageWaitForSelectorOptions{
-		Timeout: playwright.Float(4000),
-	})
-	if err != nil {
+	// Wait for slightly more time as it take time to load the chat
+	locator := page.Locator("rs-message-composer textarea[name='message']")
+	if err = locator.WaitFor(playwright.LocatorWaitForOptions{
+		Timeout: playwright.Float(20000),
+	}); err != nil {
 		return fmt.Errorf("message textarea not found: %w", err)
 	}
 
-	if err := textarea.Fill(params.Message); err != nil {
+	if err = locator.Fill(params.Message); err != nil {
 		return fmt.Errorf("filling message failed: %w", err)
 	}
 
-	sendBtn, err := page.WaitForSelector("rs-message-composer button[aria-label='Send message']", playwright.PageWaitForSelectorOptions{
-		Timeout: playwright.Float(2500),
-	})
-	if err != nil {
+	sendBtn := page.Locator("rs-message-composer button[aria-label='Send message']")
+	if err = sendBtn.WaitFor(playwright.LocatorWaitForOptions{
+		Timeout: playwright.Float(5000),
+	}); err != nil {
 		return fmt.Errorf("send button not found: %w", err)
 	}
 
-	if err := sendBtn.Click(); err != nil {
+	if err = sendBtn.Click(); err != nil {
 		return fmt.Errorf("clicking send failed: %w", err)
 	}
 
@@ -89,7 +133,7 @@ func (r browserless) SendDM(params DMParams) error {
 	return nil
 }
 
-func (r browserless) CheckIfLogin(params DMParams) error {
+func (r browserless) CheckIfLogin(params DMParams) (err error) {
 	pw, err := playwright.Run()
 	if err != nil {
 		return fmt.Errorf("playwright start failed: %w", err)
@@ -117,7 +161,27 @@ func (r browserless) CheckIfLogin(params DMParams) error {
 		return fmt.Errorf("page creation failed: %w", err)
 	}
 
-	if err := r.tryLogin(page, params); err != nil {
+	// Screenshot on error (deferred)
+	defer func() {
+		if err != nil {
+			filePath := fmt.Sprintf("login_error_%s.png", params.ID)
+
+			// Capture screenshot directly to memory (no need for file path)
+			byteData, screenShotErr := page.Screenshot(playwright.PageScreenshotOptions{
+				FullPage: playwright.Bool(true), // Optional: capture full page
+			})
+			if screenShotErr != nil {
+				r.logger.Warn("failed to take screenshot", zap.Error(screenShotErr))
+			} else {
+				buf := bytes.NewBuffer(byteData)
+				if errFileStore := r.debugFileStore.WriteObject(goCtx.Background(), filePath, buf); errFileStore != nil {
+					r.logger.Debug("failed to save screenshot", zap.Error(errFileStore), zap.String("output_name", filePath))
+				}
+			}
+		}
+	}()
+
+	if err = r.tryLogin(page, params); err != nil {
 		return err
 	}
 	return nil
@@ -130,32 +194,36 @@ func (r browserless) tryLogin(page playwright.Page, params DMParams) error {
 		return fmt.Errorf("navigate to login failed: %w", err)
 	}
 
-	selectors := map[string]string{
-		"username": "#login-username input[name='username']",
-		"password": "#login-password input[name='password']",
-		"button":   "button[type='button'] span:has-text('Log In')",
+	locators := map[string]playwright.Locator{
+		"username": page.Locator("#login-username input[name='username']"),
+		"password": page.Locator("#login-password input[name='password']"),
+		"button":   page.Locator("button.login"),
 	}
-	for name, selector := range selectors {
-		if _, err := page.WaitForSelector(selector, playwright.PageWaitForSelectorOptions{
+
+	// Wait for all locators
+	for name, locator := range locators {
+		if err := locator.WaitFor(playwright.LocatorWaitForOptions{
 			Timeout: playwright.Float(5000),
 		}); err != nil {
-			return fmt.Errorf("%s selector wait failed: %w", name, err)
+			return fmt.Errorf("%s locator wait failed: %w", name, err)
 		}
 	}
 
-	if err := page.Fill(selectors["username"], params.Username); err != nil {
+	// Fill inputs
+	if err := locators["username"].Fill(params.Username); err != nil {
 		return fmt.Errorf("fill username failed: %w", err)
 	}
-	if err := page.Fill(selectors["password"], params.Password); err != nil {
+	if err := locators["password"].Fill(params.Password); err != nil {
 		return fmt.Errorf("fill password failed: %w", err)
 	}
-
+	// Optional pause (but often unnecessary with locators)
 	page.WaitForTimeout(1000)
-	if err := page.Click(selectors["button"]); err != nil {
+
+	if err := locators["button"].Click(); err != nil {
 		return fmt.Errorf("login button click failed: %w", err)
 	}
 
-	page.WaitForTimeout(3000)
+	page.WaitForTimeout(3000) // You can replace this with a proper navigation wait
 
 	if loginMsg := extractLoginErrors(page); loginMsg != "" {
 		return &errorx.LoginError{Reason: loginMsg}
@@ -165,21 +233,23 @@ func (r browserless) tryLogin(page playwright.Page, params DMParams) error {
 
 func extractLoginErrors(page playwright.Page) string {
 	var errors []string
-	helperTexts, err := page.QuerySelectorAll("faceplate-form-helper-text")
+
+	helpers := page.Locator("faceplate-form-helper-text")
+	count, err := helpers.Count()
 	if err != nil {
 		return ""
 	}
 
-	for _, helper := range helperTexts {
-		shadow, err := helper.EvaluateHandle("el => el.shadowRoot?.querySelector('#helper-text')?.innerText")
+	for i := 0; i < count; i++ {
+		helper := helpers.Nth(i)
+
+		txt, err := helper.Evaluate(`el => el.shadowRoot?.querySelector("#helper-text")?.innerText`, nil)
 		if err != nil {
 			continue
 		}
-		if txt, err := shadow.JSONValue(); err == nil && txt != nil {
-			str := strings.TrimSpace(fmt.Sprintf("%v", txt))
-			if str != "" {
-				errors = append(errors, str)
-			}
+
+		if str, ok := txt.(string); ok && strings.TrimSpace(str) != "" {
+			errors = append(errors, strings.TrimSpace(str))
 		}
 	}
 

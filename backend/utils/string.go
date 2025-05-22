@@ -84,6 +84,7 @@ func FormatDM(input string) string {
 
 	// Replace \n with actual single newlines (line breaks)
 	input = strings.ReplaceAll(input, `\n`, "\n")
+	input = strings.ReplaceAll(input, "—", ",")
 
 	return input
 }

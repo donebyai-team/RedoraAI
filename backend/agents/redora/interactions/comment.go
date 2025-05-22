@@ -11,6 +11,7 @@ import (
 	"github.com/shank318/doota/utils"
 	"go.uber.org/zap"
 	"math/rand"
+	"strings"
 	"time"
 )
 
@@ -66,6 +67,13 @@ func (r redditInteractions) SendComment(ctx context.Context, interaction *models
 			r.logger.Warn("failed to update lead status for automated comment", zap.Error(err), zap.String("lead_id", redditLead.ID))
 		}
 	}()
+
+	if strings.TrimSpace(utils.FormatComment(redditLead.LeadMetadata.SuggestedComment)) == "" {
+		err := fmt.Errorf("no comment message found")
+		interaction.Status = models.LeadInteractionStatusFAILED
+		interaction.Reason = err.Error()
+		return err
+	}
 
 	// case: if auto comment disabled
 	if !interaction.Organization.FeatureFlags.EnableAutoComment {
