@@ -46,7 +46,7 @@ func (f OrganizationFeatureFlags) GetRelevancyScoreDM() float64 {
 }
 
 func (f OrganizationFeatureFlags) GetRelevancyScoreComment() float64 {
-	if f.RelevancyScoreDM == 0 {
+	if f.RelevancyScoreComment == 0 {
 		return defaultRelevancyScore
 	}
 	return f.RelevancyScoreComment
