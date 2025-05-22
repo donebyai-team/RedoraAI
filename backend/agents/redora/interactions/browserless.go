@@ -119,9 +119,7 @@ func (r browserless) SendDM(params DMParams) (err error) {
 		return fmt.Errorf("message textarea not found: %w", err)
 	}
 
-	if err := locator.Type(params.Message, playwright.LocatorTypeOptions{
-		Delay: playwright.Float(100), // milliseconds between keystrokes
-	}); err != nil {
+	if err := locator.Fill(params.Message); err != nil {
 		return fmt.Errorf("filling message failed: %w", err)
 	}
 
