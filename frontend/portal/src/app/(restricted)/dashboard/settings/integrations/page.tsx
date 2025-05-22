@@ -247,7 +247,7 @@ export default function Page() {
                 onChange={(e) => setAutoComment(e.target.checked)}
               />
               <Typography variant="body1" fontWeight="medium" ml={2.5}>
-                Enable Automated Comments
+                {`${autoComment ? "Enable" : "Disable"} Automated Comments`}
               </Typography>
             </Box>
 
