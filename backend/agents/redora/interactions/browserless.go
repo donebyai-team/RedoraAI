@@ -13,7 +13,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strings"
 )
 
@@ -50,15 +49,15 @@ func (r browserless) SendDM(params DMParams) (err error) {
 	defer browser.Close()
 
 	// Create a unique temporary directory for video
-	tmpDir := filepath.Join(os.TempDir(), fmt.Sprintf("video_run_%s", params.ID))
-	if err := os.MkdirAll(tmpDir, 0755); err != nil {
-		return fmt.Errorf("failed to create temp video dir: %w", err)
-	}
+	//tmpDir := filepath.Join(os.TempDir(), fmt.Sprintf("video_run_%s", params.ID))
+	//if err := os.MkdirAll(tmpDir, 0755); err != nil {
+	//	return fmt.Errorf("failed to create temp video dir: %w", err)
+	//}
 
 	pageContext, err := browser.NewContext(playwright.BrowserNewContextOptions{
-		RecordVideo: &playwright.RecordVideo{
-			Dir: tmpDir,
-		},
+		//RecordVideo: &playwright.RecordVideo{
+		//	Dir: tmpDir,
+		//},
 	})
 	if err != nil {
 		return fmt.Errorf("context creation failed: %w", err)
@@ -72,21 +71,21 @@ func (r browserless) SendDM(params DMParams) (err error) {
 
 	// Defer cleanup and video save after context is closed
 	defer func() {
-		closeErr := pageContext.Close() // finalize video recording
-		if closeErr != nil {
-			r.logger.Warn("failed to close context", zap.Error(closeErr))
-		}
-
-		r.saveVideo(params.ID, page)
+		//closeErr := pageContext.Close() // finalize video recording
+		//if closeErr != nil {
+		//	r.logger.Warn("failed to close context", zap.Error(closeErr))
+		//}
+		//
+		//r.saveVideo(params.ID, page)
 
 		if err != nil {
 			r.storeScreenshot("defer", params.ID, page)
 		}
 
 		// Remove temp directory and video files
-		if rmErr := os.RemoveAll(tmpDir); rmErr != nil {
-			r.logger.Warn("failed to remove temp video directory", zap.Error(rmErr))
-		}
+		//if rmErr := os.RemoveAll(tmpDir); rmErr != nil {
+		//	r.logger.Warn("failed to remove temp video directory", zap.Error(rmErr))
+		//}
 	}()
 
 	// Login flow
@@ -164,7 +163,6 @@ func (r browserless) saveVideo(id string, page playwright.Page) {
 }
 
 func (r browserless) storeScreenshot(stage, id string, page playwright.Page) {
-	return
 	filePath := fmt.Sprintf("%s_%s.png", stage, id)
 	byteData, screenShotErr := page.Screenshot(playwright.PageScreenshotOptions{
 		FullPage: playwright.Bool(true), // Optional: capture full page
