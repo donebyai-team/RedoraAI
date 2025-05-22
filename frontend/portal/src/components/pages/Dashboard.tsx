@@ -186,7 +186,7 @@ export default function Dashboard() {
               <div className="flex-1 flex flex-col space-y-4 mt-6">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-background/95 py-2">
                   <h2 className="text-xl font-semibold">Active Leads</h2>
-                  <FilterControls onChange={handleDateRangeChange} />
+                  <FilterControls onDateRangeFilterChangeChange={handleDateRangeChange} />
                 </div>
 
                 {isLoading ? (
