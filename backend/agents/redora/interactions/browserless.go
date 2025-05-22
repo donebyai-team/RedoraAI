@@ -9,7 +9,11 @@ import (
 	"github.com/shank318/doota/errorx"
 	"github.com/streamingfast/dstore"
 	"go.uber.org/zap"
+	"golang.org/x/net/context"
+	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -45,7 +49,17 @@ func (r browserless) SendDM(params DMParams) (err error) {
 	}
 	defer browser.Close()
 
-	context, err := browser.NewContext()
+	// Create a unique temporary directory
+	tmpDir := filepath.Join(os.TempDir(), fmt.Sprintf("video_run_%s", params.ID))
+	if err := os.MkdirAll(tmpDir, 0755); err != nil {
+		return fmt.Errorf("failed to create temp video dir: %w", err)
+	}
+
+	context, err := browser.NewContext(playwright.BrowserNewContextOptions{
+		RecordVideo: &playwright.RecordVideo{
+			Dir: tmpDir,
+		},
+	})
 	if err != nil {
 		return fmt.Errorf("context creation failed: %w", err)
 	}
@@ -57,9 +71,11 @@ func (r browserless) SendDM(params DMParams) (err error) {
 
 	// Screenshot on error (deferred)
 	defer func() {
+		r.saveVideo(params.ID, page)
 		if err != nil {
 			r.storeScreenshot("defer", params.ID, page)
 		}
+		os.RemoveAll(tmpDir)
 	}()
 
 	if err = r.tryLogin(page, params); err != nil {
@@ -109,7 +125,28 @@ func (r browserless) SendDM(params DMParams) (err error) {
 	return nil
 }
 
+func (r browserless) saveVideo(id string, page playwright.Page) {
+	if video := page.Video(); video != nil {
+		videoPath, err := video.Path()
+		if err == nil {
+			file, err := os.Open(videoPath)
+			if err == nil {
+				defer file.Close()
+
+				var buf bytes.Buffer
+				if _, err := io.Copy(&buf, file); err == nil {
+					objectName := fmt.Sprintf("video_%s.webm", id)
+					if err := r.debugFileStore.WriteObject(context.Background(), objectName, &buf); err != nil {
+						r.logger.Warn("failed to upload video", zap.Error(err))
+					}
+				}
+			}
+		}
+	}
+}
+
 func (r browserless) storeScreenshot(stage, id string, page playwright.Page) {
+	return
 	filePath := fmt.Sprintf("%s_%s.png", stage, id)
 	byteData, screenShotErr := page.Screenshot(playwright.PageScreenshotOptions{
 		FullPage: playwright.Bool(true), // Optional: capture full page
@@ -155,20 +192,7 @@ func (r browserless) CheckIfLogin(params DMParams) (err error) {
 	// Screenshot on error (deferred)
 	defer func() {
 		if err != nil {
-			filePath := fmt.Sprintf("login_error_%s.png", params.ID)
-
-			// Capture screenshot directly to memory (no need for file path)
-			byteData, screenShotErr := page.Screenshot(playwright.PageScreenshotOptions{
-				FullPage: playwright.Bool(true), // Optional: capture full page
-			})
-			if screenShotErr != nil {
-				r.logger.Warn("failed to take screenshot", zap.Error(screenShotErr))
-			} else {
-				buf := bytes.NewBuffer(byteData)
-				if errFileStore := r.debugFileStore.WriteObject(goCtx.Background(), filePath, buf); errFileStore != nil {
-					r.logger.Debug("failed to save screenshot", zap.Error(errFileStore), zap.String("output_name", filePath))
-				}
-			}
+			r.storeScreenshot("defer", params.ID, page)
 		}
 	}()
 
@@ -203,16 +227,24 @@ func (r browserless) tryLogin(page playwright.Page, params DMParams) error {
 	}
 
 	// Fill inputs
-	if err := locators["username"].Fill(params.Username); err != nil {
-		return fmt.Errorf("fill username failed: %w", err)
+	if err := locators["username"].Type(params.Username, playwright.LocatorTypeOptions{
+		Delay: playwright.Float(100), // milliseconds between keystrokes
+	}); err != nil {
+		return fmt.Errorf("type username failed: %w", err)
 	}
-	if err := locators["password"].Fill(params.Password); err != nil {
-		return fmt.Errorf("fill password failed: %w", err)
+
+	if err := locators["password"].Type(params.Password, playwright.LocatorTypeOptions{
+		Delay: playwright.Float(100),
+	}); err != nil {
+		return fmt.Errorf("type password failed: %w", err)
 	}
 	// Optional pause (but often unnecessary with locators)
 	page.WaitForTimeout(1000)
 
-	if err := locators["button"].Click(); err != nil {
+	// Click the login button with a small delay to simulate realism
+	if err := locators["button"].Click(playwright.LocatorClickOptions{
+		Delay: playwright.Float(100), // Delay before mouseup (in ms)
+	}); err != nil {
 		return fmt.Errorf("login button click failed: %w", err)
 	}
 
@@ -262,7 +294,7 @@ type ReconnectResponse struct {
 func (r browserless) getCDPUrl() (string, error) {
 	query := `mutation {
 		proxy(type: [document, xhr], country: US, sticky: true) { time }
-		goto(url: "https://www.reddit.com/login", waitUntil: firstContentfulPaint) {
+		goto(url: "https://www.reddit.com", waitUntil: firstContentfulPaint) {
 			status
 		}
 		reconnect(timeout: 30000) {
