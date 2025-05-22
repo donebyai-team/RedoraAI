@@ -49,13 +49,13 @@ func (r browserless) SendDM(params DMParams) (err error) {
 	}
 	defer browser.Close()
 
-	// Create a unique temporary directory
+	// Create a unique temporary directory for video
 	tmpDir := filepath.Join(os.TempDir(), fmt.Sprintf("video_run_%s", params.ID))
 	if err := os.MkdirAll(tmpDir, 0755); err != nil {
 		return fmt.Errorf("failed to create temp video dir: %w", err)
 	}
 
-	context, err := browser.NewContext(playwright.BrowserNewContextOptions{
+	pageContext, err := browser.NewContext(playwright.BrowserNewContextOptions{
 		RecordVideo: &playwright.RecordVideo{
 			Dir: tmpDir,
 		},
@@ -64,32 +64,46 @@ func (r browserless) SendDM(params DMParams) (err error) {
 		return fmt.Errorf("context creation failed: %w", err)
 	}
 
-	page, err := context.NewPage()
+	page, err := pageContext.NewPage()
 	if err != nil {
+		_ = pageContext.Close() // clean up context if page creation fails
 		return fmt.Errorf("page creation failed: %w", err)
 	}
 
-	// Screenshot on error (deferred)
+	// Defer cleanup and video save after context is closed
 	defer func() {
+		closeErr := pageContext.Close() // finalize video recording
+		if closeErr != nil {
+			r.logger.Warn("failed to close context", zap.Error(closeErr))
+		}
+
 		r.saveVideo(params.ID, page)
+
 		if err != nil {
 			r.storeScreenshot("defer", params.ID, page)
 		}
-		os.RemoveAll(tmpDir)
+
+		// Remove temp directory and video files
+		if rmErr := os.RemoveAll(tmpDir); rmErr != nil {
+			r.logger.Warn("failed to remove temp video directory", zap.Error(rmErr))
+		}
 	}()
 
+	// Login flow
 	if err = r.tryLogin(page, params); err != nil {
 		return err
 	}
 
+	// Navigate to chat page
 	chatURL := "https://chat.reddit.com/user/" + params.To
 	if _, err = page.Goto(chatURL, playwright.PageGotoOptions{Timeout: playwright.Float(10000)}); err != nil {
 		return fmt.Errorf("chat page navigation failed: %w", err)
 	}
 
-	// Capture a screenshot after redirecting to user
+	// Screenshot after chat page load (optional)
 	r.storeScreenshot("chat", params.ID, page)
 
+	// Check for error banner on chat page
 	if alert, _ := page.QuerySelector("faceplate-banner[appearance='error']"); alert != nil {
 		msg, _ := alert.GetAttribute("msg")
 		if msg != "" {
@@ -98,7 +112,7 @@ func (r browserless) SendDM(params DMParams) (err error) {
 		return fmt.Errorf("chat error: invalid user")
 	}
 
-	// Wait for slightly more time as it take time to load the chat
+	// Wait for message textarea to load
 	locator := page.Locator("rs-message-composer textarea[name='message']")
 	if err = locator.WaitFor(playwright.LocatorWaitForOptions{
 		Timeout: playwright.Float(20000),
@@ -106,7 +120,9 @@ func (r browserless) SendDM(params DMParams) (err error) {
 		return fmt.Errorf("message textarea not found: %w", err)
 	}
 
-	if err = locator.Fill(params.Message); err != nil {
+	if err := locator.Type(params.Message, playwright.LocatorTypeOptions{
+		Delay: playwright.Float(100), // milliseconds between keystrokes
+	}); err != nil {
 		return fmt.Errorf("filling message failed: %w", err)
 	}
 
@@ -117,7 +133,9 @@ func (r browserless) SendDM(params DMParams) (err error) {
 		return fmt.Errorf("send button not found: %w", err)
 	}
 
-	if err = sendBtn.Click(); err != nil {
+	if err := sendBtn.Click(playwright.LocatorClickOptions{
+		Delay: playwright.Float(100), // Delay before mouseup (in ms)
+	}); err != nil {
 		return fmt.Errorf("clicking send failed: %w", err)
 	}
 
