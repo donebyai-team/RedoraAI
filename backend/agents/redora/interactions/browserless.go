@@ -58,7 +58,7 @@ func (r browserless) SendDM(params DMParams) (err error) {
 	// Screenshot on error (deferred)
 	defer func() {
 		if err != nil {
-			filePath := fmt.Sprintf("dm_error_%d.png", params.ID)
+			filePath := fmt.Sprintf("dm_%s.png", params.ID)
 
 			// Capture screenshot directly to memory (no need for file path)
 			byteData, screenShotErr := page.Screenshot(playwright.PageScreenshotOptions{
@@ -150,7 +150,7 @@ func (r browserless) CheckIfLogin(params DMParams) (err error) {
 	// Screenshot on error (deferred)
 	defer func() {
 		if err != nil {
-			filePath := fmt.Sprintf("login_error_%d.png", params.ID)
+			filePath := fmt.Sprintf("login_error_%s.png", params.ID)
 
 			// Capture screenshot directly to memory (no need for file path)
 			byteData, screenShotErr := page.Screenshot(playwright.PageScreenshotOptions{
