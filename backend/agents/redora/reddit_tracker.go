@@ -157,22 +157,24 @@ func (s *redditKeywordTracker) sendAlert(ctx context.Context, project *models.Pr
 		}
 		// Send alert on redora
 		err = s.alertNotifier.SendLeadsSummary(ctx, alerts.LeadSummary{
-			OrgID:              project.OrganizationID,
-			ProjectName:        project.Name,
-			TotalPostsAnalysed: analysis.PostsTracked,
-			TotalCommentsSent:  analysis.CommentScheduled,
-			DailyCount:         analysis.RelevantPostsFound,
+			OrgID:                  project.OrganizationID,
+			ProjectName:            project.Name,
+			TotalPostsAnalysed:     analysis.PostsTracked,
+			TotalCommentsScheduled: analysis.CommentScheduled,
+			TotalDMScheduled:       analysis.DmScheduled,
+			DailyCount:             analysis.RelevantPostsFound,
 		})
 		if err != nil {
 			s.logger.Error("failed to send slack notification", zap.Error(err))
 		}
 
 		err = s.alertNotifier.SendLeadsSummaryEmail(ctx, alerts.LeadSummary{
-			OrgID:              project.OrganizationID,
-			ProjectName:        project.Name,
-			TotalPostsAnalysed: analysis.PostsTracked,
-			TotalCommentsSent:  analysis.CommentScheduled,
-			DailyCount:         analysis.RelevantPostsFound,
+			OrgID:                  project.OrganizationID,
+			ProjectName:            project.Name,
+			TotalPostsAnalysed:     analysis.PostsTracked,
+			TotalCommentsScheduled: analysis.CommentScheduled,
+			TotalDMScheduled:       analysis.DmScheduled,
+			DailyCount:             analysis.RelevantPostsFound,
 		})
 		if err != nil {
 			s.logger.Error("failed to send email notification", zap.Error(err))

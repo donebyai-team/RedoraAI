@@ -15,12 +15,13 @@ import (
 )
 
 type LeadSummary struct {
-	OrgID              string
-	UserID             string
-	ProjectName        string
-	TotalPostsAnalysed uint32
-	TotalCommentsSent  uint32
-	DailyCount         uint32
+	OrgID                  string
+	UserID                 string
+	ProjectName            string
+	TotalPostsAnalysed     uint32
+	TotalCommentsScheduled uint32
+	TotalDMScheduled       uint32
+	DailyCount             uint32
 }
 
 type AlertNotifier interface {
@@ -129,6 +130,7 @@ func (s *SlackNotifier) SendLeadsSummaryEmail(ctx context.Context, summary LeadS
 		    <p><strong>Product:</strong> %s</p>
 		    <p><strong>Posts Analyzed:</strong> %d</p>
 		    <p><strong>Automated Comments Scheduled:</strong> %d</p>
+			<p><strong>Automated DM Scheduled:</strong> %d</p>
 		    <p><strong>Relevant Posts Found:</strong> <strong>%d</strong></p>
 		    <p>🔗 <a href="%s">View all leads in your dashboard</a></p>
 		    <hr>
@@ -139,7 +141,7 @@ func (s *SlackNotifier) SendLeadsSummaryEmail(ctx context.Context, summary LeadS
 		  </div>
 		</body>
 		</html>
-	`, summary.ProjectName, summary.TotalPostsAnalysed, summary.TotalCommentsSent, summary.DailyCount, "https://app.redoraai.com/dashboard/leads")
+	`, summary.ProjectName, summary.TotalPostsAnalysed, summary.TotalCommentsScheduled, summary.TotalDMScheduled, summary.DailyCount, "https://app.redoraai.com/dashboard/leads")
 
 	params := &resend.SendEmailRequest{
 		From:    "RedoraAI <leads@alerts.redoraai.com>",
@@ -165,11 +167,13 @@ func (s *SlackNotifier) SendLeadsSummary(ctx context.Context, summary LeadSummar
 			"*Product:* %s\n"+
 			"*Posts Analyzed:* %d\n"+
 			"*Automated Comments Scheduled:* %d\n"+
+			"*Automated DM Scheduled:* %d\n"+
 			"*Relevant Posts Found:* *%d*\n\n"+
 			"🔗 <%s|View all posts in your dashboard>",
 		summary.ProjectName,
 		summary.TotalPostsAnalysed,
-		summary.TotalCommentsSent,
+		summary.TotalCommentsScheduled,
+		summary.TotalDMScheduled,
 		summary.DailyCount,
 		leadsURL,
 	)
