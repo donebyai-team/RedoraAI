@@ -28,11 +28,16 @@ type OauthClient struct {
 }
 
 type userAgentTransport struct {
-	base http.RoundTripper
+	userName string
+	base     http.RoundTripper
 }
 
 func (u *userAgentTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	req.Header.Set("User-Agent", "linux:com.reddit.scraper:v0.1")
+	if u.userName != "" {
+		req.Header.Set("User-Agent", fmt.Sprintf("com.redoraai:v0.1 by (/u/%s)", u.userName))
+	} else {
+		req.Header.Set("User-Agent", "com.redoraai:v0.1 by (redora)")
+	}
 	return u.base.RoundTrip(req)
 }
 
@@ -106,10 +111,12 @@ func (r *OauthClient) newRedditClient(ctx context.Context, orgID string, forceAu
 		return nil, datastore.IntegrationNotFoundOrActive
 	}
 
+	redditUserConfig := integration.GetRedditConfig()
+
 	client := &Client{
 		logger:      r.logger,
-		config:      integration.GetRedditConfig(),
-		httpClient:  newHTTPClient(),
+		config:      redditUserConfig,
+		httpClient:  newHTTPClient(redditUserConfig.Name),
 		oauthConfig: r.config,
 		baseURL:     redditAPIBase,
 		unAuthorizedErrorCallback: func(ctx context.Context) {
