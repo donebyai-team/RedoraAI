@@ -7,7 +7,3 @@ export const isAdmin = (user: User): boolean => {
 export const isPlatformAdmin = (user: User): boolean => {
     return user.role === UserRole.PLATFORM_ADMIN
 }
-
-export const isAdminUser = (user: User): boolean => {
-    return UserRole.ADMIN === user.role;
-}
