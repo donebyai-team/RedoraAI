@@ -9,7 +9,7 @@ import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 import Paper from '@mui/material/Paper'
 import { useAuth, useAuthUser } from '@doota/ui-core/hooks/useAuth'
-import { IntegrationType, Integration, User, Organization } from '@doota/pb/doota/portal/v1/portal_pb'
+import { IntegrationType, Integration } from '@doota/pb/doota/portal/v1/portal_pb'
 import { FallbackSpinner } from '../../../../../atoms/FallbackSpinner'
 import { Button } from '../../../../../atoms/Button'
 import { portalClient } from '../../../../../services/grpc'
@@ -91,22 +91,14 @@ const CustomSwitch = styled(Switch)(() => ({
 const defaultRelevancyScoreForComment = 90;
 const defaultStatusForComment = false;
 
-
-function getOrganization(organization: Organization | null, user: User) {
-  if (organization) {
-    return organization;
-  }
-  return user?.organizations?.[0] || null;
-}
-
 export default function Page() {
   const user = useAuthUser()
-  const { setUser, organization, setOrganization } = useAuth()
+  const { setUser, setOrganization, getOrganization } = useAuth()
 
   const [loading, setLoading] = useState(true)
   const [integrations, setIntegrations] = useState<Integration[]>([])
 
-  const org = getOrganization(organization, user);
+  const org = getOrganization();
 
   const defaultRelevancyScore = org?.featureFlags?.Comment?.relevancyScore ?? defaultRelevancyScoreForComment;
   const defaultAutoComment = org?.featureFlags?.Comment?.enabled ?? defaultStatusForComment;
