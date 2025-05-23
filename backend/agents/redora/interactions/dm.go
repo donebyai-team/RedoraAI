@@ -93,7 +93,7 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 
 	if user == nil || user.ID == "" {
 		interaction.Status = models.LeadInteractionStatusFAILED
-		interaction.Reason = "user is nil"
+		interaction.Reason = "user does not exist or suspended"
 		return nil
 	}
 
