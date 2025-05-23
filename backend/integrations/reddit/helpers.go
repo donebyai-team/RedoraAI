@@ -44,9 +44,9 @@ func (r *Client) buildRequest(ctx context.Context, rawBody interface{}, method, 
 	}
 	if r.config != nil {
 		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", r.config.AccessToken))
-		req.Header.Set("User-Agent", fmt.Sprintf("com.redoraai:v0.1 by (/u/%s)", r.config.Name))
+		//req.Header.Set("User-Agent", fmt.Sprintf("com.redoraai:v0.1 by (/u/%s)", r.config.Name))
 	} else {
-		req.Header.Set("User-Agent", "com.redoraai:v0.1 by (redora)")
+		//req.Header.Set("User-Agent", "com.redoraai:v0.1 by (redora)")
 	}
 
 	return req, nil

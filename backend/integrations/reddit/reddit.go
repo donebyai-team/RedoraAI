@@ -37,7 +37,7 @@ func NewClientWithConfig(config *models.RedditConfig, logger *zap.Logger) *Clien
 		baseURL:    redditAPIBase,
 		config:     config,
 		logger:     logger,
-		httpClient: newHTTPClient(),
+		httpClient: newHTTPClient(config.Name),
 	}
 }
 
@@ -45,11 +45,11 @@ func NewClientWithOutConfig(logger *zap.Logger) *Client {
 	return &Client{
 		baseURL:    redditAPINonAuthBase,
 		logger:     logger,
-		httpClient: newHTTPClient(),
+		httpClient: newHTTPClient(""),
 	}
 }
 
-func newHTTPClient() *retryablehttp.Client {
+func newHTTPClient(userName string) *retryablehttp.Client {
 	cli := retryablehttp.NewClient()
 	cli.Logger = nil
 	cli.RetryMax = 1
@@ -71,7 +71,8 @@ func newHTTPClient() *retryablehttp.Client {
 	}
 
 	// Wrap with user-agent injection
-	cli.HTTPClient.Transport = baseTransport
+	cli.HTTPClient.Transport = &userAgentTransport{base: baseTransport, userName: userName}
+
 	cli.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
 		if err != nil {
 			return true, err
