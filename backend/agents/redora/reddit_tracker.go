@@ -487,8 +487,14 @@ func (s *redditKeywordTracker) sendAutomatedDM(ctx context.Context, org *models.
 	return nil
 }
 
+var ignoreOldEnoughChecksForOrgs = []string{"0d40bd4d-15ba-48d1-b3db-7d8dae22b7dd"}
+
 func (s *redditKeywordTracker) sendAutomatedComment(ctx context.Context, org *models.Organization, redditConfig *models.RedditConfig, redditLead *models.Lead) error {
 	isOldEnough := redditConfig.IsUserOldEnough(2)
+	if utils.Contains(ignoreOldEnoughChecksForOrgs, org.ID) {
+		isOldEnough = true
+	}
+
 	autoCommentEnabled := org.FeatureFlags.EnableAutoComment
 
 	// Case 1: User is old enough, but auto comment is currently disabled — enable it
