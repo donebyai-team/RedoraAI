@@ -9,13 +9,13 @@ import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 import Paper from '@mui/material/Paper'
 import { useAuth, useAuthUser } from '@doota/ui-core/hooks/useAuth'
-import { IntegrationType, Integration } from '@doota/pb/doota/portal/v1/portal_pb'
+import { IntegrationType, Integration, User, Organization } from '@doota/pb/doota/portal/v1/portal_pb'
 import { FallbackSpinner } from '../../../../../atoms/FallbackSpinner'
 import { Button } from '../../../../../atoms/Button'
 import { portalClient } from '../../../../../services/grpc'
 import { buildAppUrl } from '../../../../routes'
 import { routes } from '@doota/ui-core/routing'
-import { isAdmin, isAdminUser, isPlatformAdmin } from '@doota/ui-core/helper/role'
+import { isAdmin, isPlatformAdmin } from '@doota/ui-core/helper/role'
 import { Box } from '@mui/system'
 import { AppBar, Toolbar, Typography, Card, CardContent, Slider, Switch, styled } from '@mui/material'
 import {
@@ -88,6 +88,17 @@ const CustomSwitch = styled(Switch)(() => ({
   },
 }));
 
+const defaultRelevancyScoreForComment = 90;
+const defaultStatusForComment = false;
+
+
+function getOrganization(organization: Organization | null, user: User) {
+  if (organization) {
+    return organization;
+  }
+  return user?.organizations?.[0] || null;
+}
+
 export default function Page() {
   const user = useAuthUser()
   const { setUser, organization, setOrganization } = useAuth()
@@ -95,8 +106,10 @@ export default function Page() {
   const [loading, setLoading] = useState(true)
   const [integrations, setIntegrations] = useState<Integration[]>([])
 
-  const defaultRelevancyScore = (isAdminUser(user) ? user.organizations?.[0]?.featureFlags?.Comment?.relevancyScore : organization?.featureFlags?.Comment?.relevancyScore) ?? 90;
-  const defaultAutoComment = (isAdminUser(user) ? user.organizations?.[0]?.featureFlags?.Comment?.enabled : organization?.featureFlags?.Comment?.enabled) ?? false;
+  const org = getOrganization(organization, user);
+
+  const defaultRelevancyScore = org?.featureFlags?.Comment?.relevancyScore ?? defaultRelevancyScoreForComment;
+  const defaultAutoComment = org?.featureFlags?.Comment?.enabled ?? defaultStatusForComment;
 
   const [relevancyScore, setRelevancyScore] = useState(defaultRelevancyScore)
   const [autoComment, setAutoComment] = useState(defaultAutoComment)
@@ -134,7 +147,7 @@ export default function Page() {
       const result = await portalClient.updateAutomationSettings({
         comment: { enabled: autoComment, relevancyScore }
       });
-      
+
       if (isPlatformAdmin(user)) {
         setOrganization(result);
       }
