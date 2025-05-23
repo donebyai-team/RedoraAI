@@ -443,6 +443,11 @@ export declare type UsageLimit = Message<"doota.core.v1.UsageLimit"> & {
    * @generated from field: int32 per_day = 1;
    */
   perDay: number;
+
+  /**
+   * @generated from field: int32 per_month = 2;
+   */
+  perMonth: number;
 };
 
 /**

@@ -165,6 +165,7 @@ enum SubscriptionPlanID {
 
 message UsageLimit {
   int32 per_day = 1;
+  int32 per_month = 2;
 }
 
 message Subscription {
