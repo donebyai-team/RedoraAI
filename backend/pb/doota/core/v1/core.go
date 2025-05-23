@@ -27,7 +27,6 @@ func (i *SubscriptionStatus) FromModel(model models.SubscriptionStatus) {
 
 func (u *UsageLimit) FromModel(model *models.UsageLimits) *UsageLimit {
 	u.PerDay = int32(model.PerDay)
-	u.PerMonth = int32(model.PerMonth)
 	return u
 }
 

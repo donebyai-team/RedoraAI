@@ -210,7 +210,7 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 	source.OrgID = project.OrganizationID
 
 	// We will try to keep searching until we reach the max relevant posts per day >= defaultRelevancyScore
-	if ok, err := s.isMaxLeadLimitReached(ctx, project.OrganizationID); err != nil || ok {
+	if ok, err := s.isMaxLeadLimitReached(ctx, tracker.Organization); err != nil || ok {
 		return err
 	}
 
@@ -306,7 +306,7 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 			}
 
 			// if the lower model thinks it is relevant, verify it with the higher one and override it if it is
-			if relevanceResponse.IsRelevantConfidenceScore >= defaultRelevancyScore {
+			if relevanceResponse.IsRelevantConfidenceScore >= defaultRelevancyScoreGlobal {
 				s.logger.Info("calling relevancy with higher model", zap.String("higher_model", string(s.aiClient.GetAdvanceModel())), zap.String("post_id", post.ID))
 				relevanceResponseHigherModel, usageHigherModel, errHigherModel := s.aiClient.IsRedditPostRelevant(ctx, s.aiClient.GetAdvanceModel(), ai.IsPostRelevantInput{
 					Project: project,
@@ -361,8 +361,8 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 			redditLead.Description = "[Redacted]"
 		}
 
-		// relevant posts
-		if redditLead.RelevancyScore >= defaultRelevancyScore {
+		// is post highly relevant
+		if redditLead.RelevancyScore >= defaultRelevancyScoreGlobal {
 			countPostsWithHighRelevancy++
 			isAllowed, err := s.isMaxLeadLimitUnderLimit(ctx, tracker.Organization)
 			if err != nil {
@@ -387,11 +387,7 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 		}
 
 		// IMP: Make sure to send comment after saving the lead as we need lead id
-		commentRelevancyScore := tracker.Organization.FeatureFlags.RelevancyScoreComment
-		if commentRelevancyScore == 0 {
-			commentRelevancyScore = defaultRelevancyScore
-		}
-		if redditLead.RelevancyScore >= commentRelevancyScore && tracker.Organization.FeatureFlags.EnableAutoComment {
+		if redditLead.RelevancyScore >= tracker.Organization.FeatureFlags.GetRelevancyScoreComment() && tracker.Organization.FeatureFlags.EnableAutoComment {
 			// schedule comment
 			if len(strings.TrimSpace(redditLead.LeadMetadata.SuggestedComment)) > 0 {
 				err := s.sendAutomatedComment(ctx, tracker.Organization, redditClient.GetConfig(), redditLead)
@@ -401,11 +397,7 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 			}
 		}
 
-		dmRelevancyScore := tracker.Organization.FeatureFlags.RelevancyScoreDM
-		if dmRelevancyScore == 0 {
-			dmRelevancyScore = defaultRelevancyScore
-		}
-		if redditLead.RelevancyScore >= dmRelevancyScore && tracker.Organization.FeatureFlags.EnableAutoDM {
+		if redditLead.RelevancyScore >= tracker.Organization.FeatureFlags.GetRelevancyScoreDM() && tracker.Organization.FeatureFlags.EnableAutoDM {
 			// Schedule DM
 			if len(strings.TrimSpace(redditLead.LeadMetadata.SuggestedDM)) > 0 {
 				err := s.sendAutomatedDM(ctx, tracker.Organization, redditClient.GetConfig(), redditLead)
@@ -427,7 +419,7 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 		}
 
 		// We will try to keep searching until we reach the max relevant posts per day >= defaultRelevancyScore
-		ok, err := s.isMaxLeadLimitReached(ctx, project.OrganizationID)
+		ok, err := s.isMaxLeadLimitReached(ctx, tracker.Organization)
 		if err != nil || ok {
 			if err != nil {
 				return err
@@ -458,7 +450,7 @@ func (s *redditKeywordTracker) sendAutomatedDM(ctx context.Context, org *models.
 	}
 	// Continue
 	redisKey := dailyCounterKey(org.ID)
-	shouldDM, err := s.state.CheckIfUnderLimitAndIncrement(ctx, redisKey, keyDMScheduledPerDay, maxDMPerDay, 24*time.Hour)
+	shouldDM, err := s.state.CheckIfUnderLimitAndIncrement(ctx, redisKey, keyDMScheduledPerDay, org.FeatureFlags.GetMaxDMsPerDay(), 24*time.Hour)
 	if err != nil {
 		return fmt.Errorf("failed to check if dm_scheduled under limit and increment: %w", err)
 	}
@@ -534,7 +526,7 @@ func (s *redditKeywordTracker) sendAutomatedComment(ctx context.Context, org *mo
 
 	// Continue
 	redisKey := dailyCounterKey(org.ID)
-	shouldComment, err := s.state.CheckIfUnderLimitAndIncrement(ctx, redisKey, keyCommentScheduledPerDay, maxCommentsPerDay, 24*time.Hour)
+	shouldComment, err := s.state.CheckIfUnderLimitAndIncrement(ctx, redisKey, keyCommentScheduledPerDay, org.FeatureFlags.GetMaxCommentsPerDay(), 24*time.Hour)
 	if err != nil {
 		return fmt.Errorf("failed to check if comment_scheduled under limit and increment: %w", err)
 	}
@@ -568,15 +560,15 @@ func dailyCounterKey(orgID string) string {
 }
 
 func (s *redditKeywordTracker) isMaxLeadLimitUnderLimit(ctx context.Context, org *models.Organization) (bool, error) {
-	return s.state.CheckIfUnderLimitAndIncrement(ctx, dailyCounterKey(org.ID), keyRelevantLeadsPerDay, maxLeadsPerDay, 24*time.Hour)
+	return s.state.CheckIfUnderLimitAndIncrement(ctx, dailyCounterKey(org.ID), keyRelevantLeadsPerDay, org.FeatureFlags.GetMaxLeadsPerDay(), 24*time.Hour)
 }
 
-func (s *redditKeywordTracker) isMaxLeadLimitReached(ctx context.Context, orgID string) (bool, error) {
-	dailyCounters, err := s.state.GetLeadAnalysisCounters(ctx, dailyCounterKey(orgID))
+func (s *redditKeywordTracker) isMaxLeadLimitReached(ctx context.Context, org *models.Organization) (bool, error) {
+	dailyCounters, err := s.state.GetLeadAnalysisCounters(ctx, dailyCounterKey(org.ID))
 	if err != nil {
 		return false, err
 	}
-	if dailyCounters.RelevantPostsFound >= maxLeadsPerDay {
+	if dailyCounters.RelevantPostsFound >= uint32(org.FeatureFlags.GetMaxLeadsPerDay()) {
 		s.logger.Info("reached max leads per day",
 			zap.Uint32("count", dailyCounters.RelevantPostsFound))
 		return true, nil
@@ -592,18 +584,14 @@ func (s *redditKeywordTracker) isMaxLeadLimitReached(ctx context.Context, orgID 
 }
 
 const (
-	minSelftextLength        = 30
-	minTitleLength           = 5
-	maxPostAgeInMonths       = 6
-	minCommentThreshold      = 5
-	maxLeadsPerDay           = 25
-	defaultRelevancyScore    = 90
-	dailyPostsRelevancyScore = 80
-	minRelevancyScore        = 70
-	defaultLLMFailedCount    = 3
-	maxCommentsPerDay        = 4
-	maxDMPerDay              = 10
-	maxPostsToTrackPerDay    = 600
+	minSelftextLength           = 30
+	minTitleLength              = 5
+	maxPostAgeInMonths          = 6
+	defaultRelevancyScoreGlobal = 90 // relevancy score to re-confirm with higher model and also max leads
+	dailyPostsRelevancyScore    = 80
+	minRelevancyScore           = 70
+	defaultLLMFailedCount       = 3
+	maxPostsToTrackPerDay       = 600
 )
 
 var systemAuthors = []string{"[deleted]", "AutoModerator"}

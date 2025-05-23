@@ -7,8 +7,7 @@ import (
 )
 
 type UsageLimits struct {
-	PerDay   int `json:"per_day"`
-	PerMonth int `json:"per_month"`
+	PerDay int64 `json:"per_day"`
 }
 
 type SubscriptionPlanMetadata struct {
@@ -32,7 +31,7 @@ type SubscriptionPlan struct {
 	Metadata    SubscriptionPlanMetadata `json:"metadata"`
 }
 
-var RedoraPlans = map[SubscriptionPlanType]SubscriptionPlan{
+var RedoraPlans = map[SubscriptionPlanType]*SubscriptionPlan{
 	SubscriptionPlanTypeFREE: {
 		PlanType:    SubscriptionPlanTypeFREE,
 		Description: "Free plan with limited usage to try out the platform",
@@ -40,16 +39,13 @@ var RedoraPlans = map[SubscriptionPlanType]SubscriptionPlan{
 		Interval:    7, // 14-day trial
 		Metadata: SubscriptionPlanMetadata{
 			Comments: UsageLimits{
-				PerDay:   5,
-				PerMonth: 50,
+				PerDay: 4,
 			},
 			DMs: UsageLimits{
-				PerDay:   2,
-				PerMonth: 20,
+				PerDay: 4,
 			},
 			RelevantPosts: UsageLimits{
-				PerDay:   25,
-				PerMonth: 750,
+				PerDay: 25,
 			},
 			MaxSources:  5,
 			MaxKeywords: 5,
@@ -62,16 +58,13 @@ var RedoraPlans = map[SubscriptionPlanType]SubscriptionPlan{
 		Interval:    30,
 		Metadata: SubscriptionPlanMetadata{
 			Comments: UsageLimits{
-				PerDay:   30,
-				PerMonth: 300,
+				PerDay: 30,
 			},
 			DMs: UsageLimits{
-				PerDay:   10,
-				PerMonth: 100,
+				PerDay: 10,
 			},
 			RelevantPosts: UsageLimits{
-				PerDay:   50,
-				PerMonth: 500,
+				PerDay: 50,
 			},
 			MaxSources:  5,
 			MaxKeywords: 5,
@@ -84,16 +77,13 @@ var RedoraPlans = map[SubscriptionPlanType]SubscriptionPlan{
 		Interval:    30,
 		Metadata: SubscriptionPlanMetadata{
 			Comments: UsageLimits{
-				PerDay:   100,
-				PerMonth: 1000,
+				PerDay: 100,
 			},
 			DMs: UsageLimits{
-				PerDay:   40,
-				PerMonth: 400,
+				PerDay: 40,
 			},
 			RelevantPosts: UsageLimits{
-				PerDay:   200,
-				PerMonth: 2000,
+				PerDay: 200,
 			},
 			MaxSources:  5,
 			MaxKeywords: 5,
@@ -106,16 +96,13 @@ var RedoraPlans = map[SubscriptionPlanType]SubscriptionPlan{
 		Interval:    30,
 		Metadata: SubscriptionPlanMetadata{
 			Comments: UsageLimits{
-				PerDay:   60,
-				PerMonth: 600,
+				PerDay: 60,
 			},
 			DMs: UsageLimits{
-				PerDay:   25,
-				PerMonth: 250,
+				PerDay: 25,
 			},
 			RelevantPosts: UsageLimits{
-				PerDay:   100,
-				PerMonth: 1000,
+				PerDay: 100,
 			},
 		},
 	},
