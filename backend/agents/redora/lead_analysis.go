@@ -43,13 +43,26 @@ func (a LeadAnalysis) GenerateLeadAnalysis(ctx context.Context, projectID string
 	if err != nil {
 		return nil, err
 	}
-	analysis.CommentScheduled = uint32(len(interactionsScheduled))
+
+	for _, interaction := range interactionsScheduled {
+		if interaction.Type == models.LeadInteractionTypeCOMMENT {
+			analysis.CommentScheduled++
+		} else if interaction.Type == models.LeadInteractionTypeDM {
+			analysis.DmScheduled++
+		}
+	}
 
 	// total comment sent
 	interactionsSent, err := a.automatedInteractions.GetInteractions(ctx, projectID, models.LeadInteractionStatusSENT, dateRange)
 	if err != nil {
 		return nil, err
 	}
-	analysis.CommentSent = uint32(len(interactionsSent))
+	for _, interaction := range interactionsSent {
+		if interaction.Type == models.LeadInteractionTypeCOMMENT {
+			analysis.CommentSent++
+		} else if interaction.Type == models.LeadInteractionTypeDM {
+			analysis.DmSent++
+		}
+	}
 	return &analysis, nil
 }
