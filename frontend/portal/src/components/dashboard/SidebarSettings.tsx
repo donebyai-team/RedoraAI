@@ -4,7 +4,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import {
   // Edit, 
-  X,
+  // X,
   Sliders,
   Gauge
 } from "lucide-react";
@@ -42,15 +42,15 @@ export function SidebarSettings({ type }: SidebarSettingsProps) {
             <div key={item.id} className="flex justify-between items-center p-2 rounded-md hover:bg-secondary/50">
               <div>
                 <p className="text-sm font-medium">"{item.name}"</p>
-                <p className="text-xs text-muted-foreground">30 matches this week</p>
+                {/* <p className="text-xs text-muted-foreground">30 matches this week</p> */}
               </div>
               <div className="flex gap-1">
                 {/* <button className="p-1 rounded-md hover:bg-background">
                   <Edit className="h-4 w-4 text-muted-foreground" />
                 </button> */}
-                <button className="p-1 rounded-md hover:bg-background">
+                {/* <button className="p-1 rounded-md hover:bg-background">
                   <X className="h-4 w-4 text-muted-foreground" />
-                </button>
+                </button> */}
               </div>
             </div>
           ))
@@ -60,15 +60,15 @@ export function SidebarSettings({ type }: SidebarSettingsProps) {
             <div key={item.id} className={`flex justify-between items-center p-2 rounded-md hover:bg-secondary/50 ${subReddit === item.id ? "bg-secondary/50" : ""}`} onClick={() => handleSubRedditsClick(item)}>
               <div>
                 <p className="text-sm font-medium">{item.name}</p>
-                <p className="text-xs text-muted-foreground">Last lead: {"3h ago"}</p>
+                {/* <p className="text-xs text-muted-foreground">Last lead: {"3h ago"}</p> */}
               </div>
               <div className="flex gap-1">
                 {/* <button className="p-1 rounded-md hover:bg-background">
                   <Edit className="h-4 w-4 text-muted-foreground" />
                 </button> */}
-                <button className="p-1 rounded-md hover:bg-background">
+                {/* <button className="p-1 rounded-md hover:bg-background">
                   <X className="h-4 w-4 text-muted-foreground" />
-                </button>
+                </button> */}
               </div>
             </div>
           ))

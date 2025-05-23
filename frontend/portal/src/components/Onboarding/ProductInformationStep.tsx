@@ -171,9 +171,7 @@ export default function ProductInformationStep() {
                                 disabled={isLoading || loadingMeta}
                                 error={!!errors[field.name]}
                                 helperText={errors[field.name]?.message ?? field.helperText}
-                                FormHelperTextProps={{
-                                    sx: { ml: 1.5, fontSize: "0.75rem" },
-                                }}
+                                FormHelperTextProps={{ sx: { ml: 1.5, fontSize: "0.75rem" } }}
                             />
                         )}
                     />

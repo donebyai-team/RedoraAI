@@ -1,17 +1,30 @@
 
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { MessageSquare, Save, Send, X, User, AlertTriangle } from "lucide-react";
+import {
+  MessageSquare,
+  Save,
+  Send,
+  // X,
+  User,
+  // AlertTriangle 
+} from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { RedditAccount } from "@/components/reddit-accounts/RedditAccountBadge";
-import { RedditAccountSelector } from "@/components/reddit-accounts/RedditAccountSelector";
+// import { RedditAccountSelector } from "@/components/reddit-accounts/RedditAccountSelector";
 import {
   Tooltip,
-  TooltipContent,
+  // TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { toast } from "@/components/ui/use-toast";
+import { useAppSelector } from "@/store/hooks";
+import { RootState } from "@/store/store";
+import { getFormattedDate, getSubredditName } from "@/utils/format";
+import Link from "next/link";
+import { HtmlBodyRenderer, HtmlTitleRenderer, MarkdownRenderer } from "../Html/HtmlRenderer";
+// import { RedditAccountSelector } from "../reddit-accounts/RedditAccountSelector";
 
 interface LeadPost {
   id: string;
@@ -31,15 +44,18 @@ interface LeadPost {
 
 interface LeadFeedProps {
   onAction: (action: string, postId: string) => void;
-  redditAccounts: RedditAccount[];
+  redditAccounts?: RedditAccount[];
   defaultAccountId: string;
-  onAccountChange: (postId: string, accountId: string) => void;
+  onAccountChange?: (postId: string, accountId: string) => void;
 }
 
-export function LeadFeed({ onAction, redditAccounts = [], defaultAccountId, onAccountChange }: LeadFeedProps) {
+export function LeadFeed({ onAction, defaultAccountId }: LeadFeedProps) {
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [recentlyUsedAccounts, setRecentlyUsedAccounts] = useState<Record<string, Date>>({});
+  const { newTabList } = useAppSelector((state: RootState) => state.lead);
+  const { subredditList } = useAppSelector((state: RootState) => state.source);
+  const { accounts: redditAccounts } = useAppSelector((state) => state.reddit);
 
   // Sample data with assigned Reddit accounts and last replied timestamp
   const posts: LeadPost[] = [
@@ -122,23 +138,6 @@ export function LeadFeed({ onAction, redditAccounts = [], defaultAccountId, onAc
     setExpandedId(expandedId === id ? null : id);
   };
 
-  const handleAccountChange = (postId: string, accountId: string) => {
-    onAccountChange(postId, accountId);
-  };
-
-  // Function to check if the assigned account is valid for actions
-  const isAccountValid = (postId: string) => {
-    const post = posts.find(p => p.id === postId);
-    if (!post) return false;
-
-    const account = redditAccounts.find(acc => acc.id === post.assignedAccountId);
-    if (!account) return false;
-
-    return !account.status.isBanned &&
-      !account.status.isFlagged &&
-      (!account.status.cooldownMinutes || account.status.cooldownMinutes <= 0);
-  };
-
   // Function to suggest alternative account if current one was recently used
   const shouldSuggestAccountRotation = (post: LeadPost) => {
     const currentAccount = redditAccounts.find(acc => acc.id === post.assignedAccountId);
@@ -163,6 +162,36 @@ export function LeadFeed({ onAction, redditAccounts = [], defaultAccountId, onAc
     return false;
   };
 
+  const copyTextAndOpenLink = (textToCopy: string, linkToOpen: string) => {
+    if (!navigator.clipboard) {
+      // Fallback for older browsers that do not support `navigator.clipboard`
+      const textArea = document.createElement("textarea");
+      textArea.value = textToCopy;
+      textArea.style.position = "fixed";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+
+      try {
+        const successful = document.execCommand("copy");
+        if (!successful) throw new Error("Fallback: Copy command was unsuccessful");
+        window.open(linkToOpen, '_blank');
+      } catch (err: any) {
+        const message = err?.message || "Fallback: Copy failed";
+        console.log(message);
+      } finally {
+        document.body.removeChild(textArea);
+      }
+    } else {
+      navigator.clipboard.writeText(textToCopy)
+        .then(() => window.open(linkToOpen, '_blank'))
+        .catch((err: any) => {
+          const message = err?.message || "Clipboard copy failed";
+          console.log(message);
+        });
+    }
+  };
+
   // Show account rotation toast when post has a recently used account
   useEffect(() => {
     posts.forEach(post => {
@@ -177,10 +206,23 @@ export function LeadFeed({ onAction, redditAccounts = [], defaultAccountId, onAc
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // If no posts with comments are available
+  if (newTabList.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-center">
+        <MessageSquare className="h-12 w-12 text-muted-foreground mb-4" />
+        <h3 className="text-lg font-medium mb-2">No posts yet</h3>
+        <p className="text-muted-foreground max-w-md">
+          When Redora.ai comments on posts, they will appear here. Check back later or adjust your filter settings.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <ScrollArea className="h-[calc(100vh-300px)]">
       <div className="space-y-4 pr-4">
-        {posts.map(post => (
+        {newTabList?.map(post => (
           <Card key={post.id} className="overflow-hidden">
             <CardContent className="p-6">
               <div className="flex flex-col space-y-4">
@@ -188,50 +230,57 @@ export function LeadFeed({ onAction, redditAccounts = [], defaultAccountId, onAc
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-1">
-                      <div className={`text-sm font-bold px-2 py-1 rounded-md ${getScoreColor(post.score)}`}>
-                        {post.score.toFixed(2)}
-                      </div>
-                      <div className="flex gap-2">
-                        {post.tags.map(tag => (
-                          <span key={tag} className="text-xs bg-secondary px-2 py-0.5 rounded-full">
-                            {tag}
-                          </span>
-                        ))}
+                      <div className={`text-sm font-bold px-2 py-1 rounded-md ${getScoreColor(post.relevancyScore)}`}>
+                        {post.relevancyScore}%
                       </div>
                     </div>
-                    <h3 className="text-lg font-medium">{post.title}</h3>
+
+                    <Link href={post.metadata?.postUrl || "#"} target="_blank">
+                      <h3 className="text-lg font-medium">
+                        <HtmlTitleRenderer htmlString={post.title || ""} />
+                      </h3>
+                    </Link>
                     <div className="flex items-center text-sm text-muted-foreground gap-2 mt-1">
-                      <span>{post.subreddit}</span>
+                      <span>{getSubredditName(subredditList, post?.sourceId ?? "")}</span>
                       <span>•</span>
-                      <span>{post.time}</span>
+                      <span>{getFormattedDate(post.postCreatedAt)}</span>
                       <span>•</span>
-                      <span>by {post.author}</span>
-                      <span className="text-xs bg-secondary px-1.5 rounded-full">{post.karma} karma</span>
+                      <Link href={post.metadata?.authorUrl || "#"} target="_blank">
+                        by {post.author}
+                      </Link>
                     </div>
                   </div>
                 </div>
+
+                <HtmlBodyRenderer htmlString={post.metadata?.descriptionHtml || ""} />
 
                 {/* Snippet and AI suggestion */}
-                <p className="text-sm text-muted-foreground">{post.snippet}</p>
-
-                <div className="bg-secondary/50 rounded-md p-3">
-                  <div className="flex items-center gap-2 text-sm font-medium mb-2">
-                    <MessageSquare className="h-4 w-4" />
-                    <span>AI Suggested Response</span>
-                  </div>
-                  <p className="text-sm">{post.aiSuggestion}</p>
-                </div>
-
-                {/* Expanded DM suggestion */}
-                {expandedId === post.id && (
+                {post.metadata?.suggestedComment && (
                   <div className="bg-secondary/50 rounded-md p-3">
                     <div className="flex items-center gap-2 text-sm font-medium mb-2">
-                      <Send className="h-4 w-4" />
-                      <span>AI Suggested DM</span>
+                      <MessageSquare className="h-4 w-4" />
+                      <span>AI Suggested Comment</span>
                     </div>
-                    <p className="text-sm">{post.aiDmSuggestion}</p>
+                    <p className="text-sm">
+                      <MarkdownRenderer data={post.metadata?.suggestedComment || ""} />
+                    </p>
                   </div>
                 )}
+
+                {/* Expanded DM suggestion */}
+                {post.metadata?.suggestedDm && (<>
+                  {expandedId === post.id && (
+                    <div className="bg-secondary/50 rounded-md p-3">
+                      <div className="flex items-center gap-2 text-sm font-medium mb-2">
+                        <Send className="h-4 w-4" />
+                        <span>AI Suggested DM</span>
+                      </div>
+                      <p className="text-sm">
+                        <MarkdownRenderer data={post.metadata?.suggestedDm || ""} />
+                      </p>
+                    </div>
+                  )}
+                </>)}
 
                 {/* Reddit account selector with rotation suggestion if needed */}
                 <div className="flex justify-between items-center">
@@ -243,85 +292,70 @@ export function LeadFeed({ onAction, redditAccounts = [], defaultAccountId, onAc
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <div className="relative">
-                            <RedditAccountSelector
+                            {redditAccounts?.[0]?.details?.value?.userName}
+                            {/* <RedditAccountSelector
                               accounts={redditAccounts}
                               currentAccountId={post.assignedAccountId || defaultAccountId}
                               onAccountChange={(accountId) => handleAccountChange(post.id, accountId)}
                               postId={post.id}
-                            />
-                            {shouldSuggestAccountRotation(post) && (
-                              <div className="absolute -top-2 -right-2">
-                                <div className="bg-amber-50 rounded-full p-0.5 border border-amber-200">
-                                  <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
-                                </div>
-                              </div>
-                            )}
+                            /> */}
                           </div>
                         </TooltipTrigger>
-                        <TooltipContent side="top">
+                        {/* <TooltipContent side="top">
                           <p className="text-xs max-w-[200px]">
                             {shouldSuggestAccountRotation(post)
                               ? "This account was used recently. Consider rotating accounts to avoid rate limits."
                               : "Using multiple Reddit accounts helps avoid rate limits and boosts reach."}
                           </p>
-                        </TooltipContent>
+                        </TooltipContent> */}
                       </Tooltip>
                     </TooltipProvider>
                   </div>
 
                   {/* Show last replied time if available */}
-                  {post.lastReplied && (
+                  {/* {post.lastReplied && (
                     <span className="text-xs text-muted-foreground">
                       Last replied: {timeAgo(post.lastReplied)}
                     </span>
-                  )}
+                  )} */}
                 </div>
 
                 {/* Action buttons */}
                 <div className="flex flex-wrap gap-2 mt-2">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div>
-                          <button
-                            onClick={() => handleAction('comment', post.id)}
-                            className="inline-flex items-center justify-center text-sm font-medium h-9 px-4 py-2 rounded-md border border-input bg-background hover:bg-accent disabled:opacity-50 disabled:pointer-events-none"
-                            disabled={!isAccountValid(post.id)}
-                          >
-                            <MessageSquare className="h-4 w-4 mr-2" />
-                            Post Comment
-                          </button>
-                        </div>
-                      </TooltipTrigger>
-                      {!isAccountValid(post.id) && (
-                        <TooltipContent side="bottom">
-                          <p className="text-xs">This account cannot be used for posting. Select an active account.</p>
-                        </TooltipContent>
-                      )}
-                    </Tooltip>
-                  </TooltipProvider>
 
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div>
-                          <button
-                            onClick={() => handleAction('dm', post.id)}
-                            className="inline-flex items-center justify-center text-sm font-medium h-9 px-4 py-2 rounded-md border border-input bg-background hover:bg-accent disabled:opacity-50 disabled:pointer-events-none"
-                            disabled={!isAccountValid(post.id)}
-                          >
-                            <Send className="h-4 w-4 mr-2" />
-                            Send DM
-                          </button>
-                        </div>
-                      </TooltipTrigger>
-                      {!isAccountValid(post.id) && (
-                        <TooltipContent side="bottom">
-                          <p className="text-xs">This account cannot be used for messaging. Select an active account.</p>
-                        </TooltipContent>
-                      )}
-                    </Tooltip>
-                  </TooltipProvider>
+                  {post.metadata?.suggestedComment && (
+                    <div>
+                      <button
+                        onClick={() =>
+                          copyTextAndOpenLink(
+                            post.metadata?.suggestedComment ?? "",
+                            post.metadata?.automatedCommentUrl || post.metadata?.postUrl || "#"
+                          )
+                        }
+                        className="inline-flex items-center justify-center text-sm font-medium h-9 px-4 py-2 rounded-md border border-input bg-background hover:bg-accent disabled:opacity-50 disabled:pointer-events-none"
+                      >
+                        <MessageSquare className="h-4 w-4 mr-2" />
+                        Post Comment
+                      </button>
+                    </div>
+                  )}
+
+                  {post.metadata?.suggestedDm && (
+                    <div>
+                      <button
+                        onClick={() =>
+                          copyTextAndOpenLink(
+                            post.metadata?.suggestedDm ?? "",
+                            post.metadata?.dmUrl ?? "#"
+                          )
+                        }
+                        className="inline-flex items-center justify-center text-sm font-medium h-9 px-4 py-2 rounded-md border border-input bg-background hover:bg-accent disabled:opacity-50 disabled:pointer-events-none"
+                      >
+                        <Send className="h-4 w-4 mr-2" />
+                        Send DM
+                      </button>
+                    </div>
+                  )}
 
                   <button
                     onClick={() => handleAction('save', post.id)}
@@ -331,20 +365,14 @@ export function LeadFeed({ onAction, redditAccounts = [], defaultAccountId, onAc
                     Save
                   </button>
 
-                  <button
-                    onClick={() => handleAction('skip', post.id)}
-                    className="inline-flex items-center justify-center text-sm font-medium h-9 px-4 py-2 rounded-md border border-input bg-background hover:bg-accent"
-                  >
-                    <X className="h-4 w-4 mr-2" />
-                    Skip
-                  </button>
-
-                  <button
-                    onClick={() => toggleExpand(post.id)}
-                    className="ml-auto text-sm text-primary hover:underline"
-                  >
-                    {expandedId === post.id ? 'Hide DM suggestion' : 'Show DM suggestion'}
-                  </button>
+                  {post.metadata?.suggestedDm &&
+                    <button
+                      onClick={() => toggleExpand(post.id)}
+                      className="ml-auto text-sm text-primary hover:underline"
+                    >
+                      {expandedId === post.id ? 'Hide DM suggestion' : 'Show DM suggestion'}
+                    </button>
+                  }
                 </div>
               </div>
             </CardContent>
@@ -355,24 +383,24 @@ export function LeadFeed({ onAction, redditAccounts = [], defaultAccountId, onAc
   );
 }
 
-// Helper function to format time ago
-const timeAgo = (date: Date) => {
-  const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
+// // Helper function to format time ago
+// const timeAgo = (date: Date) => {
+//   const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
 
-  let interval = Math.floor(seconds / 31536000);
-  if (interval >= 1) return `${interval} year${interval > 1 ? 's' : ''} ago`;
+//   let interval = Math.floor(seconds / 31536000);
+//   if (interval >= 1) return `${interval} year${interval > 1 ? 's' : ''} ago`;
 
-  interval = Math.floor(seconds / 2592000);
-  if (interval >= 1) return `${interval} month${interval > 1 ? 's' : ''} ago`;
+//   interval = Math.floor(seconds / 2592000);
+//   if (interval >= 1) return `${interval} month${interval > 1 ? 's' : ''} ago`;
 
-  interval = Math.floor(seconds / 86400);
-  if (interval >= 1) return `${interval} day${interval > 1 ? 's' : ''} ago`;
+//   interval = Math.floor(seconds / 86400);
+//   if (interval >= 1) return `${interval} day${interval > 1 ? 's' : ''} ago`;
 
-  interval = Math.floor(seconds / 3600);
-  if (interval >= 1) return `${interval} hour${interval > 1 ? 's' : ''} ago`;
+//   interval = Math.floor(seconds / 3600);
+//   if (interval >= 1) return `${interval} hour${interval > 1 ? 's' : ''} ago`;
 
-  interval = Math.floor(seconds / 60);
-  if (interval >= 1) return `${interval} minute${interval > 1 ? 's' : ''} ago`;
+//   interval = Math.floor(seconds / 60);
+//   if (interval >= 1) return `${interval} minute${interval > 1 ? 's' : ''} ago`;
 
-  return `${Math.floor(seconds)} second${seconds !== 1 ? 's' : ''} ago`;
-};
+//   return `${Math.floor(seconds)} second${seconds !== 1 ? 's' : ''} ago`;
+// };

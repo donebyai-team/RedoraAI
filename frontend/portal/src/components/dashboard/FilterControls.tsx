@@ -1,36 +1,43 @@
 
 // import { Filter } from "lucide-react";
-import { useState } from "react";
+import { LeadStatus } from "@doota/pb/doota/core/v1/core_pb";
+import { DateRangeFilter } from "@doota/pb/doota/portal/v1/portal_pb";
 
 type TimeRangeSelectProps = {
-  onDateRangeFilterChangeChange?: (value: string) => void;
+  dateRange?: DateRangeFilter;
+  onDateRangeFilterChange?: (value: string) => void;
+  leadStatusFilter?: LeadStatus | null;
+  onLeadStatusFilterChange?: (value: string) => void;
 };
 
-export function FilterControls({ onDateRangeFilterChangeChange }: TimeRangeSelectProps) {
-
-  const [value, setValue] = useState<string>("");
-
-  const handleDateRangeFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newValue = e.target.value;
-    setValue(newValue);
-    onDateRangeFilterChangeChange?.(newValue);
-  };
+export function FilterControls({ dateRange, leadStatusFilter, onDateRangeFilterChange, onLeadStatusFilterChange }: TimeRangeSelectProps) {
 
   return (
     <div className="flex flex-wrap gap-2 items-center">
       <div className="relative">
-        <select className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1">
-          <option value="all">All Posts</option>
-          <option value="unreplied">Unreplied Only</option>
-          <option value="saved">Saved Only</option>
+        <select
+          className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1"
+          value={leadStatusFilter ?? ""}
+          onChange={(event) => {
+            if (onLeadStatusFilterChange) {
+              onLeadStatusFilterChange(event.target.value)
+            }
+          }}
+        >
+          <option value="0">All Posts</option>
+          <option value="1">Saved Only</option>
         </select>
       </div>
 
       <div className="relative">
         <select
           className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1"
-          value={value}
-          onChange={handleDateRangeFilterChange}
+          value={dateRange}
+          onChange={(event) => {
+            if (onDateRangeFilterChange) {
+              onDateRangeFilterChange(event.target.value)
+            }
+          }}
         >
           <option value="1">Today</option>
           <option value="2">Yesterday</option>

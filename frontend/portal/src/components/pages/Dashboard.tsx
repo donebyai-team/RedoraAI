@@ -30,6 +30,8 @@ import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { setError, setIsLoading, setNewTabList } from "../../../store/Lead/leadSlice";
 import { RootState } from "../../../store/store";
 import { DateRangeFilter, LeadAnalysis } from "@doota/pb/doota/portal/v1/portal_pb";
+import { LeadStatus } from "@doota/pb/doota/core/v1/core_pb";
+import { setAccounts, setLoading } from "@/store/Reddit/RedditSlice";
 
 export default function Dashboard() {
   const { portalClient } = useClientsContext()
@@ -74,6 +76,7 @@ export default function Dashboard() {
 
   const [counts, setCounts] = useState<LeadAnalysis | undefined>(undefined);
   const [dateRange, setDateRange] = useState<DateRangeFilter>(DateRangeFilter.DATE_RANGE_UNSPECIFIED);
+  const [leadStatusFilter, setLeadStatusFilter] = useState<LeadStatus | null>(null);
   const [defaultAccountId, setDefaultAccountId] = useState<string>("account1");
   const [postAccountAssignments, setPostAccountAssignments] = useState<Record<string, string>>({});
   console.log(postAccountAssignments);
@@ -130,8 +133,8 @@ export default function Dashboard() {
         const result = await portalClient.getRelevantLeads({
           ...(relevancyScore && { relevancyScore }),
           ...(subReddit && { subReddit }),
+          ...(leadStatusFilter && { status: leadStatusFilter }),
           dateRange,
-          // pageNo: 1,
         });
         const allLeads = result.leads ?? [];
         const counts = result?.analysis;
@@ -153,7 +156,24 @@ export default function Dashboard() {
     getAllRelevantLeads();
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [relevancyScore, subReddit, dateRange]);
+  }, [relevancyScore, subReddit, dateRange, leadStatusFilter]);
+
+  // get all reddit account
+  useEffect(() => {
+    dispatch(setLoading(true));
+    portalClient.getIntegrations({})
+      .then((res) => {
+        dispatch(setAccounts(res.integrations));
+      })
+      .catch((err) => {
+        dispatch(setError('Failed to fetch integrations'));
+        console.error("Error fetching integrations:", err);
+      })
+      .finally(() => {
+        dispatch(setLoading(false));
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleDateRangeChange = (value: string) => {
     const map: Record<string, DateRangeFilter> = {
@@ -163,6 +183,14 @@ export default function Dashboard() {
     };
 
     setDateRange(map[value] ?? DateRangeFilter.DATE_RANGE_UNSPECIFIED);
+  };
+
+  const handleLeadStatusFilterChange = (value: string) => {
+    const map: Record<string, LeadStatus> = {
+      "1": LeadStatus.LEAD,
+    };
+
+    setLeadStatusFilter(map[value] ?? null);
   };
 
   return (
@@ -186,7 +214,12 @@ export default function Dashboard() {
               <div className="flex-1 flex flex-col space-y-4 mt-6">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-background/95 py-2">
                   <h2 className="text-xl font-semibold">Active Leads</h2>
-                  <FilterControls onDateRangeFilterChangeChange={handleDateRangeChange} />
+                  <FilterControls
+                    dateRange={dateRange}
+                    onDateRangeFilterChange={handleDateRangeChange}
+                    leadStatusFilter={leadStatusFilter}
+                    onLeadStatusFilterChange={handleLeadStatusFilterChange}
+                  />
                 </div>
 
                 {isLoading ? (
