@@ -15,7 +15,7 @@ import { Button } from '../../../../../atoms/Button'
 import { portalClient } from '../../../../../services/grpc'
 import { buildAppUrl } from '../../../../routes'
 import { routes } from '@doota/ui-core/routing'
-import { isAdmin } from '@doota/ui-core/helper/role'
+import { isAdmin, isAdminUser, isPlatformAdmin } from '@doota/ui-core/helper/role'
 import { Box } from '@mui/system'
 import { AppBar, Toolbar, Typography, Card, CardContent, Slider, Switch, styled } from '@mui/material'
 import {
@@ -95,8 +95,8 @@ export default function Page() {
   const [loading, setLoading] = useState(true)
   const [integrations, setIntegrations] = useState<Integration[]>([])
 
-  const defaultRelevancyScore = organization?.featureFlags?.Comment?.relevancyScore ?? 90;
-  const defaultAutoComment = organization?.featureFlags?.Comment?.enabled ?? false;
+  const defaultRelevancyScore = (isAdminUser(user) ? user.organizations?.[0]?.featureFlags?.Comment?.relevancyScore : organization?.featureFlags?.Comment?.relevancyScore) ?? 90;
+  const defaultAutoComment = (isAdminUser(user) ? user.organizations?.[0]?.featureFlags?.Comment?.enabled : organization?.featureFlags?.Comment?.enabled) ?? false;
 
   const [relevancyScore, setRelevancyScore] = useState(defaultRelevancyScore)
   const [autoComment, setAutoComment] = useState(defaultAutoComment)
@@ -133,9 +133,11 @@ export default function Page() {
     try {
       const result = await portalClient.updateAutomationSettings({
         comment: { enabled: autoComment, relevancyScore }
-      })
-
-      setOrganization(result);
+      });
+      
+      if (isPlatformAdmin(user)) {
+        setOrganization(result);
+      }
 
       setUser(prev => {
         if (!prev) return prev
