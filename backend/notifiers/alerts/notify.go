@@ -31,6 +31,7 @@ type AlertNotifier interface {
 	SendNewUserAlert(ctx context.Context, orgName string)
 	SendUserActivity(ctx context.Context, activity, orgName, redditUsername string)
 	SendNewProductAddedAlert(ctx context.Context, productName, website string)
+	SendWelcomeEmail(ctx context.Context, orgID string)
 }
 
 type SlackNotifier struct {
@@ -152,6 +153,59 @@ func (s *SlackNotifier) SendLeadsSummaryEmail(ctx context.Context, summary LeadS
 
 	_, err = s.ResendClient.Emails.Send(params)
 	return err
+}
+
+func (s *SlackNotifier) SendWelcomeEmail(ctx context.Context, orgID string) {
+	users, err := s.db.GetUsersByOrgID(ctx, orgID)
+	if err != nil {
+		s.logger.Error("failed to send welcome email", zap.Error(err))
+		return
+	}
+
+	// Only send it for the first one
+	if len(users) == 0 || len(users) > 1 {
+		return
+	}
+
+	htmlBody := fmt.Sprintf(`
+	<!DOCTYPE html>
+	<html>
+	<body style="font-family: Arial, sans-serif; background-color: #f7f9fc; padding: 20px;">
+	  <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 30px; border-radius: 8px;">
+	    <h2>Welcome to <strong>RedoraAI</strong> 👋</h2>
+	    <p>We're excited to have you onboard! RedoraAI helps you discover and engage with high-intent leads from Reddit — automatically.</p>
+	    
+	    <h3>🚀 Here’s how to get started:</h3>
+	    <ol>
+	      <li><strong>Tell us about your product</strong> — so we can tailor your outreach.</li>
+	      <li><strong>Select keywords & subreddits</strong> — to track relevant discussions.</li>
+	      <li><strong>Enable Redora Copilot</strong> — to automate intelligent comments and DMs to potential leads.</li>
+	    </ol>
+	    
+	    <p>🔗 <a href="https://app.redoraai.com/onboarding" style="color: #3366cc;">Begin Onboarding Now</a></p>
+	    
+	    <hr>
+	    <footer style="font-size: 12px; color: #888;">
+			<p><strong>RedoraAI</strong> — AI for Intelligent Lead Generation</p>
+			<p>Need help? <a href="mailto:shashank@donebyai.team">shashank@donebyai.team</a></p>
+		</footer>
+	  </div>
+	</body>
+	</html>
+`)
+
+	params := &resend.SendEmailRequest{
+		From:    "RedoraAI <welcome@alerts.redoraai.com>",
+		To:      []string{users[0].Email},
+		Cc:      []string{"shashank@donebyai.team"},
+		Subject: "🔥Welcome aboard — here’s what to do next",
+		Html:    htmlBody,
+	}
+
+	_, err = s.ResendClient.Emails.Send(params)
+	if err != nil {
+		s.logger.Error("failed to send welcome email", zap.Error(err))
+	}
 }
 
 func (s *SlackNotifier) SendLeadsSummary(ctx context.Context, summary LeadSummary) error {
