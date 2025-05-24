@@ -45,7 +45,7 @@ var RedoraPlans = map[SubscriptionPlanType]*SubscriptionPlan{
 				PerDay: 4,
 			},
 			RelevantPosts: UsageLimits{
-				PerDay: 25,
+				PerDay: 10,
 			},
 			MaxSources:  5,
 			MaxKeywords: 5,
