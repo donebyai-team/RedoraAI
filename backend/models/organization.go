@@ -25,9 +25,11 @@ func (o *Organization) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
 type OrganizationFeatureFlags struct {
 	EnableAutoDM     bool    `json:"enable_auto_dm"`
 	RelevancyScoreDM float64 `json:"relevancy_score_dm"`
+	MaxDMsPerDay     int64   `json:"max_dms_per_day"` // specified by user, max can be based on the plan subscribed
 
 	EnableAutoComment     bool    `json:"enable_auto_comment"`
 	RelevancyScoreComment float64 `json:"relevancy_score_comment"`
+	MaxCommentsPerDay     int64   `json:"max_comments_per_day"` // specified by user, max can be based on the plan subscribed
 
 	CommentLLMModel   LLMModel      `json:"comment_llm_model"`
 	DMLLMModel        LLMModel      `json:"dm_llm_model"`
@@ -36,18 +38,48 @@ type OrganizationFeatureFlags struct {
 	Activities        []OrgActivity `json:"activities"`
 }
 
-const defaultRelevancyScore = 90
+func (f OrganizationFeatureFlags) GetSubscriptionPlanMetadata() SubscriptionPlanMetadata {
+	//if f.Subscription == nil {
+	//	return RedoraPlans[SubscriptionPlanTypeFREE].Metadata
+	//}
+	return RedoraPlans[SubscriptionPlanTypeFREE].Metadata
+}
 
+// Defined by redora global or max allowed by plan, whichever is higher
+func (f OrganizationFeatureFlags) GetMaxLeadsPerDay() int64 {
+	return f.GetSubscriptionPlanMetadata().RelevantPosts.PerDay
+}
+
+// Defined by user or max allowed by plan, whichever is higher
+func (f OrganizationFeatureFlags) GetMaxDMsPerDay() int64 {
+	if f.MaxDMsPerDay == 0 {
+		return f.GetSubscriptionPlanMetadata().DMs.PerDay
+	}
+	return f.MaxDMsPerDay
+}
+
+// Defined by user or max allowed by plan, whichever is higher
+func (f OrganizationFeatureFlags) GetMaxCommentsPerDay() int64 {
+	if f.MaxCommentsPerDay == 0 {
+		return f.GetSubscriptionPlanMetadata().Comments.PerDay
+	}
+	return f.MaxCommentsPerDay
+}
+
+const defaultMinRelevancyScoreForAutomatedCommentsAndDM = 90
+
+// Defined by user or max allowed by plan, whichever is higher
 func (f OrganizationFeatureFlags) GetRelevancyScoreDM() float64 {
 	if f.RelevancyScoreDM == 0 {
-		return defaultRelevancyScore
+		return defaultMinRelevancyScoreForAutomatedCommentsAndDM
 	}
 	return f.RelevancyScoreDM
 }
 
+// Defined by user or max allowed by plan, whichever is higher
 func (f OrganizationFeatureFlags) GetRelevancyScoreComment() float64 {
 	if f.RelevancyScoreComment == 0 {
-		return defaultRelevancyScore
+		return defaultMinRelevancyScoreForAutomatedCommentsAndDM
 	}
 	return f.RelevancyScoreComment
 }

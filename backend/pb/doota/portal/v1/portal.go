@@ -42,11 +42,13 @@ func (o *Organization) FromModel(model *models.Organization) *Organization {
 	o.FeatureFlags.Comment = &AutomationSetting{
 		Enabled:        model.FeatureFlags.EnableAutoComment,
 		RelevancyScore: float32(model.FeatureFlags.GetRelevancyScoreComment()),
+		MaxPerDay:      model.FeatureFlags.GetMaxCommentsPerDay(),
 	}
 
 	o.FeatureFlags.DM = &AutomationSetting{
 		Enabled:        model.FeatureFlags.EnableAutoDM,
 		RelevancyScore: float32(model.FeatureFlags.GetRelevancyScoreDM()),
+		MaxPerDay:      model.FeatureFlags.GetMaxDMsPerDay(),
 	}
 
 	o.CreatedAt = timestamppb.New(model.CreatedAt)

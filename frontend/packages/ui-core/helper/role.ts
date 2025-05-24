@@ -1,6 +1,6 @@
 import { User, UserRole } from "@doota/pb/doota/portal/v1/portal_pb";
 
-export const isAdmin = (user: User) :boolean => {
+export const isAdmin = (user: User): boolean => {
     return [UserRole.ADMIN, UserRole.PLATFORM_ADMIN].includes(user.role)
 }
 

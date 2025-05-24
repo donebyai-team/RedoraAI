@@ -427,6 +427,14 @@ func (p *Portal) UpdateAutomationSettings(ctx context.Context, c *connect.Reques
 		if c.Msg.Comment.RelevancyScore < 80 {
 			return nil, status.New(codes.InvalidArgument, "relevancy score should be at least 80").Err()
 		}
+
+		maxAllowedCommentPerDay := org.FeatureFlags.GetSubscriptionPlanMetadata().Comments.PerDay
+
+		if c.Msg.Comment.MaxPerDay > maxAllowedCommentPerDay {
+			return nil, status.New(codes.InvalidArgument, fmt.Sprintf("max %s automated comments allows as per the subscribed plan", maxAllowedCommentPerDay)).Err()
+		}
+		// If 0 is given, we default to the max allowed
+		org.FeatureFlags.MaxCommentsPerDay = c.Msg.Comment.MaxPerDay
 		org.FeatureFlags.EnableAutoComment = c.Msg.Comment.Enabled
 		org.FeatureFlags.RelevancyScoreComment = float64(c.Msg.Comment.RelevancyScore)
 	}

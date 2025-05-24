@@ -704,6 +704,11 @@ export declare type AutomationSetting = Message<"doota.portal.v1.AutomationSetti
    * @generated from field: float relevancy_score = 2;
    */
   relevancyScore: number;
+
+  /**
+   * @generated from field: int64 max_per_day = 3;
+   */
+  maxPerDay: bigint;
 };
 
 /**

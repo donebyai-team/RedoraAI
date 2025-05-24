@@ -9,7 +9,10 @@ import (
 	"github.com/shank318/doota/errorx"
 	"github.com/streamingfast/dstore"
 	"go.uber.org/zap"
+	"golang.org/x/net/context"
+	"io"
 	"net/http"
+	"os"
 	"strings"
 )
 
@@ -45,35 +48,61 @@ func (r browserless) SendDM(params DMParams) (err error) {
 	}
 	defer browser.Close()
 
-	context, err := browser.NewContext()
+	// Create a unique temporary directory for video
+	//tmpDir := filepath.Join(os.TempDir(), fmt.Sprintf("video_run_%s", params.ID))
+	//if err := os.MkdirAll(tmpDir, 0755); err != nil {
+	//	return fmt.Errorf("failed to create temp video dir: %w", err)
+	//}
+
+	pageContext, err := browser.NewContext(playwright.BrowserNewContextOptions{
+		//RecordVideo: &playwright.RecordVideo{
+		//	Dir: tmpDir,
+		//},
+	})
 	if err != nil {
 		return fmt.Errorf("context creation failed: %w", err)
 	}
 
-	page, err := context.NewPage()
+	page, err := pageContext.NewPage()
 	if err != nil {
+		_ = pageContext.Close() // clean up context if page creation fails
 		return fmt.Errorf("page creation failed: %w", err)
 	}
 
-	// Screenshot on error (deferred)
+	// Defer cleanup and video save after context is closed
 	defer func() {
+		//closeErr := pageContext.Close() // finalize video recording
+		//if closeErr != nil {
+		//	r.logger.Warn("failed to close context", zap.Error(closeErr))
+		//}
+		//
+		//r.saveVideo(params.ID, page)
+
 		if err != nil {
 			r.storeScreenshot("defer", params.ID, page)
 		}
+
+		// Remove temp directory and video files
+		//if rmErr := os.RemoveAll(tmpDir); rmErr != nil {
+		//	r.logger.Warn("failed to remove temp video directory", zap.Error(rmErr))
+		//}
 	}()
 
+	// Login flow
 	if err = r.tryLogin(page, params); err != nil {
 		return err
 	}
 
+	// Navigate to chat page
 	chatURL := "https://chat.reddit.com/user/" + params.To
 	if _, err = page.Goto(chatURL, playwright.PageGotoOptions{Timeout: playwright.Float(10000)}); err != nil {
 		return fmt.Errorf("chat page navigation failed: %w", err)
 	}
 
-	// Capture a screenshot after redirecting to user
+	// Screenshot after chat page load (optional)
 	r.storeScreenshot("chat", params.ID, page)
 
+	// Check for error banner on chat page
 	if alert, _ := page.QuerySelector("faceplate-banner[appearance='error']"); alert != nil {
 		msg, _ := alert.GetAttribute("msg")
 		if msg != "" {
@@ -82,7 +111,7 @@ func (r browserless) SendDM(params DMParams) (err error) {
 		return fmt.Errorf("chat error: invalid user")
 	}
 
-	// Wait for slightly more time as it take time to load the chat
+	// Wait for message textarea to load
 	locator := page.Locator("rs-message-composer textarea[name='message']")
 	if err = locator.WaitFor(playwright.LocatorWaitForOptions{
 		Timeout: playwright.Float(20000),
@@ -90,7 +119,7 @@ func (r browserless) SendDM(params DMParams) (err error) {
 		return fmt.Errorf("message textarea not found: %w", err)
 	}
 
-	if err = locator.Fill(params.Message); err != nil {
+	if err := locator.Fill(params.Message); err != nil {
 		return fmt.Errorf("filling message failed: %w", err)
 	}
 
@@ -101,12 +130,34 @@ func (r browserless) SendDM(params DMParams) (err error) {
 		return fmt.Errorf("send button not found: %w", err)
 	}
 
-	if err = sendBtn.Click(); err != nil {
+	if err := sendBtn.Click(playwright.LocatorClickOptions{
+		Delay: playwright.Float(100), // Delay before mouseup (in ms)
+	}); err != nil {
 		return fmt.Errorf("clicking send failed: %w", err)
 	}
 
 	page.WaitForTimeout(1500)
 	return nil
+}
+
+func (r browserless) saveVideo(id string, page playwright.Page) {
+	if video := page.Video(); video != nil {
+		videoPath, err := video.Path()
+		if err == nil {
+			file, err := os.Open(videoPath)
+			if err == nil {
+				defer file.Close()
+
+				var buf bytes.Buffer
+				if _, err := io.Copy(&buf, file); err == nil {
+					objectName := fmt.Sprintf("video_%s.webm", id)
+					if err := r.debugFileStore.WriteObject(context.Background(), objectName, &buf); err != nil {
+						r.logger.Warn("failed to upload video", zap.Error(err))
+					}
+				}
+			}
+		}
+	}
 }
 
 func (r browserless) storeScreenshot(stage, id string, page playwright.Page) {
@@ -155,20 +206,7 @@ func (r browserless) CheckIfLogin(params DMParams) (err error) {
 	// Screenshot on error (deferred)
 	defer func() {
 		if err != nil {
-			filePath := fmt.Sprintf("login_error_%s.png", params.ID)
-
-			// Capture screenshot directly to memory (no need for file path)
-			byteData, screenShotErr := page.Screenshot(playwright.PageScreenshotOptions{
-				FullPage: playwright.Bool(true), // Optional: capture full page
-			})
-			if screenShotErr != nil {
-				r.logger.Warn("failed to take screenshot", zap.Error(screenShotErr))
-			} else {
-				buf := bytes.NewBuffer(byteData)
-				if errFileStore := r.debugFileStore.WriteObject(goCtx.Background(), filePath, buf); errFileStore != nil {
-					r.logger.Debug("failed to save screenshot", zap.Error(errFileStore), zap.String("output_name", filePath))
-				}
-			}
+			r.storeScreenshot("defer", params.ID, page)
 		}
 	}()
 
@@ -206,13 +244,17 @@ func (r browserless) tryLogin(page playwright.Page, params DMParams) error {
 	if err := locators["username"].Fill(params.Username); err != nil {
 		return fmt.Errorf("fill username failed: %w", err)
 	}
+
 	if err := locators["password"].Fill(params.Password); err != nil {
 		return fmt.Errorf("fill password failed: %w", err)
 	}
 	// Optional pause (but often unnecessary with locators)
 	page.WaitForTimeout(1000)
 
-	if err := locators["button"].Click(); err != nil {
+	// Click the login button with a small delay to simulate realism
+	if err := locators["button"].Click(playwright.LocatorClickOptions{
+		Delay: playwright.Float(100), // Delay before mouseup (in ms)
+	}); err != nil {
 		return fmt.Errorf("login button click failed: %w", err)
 	}
 
@@ -259,10 +301,11 @@ type ReconnectResponse struct {
 	} `json:"data"`
 }
 
+//proxy(type: [document, xhr], country: US, sticky: true) { time }
+
 func (r browserless) getCDPUrl() (string, error) {
 	query := `mutation {
-		proxy(type: [document, xhr], country: US, sticky: true) { time }
-		goto(url: "https://www.reddit.com/login", waitUntil: firstContentfulPaint) {
+		goto(url: "https://www.reddit.com", waitUntil: firstContentfulPaint) {
 			status
 		}
 		reconnect(timeout: 30000) {

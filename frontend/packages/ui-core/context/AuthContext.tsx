@@ -17,6 +17,7 @@ export type AuthValuesType = {
 
   setOrganization: (org: Organization) => Promise<void>
   setUser: React.Dispatch<React.SetStateAction<User | null>>
+  getOrganization: () => Organization | null
 }
 
 // ** Defaults
@@ -29,7 +30,8 @@ const defaultProvider: AuthValuesType = {
   logout: () => Promise.resolve(),
 
   setOrganization: () => Promise.resolve(),
-  setUser: () => { }
+  setUser: () => { },
+  getOrganization: () => null
 }
 
 export const AuthContext = createContext<AuthValuesType>(defaultProvider)
@@ -143,6 +145,13 @@ export const BaseAuthProvider: FC<Props> = ({
     setLoading(false)
   }
 
+  const getOrganization = () => {
+    if (organization) {
+      return organization;
+    }
+    return user?.organizations?.[0] ?? null;
+  }
+
   const values = {
     user,
     organization,
@@ -155,7 +164,8 @@ export const BaseAuthProvider: FC<Props> = ({
       await organizationStore.Set(org)
       setOrganization(org)
     },
-    setUser
+    setUser,
+    getOrganization
   }
 
   return <AuthContext.Provider value={values}>{children}</AuthContext.Provider>
