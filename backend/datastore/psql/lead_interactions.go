@@ -99,9 +99,9 @@ func (r *Database) GetLeadInteractionsToExecute(ctx context.Context, statuses []
 			if err != nil {
 				return nil, err
 			}
-
-			orgCache[orgID] = organization
 			interaction.Organization = organization
+			orgCache[organization.ID] = organization
+			projectToOrg[projectID] = organization.ID
 		}
 	}
 
