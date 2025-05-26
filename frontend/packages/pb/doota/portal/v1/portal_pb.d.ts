@@ -1208,6 +1208,14 @@ export declare const PortalService: GenService<{
     output: typeof ProjectSchema;
   },
   /**
+   * @generated from rpc doota.portal.v1.PortalService.SuggestKeywordsAndSources
+   */
+  suggestKeywordsAndSources: {
+    methodKind: "unary";
+    input: typeof EmptySchema;
+    output: typeof ProjectSchema;
+  },
+  /**
    * @generated from rpc doota.portal.v1.PortalService.UpdateAutomationSettings
    */
   updateAutomationSettings: {

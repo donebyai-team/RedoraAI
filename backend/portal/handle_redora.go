@@ -21,28 +21,28 @@ import (
 	"strings"
 )
 
-func (p *Portal) getProject(ctx context.Context, headers http.Header, orgID string) (string, error) {
-	projectID := ""
+func (p *Portal) getProject(ctx context.Context, headers http.Header, orgID string) (*models.Project, error) {
+	var project *models.Project
 	if in := headers.Get("X-Project-Id"); in != "" {
 		project, err := p.db.GetProject(ctx, in)
 		if err != nil {
-			return "", fmt.Errorf("failed to get project by org id: %w", err)
+			return nil, fmt.Errorf("failed to get project by org id: %w", err)
 		}
-		projectID = project.ID
+		project = project
 	} else {
 		// TODO: For now, since we have only one project per org. This is a workaround
 		// Remove it later and make X-Project-Id mandatory on frontend
 		projects, err := p.db.GetProjects(ctx, orgID)
 		if err != nil {
-			return "", fmt.Errorf("failed to get project by org id: %w", err)
+			return nil, fmt.Errorf("failed to get project by org id: %w", err)
 		}
 		if len(projects) == 0 {
-			return "", status.New(codes.PermissionDenied, "no project not found").Err()
+			return nil, status.New(codes.PermissionDenied, "no project not found").Err()
 		}
-		projectID = projects[0].ID
+		project = projects[0]
 	}
 
-	return projectID, nil
+	return project, nil
 }
 
 func (p *Portal) CreateOrEditProject(ctx context.Context, c *connect.Request[pbportal.CreateProjectRequest]) (*connect.Response[pbcore.Project], error) {
@@ -74,8 +74,6 @@ func (p *Portal) CreateOrEditProject(ctx context.Context, c *connect.Request[pbp
 	}
 
 	var project *models.Project
-	shouldSuggestKeywords := true
-
 	if c.Msg.Id != "" {
 		existingProject, err := p.db.GetProject(ctx, c.Msg.Id)
 		if err != nil {
@@ -94,12 +92,12 @@ func (p *Portal) CreateOrEditProject(ctx context.Context, c *connect.Request[pbp
 			}
 		}
 
-		// suggest only if any of these field changes
-		if (existingProject.Name == c.Msg.Name &&
-			existingProject.ProductDescription == c.Msg.Description &&
-			existingProject.CustomerPersona == c.Msg.TargetPersona) &&
-			(len(existingProject.Metadata.SuggestedSubReddits) != 0 || len(existingProject.Metadata.SuggestedKeywords) != 0) {
-			shouldSuggestKeywords = false
+		// reset the suggestions if the project name or description or target has changed
+		if existingProject.Name != c.Msg.Name ||
+			existingProject.ProductDescription != c.Msg.Description ||
+			existingProject.CustomerPersona != c.Msg.TargetPersona {
+			existingProject.Metadata.SuggestedKeywords = []string{}
+			existingProject.Metadata.SuggestedSubReddits = []string{}
 		}
 
 		project, err = p.db.UpdateProject(ctx, &models.Project{
@@ -140,7 +138,25 @@ func (p *Portal) CreateOrEditProject(ctx context.Context, c *connect.Request[pbp
 		go p.alertNotifier.SendNewProductAddedAlert(context.Background(), project.Name, project.WebsiteURL)
 	}
 
-	if shouldSuggestKeywords {
+	projectProto, err := p.projectToProto(ctx, project)
+	if err != nil {
+		return nil, err
+	}
+
+	return connect.NewResponse(projectProto), nil
+}
+
+func (p *Portal) SuggestKeywordsAndSources(ctx context.Context, c *connect.Request[emptypb.Empty]) (*connect.Response[pbcore.Project], error) {
+	actor, err := p.gethAuthContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	project, err := p.getProject(ctx, c.Header(), actor.OrganizationID)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(project.Metadata.SuggestedKeywords) == 0 || len(project.Metadata.SuggestedSubReddits) == 0 {
 		p.logger.Info("suggesting keywords", zap.String("project_id", project.ID))
 		suggestions, usage, err := p.aiClient.SuggestKeywordsAndSubreddits(ctx, p.aiClient.GetAdvanceModel(), project, p.logger)
 		if err != nil {
@@ -175,7 +191,6 @@ func (p *Portal) CreateOrEditProject(ctx context.Context, c *connect.Request[pbp
 			p.db.UpdateProject(ctx, project)
 		}
 	}
-
 	projectProto, err := p.projectToProto(ctx, project)
 	if err != nil {
 		return nil, err
@@ -236,7 +251,7 @@ func (p *Portal) CreateKeywords(ctx context.Context, c *connect.Request[pbportal
 		return nil, status.New(codes.InvalidArgument, "maximum 5 keywords are allowed").Err()
 	}
 
-	projectID, err := p.getProject(ctx, c.Header(), actor.OrganizationID)
+	project, err := p.getProject(ctx, c.Header(), actor.OrganizationID)
 	if err != nil {
 		return nil, err
 	}
@@ -248,12 +263,12 @@ func (p *Portal) CreateKeywords(ctx context.Context, c *connect.Request[pbportal
 		}
 	}
 
-	err = p.db.CreateKeywords(ctx, projectID, c.Msg.Keywords)
+	err = p.db.CreateKeywords(ctx, project.ID, c.Msg.Keywords)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to create keyword: %w", err))
 	}
 
-	keywords, err := p.db.GetKeywords(ctx, projectID)
+	keywords, err := p.db.GetKeywords(ctx, project.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -272,12 +287,12 @@ func (p *Portal) AddSource(ctx context.Context, c *connect.Request[pbportal.AddS
 		return nil, err
 	}
 
-	projectID, err := p.getProject(ctx, c.Header(), actor.OrganizationID)
+	project, err := p.getProject(ctx, c.Header(), actor.OrganizationID)
 	if err != nil {
 		return nil, err
 	}
 
-	sources, err := p.db.GetSourcesByProject(ctx, projectID)
+	sources, err := p.db.GetSourcesByProject(ctx, project.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -293,7 +308,7 @@ func (p *Portal) AddSource(ctx context.Context, c *connect.Request[pbportal.AddS
 	redditService := services.NewRedditService(p.logger, p.db, redditClient, p.aiClient, p.cache)
 
 	source := &models.Source{
-		ProjectID: projectID,
+		ProjectID: project.ID,
 		Name:      utils.CleanSubredditName(c.Msg.Name),
 		OrgID:     actor.OrganizationID,
 	}
@@ -311,13 +326,13 @@ func (p *Portal) GetSources(ctx context.Context, c *connect.Request[emptypb.Empt
 		return nil, err
 	}
 
-	projectID, err := p.getProject(ctx, c.Header(), actor.OrganizationID)
+	project, err := p.getProject(ctx, c.Header(), actor.OrganizationID)
 	if err != nil {
 		return nil, err
 	}
 
 	redditService := services.NewRedditService(p.logger, p.db, nil, nil, nil)
-	sources, err := redditService.GetSubReddits(ctx, projectID)
+	sources, err := redditService.GetSubReddits(ctx, project.ID)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to get subreddits: %w", err))
 	}
@@ -365,7 +380,7 @@ func (p *Portal) GetRelevantLeads(ctx context.Context, c *connect.Request[pbport
 		return nil, err
 	}
 
-	projectID, err := p.getProject(ctx, c.Header(), actor.OrganizationID)
+	project, err := p.getProject(ctx, c.Header(), actor.OrganizationID)
 	if err != nil {
 		return nil, err
 	}
@@ -375,7 +390,7 @@ func (p *Portal) GetRelevantLeads(ctx context.Context, c *connect.Request[pbport
 		subReddits = append(subReddits, *c.Msg.SubReddit)
 	}
 
-	leads, err := p.db.GetLeadsByRelevancy(ctx, projectID, datastore.LeadsFilter{
+	leads, err := p.db.GetLeadsByRelevancy(ctx, project.ID, datastore.LeadsFilter{
 		RelevancyScore: c.Msg.RelevancyScore,
 		Sources:        subReddits,
 		Limit:          pageCount,
@@ -391,7 +406,7 @@ func (p *Portal) GetRelevantLeads(ctx context.Context, c *connect.Request[pbport
 		leadsProto = append(leadsProto, new(pbcore.Lead).FromModel(redactPlatformOnlyMetadata(actor.Role, lead)))
 	}
 
-	analysis, err := redora.NewLeadAnalysis(p.db, p.logger).GenerateLeadAnalysis(ctx, projectID, c.Msg.DateRange)
+	analysis, err := redora.NewLeadAnalysis(p.db, p.logger).GenerateLeadAnalysis(ctx, project.ID, c.Msg.DateRange)
 	if err != nil {
 		return nil, err
 	}
@@ -463,7 +478,7 @@ func (p *Portal) GetLeadsByStatus(ctx context.Context, c *connect.Request[pbport
 		return nil, err
 	}
 
-	projectID, err := p.getProject(ctx, c.Header(), actor.OrganizationID)
+	project, err := p.getProject(ctx, c.Header(), actor.OrganizationID)
 	if err != nil {
 		return nil, err
 	}
@@ -472,7 +487,7 @@ func (p *Portal) GetLeadsByStatus(ctx context.Context, c *connect.Request[pbport
 	if err != nil {
 		return nil, err
 	}
-	leads, err := p.db.GetLeadsByStatus(ctx, projectID, datastore.LeadsFilter{
+	leads, err := p.db.GetLeadsByStatus(ctx, project.ID, datastore.LeadsFilter{
 		Status:    status,
 		Limit:     pageCount,
 		DateRange: c.Msg.DateRange,
@@ -496,12 +511,12 @@ func (p *Portal) UpdateLeadStatus(ctx context.Context, c *connect.Request[pbport
 		return nil, err
 	}
 
-	projectID, err := p.getProject(ctx, c.Header(), actor.OrganizationID)
+	project, err := p.getProject(ctx, c.Header(), actor.OrganizationID)
 	if err != nil {
 		return nil, err
 	}
 
-	lead, err := p.db.GetLeadByID(ctx, projectID, c.Msg.LeadId)
+	lead, err := p.db.GetLeadByID(ctx, project.ID, c.Msg.LeadId)
 	if err != nil && !errors.Is(err, datastore.NotFound) {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to fetch lead: %w", err))
 	}
