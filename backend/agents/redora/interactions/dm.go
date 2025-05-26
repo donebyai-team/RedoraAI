@@ -26,7 +26,9 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 	if interaction.Type != models.LeadInteractionTypeDM {
 		return fmt.Errorf("interaction type is not DM")
 	}
-	r.logger.Info("sending reddit DM", zap.String("from", interaction.From))
+	r.logger.Info("sending reddit DM",
+		zap.String("interaction_id", interaction.ID),
+		zap.String("from", interaction.From))
 
 	redditLead, err := r.db.GetLeadByID(ctx, interaction.ProjectID, interaction.LeadID)
 	if err != nil {
@@ -62,6 +64,20 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 	if !interaction.Organization.FeatureFlags.EnableAutoDM {
 		interaction.Status = models.LeadInteractionStatusFAILED
 		interaction.Reason = "auto DM is disabled for this organization"
+		return nil
+	}
+
+	// Check the interaction should not exist
+	exists, err := r.db.IsInteractionExists(ctx, interaction)
+	if err != nil {
+		interaction.Status = models.LeadInteractionStatusFAILED
+		interaction.Reason = fmt.Sprintf("failed to check if interaction exists: %s", err.Error())
+		return err
+	}
+
+	if exists {
+		interaction.Status = models.LeadInteractionStatusFAILED
+		interaction.Reason = "DM already exists"
 		return nil
 	}
 
@@ -120,6 +136,10 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 	interaction.Reason = ""
 	redditLead.LeadMetadata.AutomatedDMSent = true
 	redditLead.Status = models.LeadStatusCOMPLETED
+
+	r.logger.Info("successfully sent reddit DM",
+		zap.String("interaction_id", interaction.ID),
+		zap.String("from", interaction.From))
 
 	return nil
 }
