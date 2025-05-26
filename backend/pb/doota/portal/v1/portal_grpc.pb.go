@@ -21,26 +21,27 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	PortalService_GetConfig_FullMethodName                = "/doota.portal.v1.PortalService/GetConfig"
-	PortalService_Self_FullMethodName                     = "/doota.portal.v1.PortalService/Self"
-	PortalService_GetIntegration_FullMethodName           = "/doota.portal.v1.PortalService/GetIntegration"
-	PortalService_Batch_FullMethodName                    = "/doota.portal.v1.PortalService/Batch"
-	PortalService_CreateCustomerCase_FullMethodName       = "/doota.portal.v1.PortalService/CreateCustomerCase"
-	PortalService_PasswordlessStart_FullMethodName        = "/doota.portal.v1.PortalService/PasswordlessStart"
-	PortalService_PasswordlessVerify_FullMethodName       = "/doota.portal.v1.PortalService/PasswordlessVerify"
-	PortalService_OauthAuthorize_FullMethodName           = "/doota.portal.v1.PortalService/OauthAuthorize"
-	PortalService_OauthCallback_FullMethodName            = "/doota.portal.v1.PortalService/OauthCallback"
-	PortalService_SocialLoginCallback_FullMethodName      = "/doota.portal.v1.PortalService/SocialLoginCallback"
-	PortalService_GetIntegrations_FullMethodName          = "/doota.portal.v1.PortalService/GetIntegrations"
-	PortalService_CreateKeywords_FullMethodName           = "/doota.portal.v1.PortalService/CreateKeywords"
-	PortalService_AddSource_FullMethodName                = "/doota.portal.v1.PortalService/AddSource"
-	PortalService_GetSources_FullMethodName               = "/doota.portal.v1.PortalService/GetSources"
-	PortalService_RemoveSource_FullMethodName             = "/doota.portal.v1.PortalService/RemoveSource"
-	PortalService_GetRelevantLeads_FullMethodName         = "/doota.portal.v1.PortalService/GetRelevantLeads"
-	PortalService_GetLeadsByStatus_FullMethodName         = "/doota.portal.v1.PortalService/GetLeadsByStatus"
-	PortalService_UpdateLeadStatus_FullMethodName         = "/doota.portal.v1.PortalService/UpdateLeadStatus"
-	PortalService_CreateOrEditProject_FullMethodName      = "/doota.portal.v1.PortalService/CreateOrEditProject"
-	PortalService_UpdateAutomationSettings_FullMethodName = "/doota.portal.v1.PortalService/UpdateAutomationSettings"
+	PortalService_GetConfig_FullMethodName                 = "/doota.portal.v1.PortalService/GetConfig"
+	PortalService_Self_FullMethodName                      = "/doota.portal.v1.PortalService/Self"
+	PortalService_GetIntegration_FullMethodName            = "/doota.portal.v1.PortalService/GetIntegration"
+	PortalService_Batch_FullMethodName                     = "/doota.portal.v1.PortalService/Batch"
+	PortalService_CreateCustomerCase_FullMethodName        = "/doota.portal.v1.PortalService/CreateCustomerCase"
+	PortalService_PasswordlessStart_FullMethodName         = "/doota.portal.v1.PortalService/PasswordlessStart"
+	PortalService_PasswordlessVerify_FullMethodName        = "/doota.portal.v1.PortalService/PasswordlessVerify"
+	PortalService_OauthAuthorize_FullMethodName            = "/doota.portal.v1.PortalService/OauthAuthorize"
+	PortalService_OauthCallback_FullMethodName             = "/doota.portal.v1.PortalService/OauthCallback"
+	PortalService_SocialLoginCallback_FullMethodName       = "/doota.portal.v1.PortalService/SocialLoginCallback"
+	PortalService_GetIntegrations_FullMethodName           = "/doota.portal.v1.PortalService/GetIntegrations"
+	PortalService_CreateKeywords_FullMethodName            = "/doota.portal.v1.PortalService/CreateKeywords"
+	PortalService_AddSource_FullMethodName                 = "/doota.portal.v1.PortalService/AddSource"
+	PortalService_GetSources_FullMethodName                = "/doota.portal.v1.PortalService/GetSources"
+	PortalService_RemoveSource_FullMethodName              = "/doota.portal.v1.PortalService/RemoveSource"
+	PortalService_GetRelevantLeads_FullMethodName          = "/doota.portal.v1.PortalService/GetRelevantLeads"
+	PortalService_GetLeadsByStatus_FullMethodName          = "/doota.portal.v1.PortalService/GetLeadsByStatus"
+	PortalService_UpdateLeadStatus_FullMethodName          = "/doota.portal.v1.PortalService/UpdateLeadStatus"
+	PortalService_CreateOrEditProject_FullMethodName       = "/doota.portal.v1.PortalService/CreateOrEditProject"
+	PortalService_SuggestKeywordsAndSources_FullMethodName = "/doota.portal.v1.PortalService/SuggestKeywordsAndSources"
+	PortalService_UpdateAutomationSettings_FullMethodName  = "/doota.portal.v1.PortalService/UpdateAutomationSettings"
 )
 
 // PortalServiceClient is the client API for PortalService service.
@@ -69,6 +70,7 @@ type PortalServiceClient interface {
 	GetLeadsByStatus(ctx context.Context, in *GetLeadsByStatusRequest, opts ...grpc.CallOption) (*GetLeadsResponse, error)
 	UpdateLeadStatus(ctx context.Context, in *UpdateLeadStatusRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	CreateOrEditProject(ctx context.Context, in *CreateProjectRequest, opts ...grpc.CallOption) (*v1.Project, error)
+	SuggestKeywordsAndSources(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*v1.Project, error)
 	UpdateAutomationSettings(ctx context.Context, in *UpdateAutomationSettingRequest, opts ...grpc.CallOption) (*Organization, error)
 }
 
@@ -251,6 +253,15 @@ func (c *portalServiceClient) CreateOrEditProject(ctx context.Context, in *Creat
 	return out, nil
 }
 
+func (c *portalServiceClient) SuggestKeywordsAndSources(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*v1.Project, error) {
+	out := new(v1.Project)
+	err := c.cc.Invoke(ctx, PortalService_SuggestKeywordsAndSources_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *portalServiceClient) UpdateAutomationSettings(ctx context.Context, in *UpdateAutomationSettingRequest, opts ...grpc.CallOption) (*Organization, error) {
 	out := new(Organization)
 	err := c.cc.Invoke(ctx, PortalService_UpdateAutomationSettings_FullMethodName, in, out, opts...)
@@ -286,6 +297,7 @@ type PortalServiceServer interface {
 	GetLeadsByStatus(context.Context, *GetLeadsByStatusRequest) (*GetLeadsResponse, error)
 	UpdateLeadStatus(context.Context, *UpdateLeadStatusRequest) (*emptypb.Empty, error)
 	CreateOrEditProject(context.Context, *CreateProjectRequest) (*v1.Project, error)
+	SuggestKeywordsAndSources(context.Context, *emptypb.Empty) (*v1.Project, error)
 	UpdateAutomationSettings(context.Context, *UpdateAutomationSettingRequest) (*Organization, error)
 	mustEmbedUnimplementedPortalServiceServer()
 }
@@ -350,6 +362,9 @@ func (UnimplementedPortalServiceServer) UpdateLeadStatus(context.Context, *Updat
 }
 func (UnimplementedPortalServiceServer) CreateOrEditProject(context.Context, *CreateProjectRequest) (*v1.Project, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateOrEditProject not implemented")
+}
+func (UnimplementedPortalServiceServer) SuggestKeywordsAndSources(context.Context, *emptypb.Empty) (*v1.Project, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SuggestKeywordsAndSources not implemented")
 }
 func (UnimplementedPortalServiceServer) UpdateAutomationSettings(context.Context, *UpdateAutomationSettingRequest) (*Organization, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateAutomationSettings not implemented")
@@ -709,6 +724,24 @@ func _PortalService_CreateOrEditProject_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PortalService_SuggestKeywordsAndSources_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortalServiceServer).SuggestKeywordsAndSources(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortalService_SuggestKeywordsAndSources_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortalServiceServer).SuggestKeywordsAndSources(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _PortalService_UpdateAutomationSettings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateAutomationSettingRequest)
 	if err := dec(in); err != nil {
@@ -809,6 +842,10 @@ var PortalService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateOrEditProject",
 			Handler:    _PortalService_CreateOrEditProject_Handler,
+		},
+		{
+			MethodName: "SuggestKeywordsAndSources",
+			Handler:    _PortalService_SuggestKeywordsAndSources_Handler,
 		},
 		{
 			MethodName: "UpdateAutomationSettings",
