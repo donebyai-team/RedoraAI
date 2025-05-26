@@ -36,7 +36,7 @@ var RedoraPlans = map[SubscriptionPlanType]*SubscriptionPlan{
 		PlanType:    SubscriptionPlanTypeFREE,
 		Description: "Free plan with limited usage to try out the platform",
 		Price:       0.0,
-		Interval:    7, // 14-day trial
+		Interval:    365 * 10, // 10 years
 		Metadata: SubscriptionPlanMetadata{
 			Comments: UsageLimits{
 				PerDay: 4,
