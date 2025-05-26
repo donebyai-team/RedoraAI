@@ -2,8 +2,10 @@ package psql
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/lib/pq"
+	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/models"
 	pbportal "github.com/shank318/doota/pb/doota/portal/v1"
 	"time"
@@ -16,6 +18,7 @@ func init() {
 		"lead_interactions/query_interaction_by_project.sql",
 		"lead_interactions/query_interaction_to_execute.sql",
 		"lead_interactions/set_interaction_status_processing.sql",
+		"lead_interactions/query_interaction_by_to_from.sql",
 	})
 }
 
@@ -44,6 +47,24 @@ func (r *Database) GetLeadInteractions(ctx context.Context, projectID string, st
 		"start_datetime": sqlNullTime(startDateTime),
 		"end_datetime":   sqlNullTime(endDateTime),
 	})
+}
+
+func (r *Database) IsInteractionExists(ctx context.Context, interaction *models.LeadInteraction) (bool, error) {
+	one, err := getOne[models.LeadInteraction](ctx, r, "lead_interactions/query_interaction_by_to_from.sql", map[string]any{
+		"project_id": interaction.ProjectID,
+		"status":     interaction.Status,
+		"type":       interaction.Type,
+		"from_user":  interaction.From,
+		"to_user":    interaction.To,
+	})
+	if err != nil {
+		if errors.Is(err, datastore.NotFound) {
+			return false, nil
+		}
+		return false, err
+	}
+
+	return one != nil, nil
 }
 
 func (r *Database) GetLeadInteractionsToExecute(ctx context.Context, statuses []models.LeadInteractionStatus) ([]*models.LeadInteraction, error) {

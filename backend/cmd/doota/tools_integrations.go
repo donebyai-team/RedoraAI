@@ -90,6 +90,12 @@ func toolsGetRunE(cmd *cobra.Command, args []string) error {
 		fmt.Println("   APIKEY: ", config.APIKey)
 		fmt.Println("   APIHost: ", config.HostName)
 		return nil
+	case models.IntegrationTypeREDDIT:
+		fmt.Println("Reddit Config: ")
+		config := integration.GetRedditConfig()
+		fmt.Println("   Token: ", config.AccessToken)
+		fmt.Println("   UserName: ", config.Name)
+		return nil
 	}
 	return nil
 }

@@ -47,7 +47,9 @@ func (r redditInteractions) SendComment(ctx context.Context, interaction *models
 	if interaction.Type != models.LeadInteractionTypeCOMMENT {
 		return fmt.Errorf("interaction type is not comment")
 	}
-	r.logger.Info("sending reddit comment", zap.String("from", interaction.From))
+	r.logger.Info("sending reddit comment",
+		zap.String("interaction_id", interaction.ID),
+		zap.String("from", interaction.From))
 
 	redditLead, err := r.db.GetLeadByID(ctx, interaction.ProjectID, interaction.LeadID)
 	if err != nil {
@@ -124,6 +126,10 @@ func (r redditInteractions) SendComment(ctx context.Context, interaction *models
 		redditLead.LeadMetadata.AutomatedCommentURL = fmt.Sprintf("https://www.reddit.com/%s", interaction.Metadata.Permalink)
 		redditLead.Status = models.LeadStatusCOMPLETED
 	}
+
+	r.logger.Info("successfully sent reddit comment",
+		zap.String("interaction_id", interaction.ID),
+		zap.String("from", interaction.From))
 
 	return nil
 }
