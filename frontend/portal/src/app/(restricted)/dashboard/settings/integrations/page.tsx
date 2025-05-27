@@ -273,11 +273,11 @@ export default function Page() {
               <Typography variant="h4" component="div" fontWeight="bold">
                 Automated DM Settings
               </Typography>
-
-              <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-                Contact us via chat to configure automated DM.
-              </Typography>
             </Box>
+
+            <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+              Contact us via chat to configure automated DM.
+            </Typography>
           </CardContent>
         </Card>
 
