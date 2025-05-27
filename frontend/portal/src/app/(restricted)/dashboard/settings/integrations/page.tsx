@@ -218,7 +218,7 @@ export default function Page() {
         <Card sx={{ p: 4, mt: 5 }} component={Paper}>
           <CardContent>
             <Box display="flex" alignItems="center" gap={1} mb={2}>
-              <Typography variant="h4" component="div" fontWeight="bold">
+              <Typography variant="h5" component="div" fontWeight="bold">
                 Automated Comments Settings
               </Typography>
             </Box>
@@ -270,7 +270,7 @@ export default function Page() {
         <Card sx={{ p: 4, mt: 5 }} component={Paper}>
           <CardContent>
             <Box display="flex" alignItems="center" gap={1} mb={2}>
-              <Typography variant="h4" component="div" fontWeight="bold">
+              <Typography variant="h5" component="div" fontWeight="bold">
                 Automated DM Settings
               </Typography>
             </Box>
