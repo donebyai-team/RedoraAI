@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/shank318/doota/agents/redora/interactions"
 	"github.com/shank318/doota/app"
 	"github.com/shank318/doota/models"
 	"github.com/spf13/cobra"
@@ -154,6 +155,12 @@ func toolsCreateIntegrationRedditLogin(cmd *cobra.Command, args []string) error 
 	}
 	// we need to chery pick the password since it is not exposed via json interface
 	out.Password = gjson.Get(args[1], "password").String()
+	out.Cookies = gjson.Get(args[1], "cookies").String()
+
+	_, err = interactions.ParseCookiesFromJSON(out.Cookies)
+	if err != nil {
+		return fmt.Errorf("unable to parse cookies: %w", err)
+	}
 
 	integration = models.SetIntegrationType(integration, models.IntegrationTypeREDDITDMLOGIN, out)
 	upsertIntegration, err := db.UpsertIntegration(ctx, integration)

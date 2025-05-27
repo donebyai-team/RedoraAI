@@ -201,12 +201,13 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 	browserLessClient := interactions.NewBrowserlessClient(sflags.MustGetString(cmd, "common-browserless-api-key"), debugStore, logger)
 	interactionService := interactions.NewRedditInteractions(deps.DataStore, browserLessClient, redditOauthClient, logger)
 
-	//err = browserLessClient.SendDM(interactions.DMParams{
+	//err = browserLessClient.CheckIfLogin(interactions.DMParams{
 	//	Username: "adarsh@miraa.io",
 	//	Password: "Adarsh@121097",
 	//	To:       "t2_2xy5yaww",
 	//	Message:  "Hidd",
 	//	ID:       "unique_id",
+	//	Cookie:   `[]`,
 	//})
 	//if err != nil {
 	//	return nil, err
