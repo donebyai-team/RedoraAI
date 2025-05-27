@@ -10,6 +10,7 @@ import { NextElementRegistryProvider } from '../context/NextElementRegistryProvi
 import { PortalClientProvider } from '../provider/PortalClientProvider'
 import { PortalExecutionRuntimeProvider } from '../provider/PortalExecutionRuntimeProvider'
 import StoreProvider from '../../store/StoreProvider'
+import Script from 'next/script'
 
 export const metadata = {
   title: 'RedoraAI',
@@ -26,6 +27,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
 
       <body>
+      {/* ✅ HubSpot Chat Script */}
+      <Script
+          id="hubspot-chat"
+          strategy="afterInteractive"
+          src="//js-na2.hs-scripts.com/242526027.js"
+      />
         <StoreProvider>
           <NextElementRegistryProvider>
             <ConfigGuard fallback={<FallbackSpinner />}>
