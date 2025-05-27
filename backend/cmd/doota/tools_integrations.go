@@ -97,6 +97,13 @@ func toolsGetRunE(cmd *cobra.Command, args []string) error {
 		fmt.Println("   Token: ", config.AccessToken)
 		fmt.Println("   UserName: ", config.Name)
 		return nil
+	case models.IntegrationTypeREDDITDMLOGIN:
+		fmt.Println("Reddit Config: ")
+		config := integration.GetRedditDMLoginConfig()
+		fmt.Println("   Cookies: ", config.Cookies)
+		fmt.Println("   UserName: ", config.Username)
+		fmt.Println("   Password: ", config.Password)
+		return nil
 	}
 	return nil
 }
