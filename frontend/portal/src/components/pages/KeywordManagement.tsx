@@ -1,3 +1,4 @@
+"use client";
 
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -731,34 +732,34 @@ export default function KeywordManagement() {
                 <CardContent className="space-y-6">
                   <div className="space-y-4">
                     <h4 className="font-medium text-sm">Suggested Keywords</h4>
-                    {keywordSuggestions.map((keyword, i) => (
-                      <div key={i} className="flex justify-between items-center p-2 rounded-md hover:bg-secondary/50">
-                        <p className="text-sm">"{keyword}"</p>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleAddSuggestedKeyword(keyword)}
-                        >
-                          <PlusCircle className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
+                      {keywordSuggestions.map((keyword, i) => (
+                        <div key={i} className="flex justify-between items-center p-2 rounded-md hover:bg-secondary/50">
+                          <p className="text-sm">"{keyword}"</p>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleAddSuggestedKeyword(keyword)}
+                          >
+                            <PlusCircle className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
                   </div>
 
                   <div className="space-y-4">
                     <h4 className="font-medium text-sm">Suggested Subreddits</h4>
-                    {subredditSuggestions.map((subreddit, i) => (
-                      <div key={i} className="flex justify-between items-center p-2 rounded-md hover:bg-secondary/50">
-                        <p className="text-sm">{subreddit}</p>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleAddSuggestedSubreddit(subreddit)}
-                        >
-                          <PlusCircle className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
+                      {subredditSuggestions.map((subreddit, i) => (
+                        <div key={i} className="flex justify-between items-center p-2 rounded-md hover:bg-secondary/50">
+                          <p className="text-sm">{subreddit}</p>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleAddSuggestedSubreddit(subreddit)}
+                          >
+                            <PlusCircle className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
                   </div>
 
                   <div className="bg-primary/5 p-3 rounded-md">

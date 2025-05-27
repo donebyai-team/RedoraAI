@@ -1,6 +1,7 @@
+"use client";
 
 import { useState } from "react";
-import { toast } from "@/components/ui/use-toast";
+// import { toast } from "@/components/ui/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { LeadFeed as LeadFeedComponent } from "@/components/dashboard/LeadFeed";
@@ -49,51 +50,52 @@ export default function LeadFeed() {
   ];
 
   const [defaultAccountId, setDefaultAccountId] = useState<string>("account1");
-  const [postAccountAssignments, setPostAccountAssignments] = useState<Record<string, string>>({});
-  console.log(postAccountAssignments);
+  // const [postAccountAssignments, setPostAccountAssignments] = useState<Record<string, string>>({});
+  // console.log(postAccountAssignments);
+  console.log(setIsLoading);
 
-  const handleAction = (action: string, postId: string) => {
-    console.log(postId);
-    // Demo function to handle actions like commenting, sending DM, etc.
-    setIsLoading(true);
+  // const handleAction = (action: string, postId: string) => {
+  //   console.log(postId);
+  //   // Demo function to handle actions like commenting, sending DM, etc.
+  //   setIsLoading(true);
 
-    setTimeout(() => {
-      setIsLoading(false);
+  //   setTimeout(() => {
+  //     setIsLoading(false);
 
-      if (action === "comment") {
-        toast({
-          title: "Comment posted",
-          description: "Your comment has been posted successfully.",
-        });
-      } else if (action === "dm") {
-        toast({
-          title: "Message sent",
-          description: "Your direct message has been sent.",
-        });
-      } else if (action === "save") {
-        toast({
-          title: "Post saved",
-          description: "This post has been saved for later.",
-        });
-      } else if (action === "skip") {
-        toast({
-          title: "Post skipped",
-          description: "This post has been marked as skipped.",
-        });
-      }
-    }, 1000);
-  };
+  //     if (action === "comment") {
+  //       toast({
+  //         title: "Comment posted",
+  //         description: "Your comment has been posted successfully.",
+  //       });
+  //     } else if (action === "dm") {
+  //       toast({
+  //         title: "Message sent",
+  //         description: "Your direct message has been sent.",
+  //       });
+  //     } else if (action === "save") {
+  //       toast({
+  //         title: "Post saved",
+  //         description: "This post has been saved for later.",
+  //       });
+  //     } else if (action === "skip") {
+  //       toast({
+  //         title: "Post skipped",
+  //         description: "This post has been marked as skipped.",
+  //       });
+  //     }
+  //   }, 1000);
+  // };
 
   const handleDefaultAccountChange = (accountId: string) => {
     setDefaultAccountId(accountId);
   };
 
-  const handlePostAccountChange = (postId: string, accountId: string) => {
-    setPostAccountAssignments(prev => ({
-      ...prev,
-      [postId]: accountId
-    }));
-  };
+  // const handlePostAccountChange = (postId: string, accountId: string) => {
+  //   setPostAccountAssignments(prev => ({
+  //     ...prev,
+  //     [postId]: accountId
+  //   }));
+  // };
 
   return (
     <>
@@ -140,10 +142,10 @@ export default function LeadFeed() {
                 ) : (
                   <div className="flex-1">
                     <LeadFeedComponent
-                      onAction={handleAction}
-                      redditAccounts={redditAccounts}
-                      defaultAccountId={defaultAccountId}
-                      onAccountChange={handlePostAccountChange}
+                      // onAction={handleAction}
+                      // redditAccounts={redditAccounts}
+                      // defaultAccountId={defaultAccountId}
+                      // onAccountChange={handlePostAccountChange}
                     />
                   </div>
                 )}

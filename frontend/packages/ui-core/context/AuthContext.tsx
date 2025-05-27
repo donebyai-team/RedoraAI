@@ -5,6 +5,12 @@ import { errorToMessage } from '@doota/pb/utils/errors'
 import { FullStory, isInitialized as isFullStoryInitialized } from '@fullstory/browser'
 import { useClientsContext } from './ClientContext'
 import { TokenStore, OrganizationStore } from '@doota/store'
+import { Subscription, SubscriptionPlanID } from '@doota/pb/doota/core/v1/core_pb'
+
+type SubscriptionDetails = {
+  planName: string;
+  subscription: Subscription | undefined;
+};
 
 export type AuthValuesType = {
   user: User | null
@@ -18,6 +24,7 @@ export type AuthValuesType = {
   setOrganization: (org: Organization) => Promise<void>
   setUser: React.Dispatch<React.SetStateAction<User | null>>
   getOrganization: () => Organization | null
+  getPlanDetails: () => SubscriptionDetails,
 }
 
 // ** Defaults
@@ -31,7 +38,8 @@ const defaultProvider: AuthValuesType = {
 
   setOrganization: () => Promise.resolve(),
   setUser: () => { },
-  getOrganization: () => null
+  getOrganization: () => null,
+  getPlanDetails: () => ({ planName: "", subscription: undefined }),
 }
 
 export const AuthContext = createContext<AuthValuesType>(defaultProvider)
@@ -152,6 +160,28 @@ export const BaseAuthProvider: FC<Props> = ({
     return user?.organizations?.[0] ?? null;
   }
 
+  const getPlanDetails = (): SubscriptionDetails => {
+    const currentOrganization = getOrganization();
+    const subscription = currentOrganization?.featureFlags?.subscription ?? { planId: null };
+
+    const planId = subscription?.planId;
+    if (!planId) {
+      return {
+        planName: "FREE",
+        subscription: undefined
+      };
+    }
+
+    const planKey = Object.entries(SubscriptionPlanID).find(([, value]) => value === planId)?.[0];
+    const planName = planKey?.replace("SUBSCRIPTION_PLAN_", "") ?? "FREE";
+
+    return {
+      planName,
+      subscription
+    };
+  };
+
+
   const values = {
     user,
     organization,
@@ -165,7 +195,8 @@ export const BaseAuthProvider: FC<Props> = ({
       setOrganization(org)
     },
     setUser,
-    getOrganization
+    getOrganization,
+    getPlanDetails
   }
 
   return <AuthContext.Provider value={values}>{children}</AuthContext.Provider>

@@ -1,12 +1,13 @@
 // import { useState } from "react";
-import { 
-  BarChart2, 
-  CreditCard, 
-  LayoutDashboard, 
-  MessageSquare, 
-  // Settings, 
-  Tag, 
-  Users
+import {
+  // BarChart2,
+  // CreditCard,
+  // Users
+  LayoutDashboard,
+  MessageSquare,
+  Settings,
+  Tag,
+  Edit
 } from "lucide-react";
 import {
   Sidebar,
@@ -24,55 +25,72 @@ import {
 } from "@/components/ui/sidebar";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { routes } from '@doota/ui-core/routing'
+import { useAuth } from "@doota/ui-core/hooks/useAuth";
+import { Badge } from "@/components/ui/badge";
 
 export function AppSidebar() {
   const location = usePathname();
+  const { getPlanDetails } = useAuth();
+  const { planName } = getPlanDetails();
   // const [open, setOpen] = useState(true);
 
   const isActive = (path: string) => {
     return location.startsWith(path);
   };
-  
+
   const mainMenuItems = [
     {
       title: "Dashboard",
-      path: "/dashboard",
+      path: routes.new.dashboard,
       icon: LayoutDashboard,
-      active: isActive("/dashboard"),
+      active: isActive(routes.new.dashboard),
     },
     {
       title: "Keywords & Subreddits",
-      path: "/keywords",
+      path: routes.new.keywords,
       icon: Tag,
-      active: isActive("/keywords"),
+      active: isActive(routes.new.keywords),
     },
     {
       title: "Lead Feed",
-      path: "/leads",
+      path: routes.new.leads,
       icon: MessageSquare,
-      active: isActive("/leads"),
+      active: isActive(routes.new.leads),
     },
   ];
-  
+
   const workspaceSettingsItems = [
     {
-      title: "Reddit Accounts",
-      path: "/settings/reddit-accounts",
-      icon: BarChart2,
-      active: isActive("/settings/reddit-accounts"),
+      title: "Edit Product",
+      path: routes.new.edit_product,
+      icon: Edit,
+      active: isActive(routes.new.edit_product),
     },
     {
-      title: "Team Members",
-      path: "/settings/team",
-      icon: Users,
-      active: isActive("/settings/team"),
+      title: "Settings",
+      path: routes.new.integrations,
+      icon: Settings,
+      active: isActive(routes.new.integrations),
     },
-    {
-      title: "Billing Plan",
-      path: "/settings/billing",
-      icon: CreditCard,
-      active: isActive("/settings/billing"),
-    },
+    // {
+    //   title: "Reddit Accounts",
+    //   path: "/settings/reddit-accounts",
+    //   icon: BarChart2,
+    //   active: isActive("/settings/reddit-accounts"),
+    // },
+    // {
+    //   title: "Team Members",
+    //   path: "/settings/team",
+    //   icon: Users,
+    //   active: isActive("/settings/team"),
+    // },
+    // {
+    //   title: "Billing Plan",
+    //   path: "/settings/billing",
+    //   icon: CreditCard,
+    //   active: isActive("/settings/billing"),
+    // },
   ];
 
   return (
@@ -88,7 +106,7 @@ export function AppSidebar() {
           <SidebarTrigger />
         </div>
       </SidebarHeader>
-      
+
       <SidebarContent className="flex-grow">
         <SidebarGroup>
           <SidebarGroupLabel>Main</SidebarGroupLabel>
@@ -107,7 +125,7 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        
+
         <SidebarGroup>
           <SidebarGroupLabel>Workspace Settings</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -126,12 +144,15 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      
+
       <SidebarFooter className="mt-auto">
         <div className="px-3 py-2 border-t border-sidebar-border">
           <div className="flex justify-between items-center">
-            <div className="text-xs text-muted-foreground">
+            <div className="text-xs flex items-center text-muted-foreground gap-2.5">
               <p>Workspace: Personal</p>
+              <Badge variant={"default"} className="px-1.5 py-0.5 flex items-center">
+                <span className="text-xs">{planName}</span>
+              </Badge>
             </div>
           </div>
         </div>

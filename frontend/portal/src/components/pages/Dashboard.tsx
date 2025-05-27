@@ -29,14 +29,13 @@ import { useClientsContext } from "@doota/ui-core/context/ClientContext";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { setError, setIsLoading, setNewTabList } from "../../../store/Lead/leadSlice";
 import { RootState } from "../../../store/store";
-import { DateRangeFilter, LeadAnalysis } from "@doota/pb/doota/portal/v1/portal_pb";
-import { LeadStatus } from "@doota/pb/doota/core/v1/core_pb";
+import { LeadAnalysis } from "@doota/pb/doota/portal/v1/portal_pb";
 import { setAccounts, setLoading } from "@/store/Reddit/RedditSlice";
 
 export default function Dashboard() {
   const { portalClient } = useClientsContext()
   const dispatch = useAppDispatch();
-  const { isLoading } = useAppSelector((state: RootState) => state.lead);
+  const { dateRange, leadStatusFilter, isLoading } = useAppSelector((state: RootState) => state.lead);
   const { relevancyScore, subReddit } = useAppSelector((state: RootState) => state.parems);
 
   // Sample Reddit accounts
@@ -75,54 +74,52 @@ export default function Dashboard() {
   ];
 
   const [counts, setCounts] = useState<LeadAnalysis | undefined>(undefined);
-  const [dateRange, setDateRange] = useState<DateRangeFilter>(DateRangeFilter.DATE_RANGE_UNSPECIFIED);
-  const [leadStatusFilter, setLeadStatusFilter] = useState<LeadStatus | null>(null);
   const [defaultAccountId, setDefaultAccountId] = useState<string>("account1");
-  const [postAccountAssignments, setPostAccountAssignments] = useState<Record<string, string>>({});
-  console.log(postAccountAssignments);
+  // const [postAccountAssignments, setPostAccountAssignments] = useState<Record<string, string>>({});
+  // console.log(postAccountAssignments);
 
-  const handleAction = (action: string, postId: string) => {
-    console.log(postId);
-    // Demo function to handle actions like commenting, sending DM, etc.
-    setIsLoading(true);
+  // const handleAction = (action: string, postId: string) => {
+  //   console.log(postId);
+  //   // Demo function to handle actions like commenting, sending DM, etc.
+  //   setIsLoading(true);
 
-    setTimeout(() => {
-      setIsLoading(false);
+  //   setTimeout(() => {
+  //     setIsLoading(false);
 
-      if (action === "comment") {
-        toast({
-          title: "Comment posted",
-          description: "Your comment has been posted successfully.",
-        });
-      } else if (action === "dm") {
-        toast({
-          title: "Message sent",
-          description: "Your direct message has been sent.",
-        });
-      } else if (action === "save") {
-        toast({
-          title: "Post saved",
-          description: "This post has been saved for later.",
-        });
-      } else if (action === "skip") {
-        toast({
-          title: "Post skipped",
-          description: "This post has been marked as skipped.",
-        });
-      }
-    }, 1000);
-  };
+  //     if (action === "comment") {
+  //       toast({
+  //         title: "Comment posted",
+  //         description: "Your comment has been posted successfully.",
+  //       });
+  //     } else if (action === "dm") {
+  //       toast({
+  //         title: "Message sent",
+  //         description: "Your direct message has been sent.",
+  //       });
+  //     } else if (action === "save") {
+  //       toast({
+  //         title: "Post saved",
+  //         description: "This post has been saved for later.",
+  //       });
+  //     } else if (action === "skip") {
+  //       toast({
+  //         title: "Post skipped",
+  //         description: "This post has been marked as skipped.",
+  //       });
+  //     }
+  //   }, 1000);
+  // };
 
   const handleDefaultAccountChange = (accountId: string) => {
     setDefaultAccountId(accountId);
   };
 
-  const handlePostAccountChange = (postId: string, accountId: string) => {
-    setPostAccountAssignments(prev => ({
-      ...prev,
-      [postId]: accountId
-    }));
-  };
+  // const handlePostAccountChange = (postId: string, accountId: string) => {
+  //   setPostAccountAssignments(prev => ({
+  //     ...prev,
+  //     [postId]: accountId
+  //   }));
+  // };
 
   useEffect(() => {
 
@@ -175,24 +172,6 @@ export default function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleDateRangeChange = (value: string) => {
-    const map: Record<string, DateRangeFilter> = {
-      "1": DateRangeFilter.DATE_RANGE_TODAY,
-      "2": DateRangeFilter.DATE_RANGE_YESTERDAY,
-      "3": DateRangeFilter.DATE_RANGE_7_DAYS,
-    };
-
-    setDateRange(map[value] ?? DateRangeFilter.DATE_RANGE_UNSPECIFIED);
-  };
-
-  const handleLeadStatusFilterChange = (value: string) => {
-    const map: Record<string, LeadStatus> = {
-      "1": LeadStatus.LEAD,
-    };
-
-    setLeadStatusFilter(map[value] ?? null);
-  };
-
   return (
     <>
       <DashboardHeader />
@@ -214,12 +193,7 @@ export default function Dashboard() {
               <div className="flex-1 flex flex-col space-y-4 mt-6">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-background/95 py-2">
                   <h2 className="text-xl font-semibold">Active Leads</h2>
-                  <FilterControls
-                    dateRange={dateRange}
-                    onDateRangeFilterChange={handleDateRangeChange}
-                    leadStatusFilter={leadStatusFilter}
-                    onLeadStatusFilterChange={handleLeadStatusFilterChange}
-                  />
+                  <FilterControls />
                 </div>
 
                 {isLoading ? (
@@ -245,10 +219,10 @@ export default function Dashboard() {
                 ) : (
                   <div className="flex-1">
                     <LeadFeed
-                      onAction={handleAction}
-                      redditAccounts={redditAccounts}
-                      defaultAccountId={defaultAccountId}
-                      onAccountChange={handlePostAccountChange}
+                      // onAction={handleAction}
+                      // redditAccounts={redditAccounts}
+                      // defaultAccountId={defaultAccountId}
+                      // onAccountChange={handlePostAccountChange}
                     />
                   </div>
                 )}
