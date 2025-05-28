@@ -18,6 +18,7 @@ type DMParams struct {
 	ID       string
 	Username string
 	Password string
+	Cookie   string // json array
 	To       string
 	Message  string
 }
@@ -122,6 +123,7 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 
 	if err = r.browserLessClient.SendDM(DMParams{
 		ID:       interaction.ID,
+		Cookie:   loginConfig.Cookies,
 		Username: loginConfig.Username,
 		Password: loginConfig.Password,
 		To:       fmt.Sprintf("t2_%s", user.ID),
