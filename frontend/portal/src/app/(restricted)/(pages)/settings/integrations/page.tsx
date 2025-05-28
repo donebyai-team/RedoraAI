@@ -123,7 +123,7 @@ export default function Page() {
     portalClient
       .oauthAuthorize({
         integrationType: integrationType,
-        redirectUrl: buildAppUrl(routes.app.home),
+        redirectUrl: buildAppUrl(routes.new.dashboard),
       })
       .then(oAuthAuthorizeResp => {
         window.open(oAuthAuthorizeResp.authorizeUrl, '_self')

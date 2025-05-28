@@ -45,13 +45,13 @@ export default function Page() {
       )
 
       await login(jwt).then(() => {
-        window.location.href = routes.app.home
+        window.location.href = routes.new.dashboard
       })
     }
 
     handleCallback().catch(err => {
       console.error('callback error: ', err)
-      router.push(routes.app.home)
+      router.push(routes.new.dashboard)
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams])

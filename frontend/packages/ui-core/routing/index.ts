@@ -27,11 +27,11 @@ export const routes = {
   },
 
   new: {
-    dashboard: '/new/dashboard',
-    keywords: '/new/keywords',
-    leads: '/new/leads',
-    edit_product: '/new/settings/product',
-    integrations: '/new/settings/integrations',
+    dashboard: '/dashboard',
+    keywords: '/keywords',
+    leads: '/leads',
+    edit_product: '/settings/product',
+    integrations: '/settings/integrations',
   }
 }
 

@@ -48,7 +48,7 @@ export default function Page() {
 
     handleCallback().catch(err => {
       console.error('callback error: ', err)
-      router.push(routes.app.home)
+      router.push(routes.new.dashboard)
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams])

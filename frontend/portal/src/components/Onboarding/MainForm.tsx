@@ -14,7 +14,7 @@ import StepContent from './StepContent';
 import CustomStepIcon from './CustomStepIcon';
 import { useAppSelector } from '../../../store/hooks';
 import { RootState } from '../../../store/store';
-import { AuthLoading } from '../../app/(restricted)/dashboard/layout';
+import { AuthLoading } from '../../app/old/dashboard/layout';
 import { isActivePath } from '../../utils/url';
 import { routes } from '@doota/ui-core/routing';
 import { usePathname } from 'next/navigation';

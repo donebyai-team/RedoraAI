@@ -23,7 +23,7 @@ const Error404 = () => {
           </Typography>
           <Typography variant='body2'>We couldn&prime;t find the page you are looking for.</Typography>
         </BoxWrapper>
-        <Button href={routes.app.home} component={Link} variant='contained' sx={{ px: 5.5, mt: 10 }}>
+        <Button href={routes.new.dashboard} component={Link} variant='contained' sx={{ px: 5.5, mt: 10 }}>
           Back to Home
         </Button>
       </Box>

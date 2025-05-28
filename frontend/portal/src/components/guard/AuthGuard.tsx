@@ -67,7 +67,7 @@ const AuthGuard = ({ children, fallback }: AuthGuardProps) => {
           router.replace(routes.app.auth.onboarding)
           return
         } else if (isOnboardingDone && path.startsWith(routes.app.auth.onboarding)) {
-          router.replace(routes.app.home)
+          router.replace(routes.new.dashboard)
           return
         }
       }
