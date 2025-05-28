@@ -149,7 +149,7 @@ export function AppSidebar() {
         <div className="px-3 py-2 border-t border-sidebar-border">
           <div className="flex justify-between items-center">
             <div className="text-xs flex items-center text-muted-foreground gap-2.5">
-              <p>Workspace: Personal</p>
+              <p>Current Plan:</p>
               <Badge variant={"default"} className="px-1.5 py-0.5 flex items-center">
                 <span className="text-xs">{planName}</span>
               </Badge>

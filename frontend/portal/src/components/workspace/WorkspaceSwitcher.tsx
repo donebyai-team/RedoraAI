@@ -1,15 +1,21 @@
 
 import { useState } from "react";
-import { ChevronDown, Plus, Settings } from "lucide-react";
+import {
+  ChevronDown,
+  // Plus, 
+  // Settings 
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
+  // DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
+// import Link from "next/link";
+import { useAuth } from "@doota/ui-core/hooks/useAuth";
+import { Project } from "@doota/pb/doota/core/v1/core_pb";
 
 interface Workspace {
   id: string;
@@ -17,12 +23,17 @@ interface Workspace {
 }
 
 export function WorkspaceSwitcher() {
+
+  const { user } = useAuth()
+
   // Mock workspaces - would be fetched from API in a real implementation
-  const workspaces: Workspace[] = [
-    { id: "w1", name: "Personal Workspace" },
-    { id: "w2", name: "Agency Clients" },
-    { id: "w3", name: "Marketing Team" },
-  ];
+  // const workspaces: Workspace[] = [
+  //   { id: "w1", name: "Personal Workspace" },
+  //   { id: "w2", name: "Agency Clients" },
+  //   { id: "w3", name: "Marketing Team" },
+  // ];
+
+  const workspaces: Project[] = user?.projects ?? [];
 
   const [currentWorkspace, setCurrentWorkspace] = useState<Workspace>(workspaces[0]);
 
@@ -52,7 +63,7 @@ export function WorkspaceSwitcher() {
             )}
           </DropdownMenuItem>
         ))}
-        <DropdownMenuSeparator />
+        {/* <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link href="/workspaces/new" className="cursor-pointer flex items-center gap-2">
             <Plus className="h-4 w-4" />
@@ -64,7 +75,7 @@ export function WorkspaceSwitcher() {
             <Settings className="h-4 w-4" />
             <span>Manage All Workspaces</span>
           </Link>
-        </DropdownMenuItem>
+        </DropdownMenuItem> */}
       </DropdownMenuContent>
     </DropdownMenu>
   );

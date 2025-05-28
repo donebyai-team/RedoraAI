@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 // import { toast } from "@/components/ui/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,9 +10,17 @@ import { FilterControls } from "@/components/dashboard/FilterControls";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { DashboardFooter } from "@/components/dashboard/DashboardFooter";
 import { RedditAccount } from "@/components/reddit-accounts/RedditAccountBadge";
+import { useClientsContext } from "@doota/ui-core/context/ClientContext";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { setError, setIsLoading, setNewTabList } from "@/store/Lead/leadSlice";
+import { toast } from "@/components/ui/use-toast";
 
 export default function LeadFeed() {
-  const [isLoading, setIsLoading] = useState(false);
+
+  const { portalClient } = useClientsContext()
+  const dispatch = useAppDispatch();
+  const { dateRange, leadStatusFilter, isLoading } = useAppSelector((state) => state.lead);
+  const { relevancyScore, subReddit } = useAppSelector((state) => state.parems);
 
   // Sample Reddit accounts
   const redditAccounts: RedditAccount[] = [
@@ -52,7 +60,6 @@ export default function LeadFeed() {
   const [defaultAccountId, setDefaultAccountId] = useState<string>("account1");
   // const [postAccountAssignments, setPostAccountAssignments] = useState<Record<string, string>>({});
   // console.log(postAccountAssignments);
-  console.log(setIsLoading);
 
   // const handleAction = (action: string, postId: string) => {
   //   console.log(postId);
@@ -96,6 +103,38 @@ export default function LeadFeed() {
   //     [postId]: accountId
   //   }));
   // };
+
+  useEffect(() => {
+
+    const getAllRelevantLeads = async () => {
+      dispatch(setIsLoading(true));
+
+      try {
+        const result = await portalClient.getRelevantLeads({
+          ...(relevancyScore && { relevancyScore }),
+          ...(subReddit && { subReddit }),
+          ...(leadStatusFilter && { status: leadStatusFilter }),
+          dateRange,
+        });
+        const allLeads = result.leads ?? [];
+        dispatch(setNewTabList(allLeads));
+
+      } catch (err: any) {
+        const message = err?.response?.data?.message || err.message || "Something went wrong";
+        toast({
+          title: "Error",
+          description: message,
+        });
+        dispatch(setError(message));
+      } finally {
+        dispatch(setIsLoading(false));
+      }
+    };
+
+    getAllRelevantLeads();
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [relevancyScore, subReddit, dateRange, leadStatusFilter]);
 
   return (
     <>
@@ -142,10 +181,10 @@ export default function LeadFeed() {
                 ) : (
                   <div className="flex-1">
                     <LeadFeedComponent
-                      // onAction={handleAction}
-                      // redditAccounts={redditAccounts}
-                      // defaultAccountId={defaultAccountId}
-                      // onAccountChange={handlePostAccountChange}
+                    // onAction={handleAction}
+                    // redditAccounts={redditAccounts}
+                    // defaultAccountId={defaultAccountId}
+                    // onAccountChange={handlePostAccountChange}
                     />
                   </div>
                 )}

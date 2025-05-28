@@ -267,6 +267,20 @@ export default function Page() {
           </CardContent>
         </Card>
 
+        <Card sx={{ p: 4, mt: 5 }} component={Paper}>
+          <CardContent>
+            <Box display="flex" alignItems="center" gap={1} mb={2}>
+              <Typography variant="h5" component="div" fontWeight="bold">
+                Automated DM Settings
+              </Typography>
+            </Box>
+
+            <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+              Contact us via chat to configure automated DM.
+            </Typography>
+          </CardContent>
+        </Card>
+
       </Box>
     </Box>
   </>);

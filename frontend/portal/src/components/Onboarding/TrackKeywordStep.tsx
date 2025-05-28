@@ -27,7 +27,7 @@ import { useForm, Controller } from "react-hook-form";
 import { useClientsContext } from "@doota/ui-core/context/ClientContext";
 import toast from "react-hot-toast";
 
-interface TrackKeywordFormValues {
+export interface TrackKeywordFormValues {
     keywords: string[];
     newKeyword: string;
 }
