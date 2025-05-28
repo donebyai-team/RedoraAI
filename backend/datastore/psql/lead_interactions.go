@@ -52,7 +52,7 @@ func (r *Database) GetLeadInteractions(ctx context.Context, projectID string, st
 func (r *Database) IsInteractionExists(ctx context.Context, interaction *models.LeadInteraction) (bool, error) {
 	one, err := getOne[models.LeadInteraction](ctx, r, "lead_interactions/query_interaction_by_to_from.sql", map[string]any{
 		"project_id": interaction.ProjectID,
-		"status":     interaction.Status,
+		"status":     models.LeadInteractionStatusSENT,
 		"type":       interaction.Type,
 		"from_user":  interaction.From,
 		"to_user":    interaction.To,
@@ -99,9 +99,9 @@ func (r *Database) GetLeadInteractionsToExecute(ctx context.Context, statuses []
 			if err != nil {
 				return nil, err
 			}
-
-			orgCache[orgID] = organization
 			interaction.Organization = organization
+			orgCache[organization.ID] = organization
+			projectToOrg[projectID] = organization.ID
 		}
 	}
 
