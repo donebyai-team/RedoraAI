@@ -138,6 +138,44 @@ func (p *Portal) CreateOrEditProject(ctx context.Context, c *connect.Request[pbp
 		go p.alertNotifier.SendNewProductAddedAlert(context.Background(), project.Name, project.WebsiteURL)
 	}
 
+	// TODO: Remove this section later
+	if len(project.Metadata.SuggestedKeywords) == 0 || len(project.Metadata.SuggestedSubReddits) == 0 {
+		p.logger.Info("suggesting keywords", zap.String("project_id", project.ID))
+		suggestions, usage, err := p.aiClient.SuggestKeywordsAndSubreddits(ctx, p.aiClient.GetAdvanceModel(), project, p.logger)
+		if err != nil {
+			p.logger.Error("failed to get keyword suggestions", zap.Error(err))
+		}
+
+		if suggestions != nil {
+			p.logger.Info("adding keyword suggestions",
+				zap.String("model_used", string(usage.Model)),
+				zap.Int("num_suggestions", len(suggestions.Keywords)),
+				zap.Int("num_subreddits", len(suggestions.Subreddits)))
+
+			for _, keyword := range suggestions.Keywords {
+				if keyword.Keyword == "" {
+					continue
+				}
+				project.Metadata.SuggestedKeywords = append(project.Metadata.SuggestedKeywords, keyword.Keyword)
+			}
+
+			for _, subreddit := range suggestions.Subreddits {
+				if subreddit.Subreddit == "" {
+					continue
+				}
+				if !strings.HasPrefix(subreddit.Subreddit, "r/") {
+					subreddit.Subreddit = "r/" + subreddit.Subreddit
+				}
+
+				project.Metadata.SuggestedSubReddits = append(project.Metadata.SuggestedSubReddits, subreddit.Subreddit)
+			}
+
+			// Update project metadata
+			p.db.UpdateProject(ctx, project)
+		}
+	}
+	// =====
+
 	projectProto, err := p.projectToProto(ctx, project)
 	if err != nil {
 		return nil, err
