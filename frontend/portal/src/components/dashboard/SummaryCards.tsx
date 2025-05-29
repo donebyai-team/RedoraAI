@@ -50,14 +50,18 @@ export function SummaryCards({ counts }: PropType) {
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">{(counts?.commentScheduled as number) > 0 ? "Comments Sent/Schedule" : "Comments Sent"}</p>
-              <h3 className="text-2xl font-bold">{counts?.commentScheduled ? `${counts.commentSent ?? "0"}/${counts.commentScheduled ?? "0"}` : `${counts?.commentSent ?? "0"}`}</h3>
+              <p className="text-sm font-medium text-muted-foreground">Comments Sent</p>
+              <h3 className="text-2xl font-bold">{counts?.commentSent ?? "0"}</h3>
             </div>
             <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
               <Send className="h-5 w-5 text-primary" />
             </div>
           </div>
-          {/* <p className="text-xs text-muted-foreground mt-2">+5% from yesterday</p> */}
+          {counts?.commentScheduled as number > 0 && (
+              <p className="text-xs text-muted-foreground mt-2">
+                {counts?.commentScheduled} Scheduled
+              </p>
+          )}
         </CardContent>
       </Card>
 
@@ -65,14 +69,18 @@ export function SummaryCards({ counts }: PropType) {
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">{(counts?.dmScheduled as number) > 0 ? "DM Sent/Schedule" : "DM Sent"}</p>
-              <h3 className="text-2xl font-bold">{counts?.dmScheduled ? `${counts.dmSent ?? "0"}/${counts.dmScheduled ?? "0"}` : `${counts?.dmSent ?? "0"}`}</h3>
+              <p className="text-sm font-medium text-muted-foreground">DM Sent</p>
+              <h3 className="text-2xl font-bold">{counts?.dmSent ?? "0"}</h3>
             </div>
             <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
               <ArrowUp className="h-5 w-5 text-primary" />
             </div>
           </div>
-          {/* <p className="text-xs text-muted-foreground mt-2">+0.04 from yesterday</p> */}
+          {counts?.dmScheduled as number > 0 && (
+              <p className="text-xs text-muted-foreground mt-2">
+                {counts?.dmScheduled} Scheduled
+              </p>
+          )}
         </CardContent>
       </Card>
     </div>
