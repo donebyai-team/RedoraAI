@@ -250,7 +250,6 @@ export function LeadFeed() {
                     <div className="flex items-center text-sm text-muted-foreground gap-2 mt-1">
                       {/* <span>{getSubredditName(subredditList, post?.sourceId ?? "")}</span> */}
                       <span>{post.metadata?.subredditPrefixed}</span>
-                      <>{console.log("###12", subredditList)}</>
                       <span>•</span>
                       <span>{getFormattedDate(post.postCreatedAt)}</span>
                       <span>•</span>
@@ -267,7 +266,7 @@ export function LeadFeed() {
 
                 {/* Last matched info */}
                 <div className="text-xs text-muted-foreground">
-                  Last matched: {post.createdAt ? getFormattedDate(post.createdAt) : "N/A"}
+                  Matched: {post.createdAt ? getFormattedDate(post.createdAt) : "N/A"}
                 </div>
 
                 {/* Snippet and AI suggestion */}
