@@ -45,6 +45,21 @@ func (f OrganizationFeatureFlags) GetSubscriptionPlanMetadata() SubscriptionPlan
 	return RedoraPlans[SubscriptionPlanTypeFREE].Metadata
 }
 
+func (f OrganizationFeatureFlags) GetMaxKeywordAllowed() int {
+	return f.GetSubscriptionPlanMetadata().MaxKeywords
+}
+
+func (f OrganizationFeatureFlags) GetMaxSourcesAllowed() int {
+	return f.GetSubscriptionPlanMetadata().MaxSources
+}
+
+func (f OrganizationFeatureFlags) GetSubscriptionPlan() SubscriptionPlanType {
+	if f.Subscription == nil {
+		return SubscriptionPlanTypeFREE
+	}
+	return f.Subscription.PlanID
+}
+
 // Defined by redora global or max allowed by plan, whichever is higher
 func (f OrganizationFeatureFlags) GetMaxLeadsPerDay() int64 {
 	return f.GetSubscriptionPlanMetadata().RelevantPosts.PerDay

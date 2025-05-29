@@ -20,7 +20,7 @@ export default function Page() {
         }}
         onPasswordlessVerified={async (jwt: JWT) => {
           return login(jwt).then(() => {
-            window.location.href = routes.app.home
+            window.location.href = routes.new.dashboard
           })
         }}
         onPasswordlessVerifyError={(errorMessage: string) => {

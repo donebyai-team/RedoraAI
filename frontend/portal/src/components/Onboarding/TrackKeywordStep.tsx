@@ -9,6 +9,7 @@ import {
     IconButton,
     Paper,
     Stack,
+    CircularProgress,
 } from "@mui/material";
 import { Plus } from "lucide-react";
 import StepperControls from "./StepperControls";
@@ -21,12 +22,12 @@ import {
     prevStep,
     setProject,
 } from "../../../store/Onboarding/OnboardingSlice";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useClientsContext } from "@doota/ui-core/context/ClientContext";
 import toast from "react-hot-toast";
 
-interface TrackKeywordFormValues {
+export interface TrackKeywordFormValues {
     keywords: string[];
     newKeyword: string;
 }
@@ -37,6 +38,7 @@ export default function TrackKeywordStep() {
     const project = useAppSelector((state: RootState) => state.stepper.project);
     const listOfSuggestedKeywords = project?.suggestedKeywords ?? [];
     const { portalClient } = useClientsContext();
+    const [suggestionLoading, setSuggestionLoading] = useState<boolean>(true);
     const [isLoading, setIsLoading] = useState(false);
 
     const {
@@ -112,6 +114,26 @@ export default function TrackKeywordStep() {
 
     const handleBack = useCallback(() => dispatch(prevStep()), [dispatch]);
 
+    useEffect(() => {
+        if (!project) return;
+
+        const fetchSuggestions = async () => {
+            setSuggestionLoading(true);
+            try {
+                const result = await portalClient.suggestKeywordsAndSources({});
+                dispatch(setProject(result));
+            } catch (err: any) {
+                const message = err?.response?.data?.message || err.message || "Failed to fetch suggestions";
+                toast.error(message);
+            } finally {
+                setSuggestionLoading(false);
+            }
+        };
+
+        fetchSuggestions();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
     const filteredSuggestions = listOfSuggestedKeywords.filter((suggestion) => !keywords.some((keyword) => keyword.toLowerCase() === suggestion.toLowerCase()));
 
     return (
@@ -133,6 +155,7 @@ export default function TrackKeywordStep() {
                                     handleAddKeyword();
                                 }
                             }}
+                            disabled={suggestionLoading}
                             InputProps={{
                                 endAdornment: (
                                     <InputAdornment position="end">
@@ -146,14 +169,7 @@ export default function TrackKeywordStep() {
                     )}
                 />
 
-                <Box
-                    sx={{
-                        display: "flex",
-                        flexWrap: "wrap",
-                        gap: 0.5,
-                        px: 0.5,
-                    }}
-                >
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, px: 0.5 }}>
                     {keywords.map((keyword, index) => (
                         <Chip
                             key={`${keyword}-${index}`}
@@ -163,42 +179,33 @@ export default function TrackKeywordStep() {
                             variant="outlined"
                             size="small"
                             sx={{ fontSize: "0.75rem", py: 0.5 }}
+                            disabled={suggestionLoading}
                         />
                     ))}
                 </Box>
 
                 {filteredSuggestions?.length > 0 && (
-                    <Paper
-                        variant="outlined"
-                        sx={{
-                            p: 1.5,
-                            bgcolor: "background.default",
-                            mt: 1,
-                        }}
-                    >
-                        <Typography
-                            variant="body2"
-                            gutterBottom
-                            sx={{ fontWeight: 500 }}
-                        >
+                    <Paper variant="outlined" sx={{ p: 1.5, bgcolor: "background.default", mt: 1 }}>
+                        <Typography variant="body2" gutterBottom sx={{ fontWeight: 500 }}>
                             {`Suggested Keywords as per ${project?.name}`}
                         </Typography>
-                        <Stack
-                            direction="row"
-                            spacing={0.5}
-                            flexWrap="wrap"
-                            gap={0.5}
-                        >
-                            {filteredSuggestions.map((suggestion, index) => (
-                                <Chip
-                                    key={index}
-                                    label={suggestion}
-                                    onClick={() => addKeyword(suggestion)}
-                                    size="small"
-                                    sx={{ fontSize: "0.7rem", py: 0.3 }}
-                                />
-                            ))}
-                        </Stack>
+                        {suggestionLoading ? (
+                            <Stack display={"flex"} justifyContent={"center"} alignItems={"center"}>
+                                <CircularProgress disableShrink size={30} sx={{ my: 6, color: 'grey.600' }} />
+                            </Stack>
+                        ) : (
+                            <Stack direction="row" spacing={0.5} flexWrap="wrap" gap={0.5}>
+                                {filteredSuggestions.map((suggestion, index) => (
+                                    <Chip
+                                        key={index}
+                                        label={suggestion}
+                                        onClick={() => addKeyword(suggestion)}
+                                        size="small"
+                                        sx={{ fontSize: "0.7rem", py: 0.3 }}
+                                    />
+                                ))}
+                            </Stack>
+                        )}
                     </Paper>
                 )}
             </Stack>
