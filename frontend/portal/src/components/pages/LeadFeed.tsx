@@ -1,21 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {useEffect, useState} from "react";
 // import { toast } from "@/components/ui/use-toast";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent } from "@/components/ui/card";
-import { LeadFeed as LeadFeedComponent } from "@/components/dashboard/LeadFeed";
-import { RelevancyScoreSidebar } from "@/components/dashboard/RelevancyScoreSidebar";
-import { FilterControls } from "@/components/dashboard/FilterControls";
-import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
-import { DashboardFooter } from "@/components/dashboard/DashboardFooter";
-import { RedditAccount } from "@/components/reddit-accounts/RedditAccountBadge";
-import { useClientsContext } from "@doota/ui-core/context/ClientContext";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { setError, setIsLoading, setLeadStatusFilter, setNewTabList } from "@/store/Lead/leadSlice";
-import { toast } from "@/components/ui/use-toast";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LeadStatus } from "@doota/pb/doota/core/v1/core_pb";
+import {Skeleton} from "@/components/ui/skeleton";
+import {Card, CardContent} from "@/components/ui/card";
+import {LeadFeed as LeadFeedComponent} from "@/components/dashboard/LeadFeed";
+import {RelevancyScoreSidebar} from "@/components/dashboard/RelevancyScoreSidebar";
+import {FilterControls} from "@/components/dashboard/FilterControls";
+import {DashboardHeader} from "@/components/dashboard/DashboardHeader";
+import {DashboardFooter} from "@/components/dashboard/DashboardFooter";
+import {RedditAccount} from "@/components/reddit-accounts/RedditAccountBadge";
+import {useClientsContext} from "@doota/ui-core/context/ClientContext";
+import {useAppDispatch, useAppSelector} from "@/store/hooks";
+import {setError, setIsLoading, setLeadStatusFilter, setNewTabList} from "@/store/Lead/leadSlice";
+import {toast} from "@/components/ui/use-toast";
+import {Tabs, TabsList, TabsTrigger} from "@/components/ui/tabs";
+import {LeadStatus} from "@doota/pb/doota/core/v1/core_pb";
 
 export default function LeadFeed() {
 
@@ -127,7 +127,7 @@ export default function LeadFeed() {
   const handleLeadStatusFilterChange = (value: string) => {
     setActiveTab(value);
     const map: Record<string, LeadStatus> = {
-      "All": 0,
+      "New": LeadStatus.NEW,
       "Responded": LeadStatus.COMPLETED,
       "Skipped": LeadStatus.NOT_RELEVANT,
       "Saved": LeadStatus.LEAD,
@@ -154,14 +154,14 @@ export default function LeadFeed() {
 
               <div className="flex-1 flex flex-col space-y-4 mt-6">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-background/95 py-2">
-                  <h2 className="text-xl font-semibold">Active Leads</h2>
+                  <h2 className="text-xl font-semibold">Relevant Posts</h2>
                   <FilterControls isLeadStatusFilter={false} />
                 </div>
 
                 {/* Tabs for filtering communications */}
                 <Tabs value={activeTab} onValueChange={handleLeadStatusFilterChange} className="w-full">
                   <TabsList className="grid w-full grid-cols-4 bg-secondary/50">
-                    <TabsTrigger value="All" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary">All</TabsTrigger>
+                    <TabsTrigger value="New" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary">New</TabsTrigger>
                     <TabsTrigger value="Responded" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary">Responded</TabsTrigger>
                     <TabsTrigger value="Skipped" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary">Skipped</TabsTrigger>
                     <TabsTrigger value="Saved" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary">Saved</TabsTrigger>
