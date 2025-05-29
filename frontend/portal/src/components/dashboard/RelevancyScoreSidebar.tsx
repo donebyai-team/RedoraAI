@@ -65,9 +65,9 @@ export function RelevancyScoreSidebar({ accounts = [], defaultAccountId = "", on
           <Slider
             value={[relevancy_score]}
             onValueChange={handleRelevancyChange}
-            min={70}
+            min={80}
             max={100}
-            step={10}
+            step={5}
           />
           <p className="mt-1 text-xs text-muted-foreground">
             Only show leads with score above this threshold

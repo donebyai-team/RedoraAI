@@ -132,6 +132,7 @@ export default function Dashboard() {
           ...(subReddit && { subReddit }),
           ...(leadStatusFilter && { status: leadStatusFilter }),
           dateRange,
+          pageCount: 10
         });
         const allLeads = result.leads ?? [];
         const counts = result?.analysis;
@@ -219,10 +220,10 @@ export default function Dashboard() {
                 ) : (
                   <div className="flex-1">
                     <LeadFeed
-                      // onAction={handleAction}
-                      // redditAccounts={redditAccounts}
-                      // defaultAccountId={defaultAccountId}
-                      // onAccountChange={handlePostAccountChange}
+                    // onAction={handleAction}
+                    // redditAccounts={redditAccounts}
+                    // defaultAccountId={defaultAccountId}
+                    // onAccountChange={handlePostAccountChange}
                     />
                   </div>
                 )}

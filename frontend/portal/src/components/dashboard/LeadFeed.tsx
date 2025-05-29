@@ -2,11 +2,14 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
+  Brain,
   MessageSquare,
   Save,
   Send,
+  ThumbsUp,
   // X,
   User,
+  X,
   // AlertTriangle 
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -14,6 +17,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 // import { RedditAccountSelector } from "@/components/reddit-accounts/RedditAccountSelector";
 import {
   Tooltip,
+  TooltipContent,
   // TooltipContent,
   TooltipProvider,
   TooltipTrigger,
@@ -21,47 +25,36 @@ import {
 import { toast } from "@/components/ui/use-toast";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { RootState } from "@/store/store";
-import { getFormattedDate, getSubredditName } from "@/utils/format";
+import { getFormattedDate } from "@/utils/format";
 import Link from "next/link";
 import { HtmlBodyRenderer, HtmlTitleRenderer, MarkdownRenderer } from "../Html/HtmlRenderer";
 import { LeadStatus } from "@doota/pb/doota/core/v1/core_pb";
 import { portalClient } from "@/services/grpc";
 import { setNewTabList } from "@/store/Lead/leadSlice";
-// import { RedditAccountSelector } from "../reddit-accounts/RedditAccountSelector";
 
-// interface LeadPost {
-//   id: string;
-//   title: string;
-//   snippet: string;
-//   subreddit: string;
-//   time: string;
-//   score: number;
-//   author: string;
-//   karma: string;
-//   tags: string[];
-//   aiSuggestion: string;
-//   aiDmSuggestion: string;
-//   assignedAccountId: string;
-//   lastReplied?: Date | null;
-// }
+const tabNameMap: Record<LeadStatus, string> = {
+  [LeadStatus.NEW]: "All",
+  [LeadStatus.COMPLETED]: "Responded",
+  [LeadStatus.NOT_RELEVANT]: "Skipped",
+  [LeadStatus.LEAD]: "Saved",
+};
 
-// interface LeadFeedProps {
-//   onAction: (action: string, postId: string) => void;
-//   redditAccounts?: RedditAccount[];
-//   defaultAccountId?: string;
-//   onAccountChange?: (postId: string, accountId: string) => void;
-// }
+export function getTabName(value: LeadStatus | null | undefined): string {
+  if (!value) {
+    return "All";
+  }
+  return tabNameMap[value];
+}
 
 export function LeadFeed() {
 
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  // const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedLeadId, setSelectedLeadId] = useState<string>("");
   // const [recentlyUsedAccounts, setRecentlyUsedAccounts] = useState<Record<string, Date>>({});
-  const { newTabList } = useAppSelector((state: RootState) => state.lead);
+  const { newTabList, leadStatusFilter } = useAppSelector((state: RootState) => state.lead);
   const { subredditList } = useAppSelector((state: RootState) => state.source);
   const { accounts: redditAccounts } = useAppSelector((state) => state.reddit);
   const dispatch = useAppDispatch();
-
 
   // // Sample data with assigned Reddit accounts and last replied timestamp
   // const posts: LeadPost[] = [
@@ -111,16 +104,16 @@ export function LeadFeed() {
   //     lastReplied: new Date(Date.now() - 1000 * 60 * 10) // 10 minutes ago
   //   }
   // ];
-  
+
   const getScoreColor = (score: number) => {
     if (score >= 90) return "text-green-500 bg-green-50";
     if (score >= 70) return "text-amber-500 bg-amber-50";
     return "text-red-500 bg-red-50";
   };
 
-  const toggleExpand = (id: string) => {
-    setExpandedId(expandedId === id ? null : id);
-  };
+  // const toggleExpand = (id: string) => {
+  //   setExpandedId(expandedId === id ? null : id);
+  // };
 
   // // Function to suggest alternative account if current one was recently used
   // const shouldSuggestAccountRotation = (post: LeadPost) => {
@@ -190,19 +183,6 @@ export function LeadFeed() {
   //   // eslint-disable-next-line react-hooks/exhaustive-deps
   // }, []);
 
-  // If no posts with comments are available
-  if (newTabList.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12 text-center">
-        <MessageSquare className="h-12 w-12 text-muted-foreground mb-4" />
-        <h3 className="text-lg font-medium mb-2">No posts yet</h3>
-        <p className="text-muted-foreground max-w-md">
-          When Redora.ai comments on posts, they will appear here. Check back later or adjust your filter settings.
-        </p>
-      </div>
-    );
-  }
-
   const handleLeadStatusUpdate = async (status: LeadStatus, leadId: string) => {
     setSelectedLeadId(leadId);
     try {
@@ -210,10 +190,10 @@ export function LeadFeed() {
 
       const allLeads = newTabList.filter((lead) => lead.id !== leadId);
       dispatch(setNewTabList(allLeads));
-      toast({
-        title: "Post saved",
-        description: "This post has been saved for later.",
-      });
+      // toast({
+      //   title: "Post saved",
+      //   description: "This post has been saved for later.",
+      // });
     } catch (err: any) {
       const message = err?.response?.data?.message || err.message || "Something went wrong";
       toast({
@@ -224,6 +204,15 @@ export function LeadFeed() {
       setSelectedLeadId("");
     }
   };
+
+  if (newTabList?.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-center">
+        <MessageSquare className="h-12 w-12 text-muted-foreground mb-4" />
+        <h4 className="text-lg font-medium mb-2">{`Sit back and relax, we are finding relevant leads for you. We will notify you once it’s ready.`}</h4>
+      </div>
+    );
+  }
 
   return (
     <ScrollArea className="h-[calc(100vh-300px)]">
@@ -239,6 +228,18 @@ export function LeadFeed() {
                       <div className={`text-sm font-bold px-2 py-1 rounded-md ${getScoreColor(post.relevancyScore)}`}>
                         {post.relevancyScore}%
                       </div>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="cursor-pointer">
+                              <Brain className="h-4 w-4 text-primary" />
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-[300px]">
+                            <MarkdownRenderer data={post.metadata?.chainOfThought || ""} />
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
 
                     <Link href={post.metadata?.postUrl || "#"} target="_blank">
@@ -247,7 +248,9 @@ export function LeadFeed() {
                       </h3>
                     </Link>
                     <div className="flex items-center text-sm text-muted-foreground gap-2 mt-1">
-                      <span>{getSubredditName(subredditList, post?.sourceId ?? "")}</span>
+                      {/* <span>{getSubredditName(subredditList, post?.sourceId ?? "")}</span> */}
+                      <span>{post.metadata?.subredditPrefixed}</span>
+                      <>{console.log("###12", subredditList)}</>
                       <span>•</span>
                       <span>{getFormattedDate(post.postCreatedAt)}</span>
                       <span>•</span>
@@ -262,39 +265,74 @@ export function LeadFeed() {
                   <HtmlBodyRenderer htmlString={post.metadata?.descriptionHtml || ""} />
                 </ScrollArea>
 
+                {/* Last matched info */}
+                <div className="text-xs text-muted-foreground">
+                  Last matched: {post.createdAt ? getFormattedDate(post.createdAt) : "N/A"}
+                </div>
+
                 {/* Snippet and AI suggestion */}
                 {post.metadata?.suggestedComment && (
                   <div className="bg-secondary/50 rounded-md p-3">
                     <div className="flex items-center gap-2 text-sm font-medium mb-2">
                       <MessageSquare className="h-4 w-4" />
-                      <span>AI Suggested Comment</span>
+                      <span className="text-primary">
+                        {post?.metadata?.automatedCommentUrl
+                          ? "Commented By AI"
+                          : post?.metadata?.commentScheduledAt
+                            ? "Scheduled by AI"
+                            : "Suggested Comment"}
+                      </span>
+                      {(post?.metadata?.automatedCommentUrl || post?.metadata?.commentScheduledAt) && (
+                        <span className="text-xs text-muted-foreground ml-auto">
+                          {getFormattedDate(post?.metadata?.commentScheduledAt)}
+                        </span>
+                      )}
+
                     </div>
                     <p className="text-sm">
                       <MarkdownRenderer data={post.metadata?.suggestedComment || ""} />
                     </p>
+
+                    <Link
+                      href={`https://www.reddit.com/${post.metadata.subredditPrefixed}/about/rules`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-1 text-blue-500 underline"
+                    >
+                      As per community guidelines
+                    </Link>
                   </div>
                 )}
 
                 {/* Expanded DM suggestion */}
                 {post.metadata?.suggestedDm && (<>
-                  {expandedId === post.id && (
-                    <div className="bg-secondary/50 rounded-md p-3">
-                      <div className="flex items-center gap-2 text-sm font-medium mb-2">
-                        <Send className="h-4 w-4" />
-                        <span>AI Suggested DM</span>
-                      </div>
-                      <p className="text-sm">
-                        <MarkdownRenderer data={post.metadata?.suggestedDm || ""} />
-                      </p>
+                  {/* {expandedId === post.id && ( */}
+                  <div className="bg-secondary/50 rounded-md p-3 border-l-4 border-primary">
+                    <div className="flex items-center gap-2 text-sm font-medium mb-2">
+                      <MessageSquare className="h-4 w-4 text-primary" />
+                      <span className="text-primary">
+                        {post?.metadata?.automatedDmSent
+                          ? "DM Sent By AI"
+                          : post?.metadata?.dmScheduledAt
+                            ? "Scheduled by AI"
+                            : "Suggested DM"}
+                      </span>
+                      {(post?.metadata?.automatedDmSent || post?.metadata?.dmScheduledAt) && (
+                        <span className="text-xs text-muted-foreground ml-auto">
+                          {getFormattedDate(post?.metadata.dmScheduledAt)}
+                        </span>
+                      )}
                     </div>
-                  )}
+                    <MarkdownRenderer data={post.metadata?.suggestedDm || ""} />
+                  </div>
+                  {/* )} */}
                 </>)}
 
                 {/* Reddit account selector with rotation suggestion if needed */}
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2 text-sm">
                     <User className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">Replying as:</span>
+                    <span className="text-muted-foreground">Account:</span>
 
                     <TooltipProvider>
                       <Tooltip>
@@ -340,10 +378,10 @@ export function LeadFeed() {
                             post.metadata?.automatedCommentUrl || post.metadata?.postUrl || "#"
                           )
                         }
-                        className="inline-flex items-center justify-center text-sm font-medium h-9 px-4 py-2 rounded-md border border-input bg-background hover:bg-accent disabled:opacity-50 disabled:pointer-events-none"
+                        className={`inline-flex items-center justify-center text-sm font-medium h-9 px-4 py-2 rounded-md border border-input ${post.metadata?.automatedCommentUrl ? "bg-green-600 text-white" : "bg-background hover:bg-accent"} disabled:opacity-50 disabled:pointer-events-none`}
                       >
                         <MessageSquare className="h-4 w-4 mr-2" />
-                        Post Comment
+                        {post.metadata?.automatedCommentUrl ? "View Comment" : "Copy & open comment"}
                       </button>
                     </div>
                   )}
@@ -357,31 +395,50 @@ export function LeadFeed() {
                             post.metadata?.dmUrl ?? "#"
                           )
                         }
-                        className="inline-flex items-center justify-center text-sm font-medium h-9 px-4 py-2 rounded-md border border-input bg-background hover:bg-accent disabled:opacity-50 disabled:pointer-events-none"
+                        className={`inline-flex items-center justify-center text-sm font-medium h-9 px-4 py-2 rounded-md border border-input ${post.metadata?.automatedCommentUrl ? "bg-green-600 text-white" : "bg-background hover:bg-accent"} disabled:opacity-50 disabled:pointer-events-none`}
                       >
                         <Send className="h-4 w-4 mr-2" />
-                        Send DM
+                        {post.metadata?.automatedDmSent ? "View DM" : "Copy & open DM"}
                       </button>
                     </div>
                   )}
 
-                  <button
-                    onClick={() => handleLeadStatusUpdate(LeadStatus.LEAD, post.id)}
-                    className="inline-flex items-center justify-center text-sm font-medium h-9 px-4 py-2 rounded-md border border-input bg-background hover:bg-accent"
-                    disabled={post.id === selectedLeadId}
-                  >
-                    <Save className="h-4 w-4 mr-2" />
-                    Save
-                  </button>
+                  {(leadStatusFilter === null) && (<>
+                    <button
+                      onClick={() => handleLeadStatusUpdate(LeadStatus.LEAD, post.id)}
+                      className="inline-flex items-center justify-center text-sm font-medium h-9 px-4 py-2 rounded-md border border-input bg-background hover:bg-accent"
+                      disabled={post.id === selectedLeadId}
+                    >
+                      <Save className="h-4 w-4 mr-2" />
+                      Save as Lead
+                    </button>
 
-                  {post.metadata?.suggestedDm &&
+                    <button
+                      onClick={() => handleLeadStatusUpdate(LeadStatus.COMPLETED, post.id)}
+                      className="inline-flex items-center justify-center text-sm font-medium h-9 px-4 py-2 rounded-md border border-input bg-background hover:bg-accent"
+                      disabled={post.id === selectedLeadId}
+                    >
+                      <ThumbsUp className="h-4 w-4 mr-2" />
+                      Mark as Responded
+                    </button>
+
+                    <button
+                      onClick={() => handleLeadStatusUpdate(LeadStatus.NOT_RELEVANT, post.id)}
+                      className="inline-flex items-center justify-center text-sm font-medium h-9 px-4 py-2 rounded-md border border-input bg-background hover:bg-accent"
+                    >
+                      <X className="h-4 w-4 mr-2" />
+                      Skip
+                    </button>
+                  </>)}
+
+                  {/* {post.metadata?.suggestedDm &&
                     <button
                       onClick={() => toggleExpand(post.id)}
                       className="ml-auto text-sm text-primary hover:underline"
                     >
                       {expandedId === post.id ? 'Hide DM suggestion' : 'Show DM suggestion'}
                     </button>
-                  }
+                  } */}
                 </div>
               </div>
             </CardContent>

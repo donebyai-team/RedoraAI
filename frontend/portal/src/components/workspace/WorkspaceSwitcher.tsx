@@ -16,6 +16,8 @@ import { Button } from "@/components/ui/button";
 // import Link from "next/link";
 import { useAuth } from "@doota/ui-core/hooks/useAuth";
 import { Project } from "@doota/pb/doota/core/v1/core_pb";
+import { isPlatformAdmin } from "@doota/ui-core/helper/role";
+import { useOrganization } from "@doota/ui-core/hooks/useOrganization";
 
 interface Workspace {
   id: string;
@@ -25,19 +27,13 @@ interface Workspace {
 export function WorkspaceSwitcher() {
 
   const { user } = useAuth()
+  const [currentOrg, setCurrentOrganization] = useOrganization();
 
-  // Mock workspaces - would be fetched from API in a real implementation
-  // const workspaces: Workspace[] = [
-  //   { id: "w1", name: "Personal Workspace" },
-  //   { id: "w2", name: "Agency Clients" },
-  //   { id: "w3", name: "Marketing Team" },
-  // ];
-
+  const canChangeOrg = user && isPlatformAdmin(user) && user.organizations.length > 1;
   const workspaces: Project[] = user?.projects ?? [];
-
   const [currentWorkspace, setCurrentWorkspace] = useState<Workspace>(workspaces[0]);
 
-  return (
+  return (<>
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="sm" className="h-9 gap-1 px-2">
@@ -45,7 +41,7 @@ export function WorkspaceSwitcher() {
             Workspace:
           </span>
           <span className="text-sm font-medium max-w-[150px] truncate">
-            {currentWorkspace.name}
+            {currentWorkspace?.name}
           </span>
           <ChevronDown className="h-4 w-4 text-muted-foreground" />
         </Button>
@@ -57,7 +53,7 @@ export function WorkspaceSwitcher() {
             onClick={() => setCurrentWorkspace(workspace)}
             className="cursor-pointer flex items-center justify-between"
           >
-            <span className="truncate">{workspace.name}</span>
+            <span className="truncate">{workspace?.name}</span>
             {currentWorkspace.id === workspace.id && (
               <span className="w-2 h-2 rounded-full bg-primary ml-2"></span>
             )}
@@ -78,5 +74,39 @@ export function WorkspaceSwitcher() {
         </DropdownMenuItem> */}
       </DropdownMenuContent>
     </DropdownMenu>
-  );
+
+    {user && isPlatformAdmin(user) && (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="sm" className="h-9 gap-1 px-2 ml-2">
+            <span className="text-sm font-medium max-w-[150px] truncate">
+              {currentOrg?.name}
+            </span>
+            {canChangeOrg && (
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            )}
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="max-h-[300px] overflow-y-auto">
+          {user.organizations.map((workspace) => (
+            <DropdownMenuItem
+              key={workspace.id}
+              onClick={() => {
+                setCurrentOrganization(workspace)
+                  .then(() => {
+                    window.location.reload()
+                  });
+              }}
+              className="cursor-pointer flex items-center justify-between"
+            >
+              <span className="truncate">{workspace?.name}</span>
+              {currentOrg?.id === workspace.id && (
+                <span className="w-2 h-2 rounded-full bg-primary ml-2"></span>
+              )}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    )}
+  </>);
 }
