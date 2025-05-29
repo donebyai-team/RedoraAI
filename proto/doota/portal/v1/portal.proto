@@ -62,6 +62,7 @@ message GetLeadsByStatusRequest {
   doota.core.v1.LeadStatus status = 1;
   int32 page_no = 3;
   DateRangeFilter date_range = 4;
+  int32 page_count = 5;
 }
 
 enum DateRangeFilter {
@@ -77,6 +78,7 @@ message GetRelevantLeadsRequest {
   int32 page_no = 3;
   DateRangeFilter date_range = 4;
   doota.core.v1.LeadStatus status = 5;
+  int32 page_count = 6;
 }
 
 message GetLeadsResponse {

@@ -403,12 +403,17 @@ func (p *Portal) GetRelevantLeads(ctx context.Context, c *connect.Request[pbport
 		return nil, err
 	}
 
+	if c.Msg.PageCount <= 0 {
+		c.Msg.PageCount = pageCount
+	}
+
 	if status != models.LeadStatusNEW {
 		return p.GetLeadsByStatus(ctx, &connect.Request[pbportal.GetLeadsByStatusRequest]{
 			Msg: &pbportal.GetLeadsByStatusRequest{
 				Status:    c.Msg.Status,
 				PageNo:    c.Msg.PageNo,
 				DateRange: c.Msg.DateRange,
+				PageCount: c.Msg.PageCount,
 			},
 		})
 	}
@@ -431,7 +436,7 @@ func (p *Portal) GetRelevantLeads(ctx context.Context, c *connect.Request[pbport
 	leads, err := p.db.GetLeadsByRelevancy(ctx, project.ID, datastore.LeadsFilter{
 		RelevancyScore: c.Msg.RelevancyScore,
 		Sources:        subReddits,
-		Limit:          pageCount,
+		Limit:          int(c.Msg.PageCount),
 		DateRange:      c.Msg.DateRange,
 		Offset:         int(c.Msg.PageNo),
 	})
@@ -521,13 +526,17 @@ func (p *Portal) GetLeadsByStatus(ctx context.Context, c *connect.Request[pbport
 		return nil, err
 	}
 
+	if c.Msg.PageCount <= 0 {
+		c.Msg.PageCount = pageCount
+	}
+
 	status, err := models.ParseLeadStatus(c.Msg.Status.String())
 	if err != nil {
 		return nil, err
 	}
 	leads, err := p.db.GetLeadsByStatus(ctx, project.ID, datastore.LeadsFilter{
 		Status:    status,
-		Limit:     pageCount,
+		Limit:     int(c.Msg.PageCount),
 		DateRange: c.Msg.DateRange,
 		Offset:    int(c.Msg.PageNo), // starting with 0
 	})
@@ -540,7 +549,12 @@ func (p *Portal) GetLeadsByStatus(ctx context.Context, c *connect.Request[pbport
 		leadsProto = append(leadsProto, new(pbcore.Lead).FromModel(redactPlatformOnlyMetadata(actor.Role, lead)))
 	}
 
-	return connect.NewResponse(&pbportal.GetLeadsResponse{Leads: leadsProto}), nil
+	analysis, err := redora.NewLeadAnalysis(p.db, p.logger).GenerateLeadAnalysis(ctx, project.ID, c.Msg.DateRange)
+	if err != nil {
+		return nil, err
+	}
+
+	return connect.NewResponse(&pbportal.GetLeadsResponse{Leads: leadsProto, Analysis: analysis}), nil
 }
 
 func (p *Portal) UpdateLeadStatus(ctx context.Context, c *connect.Request[pbportal.UpdateLeadStatusRequest]) (*connect.Response[emptypb.Empty], error) {
