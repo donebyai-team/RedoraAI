@@ -197,7 +197,7 @@ func (s *SlackNotifier) SendWelcomeEmail(ctx context.Context, orgID string) {
 	params := &resend.SendEmailRequest{
 		From:    "RedoraAI <welcome@alerts.redoraai.com>",
 		To:      []string{users[0].Email},
-		Cc:      []string{"shashank@donebyai.team"},
+		Cc:      []string{"shashank@donebyai.team", "adarsh@redoraai.com"},
 		Subject: "🔥Welcome aboard — here’s what to do next",
 		Html:    htmlBody,
 	}

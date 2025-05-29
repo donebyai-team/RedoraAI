@@ -124,6 +124,11 @@ export declare type GetLeadsByStatusRequest = Message<"doota.portal.v1.GetLeadsB
    * @generated from field: doota.portal.v1.DateRangeFilter date_range = 4;
    */
   dateRange: DateRangeFilter;
+
+  /**
+   * @generated from field: int32 page_count = 5;
+   */
+  pageCount: number;
 };
 
 /**
@@ -160,6 +165,11 @@ export declare type GetRelevantLeadsRequest = Message<"doota.portal.v1.GetReleva
    * @generated from field: doota.core.v1.LeadStatus status = 5;
    */
   status: LeadStatus;
+
+  /**
+   * @generated from field: int32 page_count = 6;
+   */
+  pageCount: number;
 };
 
 /**
