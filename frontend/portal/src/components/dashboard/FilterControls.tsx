@@ -1,9 +1,8 @@
-
 // import { Filter } from "lucide-react";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { setDateRange, setLeadStatusFilter } from "@/store/Lead/leadSlice";
-import { LeadStatus } from "@doota/pb/doota/core/v1/core_pb";
-import { DateRangeFilter } from "@doota/pb/doota/portal/v1/portal_pb";
+import {useAppDispatch, useAppSelector} from "@/store/hooks";
+import {setDateRange, setLeadStatusFilter} from "@/store/Lead/leadSlice";
+import {LeadStatus} from "@doota/pb/doota/core/v1/core_pb";
+import {DateRangeFilter} from "@doota/pb/doota/portal/v1/portal_pb";
 
 export function FilterControls({ isLeadStatusFilter = true }: { isLeadStatusFilter?: boolean }) {
 
@@ -22,7 +21,7 @@ export function FilterControls({ isLeadStatusFilter = true }: { isLeadStatusFilt
 
   const handleLeadStatusFilterChange = (value: string) => {
     const map: Record<string, LeadStatus> = {
-      "0": 0,
+      "0": LeadStatus.NEW,
       "1": LeadStatus.COMPLETED,
       "2": LeadStatus.NOT_RELEVANT,
       "3": LeadStatus.LEAD,
@@ -40,7 +39,7 @@ export function FilterControls({ isLeadStatusFilter = true }: { isLeadStatusFilt
             // value={leadStatusFilter ?? ""}
             onChange={(event) => handleLeadStatusFilterChange(event.target.value)}
           >
-            <option value="0">All Posts</option>
+            <option value="0">New</option>
             <option value="1">Responded</option>
             <option value="2">Skipped</option>
             <option value="3">Saved</option>
