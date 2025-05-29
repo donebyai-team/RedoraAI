@@ -46,6 +46,13 @@ func (p *Portal) protoIntegration(integration *models.Integration) *pbportal.Int
 				},
 			},
 		}
+	case models.IntegrationTypeREDDITDMLOGIN:
+		return &pbportal.Integration{
+			Id:             integration.ID,
+			OrganizationId: integration.OrganizationID,
+			Type:           pbportal.IntegrationType_INTEGRATION_TYPE_REDDIT_DM_LOGIN,
+			Status:         mapIntegrationState(integration.State),
+		}
 	//case models.IntegrationTypeGOOGLE:
 	//	return p.resolveGoogleIntegration(ctx, integration)
 	default:

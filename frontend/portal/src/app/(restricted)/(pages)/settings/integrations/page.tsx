@@ -9,7 +9,7 @@ import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 import Paper from '@mui/material/Paper'
 import { useAuth, useAuthUser } from '@doota/ui-core/hooks/useAuth'
-import { IntegrationType, Integration } from '@doota/pb/doota/portal/v1/portal_pb'
+import { IntegrationType, Integration, IntegrationState } from '@doota/pb/doota/portal/v1/portal_pb'
 import { FallbackSpinner } from '../../../../../atoms/FallbackSpinner'
 import { Button } from '../../../../../atoms/Button'
 import { portalClient } from '../../../../../services/grpc'
@@ -97,6 +97,7 @@ export default function Page() {
 
   const [loading, setLoading] = useState(true)
   const [integrations, setIntegrations] = useState<Integration[]>([])
+  const [isConnecting, setIsConnecting] = useState(false)
 
   const org = getOrganization();
 
@@ -118,6 +119,75 @@ export default function Page() {
         setLoading(false);
       });
   }, []);
+
+  const getIntegrationByType = (
+    integrations: Integration[],
+    integrationType: IntegrationType
+  ): Integration | undefined => {
+    return integrations.find((integration) => integration.type === integrationType && integration.status == IntegrationState.ACTIVE);
+  };
+
+  const handleConnectReddit = async () => {
+    try {
+      setIsConnecting(true)
+      const abortController = new AbortController();
+      const response = portalClient.connectReddit({}, { signal: abortController.signal });
+
+      let popup: Window | null = null;
+      let streamClosed = false;
+
+      // Set interval to check if popup closed manually
+      const popupCheckInterval = setInterval(() => {
+        if (popup && popup.closed && !streamClosed) {
+          // User closed popup before connection finished
+          console.log("Popup closed manually, canceling stream...");
+          // Cancel the stream here if possible
+          // Note: Depending on your gRPC lib, this might be a cancel() method or similar
+          // For example: response.cancel();
+
+          setIsConnecting(false);
+          clearInterval(popupCheckInterval);
+          streamClosed = true;
+          abortController.abort(); // ⛔ cancels the stream
+        }
+      }, 500); // check every 500ms
+
+      for await (const msg of response) {
+        if (msg.url) {
+          // Open the Reddit login page in a popup
+          popup = window.open(msg.url, "_blank", "width=600,height=800");
+        }
+      }
+
+      // Stream finished normally
+      streamClosed = true;
+      clearInterval(popupCheckInterval);
+      // Stream has ended successfully
+      if (popup && !popup.closed) {
+        popup.close();
+      }
+
+      // Refresh integrations to reflect the newly connected status
+      const res = await portalClient.getIntegrations({})
+      setIntegrations(res.integrations)
+
+      // Optionally show a success message or refetch integration status
+      toast.success("Reddit connected successfully");
+    } catch (err: any) {
+      const message = err?.response?.data?.message || err.message || "Something went wrong";
+      toast.error(message);
+    } finally {
+      setIsConnecting(false)
+    }
+  };
+
+  const handleDisconnectReddit = () => {
+    // Here you would call the API to disconnect/remove integration
+    // For demo, just remove the Reddit DM integration from state:
+    setIntegrations((prev) =>
+      prev.filter((i) => i.type !== IntegrationType.REDDIT_DM_LOGIN)
+    )
+  }
 
   const openOauthConsentScreen = (integrationType: IntegrationType) => {
     portalClient
@@ -202,20 +272,80 @@ export default function Page() {
               <TableRow>
                 <TableCell sx={{ fontWeight: "medium" }}>Provider</TableCell>
                 <TableCell sx={{ fontWeight: "medium" }}>Username</TableCell>
+                <TableCell /> {/* Empty header for action column */}
               </TableRow>
             </TableHead>
             <TableBody>
-              {integrations.map((row, index) => (
-                <TableRow key={index}>
-                  <TableCell>Reddit</TableCell>
-                  <TableCell>{row.details.value?.userName}</TableCell>
-                </TableRow>
-              ))}
+              {(() => {
+                const redditIntegration = getIntegrationByType(integrations, IntegrationType.REDDIT);
+                if (redditIntegration) {
+                  return (
+                    <TableRow key="reddit">
+                      <TableCell>Reddit</TableCell>
+                      <TableCell>{redditIntegration.details?.value?.userName || '—'}</TableCell>
+                      <TableCell align="right">
+                        <Button
+                          color="error"
+                          variant="outlined"
+                          size="small"
+                          onClick={() => handleDisconnectReddit()}
+                        >
+                          Disconnect
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                }
+                return null;
+              })()}
             </TableBody>
           </Table>
         </TableContainer>
 
+        {/* DM automation settings */}
         <Card sx={{ p: 4, mt: 5 }} component={Paper}>
+          <CardContent>
+            <Box display="flex" alignItems="center" gap={1} mb={2}>
+              <Typography variant="h4" fontWeight="bold">
+                DM Automation Settings
+              </Typography>
+            </Box>
+
+            <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+              Manage your Reddit DM automation preferences.
+            </Typography>
+
+            <Box display="flex" alignItems="center" gap={2}>
+              {getIntegrationByType(integrations, IntegrationType.REDDIT_DM_LOGIN)?.status === IntegrationState.ACTIVE ? (
+                <>
+                  <Typography variant="body2" color="green" fontWeight="bold">
+                    Connected
+                  </Typography>
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    size="small"
+                    onClick={handleDisconnectReddit}
+                  >
+                    Disconnect
+                  </Button>
+                </>
+              ) : (
+                <SaveButton
+                  onClick={handleConnectReddit}
+                  variant="contained"
+                  size="large"
+                  disabled={isConnecting}
+                >
+                  {isConnecting ? 'Connecting...' : 'Connect Reddit DM'}
+                </SaveButton>
+              )}
+            </Box>
+          </CardContent>
+        </Card>
+
+        {/* Comment automation settings */}
+        <Card sx={{ p: 4, mt: 5, mb: 10 }} component={Paper}>
           <CardContent>
             <Box display="flex" alignItems="center" gap={1} mb={2}>
               <Typography variant="h4" component="div" fontWeight="bold">
@@ -266,21 +396,6 @@ export default function Page() {
             </SaveButton>
           </CardContent>
         </Card>
-
-        <Card sx={{ p: 4, mt: 5 }} component={Paper}>
-          <CardContent>
-            <Box display="flex" alignItems="center" gap={1} mb={2}>
-              <Typography variant="h5" component="div" fontWeight="bold">
-                Automated DM Settings
-              </Typography>
-            </Box>
-
-            <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-              Contact us via chat to configure automated DM.
-            </Typography>
-          </CardContent>
-        </Card>
-
       </Box>
     </Box>
   </>);

@@ -1036,6 +1036,11 @@ export enum IntegrationType {
    * @generated from enum value: INTEGRATION_TYPE_REDDIT = 3;
    */
   REDDIT = 3,
+
+  /**
+   * @generated from enum value: INTEGRATION_TYPE_REDDIT_DM_LOGIN = 4;
+   */
+  REDDIT_DM_LOGIN = 4,
 }
 
 /**
