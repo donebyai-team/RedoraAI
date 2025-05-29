@@ -540,7 +540,12 @@ func (p *Portal) GetLeadsByStatus(ctx context.Context, c *connect.Request[pbport
 		leadsProto = append(leadsProto, new(pbcore.Lead).FromModel(redactPlatformOnlyMetadata(actor.Role, lead)))
 	}
 
-	return connect.NewResponse(&pbportal.GetLeadsResponse{Leads: leadsProto}), nil
+	analysis, err := redora.NewLeadAnalysis(p.db, p.logger).GenerateLeadAnalysis(ctx, project.ID, c.Msg.DateRange)
+	if err != nil {
+		return nil, err
+	}
+
+	return connect.NewResponse(&pbportal.GetLeadsResponse{Leads: leadsProto, Analysis: analysis}), nil
 }
 
 func (p *Portal) UpdateLeadStatus(ctx context.Context, c *connect.Request[pbportal.UpdateLeadStatusRequest]) (*connect.Response[emptypb.Empty], error) {
