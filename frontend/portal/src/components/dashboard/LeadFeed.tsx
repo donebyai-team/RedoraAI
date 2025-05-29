@@ -235,7 +235,7 @@ export function LeadFeed() {
                               <Brain className="h-4 w-4 text-primary" />
                             </div>
                           </TooltipTrigger>
-                          <TooltipContent side="top" className="max-w-[300px]">
+                          <TooltipContent side="top" className="max-w-[500px] min-w-[400px]">
                             <MarkdownRenderer data={post.metadata?.chainOfThought || ""} />
                           </TooltipContent>
                         </Tooltip>

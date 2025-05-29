@@ -31,12 +31,15 @@ import { setError, setIsLoading, setNewTabList } from "../../../store/Lead/leadS
 import { RootState } from "../../../store/store";
 import { LeadAnalysis } from "@doota/pb/doota/portal/v1/portal_pb";
 import { setAccounts, setLoading } from "@/store/Reddit/RedditSlice";
+import { ConnectRedditPrompt } from "../dashboard/ConnectRedditPrompt";
+import { useRedditIntegrationStatus } from "../Leads/Tabs/useRedditIntegrationStatus";
 
 export default function Dashboard() {
   const { portalClient } = useClientsContext()
   const dispatch = useAppDispatch();
   const { dateRange, leadStatusFilter, isLoading } = useAppSelector((state: RootState) => state.lead);
   const { relevancyScore, subReddit } = useAppSelector((state: RootState) => state.parems);
+  const { isConnected, loading: isLoadingRedditIntegrationStatus } = useRedditIntegrationStatus();
 
   // Sample Reddit accounts
   const redditAccounts: RedditAccount[] = [
@@ -191,43 +194,51 @@ export default function Dashboard() {
 
               <SummaryCards counts={counts} />
 
-              <div className="flex-1 flex flex-col space-y-4 mt-6">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-background/95 py-2">
-                  <h2 className="text-xl font-semibold">Active Leads</h2>
-                  <FilterControls />
-                </div>
+              {isLoadingRedditIntegrationStatus ?
+                <>Loading</>
+                :
+                isConnected ?
+                  <div className="flex-1 flex flex-col space-y-4 mt-6">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-background/95 py-2">
+                      <h2 className="text-xl font-semibold">Relevant Posts</h2>
+                      <FilterControls />
+                    </div>
 
-                {isLoading ? (
-                  <div className="space-y-4">
-                    {[...Array(3)].map((_, i) => (
-                      <Card key={i} className="border-primary/10 shadow-md">
-                        <CardContent className="p-6">
-                          <div className="space-y-2">
-                            <Skeleton className="h-4 w-[200px]" />
-                            <Skeleton className="h-4 w-full" />
-                            <Skeleton className="h-4 w-[80%]" />
-                            <div className="flex gap-2 pt-2">
-                              <Skeleton className="h-9 w-20" />
-                              <Skeleton className="h-9 w-20" />
-                              <Skeleton className="h-9 w-20" />
-                              <Skeleton className="h-9 w-20" />
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                    {isLoading ? (
+                      <div className="space-y-4">
+                        {[...Array(3)].map((_, i) => (
+                          <Card key={i} className="border-primary/10 shadow-md">
+                            <CardContent className="p-6">
+                              <div className="space-y-2">
+                                <Skeleton className="h-4 w-[200px]" />
+                                <Skeleton className="h-4 w-full" />
+                                <Skeleton className="h-4 w-[80%]" />
+                                <div className="flex gap-2 pt-2">
+                                  <Skeleton className="h-9 w-20" />
+                                  <Skeleton className="h-9 w-20" />
+                                  <Skeleton className="h-9 w-20" />
+                                  <Skeleton className="h-9 w-20" />
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex-1">
+                        <LeadFeed
+                        // onAction={handleAction}
+                        // redditAccounts={redditAccounts}
+                        // defaultAccountId={defaultAccountId}
+                        // onAccountChange={handlePostAccountChange}
+                        />
+                      </div>
+                    )}
                   </div>
-                ) : (
-                  <div className="flex-1">
-                    <LeadFeed
-                    // onAction={handleAction}
-                    // redditAccounts={redditAccounts}
-                    // defaultAccountId={defaultAccountId}
-                    // onAccountChange={handlePostAccountChange}
-                    />
-                  </div>
-                )}
-              </div>
+                  :
+                  <ConnectRedditPrompt />
+              }
+
             </div>
 
             {/* Sidebar */}

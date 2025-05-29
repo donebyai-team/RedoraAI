@@ -36,7 +36,7 @@ const initialState: LeadStateTyeps = {
     activeTab: LeadTabStatus.NEW,
     error: null,
     leadStatusFilter: null,
-    dateRange: DateRangeFilter.DATE_RANGE_UNSPECIFIED
+    dateRange: DateRangeFilter.DATE_RANGE_TODAY
 };
 
 // Slice
