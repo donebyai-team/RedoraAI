@@ -5,12 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/shank318/doota/datastore"
-	"github.com/shank318/doota/errorx"
 	"github.com/shank318/doota/models"
 	"github.com/shank318/doota/utils"
 	"go.uber.org/zap"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"strings"
 )
 
@@ -121,15 +118,24 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 
 	loginConfig := integration.GetRedditDMLoginConfig()
 
-	if err = r.browserLessClient.SendDM(DMParams{
+	updatedCookies, err := r.browserLessClient.SendDM(ctx, DMParams{
 		ID:       interaction.ID,
 		Cookie:   loginConfig.Cookies,
 		Username: loginConfig.Username,
 		Password: loginConfig.Password,
 		To:       fmt.Sprintf("t2_%s", user.ID),
 		Message:  utils.FormatDM(redditLead.LeadMetadata.SuggestedDM),
-	}); err != nil {
+	})
+	if err != nil {
 		interaction.Reason = fmt.Sprintf("failed to send DM: %v", err)
+		interaction.Status = models.LeadInteractionStatusFAILED
+		return err
+	}
+
+	loginConfig.Cookies = string(updatedCookies)
+	_, err = r.db.UpsertIntegration(ctx, integration)
+	if err != nil {
+		interaction.Reason = fmt.Sprintf("failed to update integration: %v", err)
 		interaction.Status = models.LeadInteractionStatusFAILED
 		return err
 	}
@@ -146,26 +152,26 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 	return nil
 }
 
-func (r redditInteractions) CheckIfLogin(ctx context.Context, orgID string) error {
-	integration, err := r.db.GetIntegrationByOrgAndType(ctx, orgID, models.IntegrationTypeREDDITDMLOGIN)
-	if err != nil {
-		return err
-	}
-
-	loginConfig := integration.GetRedditDMLoginConfig()
-	err = r.browserLessClient.CheckIfLogin(DMParams{
-		ID:       integration.ID,
-		Username: loginConfig.Username,
-		Password: loginConfig.Password,
-	})
-	var loginErr *errorx.LoginError
-	if err != nil && errors.As(err, &loginErr) {
-		r.logger.Warn("failed to login to reddit", zap.Error(err), zap.String("org_id", orgID))
-		return status.Error(codes.InvalidArgument, loginErr.Reason)
-	} else if err != nil {
-		r.logger.Warn("failed to login to reddit", zap.Error(err), zap.String("org_id", orgID))
-		return status.Error(codes.Internal, "unable login to reddit")
-	}
+func (r redditInteractions) Authenticate(ctx context.Context, orgID string) error {
+	//integration, err := r.db.GetIntegrationByOrgAndType(ctx, orgID, models.IntegrationTypeREDDITDMLOGIN)
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//loginConfig := integration.GetRedditDMLoginConfig()
+	//err = r.browserLessClient.CheckIfLogin(DMParams{
+	//	ID:       integration.ID,
+	//	Username: loginConfig.Username,
+	//	Password: loginConfig.Password,
+	//})
+	//var loginErr *errorx.LoginError
+	//if err != nil && errors.As(err, &loginErr) {
+	//	r.logger.Warn("failed to login to reddit", zap.Error(err), zap.String("org_id", orgID))
+	//	return status.Error(codes.InvalidArgument, loginErr.Reason)
+	//} else if err != nil {
+	//	r.logger.Warn("failed to login to reddit", zap.Error(err), zap.String("org_id", orgID))
+	//	return status.Error(codes.Internal, "unable login to reddit")
+	//}
 
 	return nil
 }
