@@ -5,7 +5,7 @@ import {
   MessageSquare,
   Search,
   Send,
-  ArrowUp
+  ArrowUp, Pin
 } from "lucide-react";
 
 interface PropType {
@@ -39,7 +39,7 @@ export function SummaryCards({ counts }: PropType) {
               <h3 className="text-2xl font-bold">{counts?.relevantPostsFound ?? "0"}</h3>
             </div>
             <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <MessageSquare className="h-5 w-5 text-primary" />
+              <Pin className="h-5 w-5 text-primary" />
             </div>
           </div>
           {/* <p className="text-xs text-muted-foreground mt-2">+8% from yesterday</p> */}
@@ -54,7 +54,7 @@ export function SummaryCards({ counts }: PropType) {
               <h3 className="text-2xl font-bold">{counts?.commentSent ?? "0"}</h3>
             </div>
             <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <Send className="h-5 w-5 text-primary" />
+              <MessageSquare className="h-5 w-5 text-primary" />
             </div>
           </div>
           {counts?.commentScheduled as number > 0 && (
@@ -73,7 +73,7 @@ export function SummaryCards({ counts }: PropType) {
               <h3 className="text-2xl font-bold">{counts?.dmSent ?? "0"}</h3>
             </div>
             <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <ArrowUp className="h-5 w-5 text-primary" />
+              <Send className="h-5 w-5 text-primary" />
             </div>
           </div>
           {counts?.dmScheduled as number > 0 && (
