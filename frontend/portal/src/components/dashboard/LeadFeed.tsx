@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  Brain,
+  Brain, Mail,
   MessageSquare,
   Save,
   Send,
@@ -251,7 +251,7 @@ export function LeadFeed() {
                       {/* <span>{getSubredditName(subredditList, post?.sourceId ?? "")}</span> */}
                       <span>{post.metadata?.subredditPrefixed}</span>
                       <span>•</span>
-                      <span>{getFormattedDate(post.postCreatedAt)}</span>
+                      <span>Posted {getFormattedDate(post.postCreatedAt)}</span>
                       <span>•</span>
                       <Link href={post.metadata?.authorUrl || "#"} target="_blank">
                         by {post.author}
@@ -278,7 +278,7 @@ export function LeadFeed() {
                         {post?.metadata?.automatedCommentUrl
                           ? "Commented By AI"
                           : post?.metadata?.commentScheduledAt
-                            ? "Scheduled by AI"
+                            ? "Comment Scheduled by AI"
                             : "Suggested Comment"}
                       </span>
                       {(post?.metadata?.automatedCommentUrl || post?.metadata?.commentScheduledAt) && (
@@ -308,12 +308,12 @@ export function LeadFeed() {
                   {/* {expandedId === post.id && ( */}
                   <div className="bg-secondary/50 rounded-md p-3 border-l-4 border-primary">
                     <div className="flex items-center gap-2 text-sm font-medium mb-2">
-                      <MessageSquare className="h-4 w-4 text-primary" />
+                      <Send className="h-4 w-4 text-primary" />
                       <span className="text-primary">
                         {post?.metadata?.automatedDmSent
                           ? "DM Sent By AI"
                           : post?.metadata?.dmScheduledAt
-                            ? "Scheduled by AI"
+                            ? "DM Scheduled by AI"
                             : "Suggested DM"}
                       </span>
                       {(post?.metadata?.automatedDmSent || post?.metadata?.dmScheduledAt) && (
