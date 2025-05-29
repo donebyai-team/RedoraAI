@@ -24,6 +24,14 @@ export const routes = {
       onboarding: '/onboarding'
     },
     serverError: '/500'
+  },
+
+  new: {
+    dashboard: '/dashboard',
+    keywords: '/keywords',
+    leads: '/leads',
+    edit_product: '/settings/product',
+    integrations: '/settings/integrations',
   }
 }
 

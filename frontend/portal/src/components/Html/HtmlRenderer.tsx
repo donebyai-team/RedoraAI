@@ -29,7 +29,7 @@ const HtmlBodyRenderer = ({ htmlString }: { htmlString: string }) => {
       if (doc) {
         doc.open();
         doc.write(`
-          <style>body { margin-left: 0px; margin-right: 0px; }</style>
+          <style>body { margin-left: 0px; margin-right: 0px; color:rgb(100, 116, 139); }</style>
           ${decodedHtml}
         `);
         doc.close();
@@ -75,7 +75,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ data }) => {
     <ReactMarkdown
       components={{
         p: ({ ...props }) => (
-          <p style={{ all: "revert" }} {...props} />
+          <p style={{ all: "revert", color: "rgb(100, 116, 139)" }} {...props} />
         ),
       }}
     >

@@ -123,7 +123,7 @@ export default function Page() {
     portalClient
       .oauthAuthorize({
         integrationType: integrationType,
-        redirectUrl: buildAppUrl(routes.app.home),
+        redirectUrl: buildAppUrl(routes.new.dashboard),
       })
       .then(oAuthAuthorizeResp => {
         window.open(oAuthAuthorizeResp.authorizeUrl, '_self')
@@ -218,7 +218,7 @@ export default function Page() {
         <Card sx={{ p: 4, mt: 5 }} component={Paper}>
           <CardContent>
             <Box display="flex" alignItems="center" gap={1} mb={2}>
-              <Typography variant="h5" component="div" fontWeight="bold">
+              <Typography variant="h4" component="div" fontWeight="bold">
                 Automated Comments Settings
               </Typography>
             </Box>
