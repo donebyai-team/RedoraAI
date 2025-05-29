@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"github.com/shank318/doota/agents/redora"
 	"github.com/shank318/doota/agents/redora/interactions"
@@ -202,17 +201,17 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 	browserLessClient := interactions.NewBrowserlessClient(sflags.MustGetString(cmd, "common-browserless-api-key"), debugStore, logger)
 	interactionService := interactions.NewRedditInteractions(deps.DataStore, browserLessClient, redditOauthClient, logger)
 
-	err = browserLessClient.SendDM(context.Background(), interactions.DMParams{
-		Username: "adarsh@miraa.io",
-		Password: "Adarsh@121097",
-		To:       "t2_2xy5yaww",
-		Message:  "Hidd",
-		ID:       "unique_id",
-		Cookie:   `[]`,
-	})
-	if err != nil {
-		return nil, err
-	}
+	//err = browserLessClient.SendDM(context.Background(), interactions.DMParams{
+	//	Username: "adarsh@miraa.io",
+	//	Password: "Adarsh@121097",
+	//	To:       "t2_2xy5yaww",
+	//	Message:  "Hidd",
+	//	ID:       "unique_id",
+	//	Cookie:   `[]`,
+	//})
+	//if err != nil {
+	//	return nil, err
+	//}
 
 	//loginCtx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	//defer cancel()
@@ -369,6 +368,14 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 
 	redditOauthClient := reddit.NewRedditOauthClient(logger, deps.DataStore, sflags.MustGetString(cmd, "portal-reddit-client-id"), sflags.MustGetString(cmd, "portal-reddit-client-secret"), sflags.MustGetString(cmd, "portal-reddit-redirect-url"))
 
+	debugStore, err := dstore.NewStore(sflags.MustGetString(cmd, "common-playwright-debug-store"), "", "", true)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create debug store: %w", err)
+	}
+
+	browserLessClient := interactions.NewBrowserlessClient(sflags.MustGetString(cmd, "common-browserless-api-key"), debugStore, logger)
+	interactionService := interactions.NewRedditInteractions(deps.DataStore, browserLessClient, redditOauthClient, logger)
+
 	p := portal.New(
 		deps.AIClient,
 		redditOauthClient,
@@ -388,6 +395,7 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		zlog.Named("portal"),
 		tracer,
 		alertNotifier,
+		interactionService,
 	)
 	return p, nil
 }

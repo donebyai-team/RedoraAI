@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
 
 func (p *Portal) getProject(ctx context.Context, headers http.Header, orgID string) (*models.Project, error) {
@@ -43,6 +44,34 @@ func (p *Portal) getProject(ctx context.Context, headers http.Header, orgID stri
 	}
 
 	return project, nil
+}
+
+func (p *Portal) ConnectReddit(ctx context.Context, c *connect.Request[emptypb.Empty], stream *connect.ServerStream[pbportal.ConnectRedditResponse]) error {
+	actor, err := p.gethAuthContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	taskCtx, cancel := context.WithTimeout(ctx, 3*time.Minute)
+	defer cancel()
+
+	liveURL, loginCallback, err := p.interactionService.Authenticate(taskCtx, actor.OrganizationID)
+	if err != nil {
+		return err
+	}
+
+	if err := stream.Send(&pbportal.ConnectRedditResponse{
+		Url: liveURL,
+	}); err != nil {
+		return err
+	}
+
+	err = loginCallback()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (p *Portal) CreateOrEditProject(ctx context.Context, c *connect.Request[pbportal.CreateProjectRequest]) (*connect.Response[pbcore.Project], error) {

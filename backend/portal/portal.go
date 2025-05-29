@@ -2,6 +2,7 @@ package portal
 
 import (
 	"context"
+	"github.com/shank318/doota/agents/redora/interactions"
 	state2 "github.com/shank318/doota/agents/state"
 	"github.com/shank318/doota/ai"
 	google2 "github.com/shank318/doota/integrations/google"
@@ -41,6 +42,7 @@ type Portal struct {
 	aiClient            *ai.Client
 	cache               state2.ConversationState
 	alertNotifier       alerts.AlertNotifier
+	interactionService  interactions.AutomatedInteractions
 }
 
 func New(
@@ -62,6 +64,7 @@ func New(
 	logger *zap.Logger,
 	tracer logging.Tracer,
 	alertNotifier alerts.AlertNotifier,
+	interactionService interactions.AutomatedInteractions,
 ) *Portal {
 	return &Portal{
 		aiClient:            aiClient,
@@ -83,6 +86,7 @@ func New(
 		logger:              logger.Named("portal"),
 		tracer:              tracer,
 		alertNotifier:       alertNotifier,
+		interactionService:  interactionService,
 	}
 }
 

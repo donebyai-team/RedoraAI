@@ -38,23 +38,7 @@ service PortalService {
 }
 
 message ConnectRedditResponse {
-  oneof message {
-    UrlMessage url = 1;
-    TaskResult task_result = 2;
-    ErrorMessage error = 3;
-  }
-}
-
-message UrlMessage {
   string url = 1;
-}
-
-message TaskResult {
-  string result = 1;
-}
-
-message ErrorMessage {
-  string error = 1;
 }
 
 message UpdateAutomationSettingRequest {
