@@ -469,7 +469,7 @@ func (p *Portal) UpdateAutomationSettings(ctx context.Context, c *connect.Reques
 		maxAllowedCommentPerDay := org.FeatureFlags.GetSubscriptionPlanMetadata().Comments.PerDay
 
 		if c.Msg.Comment.MaxPerDay > maxAllowedCommentPerDay {
-			return nil, status.New(codes.InvalidArgument, fmt.Sprintf("max %s automated comments allows as per the subscribed plan", maxAllowedCommentPerDay)).Err()
+			return nil, status.New(codes.InvalidArgument, fmt.Sprintf("max %d automated comments allows as per the subscribed plan", maxAllowedCommentPerDay)).Err()
 		}
 		// If 0 is given, we default to the max allowed
 		org.FeatureFlags.MaxCommentsPerDay = c.Msg.Comment.MaxPerDay
