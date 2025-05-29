@@ -1,5 +1,6 @@
-import { Lead } from "@doota/pb/doota/core/v1/core_pb";
+import { Lead, LeadStatus } from "@doota/pb/doota/core/v1/core_pb";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { DateRangeFilter } from "@doota/pb/doota/portal/v1/portal_pb";
 
 export type LeadTyeps = Lead;
 
@@ -20,6 +21,8 @@ interface LeadStateTyeps {
     isLoading: boolean;
     activeTab: LeadTabStatus;
     error: string | null;
+    leadStatusFilter: LeadStatus | null;
+    dateRange: DateRangeFilter;
 }
 
 // Initial state
@@ -32,6 +35,8 @@ const initialState: LeadStateTyeps = {
     isLoading: true,
     activeTab: LeadTabStatus.NEW,
     error: null,
+    leadStatusFilter: null,
+    dateRange: DateRangeFilter.DATE_RANGE_TODAY
 };
 
 // Slice
@@ -63,12 +68,29 @@ const leadSlice = createSlice({
         setError: (state, action: PayloadAction<string>) => {
             state.error = action.payload;
         },
+        setLeadStatusFilter: (state, action: PayloadAction<LeadStatus | null>) => {
+            state.leadStatusFilter = action.payload;
+        },
+        setDateRange: (state, action: PayloadAction<DateRangeFilter>) => {
+            state.dateRange = action.payload;
+        },
     },
 
 });
 
 // Export actions
-export const { setNewTabList, setCompletedList, setDiscardedTabList, setLeadsTabList, setSelectedLeadData, setActiveTab, setError, setIsLoading } = leadSlice.actions;
+export const {
+    setNewTabList,
+    setCompletedList,
+    setDiscardedTabList,
+    setLeadsTabList,
+    setSelectedLeadData,
+    setActiveTab,
+    setError,
+    setIsLoading,
+    setLeadStatusFilter,
+    setDateRange,
+} = leadSlice.actions;
 
 // Export reducer
 export const leadReducer = leadSlice.reducer;

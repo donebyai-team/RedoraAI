@@ -8,7 +8,7 @@ const Home = () => {
   const { push } = useRouter()
 
   useEffect(() => {
-    push(routes.app.home)
+    push(routes.new.dashboard)
   }, [push])
 
   return <p></p>
