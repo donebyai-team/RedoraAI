@@ -34,6 +34,27 @@ service PortalService {
   rpc CreateOrEditProject(CreateProjectRequest) returns (doota.core.v1.Project);
   rpc SuggestKeywordsAndSources(.google.protobuf.Empty) returns (doota.core.v1.Project);
   rpc UpdateAutomationSettings(UpdateAutomationSettingRequest) returns (Organization);
+  rpc ConnectReddit(.google.protobuf.Empty) returns (stream ConnectRedditResponse);
+}
+
+message ConnectRedditResponse {
+  oneof message {
+    UrlMessage url = 1;
+    TaskResult task_result = 2;
+    ErrorMessage error = 3;
+  }
+}
+
+message UrlMessage {
+  string url = 1;
+}
+
+message TaskResult {
+  string result = 1;
+}
+
+message ErrorMessage {
+  string error = 1;
 }
 
 message UpdateAutomationSettingRequest {

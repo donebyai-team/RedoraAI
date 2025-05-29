@@ -42,6 +42,7 @@ const (
 	PortalService_CreateOrEditProject_FullMethodName       = "/doota.portal.v1.PortalService/CreateOrEditProject"
 	PortalService_SuggestKeywordsAndSources_FullMethodName = "/doota.portal.v1.PortalService/SuggestKeywordsAndSources"
 	PortalService_UpdateAutomationSettings_FullMethodName  = "/doota.portal.v1.PortalService/UpdateAutomationSettings"
+	PortalService_ConnectReddit_FullMethodName             = "/doota.portal.v1.PortalService/ConnectReddit"
 )
 
 // PortalServiceClient is the client API for PortalService service.
@@ -72,6 +73,7 @@ type PortalServiceClient interface {
 	CreateOrEditProject(ctx context.Context, in *CreateProjectRequest, opts ...grpc.CallOption) (*v1.Project, error)
 	SuggestKeywordsAndSources(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*v1.Project, error)
 	UpdateAutomationSettings(ctx context.Context, in *UpdateAutomationSettingRequest, opts ...grpc.CallOption) (*Organization, error)
+	ConnectReddit(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (PortalService_ConnectRedditClient, error)
 }
 
 type portalServiceClient struct {
@@ -271,6 +273,38 @@ func (c *portalServiceClient) UpdateAutomationSettings(ctx context.Context, in *
 	return out, nil
 }
 
+func (c *portalServiceClient) ConnectReddit(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (PortalService_ConnectRedditClient, error) {
+	stream, err := c.cc.NewStream(ctx, &PortalService_ServiceDesc.Streams[0], PortalService_ConnectReddit_FullMethodName, opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &portalServiceConnectRedditClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type PortalService_ConnectRedditClient interface {
+	Recv() (*ConnectRedditResponse, error)
+	grpc.ClientStream
+}
+
+type portalServiceConnectRedditClient struct {
+	grpc.ClientStream
+}
+
+func (x *portalServiceConnectRedditClient) Recv() (*ConnectRedditResponse, error) {
+	m := new(ConnectRedditResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // PortalServiceServer is the server API for PortalService service.
 // All implementations must embed UnimplementedPortalServiceServer
 // for forward compatibility
@@ -299,6 +333,7 @@ type PortalServiceServer interface {
 	CreateOrEditProject(context.Context, *CreateProjectRequest) (*v1.Project, error)
 	SuggestKeywordsAndSources(context.Context, *emptypb.Empty) (*v1.Project, error)
 	UpdateAutomationSettings(context.Context, *UpdateAutomationSettingRequest) (*Organization, error)
+	ConnectReddit(*emptypb.Empty, PortalService_ConnectRedditServer) error
 	mustEmbedUnimplementedPortalServiceServer()
 }
 
@@ -368,6 +403,9 @@ func (UnimplementedPortalServiceServer) SuggestKeywordsAndSources(context.Contex
 }
 func (UnimplementedPortalServiceServer) UpdateAutomationSettings(context.Context, *UpdateAutomationSettingRequest) (*Organization, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateAutomationSettings not implemented")
+}
+func (UnimplementedPortalServiceServer) ConnectReddit(*emptypb.Empty, PortalService_ConnectRedditServer) error {
+	return status.Errorf(codes.Unimplemented, "method ConnectReddit not implemented")
 }
 func (UnimplementedPortalServiceServer) mustEmbedUnimplementedPortalServiceServer() {}
 
@@ -760,6 +798,27 @@ func _PortalService_UpdateAutomationSettings_Handler(srv interface{}, ctx contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PortalService_ConnectReddit_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(emptypb.Empty)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(PortalServiceServer).ConnectReddit(m, &portalServiceConnectRedditServer{stream})
+}
+
+type PortalService_ConnectRedditServer interface {
+	Send(*ConnectRedditResponse) error
+	grpc.ServerStream
+}
+
+type portalServiceConnectRedditServer struct {
+	grpc.ServerStream
+}
+
+func (x *portalServiceConnectRedditServer) Send(m *ConnectRedditResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 // PortalService_ServiceDesc is the grpc.ServiceDesc for PortalService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -852,6 +911,12 @@ var PortalService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _PortalService_UpdateAutomationSettings_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "ConnectReddit",
+			Handler:       _PortalService_ConnectReddit_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "doota/portal/v1/portal.proto",
 }

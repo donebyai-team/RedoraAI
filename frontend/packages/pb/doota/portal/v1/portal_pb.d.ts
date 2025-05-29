@@ -13,6 +13,88 @@ import type { EmptySchema, Timestamp } from "@bufbuild/protobuf/wkt";
 export declare const file_doota_portal_v1_portal: GenFile;
 
 /**
+ * @generated from message doota.portal.v1.ConnectRedditResponse
+ */
+export declare type ConnectRedditResponse = Message<"doota.portal.v1.ConnectRedditResponse"> & {
+  /**
+   * @generated from oneof doota.portal.v1.ConnectRedditResponse.message
+   */
+  message: {
+    /**
+     * @generated from field: doota.portal.v1.UrlMessage url = 1;
+     */
+    value: UrlMessage;
+    case: "url";
+  } | {
+    /**
+     * @generated from field: doota.portal.v1.TaskResult task_result = 2;
+     */
+    value: TaskResult;
+    case: "taskResult";
+  } | {
+    /**
+     * @generated from field: doota.portal.v1.ErrorMessage error = 3;
+     */
+    value: ErrorMessage;
+    case: "error";
+  } | { case: undefined; value?: undefined };
+};
+
+/**
+ * Describes the message doota.portal.v1.ConnectRedditResponse.
+ * Use `create(ConnectRedditResponseSchema)` to create a new message.
+ */
+export declare const ConnectRedditResponseSchema: GenMessage<ConnectRedditResponse>;
+
+/**
+ * @generated from message doota.portal.v1.UrlMessage
+ */
+export declare type UrlMessage = Message<"doota.portal.v1.UrlMessage"> & {
+  /**
+   * @generated from field: string url = 1;
+   */
+  url: string;
+};
+
+/**
+ * Describes the message doota.portal.v1.UrlMessage.
+ * Use `create(UrlMessageSchema)` to create a new message.
+ */
+export declare const UrlMessageSchema: GenMessage<UrlMessage>;
+
+/**
+ * @generated from message doota.portal.v1.TaskResult
+ */
+export declare type TaskResult = Message<"doota.portal.v1.TaskResult"> & {
+  /**
+   * @generated from field: string result = 1;
+   */
+  result: string;
+};
+
+/**
+ * Describes the message doota.portal.v1.TaskResult.
+ * Use `create(TaskResultSchema)` to create a new message.
+ */
+export declare const TaskResultSchema: GenMessage<TaskResult>;
+
+/**
+ * @generated from message doota.portal.v1.ErrorMessage
+ */
+export declare type ErrorMessage = Message<"doota.portal.v1.ErrorMessage"> & {
+  /**
+   * @generated from field: string error = 1;
+   */
+  error: string;
+};
+
+/**
+ * Describes the message doota.portal.v1.ErrorMessage.
+ * Use `create(ErrorMessageSchema)` to create a new message.
+ */
+export declare const ErrorMessageSchema: GenMessage<ErrorMessage>;
+
+/**
  * @generated from message doota.portal.v1.UpdateAutomationSettingRequest
  */
 export declare type UpdateAutomationSettingRequest = Message<"doota.portal.v1.UpdateAutomationSettingRequest"> & {
@@ -1232,6 +1314,14 @@ export declare const PortalService: GenService<{
     methodKind: "unary";
     input: typeof UpdateAutomationSettingRequestSchema;
     output: typeof OrganizationSchema;
+  },
+  /**
+   * @generated from rpc doota.portal.v1.PortalService.ConnectReddit
+   */
+  connectReddit: {
+    methodKind: "server_streaming";
+    input: typeof EmptySchema;
+    output: typeof ConnectRedditResponseSchema;
   },
 }>;
 

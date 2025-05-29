@@ -510,9 +510,7 @@ func (r browserless) storeScreenshot(stage, id string, page playwright.Page) {
 //	return strings.Join(errors, " | ")
 //}
 
-type loginCallback func() ([]byte, error)
-
-func (r browserless) callback(ctx context.Context, browserURL string) ([]byte, error) {
+func (r browserless) WaitAndGetCookies(ctx context.Context, browserURL string) ([]byte, error) {
 	pw, err := playwright.Run()
 	if err != nil {
 		return nil, fmt.Errorf("playwright start failed: %w", err)
@@ -549,16 +547,13 @@ func (r browserless) callback(ctx context.Context, browserURL string) ([]byte, e
 	}
 }
 
-func (r browserless) StartLogin(ctx context.Context) (string, loginCallback, error) {
+func (r browserless) StartLogin(ctx context.Context) (*CDPInfo, error) {
 	cdp, err := r.getCDPUrl(ctx, loginURL, true)
 	if err != nil {
-		return "", nil, err
+		return nil, err
 	}
 
-	return cdp.LiveURL, func() ([]byte, error) {
-		// we pass the same context so it respects timeout/deadline/cancel
-		return r.callback(ctx, cdp.BrowserWSEndpoint)
-	}, nil
+	return cdp, nil
 }
 
 type CDPInfo struct {

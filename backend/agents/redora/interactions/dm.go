@@ -152,26 +152,36 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 	return nil
 }
 
-func (r redditInteractions) Authenticate(ctx context.Context, orgID string) error {
-	//integration, err := r.db.GetIntegrationByOrgAndType(ctx, orgID, models.IntegrationTypeREDDITDMLOGIN)
-	//if err != nil {
-	//	return err
-	//}
-	//
-	//loginConfig := integration.GetRedditDMLoginConfig()
-	//err = r.browserLessClient.CheckIfLogin(DMParams{
-	//	ID:       integration.ID,
-	//	Username: loginConfig.Username,
-	//	Password: loginConfig.Password,
-	//})
-	//var loginErr *errorx.LoginError
-	//if err != nil && errors.As(err, &loginErr) {
-	//	r.logger.Warn("failed to login to reddit", zap.Error(err), zap.String("org_id", orgID))
-	//	return status.Error(codes.InvalidArgument, loginErr.Reason)
-	//} else if err != nil {
-	//	r.logger.Warn("failed to login to reddit", zap.Error(err), zap.String("org_id", orgID))
-	//	return status.Error(codes.Internal, "unable login to reddit")
-	//}
+type loginCallback func() error
 
-	return nil
+func (r redditInteractions) Authenticate(ctx context.Context, orgID string) (string, loginCallback, error) {
+	cdp, err := r.browserLessClient.StartLogin(ctx)
+	if err != nil {
+		return "", nil, err
+	}
+
+	return cdp.LiveURL, func() error {
+		cookies, err := r.browserLessClient.WaitAndGetCookies(ctx, cdp.BrowserWSEndpoint)
+		if err != nil {
+			return err
+		}
+
+		integration := &models.Integration{
+			OrganizationID: orgID,
+			State:          models.IntegrationStateACTIVE,
+			Type:           models.IntegrationTypeREDDITDMLOGIN,
+		}
+
+		out := &models.RedditDMLoginConfig{
+			Cookies: string(cookies),
+		}
+		integration = models.SetIntegrationType(integration, models.IntegrationTypeREDDITDMLOGIN, out)
+		_, err = r.db.UpsertIntegration(ctx, integration)
+		if err != nil {
+			r.logger.Warn("failed to update integration", zap.Error(err), zap.String("org_id", orgID))
+			return err
+		}
+		r.logger.Info("successfully logged in to reddit", zap.String("org_id", orgID))
+		return nil
+	}, nil
 }

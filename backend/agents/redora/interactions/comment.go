@@ -16,7 +16,7 @@ import (
 )
 
 type AutomatedInteractions interface {
-	Authenticate(ctx context.Context, orgID string) error
+	Authenticate(ctx context.Context, orgID string) (string, loginCallback, error)
 	SendDM(ctx context.Context, interaction *models.LeadInteraction) error
 	ScheduleComment(ctx context.Context, leadInteraction *models.LeadInteraction) (*models.LeadInteraction, error)
 	ScheduleDM(ctx context.Context, leadInteraction *models.LeadInteraction) (*models.LeadInteraction, error)

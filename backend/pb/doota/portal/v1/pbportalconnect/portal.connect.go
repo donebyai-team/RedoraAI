@@ -94,6 +94,9 @@ const (
 	// PortalServiceUpdateAutomationSettingsProcedure is the fully-qualified name of the PortalService's
 	// UpdateAutomationSettings RPC.
 	PortalServiceUpdateAutomationSettingsProcedure = "/doota.portal.v1.PortalService/UpdateAutomationSettings"
+	// PortalServiceConnectRedditProcedure is the fully-qualified name of the PortalService's
+	// ConnectReddit RPC.
+	PortalServiceConnectRedditProcedure = "/doota.portal.v1.PortalService/ConnectReddit"
 )
 
 // These variables are the protoreflect.Descriptor objects for the RPCs defined in this package.
@@ -120,6 +123,7 @@ var (
 	portalServiceCreateOrEditProjectMethodDescriptor       = portalServiceServiceDescriptor.Methods().ByName("CreateOrEditProject")
 	portalServiceSuggestKeywordsAndSourcesMethodDescriptor = portalServiceServiceDescriptor.Methods().ByName("SuggestKeywordsAndSources")
 	portalServiceUpdateAutomationSettingsMethodDescriptor  = portalServiceServiceDescriptor.Methods().ByName("UpdateAutomationSettings")
+	portalServiceConnectRedditMethodDescriptor             = portalServiceServiceDescriptor.Methods().ByName("ConnectReddit")
 )
 
 // PortalServiceClient is a client for the doota.portal.v1.PortalService service.
@@ -148,6 +152,7 @@ type PortalServiceClient interface {
 	CreateOrEditProject(context.Context, *connect.Request[v1.CreateProjectRequest]) (*connect.Response[v11.Project], error)
 	SuggestKeywordsAndSources(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v11.Project], error)
 	UpdateAutomationSettings(context.Context, *connect.Request[v1.UpdateAutomationSettingRequest]) (*connect.Response[v1.Organization], error)
+	ConnectReddit(context.Context, *connect.Request[emptypb.Empty]) (*connect.ServerStreamForClient[v1.ConnectRedditResponse], error)
 }
 
 // NewPortalServiceClient constructs a client for the doota.portal.v1.PortalService service. By
@@ -286,6 +291,12 @@ func NewPortalServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(portalServiceUpdateAutomationSettingsMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
+		connectReddit: connect.NewClient[emptypb.Empty, v1.ConnectRedditResponse](
+			httpClient,
+			baseURL+PortalServiceConnectRedditProcedure,
+			connect.WithSchema(portalServiceConnectRedditMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -312,6 +323,7 @@ type portalServiceClient struct {
 	createOrEditProject       *connect.Client[v1.CreateProjectRequest, v11.Project]
 	suggestKeywordsAndSources *connect.Client[emptypb.Empty, v11.Project]
 	updateAutomationSettings  *connect.Client[v1.UpdateAutomationSettingRequest, v1.Organization]
+	connectReddit             *connect.Client[emptypb.Empty, v1.ConnectRedditResponse]
 }
 
 // GetConfig calls doota.portal.v1.PortalService.GetConfig.
@@ -419,6 +431,11 @@ func (c *portalServiceClient) UpdateAutomationSettings(ctx context.Context, req 
 	return c.updateAutomationSettings.CallUnary(ctx, req)
 }
 
+// ConnectReddit calls doota.portal.v1.PortalService.ConnectReddit.
+func (c *portalServiceClient) ConnectReddit(ctx context.Context, req *connect.Request[emptypb.Empty]) (*connect.ServerStreamForClient[v1.ConnectRedditResponse], error) {
+	return c.connectReddit.CallServerStream(ctx, req)
+}
+
 // PortalServiceHandler is an implementation of the doota.portal.v1.PortalService service.
 type PortalServiceHandler interface {
 	GetConfig(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.Config], error)
@@ -445,6 +462,7 @@ type PortalServiceHandler interface {
 	CreateOrEditProject(context.Context, *connect.Request[v1.CreateProjectRequest]) (*connect.Response[v11.Project], error)
 	SuggestKeywordsAndSources(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v11.Project], error)
 	UpdateAutomationSettings(context.Context, *connect.Request[v1.UpdateAutomationSettingRequest]) (*connect.Response[v1.Organization], error)
+	ConnectReddit(context.Context, *connect.Request[emptypb.Empty], *connect.ServerStream[v1.ConnectRedditResponse]) error
 }
 
 // NewPortalServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -579,6 +597,12 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(portalServiceUpdateAutomationSettingsMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
+	portalServiceConnectRedditHandler := connect.NewServerStreamHandler(
+		PortalServiceConnectRedditProcedure,
+		svc.ConnectReddit,
+		connect.WithSchema(portalServiceConnectRedditMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/doota.portal.v1.PortalService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case PortalServiceGetConfigProcedure:
@@ -623,6 +647,8 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 			portalServiceSuggestKeywordsAndSourcesHandler.ServeHTTP(w, r)
 		case PortalServiceUpdateAutomationSettingsProcedure:
 			portalServiceUpdateAutomationSettingsHandler.ServeHTTP(w, r)
+		case PortalServiceConnectRedditProcedure:
+			portalServiceConnectRedditHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -714,4 +740,8 @@ func (UnimplementedPortalServiceHandler) SuggestKeywordsAndSources(context.Conte
 
 func (UnimplementedPortalServiceHandler) UpdateAutomationSettings(context.Context, *connect.Request[v1.UpdateAutomationSettingRequest]) (*connect.Response[v1.Organization], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.UpdateAutomationSettings is not implemented"))
+}
+
+func (UnimplementedPortalServiceHandler) ConnectReddit(context.Context, *connect.Request[emptypb.Empty], *connect.ServerStream[v1.ConnectRedditResponse]) error {
+	return connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.ConnectReddit is not implemented"))
 }
