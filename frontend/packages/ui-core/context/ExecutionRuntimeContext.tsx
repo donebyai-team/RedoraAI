@@ -8,6 +8,7 @@ export type ExecutionRuntimeStore = {
   imageSourceRegistry: {
     logo: string
     logo_new: string
+    logo_circle: string
     dat_logo: string
     dat_fuel_gauge_logo: string
   }
@@ -28,6 +29,7 @@ export const ExecutionRuntimeContext = createContext<ExecutionRuntimeStore>({
     logo: '/images/logo.svg',
     // In Browser for now, logo_new is the same as logo
     logo_new: '/images/logo.svg',
+    logo_circle: '/images/logo.svg',
 
     dat_logo: '/images/dat_logo.png',
     dat_fuel_gauge_logo: '/images/dat_fuel_gauge_logo.png'
