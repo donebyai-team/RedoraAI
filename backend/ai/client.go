@@ -232,6 +232,7 @@ func (c *Client) SuggestKeywordsAndSubreddits(ctx context.Context, model models.
 	vars["ProductName"] = project.Name
 	vars["ProductDescription"] = project.ProductDescription
 	vars["TargetCustomerPersona"] = project.CustomerPersona
+
 	llmModelToUse := c.defaultLLMModel
 
 	if string(model) != "" {
@@ -329,6 +330,7 @@ func (c *Client) IsRedditPostRelevant(ctx context.Context, model models.LLMModel
 	out["ProductName"] = input.Project.Name
 	out["ProductDescription"] = input.Project.ProductDescription
 	out["TargetCustomerPersona"] = input.Project.CustomerPersona
+	out["ProductWebsite"] = input.Project.WebsiteURL
 
 	if input.Post.Title != nil {
 		out["Title"] = input.Post.Title

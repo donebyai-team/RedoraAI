@@ -38,6 +38,7 @@ func TestRelevancyOutputFormatting(t *testing.T) {
 				Name:               "MiraaAI",
 				ProductDescription: "Miraa helps B2B SaaS businesses generate high quality leads and organic growth via Content-led SEO and GEO. We offers services like Content, SEO, and Reddit lead generation",
 				CustomerPersona:    "Founders, CMOs, CEOs, and Head of marketing/growth",
+				WebsiteURL:         "https://miraa.ai/",
 			},
 			source: &models.Source{
 				Name: "bigseo",
