@@ -152,7 +152,20 @@ export default function Page() {
                   return (
                     <TableRow key="reddit">
                       <TableCell>Reddit</TableCell>
-                      <TableCell>{redditIntegration.details?.value?.userName || '—'}</TableCell>
+                      <TableCell>
+                        {redditIntegration.details?.value?.userName ? (
+                          <a
+                            href={`https://reddit.com/user/${redditIntegration.details.value.userName}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline"
+                          >
+                            {redditIntegration.details.value.userName}
+                          </a>
+                        ) : (
+                          '—'
+                        )}
+                      </TableCell>
                       <TableCell align="right">
                         <Button
                           color="error"

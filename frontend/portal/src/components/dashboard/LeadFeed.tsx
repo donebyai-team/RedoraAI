@@ -340,7 +340,18 @@ export function LeadFeed() {
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <div className="relative">
-                            {redditAccounts?.[0]?.details?.value?.userName}
+                            {redditAccounts?.[0]?.details?.value?.userName ? (
+                              <a
+                                href={`https://reddit.com/user/${redditAccounts[0].details.value.userName}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:underline"
+                              >
+                                {redditAccounts[0].details.value.userName}
+                              </a>
+                            ) : (
+                              '—'
+                            )}
                             {/* <RedditAccountSelector
                               accounts={redditAccounts}
                               currentAccountId={post.assignedAccountId || defaultAccountId}
