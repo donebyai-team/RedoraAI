@@ -9,21 +9,23 @@ import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 import Paper from '@mui/material/Paper'
 import { useAuth, useAuthUser } from '@doota/ui-core/hooks/useAuth'
-import { IntegrationType, Integration, IntegrationState } from '@doota/pb/doota/portal/v1/portal_pb'
+import { IntegrationType, Integration, IntegrationState, Organization } from '@doota/pb/doota/portal/v1/portal_pb'
 import { FallbackSpinner } from '../../../../../atoms/FallbackSpinner'
 import { Button } from '../../../../../atoms/Button'
 import { portalClient } from '../../../../../services/grpc'
 import { buildAppUrl } from '../../../../routes'
 import { routes } from '@doota/ui-core/routing'
-import { isAdmin } from '@doota/ui-core/helper/role'
+import { isAdmin, isPlatformAdmin } from '@doota/ui-core/helper/role'
 import { Box } from '@mui/system'
 import { AppBar, Toolbar, Typography } from '@mui/material'
 import {
   Reddit as RedditIcon,
 } from "@mui/icons-material"
+import toast from 'react-hot-toast'
 
 export default function Page() {
   const user = useAuthUser()
+  const { setUser, setOrganization } = useAuth()
 
   const [loading, setLoading] = useState(true)
   const [integrations, setIntegrations] = useState<Integration[]>([])
@@ -56,11 +58,39 @@ export default function Page() {
     // send api call async
     portalClient.revokeIntegration({ id: id })
       .then(() => {
+        handleSaveAutomation({ Comment: { enable: false }, dm: { enable: false } })
         console.log("successfully revoked")
       })
       .catch((err) => {
         console.error("Error disconnecting integrations:", err);
       })
+  }
+
+  // TODO: This is duplicate in automation/page as well, merge it into common
+  const handleSaveAutomation = async (req: any) => {
+    try {
+      const result = await portalClient.updateAutomationSettings(req);
+
+      if (isPlatformAdmin(user)) {
+        setOrganization(result);
+      }
+
+      setUser(prev => {
+        if (!prev) return prev
+        const updatedOrganizations = prev.organizations.map(org =>
+          org.id === result.id ? result : org
+        )
+        return { ...prev, organizations: updatedOrganizations }
+      })
+    } catch (err) {
+      if (err instanceof Error) {
+        const message = err.message || "Failed to update automation settings";
+        toast.error(message);
+      } else {
+        console.error("Unexpected error:", err)
+      }
+
+    }
   }
 
   const openOauthConsentScreen = (integrationType: IntegrationType) => {
@@ -145,3 +175,4 @@ export default function Page() {
     </Box>
   </>);
 }
+

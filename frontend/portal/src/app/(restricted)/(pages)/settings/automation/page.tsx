@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Paper from '@mui/material/Paper'
 import { useAuth, useAuthUser } from '@doota/ui-core/hooks/useAuth'
-import { IntegrationType, Integration, IntegrationState, UpdateAutomationSettingRequest } from '@doota/pb/doota/portal/v1/portal_pb'
+import { IntegrationType, Integration, IntegrationState } from '@doota/pb/doota/portal/v1/portal_pb'
 import { FallbackSpinner } from '../../../../../atoms/FallbackSpinner'
 import { Button } from '../../../../../atoms/Button'
 import { portalClient } from '../../../../../services/grpc'
@@ -11,7 +11,6 @@ import { isPlatformAdmin } from '@doota/ui-core/helper/role'
 import { Box } from '@mui/system'
 import { Typography, Card, CardContent, Slider, Switch, styled } from '@mui/material'
 import toast from 'react-hot-toast'
-import { bigint } from 'zod'
 
 const StyledSlider = styled(Slider)(() => ({
     color: '#111827', // Dark color for the track
@@ -120,10 +119,27 @@ export default function Page() {
     const handleConnectReddit = async () => {
         try {
             setIsConnecting(true)
+            let popup: Window | null = null;
+            popup = window.open('', '_blank', "width=600,height=800");
+            if (!popup) {
+                toast.error('Popup was blocked. Please allow popups in your browser.');
+                return;
+            }
+            // Inject temporary loading UI
+            popup.document.write(`
+                <html>
+                    <head><title>Connecting...</title></head>
+                    <body style="display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif;">
+                <div>
+                    <p>Connecting to Reddit Chat...</p>
+                </div>
+                </body>
+                </html>
+            `);
+            popup.document.close();
             const abortController = new AbortController();
             const response = portalClient.connectReddit({}, { signal: abortController.signal });
 
-            let popup: Window | null = null;
             let streamClosed = false;
 
             // Set interval to check if popup closed manually
@@ -145,7 +161,7 @@ export default function Page() {
             for await (const msg of response) {
                 if (msg.url) {
                     // Open the Reddit login page in a popup
-                    popup = window.open(msg.url, "_blank", "width=600,height=800");
+                    popup.location.href = msg.url; // Redirect once URL is available
                 }
             }
 
