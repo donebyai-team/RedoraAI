@@ -257,7 +257,7 @@ export default function Page() {
                         </Box>
 
                         <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-                            Configure your DM settings. Redora will auto-send up to ${maxDMPerDay} DMs daily to qualified leads.
+                            {`Configure your DM settings. Redora will auto-send up to ${maxDMPerDay} DMs daily to qualified leads.`}
                         </Typography>
 
                         <Box display="flex" alignItems="center" gap={2}>
@@ -299,7 +299,7 @@ export default function Page() {
                         </Box>
 
                         <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-                            Set your comment automation preferences. Redora will automatically post up to ${maxCommentPerDay} comments per day on relevant posts to engage qualified leads.
+                            {`Set your comment automation preferences. Redora will automatically post up to ${maxCommentPerDay} comments per day on relevant posts to engage qualified leads.`}
                         </Typography>
 
                         <Box mb={5}>
