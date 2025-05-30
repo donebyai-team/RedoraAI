@@ -76,7 +76,7 @@ export function AppSidebar() {
       active: isActive(routes.new.integrations),
     },
     {
-      title: "Automation",
+      title: "DM Automation",
       path: routes.new.automation,
       icon: Workflow,
       active: isActive(routes.new.automation),

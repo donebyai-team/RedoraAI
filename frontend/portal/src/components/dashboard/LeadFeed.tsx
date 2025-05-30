@@ -207,10 +207,13 @@ export function LeadFeed() {
 
   if (newTabList?.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-center">
-        <MessageSquare className="h-12 w-12 text-muted-foreground mb-4" />
-        <h4 className="text-lg font-medium mb-2">{`Sit back and relax, we are finding relevant leads for you. We will notify you once it’s ready.`}</h4>
+      <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+        <MessageSquare className="h-10 w-10 text-muted-foreground mb-3" />
+        <h5 className="text-sm font-normal leading-relaxed text-muted-foreground max-w-md">
+          Sit back and relax — we’re finding relevant leads for you. You’ll be notified once it’s ready.
+        </h5>
       </div>
+
     );
   }
 

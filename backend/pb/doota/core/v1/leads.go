@@ -58,6 +58,7 @@ func (u *Project) FromModel(product *models.Project, sources []*models.Source, k
 	u.Description = product.ProductDescription
 	u.Website = product.WebsiteURL
 	u.TargetPersona = product.CustomerPersona
+	u.IsActive = product.IsActive
 
 	sourcesProto := make([]*Source, 0, len(sources))
 	for _, source := range sources {

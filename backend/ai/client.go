@@ -25,10 +25,10 @@ import (
 const SEED = 42
 
 type Client struct {
-	defaultLLMModel     models.LLMModel
-	advanceLLMModel     models.LLMModel
-	model               openai.Client
-	langsmithConfig     LangsmithConfig
+	defaultLLMModel models.LLMModel
+	advanceLLMModel models.LLMModel
+	model           openai.Client
+	langsmithConfig LangsmithConfig
 	/**/ debugFileStore dstore.Store
 	log                 *zap.Logger
 }

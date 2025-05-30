@@ -146,6 +146,7 @@ message Project {
   repeated Source sources = 7;
   repeated string suggested_keywords = 8;
   repeated string suggested_sources = 9;
+  bool is_active = 10;
 }
 
 enum SubscriptionStatus {

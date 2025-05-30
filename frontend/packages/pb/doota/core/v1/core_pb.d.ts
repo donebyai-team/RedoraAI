@@ -427,6 +427,11 @@ export declare type Project = Message<"doota.core.v1.Project"> & {
    * @generated from field: repeated string suggested_sources = 9;
    */
   suggestedSources: string[];
+
+  /**
+   * @generated from field: bool is_active = 10;
+   */
+  isActive: boolean;
 };
 
 /**

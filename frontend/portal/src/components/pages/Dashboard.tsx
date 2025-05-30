@@ -33,10 +33,12 @@ import { LeadAnalysis } from "@doota/pb/doota/portal/v1/portal_pb";
 import { setAccounts, setLoading } from "@/store/Reddit/RedditSlice";
 import { ConnectRedditPrompt } from "../dashboard/ConnectRedditPrompt";
 import { useRedditIntegrationStatus } from "../Leads/Tabs/useRedditIntegrationStatus";
+import { AnnouncementBanner } from "../dashboard/AnnouncementBanner";
 
 export default function Dashboard() {
   const { portalClient } = useClientsContext()
   const dispatch = useAppDispatch();
+  const project = useAppSelector((state: RootState) => state.stepper.project);
   const { dateRange, leadStatusFilter, isLoading } = useAppSelector((state: RootState) => state.lead);
   const { relevancyScore, subReddit } = useAppSelector((state: RootState) => state.parems);
   const { isConnected, loading: isLoadingRedditIntegrationStatus } = useRedditIntegrationStatus();
@@ -179,6 +181,9 @@ export default function Dashboard() {
   return (
     <>
       <DashboardHeader />
+      {project && !project.isActive && (
+        <AnnouncementBanner message="⚠️ Your account has been paused due to inactivity. Please contact support to enable it." />
+      )}
 
       <div className="flex-1 overflow-auto">
         <main className="container mx-auto px-4 py-6 md:px-6">
