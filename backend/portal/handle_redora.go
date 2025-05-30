@@ -68,8 +68,12 @@ func (p *Portal) ConnectReddit(ctx context.Context, c *connect.Request[emptypb.E
 
 	err = loginCallback()
 	if err != nil {
+		p.logger.Error("failed to connect reddit DM", zap.Error(err))
 		return err
 	}
+
+	go p.alertNotifier.SendRedditChatConnectedAlert(ctx, actor.Email)
+
 	return nil
 }
 

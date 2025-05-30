@@ -39,13 +39,13 @@ var RedoraPlans = map[SubscriptionPlanType]*SubscriptionPlan{
 		Interval:    365 * 10, // 10 years
 		Metadata: SubscriptionPlanMetadata{
 			Comments: UsageLimits{
-				PerDay: 4,
+				PerDay: 5,
 			},
 			DMs: UsageLimits{
-				PerDay: 4,
+				PerDay: 5,
 			},
 			RelevantPosts: UsageLimits{
-				PerDay: 10,
+				PerDay: 5,
 			},
 			MaxSources:  2,
 			MaxKeywords: 1,
@@ -54,17 +54,17 @@ var RedoraPlans = map[SubscriptionPlanType]*SubscriptionPlan{
 	SubscriptionPlanTypeFOUNDER: {
 		PlanType:    SubscriptionPlanTypeFOUNDER,
 		Description: "Perfect for individual founders reaching out to niche communities",
-		Price:       29.99,
+		Price:       39.99,
 		Interval:    30,
 		Metadata: SubscriptionPlanMetadata{
 			Comments: UsageLimits{
-				PerDay: 30,
+				PerDay: 25,
 			},
 			DMs: UsageLimits{
-				PerDay: 10,
+				PerDay: 25,
 			},
 			RelevantPosts: UsageLimits{
-				PerDay: 50,
+				PerDay: 25,
 			},
 			MaxSources:  5,
 			MaxKeywords: 5,
@@ -77,35 +77,35 @@ var RedoraPlans = map[SubscriptionPlanType]*SubscriptionPlan{
 		Interval:    30,
 		Metadata: SubscriptionPlanMetadata{
 			Comments: UsageLimits{
-				PerDay: 100,
+				PerDay: 50,
 			},
 			DMs: UsageLimits{
-				PerDay: 40,
+				PerDay: 50,
 			},
 			RelevantPosts: UsageLimits{
-				PerDay: 200,
+				PerDay: 50,
 			},
-			MaxSources:  5,
-			MaxKeywords: 5,
+			MaxSources:  20,
+			MaxKeywords: 20,
 		},
 	},
 	SubscriptionPlanTypeGROWTH: {
 		PlanType:    SubscriptionPlanTypeGROWTH,
 		Description: "For startups scaling user outreach and engagement",
-		Price:       49.99,
+		Price:       149.99,
 		Interval:    30,
 		Metadata: SubscriptionPlanMetadata{
 			Comments: UsageLimits{
-				PerDay: 60,
+				PerDay: 100,
 			},
 			DMs: UsageLimits{
-				PerDay: 25,
+				PerDay: 100,
 			},
 			RelevantPosts: UsageLimits{
 				PerDay: 100,
 			},
-			MaxSources:  5,
-			MaxKeywords: 5,
+			MaxSources:  20,
+			MaxKeywords: 20,
 		},
 	},
 }

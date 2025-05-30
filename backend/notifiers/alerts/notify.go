@@ -32,6 +32,7 @@ type AlertNotifier interface {
 	SendUserActivity(ctx context.Context, activity, orgName, redditUsername string)
 	SendNewProductAddedAlert(ctx context.Context, productName, website string)
 	SendWelcomeEmail(ctx context.Context, orgID string)
+	SendRedditChatConnectedAlert(ctx context.Context, email string)
 }
 
 type SlackNotifier struct {
@@ -91,6 +92,18 @@ func (s *SlackNotifier) SendNewProductAddedAlert(ctx context.Context, productNam
 
 	if err := s.send(ctx, msg, redoraChannel); err != nil {
 		s.logger.Error("failed to send new product alert to Slack", zap.Error(err))
+	}
+}
+
+func (s *SlackNotifier) SendRedditChatConnectedAlert(ctx context.Context, email string) {
+	msg := fmt.Sprintf(
+		"*DM Automation Enabled*\n"+
+			"*Email:* %s",
+		email,
+	)
+
+	if err := s.send(ctx, msg, redoraChannel); err != nil {
+		s.logger.Error("failed to send new user alert to Slack", zap.Error(err))
 	}
 }
 
