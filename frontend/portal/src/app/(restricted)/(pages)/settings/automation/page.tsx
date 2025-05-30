@@ -257,7 +257,7 @@ export default function Page() {
                         </Box>
 
                         <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-                            {`Configure your DM settings. Redora will auto-send up to ${maxDMPerDay} DMs daily to qualified leads.`}
+                            {`Configure your DM settings. Redora will auto-send up to ${maxDMPerDay} DMs daily to qualified leads. Your credentials are never stored — we use browser cookies to simulate real user behavior when sending DMs.`}
                         </Typography>
 
                         <Box display="flex" alignItems="center" gap={2}>
@@ -319,7 +319,7 @@ export default function Page() {
                             />
 
                             <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
-                                Only post comments on posts ≥ Min Relevancy Score
+                                Only comments on posts ≥ Min Relevancy Score
                             </Typography>
                         </Box>
 
