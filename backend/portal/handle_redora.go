@@ -70,7 +70,6 @@ func (p *Portal) ConnectReddit(ctx context.Context, c *connect.Request[emptypb.E
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -506,18 +505,24 @@ func (p *Portal) UpdateAutomationSettings(ctx context.Context, c *connect.Reques
 		org.FeatureFlags.RelevancyScoreComment = float64(c.Msg.Comment.RelevancyScore)
 	}
 
-	//if c.Msg.Dm != nil {
-	//	if c.Msg.Dm.RelevancyScore < 70 {
-	//		return nil, status.New(codes.InvalidArgument, "relevancy score should be at least 70").Err()
-	//	}
-	//	org.FeatureFlags.EnableAutoDM = c.Msg.Dm.Enabled
-	//	org.FeatureFlags.RelevancyScoreDM = float64(c.Msg.Dm.RelevancyScore)
-	//}
+	if c.Msg.Dm != nil {
+		//if c.Msg.Dm.RelevancyScore < 70 {
+		//	return nil, status.New(codes.InvalidArgument, "relevancy score should be at least 70").Err()
+		//}
+		org.FeatureFlags.MaxCommentsPerDay = c.Msg.Dm.MaxPerDay
+		org.FeatureFlags.EnableAutoDM = c.Msg.Dm.Enabled
+		org.FeatureFlags.RelevancyScoreDM = float64(c.Msg.Dm.RelevancyScore)
+	}
 
 	err = p.db.UpdateOrganization(ctx, org)
 	if err != nil {
 		return nil, err
 	}
+
+	p.logger.Info("updated automation settings",
+		zap.Bool("dm_enabled", org.FeatureFlags.EnableAutoDM),
+		zap.Bool("comment_enabled", org.FeatureFlags.EnableAutoComment),
+	)
 
 	return connect.NewResponse(new(pbportal.Organization).FromModel(org)), nil
 }

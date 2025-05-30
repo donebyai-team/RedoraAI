@@ -6,6 +6,8 @@ import {
   LayoutDashboard,
   MessageSquare,
   Settings,
+  Workflow,
+  CreditCard,
   Tag,
   Edit
 } from "lucide-react";
@@ -68,10 +70,16 @@ export function AppSidebar() {
       active: isActive(routes.new.edit_product),
     },
     {
-      title: "Settings",
+      title: "Integrations",
       path: routes.new.integrations,
       icon: Settings,
       active: isActive(routes.new.integrations),
+    },
+    {
+      title: "Automation",
+      path: routes.new.automation,
+      icon: Workflow,
+      active: isActive(routes.new.automation),
     },
     // {
     //   title: "Reddit Accounts",
@@ -85,12 +93,12 @@ export function AppSidebar() {
     //   icon: Users,
     //   active: isActive("/settings/team"),
     // },
-    // {
-    //   title: "Billing Plan",
-    //   path: "/settings/billing",
-    //   icon: CreditCard,
-    //   active: isActive("/settings/billing"),
-    // },
+    {
+      title: "Billing Plan",
+      path: routes.new.billing,
+      icon: CreditCard,
+      active: isActive(routes.new.billing),
+    },
   ];
 
   return (

@@ -86,11 +86,17 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 		return err
 	}
 
+	if integration.State != models.IntegrationStateACTIVE {
+		interaction.Status = models.LeadInteractionStatusFAILED
+		interaction.Reason = "dm integration not found or inactive"
+		return fmt.Errorf(interaction.Reason)
+	}
+
 	redditClient, err := r.redditOauthClient.GetOrCreate(ctx, interaction.Organization.ID, true)
 	if err != nil {
 		if errors.Is(err, datastore.IntegrationNotFoundOrActive) {
 			interaction.Status = models.LeadInteractionStatusFAILED
-			interaction.Reason = "integration not found or inactive"
+			interaction.Reason = "oauth integration not found or inactive"
 		} else {
 			interaction.Status = models.LeadInteractionStatusFAILED
 			interaction.Reason = err.Error()

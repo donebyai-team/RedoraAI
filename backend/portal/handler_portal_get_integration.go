@@ -31,6 +31,30 @@ func (p *Portal) GetIntegration(ctx context.Context, c *connect.Request[pbportal
 	return connect.NewResponse(p.protoIntegration(integration)), nil
 }
 
+func (p *Portal) RevokeIntegration(ctx context.Context, c *connect.Request[pbportal.RevokeIntegrationRequest]) (*connect.Response[emptypb.Empty], error) {
+	actor, err := p.gethAuthContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	integration, err := p.db.GetIntegrationById(ctx, c.Msg.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	if integration.OrganizationID != actor.OrganizationID {
+		return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("only admins can revoke integrations"))
+	}
+
+	integration.State = models.IntegrationStateAUTHREVOKED
+	_, err = p.db.UpsertIntegration(ctx, integration)
+	if err != nil {
+		return nil, err
+	}
+
+	return connect.NewResponse(&emptypb.Empty{}), nil
+}
+
 func (p *Portal) protoIntegration(integration *models.Integration) *pbportal.Integration {
 	switch integration.Type {
 	case models.IntegrationTypeREDDIT:

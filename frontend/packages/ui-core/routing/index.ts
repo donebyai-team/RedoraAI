@@ -32,6 +32,8 @@ export const routes = {
     leads: '/leads',
     edit_product: '/settings/product',
     integrations: '/settings/integrations',
+    automation: '/settings/automation',
+    billing: '/settings/billing',
   }
 }
 

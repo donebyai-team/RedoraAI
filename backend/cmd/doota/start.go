@@ -201,28 +201,16 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 	browserLessClient := interactions.NewBrowserlessClient(sflags.MustGetString(cmd, "common-browserless-api-key"), debugStore, logger)
 	interactionService := interactions.NewRedditInteractions(deps.DataStore, browserLessClient, redditOauthClient, logger)
 
-	//err = browserLessClient.SendDM(context.Background(), interactions.DMParams{
-	//	Username: "adarsh@miraa.io",
-	//	Password: "Adarsh@121097",
-	//	To:       "t2_2xy5yaww",
-	//	Message:  "Hidd",
-	//	ID:       "unique_id",
-	//	Cookie:   `[]`,
-	//})
+	//andType, err := deps.DataStore.GetIntegrationByOrgAndType(context.Background(), "5b5955de-a4c1-4bb5-9358-c3c2ba34fdf6", models.IntegrationTypeREDDITDMLOGIN)
 	//if err != nil {
 	//	return nil, err
 	//}
-
-	//loginCtx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
-	//defer cancel()
-	//
-	//liveURL, checkLogin, err := browserLessClient.StartLogin(loginCtx)
-	//if err != nil {
-	//	return nil, fmt.Errorf("unable to start login: %w", err)
-	//}
-	//
-	//fmt.Println("liveURL", liveURL)
-	//err = checkLogin()
+	//_, err = browserLessClient.SendDM(context.Background(), interactions.DMParams{
+	//	To:      "t2_1ctydt6n8g",
+	//	Message: "hello",
+	//	ID:      "unique_id",
+	//	Cookie:  andType.GetRedditDMLoginConfig().Cookies,
+	//})
 	//if err != nil {
 	//	return nil, err
 	//}

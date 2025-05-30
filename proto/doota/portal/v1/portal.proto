@@ -14,6 +14,7 @@ service PortalService {
 //  rpc AddUser(AddUserRequest) returns (User);
 //  rpc RenewUser(RenewUserRequest) returns (.google.protobuf.Empty);
   rpc GetIntegration(GetIntegrationRequest) returns (Integration);
+  rpc RevokeIntegration(RevokeIntegrationRequest) returns (.google.protobuf.Empty);
   rpc Batch(BatchReq) returns (BatchResp);
   rpc CreateCustomerCase(CreateCustomerCaseReq) returns (.google.protobuf.Empty);
   rpc PasswordlessStart(PasswordlessStartRequest) returns (.google.protobuf.Empty);
@@ -237,6 +238,10 @@ message RedditIntegration {
 
 message Integrations {
   repeated Integration integrations = 1;
+}
+
+message RevokeIntegrationRequest {
+  string id =1;
 }
 
 message GetIntegrationRequest { IntegrationType type = 1; }

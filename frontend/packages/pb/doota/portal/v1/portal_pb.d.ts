@@ -818,6 +818,22 @@ export declare type Integrations = Message<"doota.portal.v1.Integrations"> & {
 export declare const IntegrationsSchema: GenMessage<Integrations>;
 
 /**
+ * @generated from message doota.portal.v1.RevokeIntegrationRequest
+ */
+export declare type RevokeIntegrationRequest = Message<"doota.portal.v1.RevokeIntegrationRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+};
+
+/**
+ * Describes the message doota.portal.v1.RevokeIntegrationRequest.
+ * Use `create(RevokeIntegrationRequestSchema)` to create a new message.
+ */
+export declare const RevokeIntegrationRequestSchema: GenMessage<RevokeIntegrationRequest>;
+
+/**
  * @generated from message doota.portal.v1.GetIntegrationRequest
  */
 export declare type GetIntegrationRequest = Message<"doota.portal.v1.GetIntegrationRequest"> & {
@@ -1107,6 +1123,14 @@ export declare const PortalService: GenService<{
     methodKind: "unary";
     input: typeof GetIntegrationRequestSchema;
     output: typeof IntegrationSchema;
+  },
+  /**
+   * @generated from rpc doota.portal.v1.PortalService.RevokeIntegration
+   */
+  revokeIntegration: {
+    methodKind: "unary";
+    input: typeof RevokeIntegrationRequestSchema;
+    output: typeof EmptySchema;
   },
   /**
    * @generated from rpc doota.portal.v1.PortalService.Batch

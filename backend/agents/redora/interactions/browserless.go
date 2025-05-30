@@ -238,7 +238,7 @@ func (r browserless) SendDM(ctx context.Context, params DMParams) ([]byte, error
 	}
 	defer pw.Stop()
 
-	info, err := r.getCDPUrl(ctx, loginURL, false)
+	info, err := r.getCDPUrl(ctx, chatURL, false)
 	if err != nil {
 		return nil, fmt.Errorf("CDP url fetch failed: %w", err)
 	}
@@ -535,8 +535,8 @@ func (r browserless) WaitAndGetCookies(ctx context.Context, browserURL string) (
 			return nil, fmt.Errorf("login timed out or cancelled: %w", ctx.Err())
 		case <-ticker.C:
 			currentURL := page.URL()
-			if strings.HasPrefix(currentURL, "https://www.reddit.com/") && !strings.Contains(currentURL, "/login") {
-				// user has logged in and is redirected
+			if (strings.HasPrefix(currentURL, "https://www.reddit.com") || strings.HasPrefix(currentURL, "https://chat.reddit.com")) &&
+				!strings.Contains(currentURL, "/login") {
 				cookies, err := pageContext.Cookies()
 				if err != nil {
 					return nil, fmt.Errorf("failed to read cookies: %w", err)
@@ -548,7 +548,7 @@ func (r browserless) WaitAndGetCookies(ctx context.Context, browserURL string) (
 }
 
 func (r browserless) StartLogin(ctx context.Context) (*CDPInfo, error) {
-	cdp, err := r.getCDPUrl(ctx, loginURL, true)
+	cdp, err := r.getCDPUrl(ctx, chatURL, true)
 	if err != nil {
 		return nil, err
 	}

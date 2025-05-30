@@ -42,6 +42,9 @@ const (
 	// PortalServiceGetIntegrationProcedure is the fully-qualified name of the PortalService's
 	// GetIntegration RPC.
 	PortalServiceGetIntegrationProcedure = "/doota.portal.v1.PortalService/GetIntegration"
+	// PortalServiceRevokeIntegrationProcedure is the fully-qualified name of the PortalService's
+	// RevokeIntegration RPC.
+	PortalServiceRevokeIntegrationProcedure = "/doota.portal.v1.PortalService/RevokeIntegration"
 	// PortalServiceBatchProcedure is the fully-qualified name of the PortalService's Batch RPC.
 	PortalServiceBatchProcedure = "/doota.portal.v1.PortalService/Batch"
 	// PortalServiceCreateCustomerCaseProcedure is the fully-qualified name of the PortalService's
@@ -105,6 +108,7 @@ var (
 	portalServiceGetConfigMethodDescriptor                 = portalServiceServiceDescriptor.Methods().ByName("GetConfig")
 	portalServiceSelfMethodDescriptor                      = portalServiceServiceDescriptor.Methods().ByName("Self")
 	portalServiceGetIntegrationMethodDescriptor            = portalServiceServiceDescriptor.Methods().ByName("GetIntegration")
+	portalServiceRevokeIntegrationMethodDescriptor         = portalServiceServiceDescriptor.Methods().ByName("RevokeIntegration")
 	portalServiceBatchMethodDescriptor                     = portalServiceServiceDescriptor.Methods().ByName("Batch")
 	portalServiceCreateCustomerCaseMethodDescriptor        = portalServiceServiceDescriptor.Methods().ByName("CreateCustomerCase")
 	portalServicePasswordlessStartMethodDescriptor         = portalServiceServiceDescriptor.Methods().ByName("PasswordlessStart")
@@ -133,6 +137,7 @@ type PortalServiceClient interface {
 	// rpc AddUser(AddUserRequest) returns (User);
 	// rpc RenewUser(RenewUserRequest) returns (.google.protobuf.Empty);
 	GetIntegration(context.Context, *connect.Request[v1.GetIntegrationRequest]) (*connect.Response[v1.Integration], error)
+	RevokeIntegration(context.Context, *connect.Request[v1.RevokeIntegrationRequest]) (*connect.Response[emptypb.Empty], error)
 	Batch(context.Context, *connect.Request[v1.BatchReq]) (*connect.Response[v1.BatchResp], error)
 	CreateCustomerCase(context.Context, *connect.Request[v1.CreateCustomerCaseReq]) (*connect.Response[emptypb.Empty], error)
 	PasswordlessStart(context.Context, *connect.Request[v1.PasswordlessStartRequest]) (*connect.Response[emptypb.Empty], error)
@@ -181,6 +186,12 @@ func NewPortalServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			httpClient,
 			baseURL+PortalServiceGetIntegrationProcedure,
 			connect.WithSchema(portalServiceGetIntegrationMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
+		revokeIntegration: connect.NewClient[v1.RevokeIntegrationRequest, emptypb.Empty](
+			httpClient,
+			baseURL+PortalServiceRevokeIntegrationProcedure,
+			connect.WithSchema(portalServiceRevokeIntegrationMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
 		batch: connect.NewClient[v1.BatchReq, v1.BatchResp](
@@ -305,6 +316,7 @@ type portalServiceClient struct {
 	getConfig                 *connect.Client[emptypb.Empty, v1.Config]
 	self                      *connect.Client[emptypb.Empty, v1.User]
 	getIntegration            *connect.Client[v1.GetIntegrationRequest, v1.Integration]
+	revokeIntegration         *connect.Client[v1.RevokeIntegrationRequest, emptypb.Empty]
 	batch                     *connect.Client[v1.BatchReq, v1.BatchResp]
 	createCustomerCase        *connect.Client[v1.CreateCustomerCaseReq, emptypb.Empty]
 	passwordlessStart         *connect.Client[v1.PasswordlessStartRequest, emptypb.Empty]
@@ -339,6 +351,11 @@ func (c *portalServiceClient) Self(ctx context.Context, req *connect.Request[emp
 // GetIntegration calls doota.portal.v1.PortalService.GetIntegration.
 func (c *portalServiceClient) GetIntegration(ctx context.Context, req *connect.Request[v1.GetIntegrationRequest]) (*connect.Response[v1.Integration], error) {
 	return c.getIntegration.CallUnary(ctx, req)
+}
+
+// RevokeIntegration calls doota.portal.v1.PortalService.RevokeIntegration.
+func (c *portalServiceClient) RevokeIntegration(ctx context.Context, req *connect.Request[v1.RevokeIntegrationRequest]) (*connect.Response[emptypb.Empty], error) {
+	return c.revokeIntegration.CallUnary(ctx, req)
 }
 
 // Batch calls doota.portal.v1.PortalService.Batch.
@@ -443,6 +460,7 @@ type PortalServiceHandler interface {
 	// rpc AddUser(AddUserRequest) returns (User);
 	// rpc RenewUser(RenewUserRequest) returns (.google.protobuf.Empty);
 	GetIntegration(context.Context, *connect.Request[v1.GetIntegrationRequest]) (*connect.Response[v1.Integration], error)
+	RevokeIntegration(context.Context, *connect.Request[v1.RevokeIntegrationRequest]) (*connect.Response[emptypb.Empty], error)
 	Batch(context.Context, *connect.Request[v1.BatchReq]) (*connect.Response[v1.BatchResp], error)
 	CreateCustomerCase(context.Context, *connect.Request[v1.CreateCustomerCaseReq]) (*connect.Response[emptypb.Empty], error)
 	PasswordlessStart(context.Context, *connect.Request[v1.PasswordlessStartRequest]) (*connect.Response[emptypb.Empty], error)
@@ -487,6 +505,12 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 		PortalServiceGetIntegrationProcedure,
 		svc.GetIntegration,
 		connect.WithSchema(portalServiceGetIntegrationMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	portalServiceRevokeIntegrationHandler := connect.NewUnaryHandler(
+		PortalServiceRevokeIntegrationProcedure,
+		svc.RevokeIntegration,
+		connect.WithSchema(portalServiceRevokeIntegrationMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
 	portalServiceBatchHandler := connect.NewUnaryHandler(
@@ -611,6 +635,8 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 			portalServiceSelfHandler.ServeHTTP(w, r)
 		case PortalServiceGetIntegrationProcedure:
 			portalServiceGetIntegrationHandler.ServeHTTP(w, r)
+		case PortalServiceRevokeIntegrationProcedure:
+			portalServiceRevokeIntegrationHandler.ServeHTTP(w, r)
 		case PortalServiceBatchProcedure:
 			portalServiceBatchHandler.ServeHTTP(w, r)
 		case PortalServiceCreateCustomerCaseProcedure:
@@ -668,6 +694,10 @@ func (UnimplementedPortalServiceHandler) Self(context.Context, *connect.Request[
 
 func (UnimplementedPortalServiceHandler) GetIntegration(context.Context, *connect.Request[v1.GetIntegrationRequest]) (*connect.Response[v1.Integration], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.GetIntegration is not implemented"))
+}
+
+func (UnimplementedPortalServiceHandler) RevokeIntegration(context.Context, *connect.Request[v1.RevokeIntegrationRequest]) (*connect.Response[emptypb.Empty], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.RevokeIntegration is not implemented"))
 }
 
 func (UnimplementedPortalServiceHandler) Batch(context.Context, *connect.Request[v1.BatchReq]) (*connect.Response[v1.BatchResp], error) {
