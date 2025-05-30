@@ -92,6 +92,8 @@ export default function Page() {
 
     const defaultRelevancyScore = org?.featureFlags?.Comment?.relevancyScore ?? defaultRelevancyScoreForComment;
     const defaultAutoComment = org?.featureFlags?.Comment?.enabled ?? defaultStatusForComment;
+    const maxDMPerDay = org?.featureFlags?.DM?.maxPerDay || 0;
+    const maxCommentPerDay = org?.featureFlags?.Comment?.maxPerDay || 0;
 
     const [relevancyScore, setRelevancyScore] = useState(defaultRelevancyScore)
     const [autoComment, setAutoComment] = useState(defaultAutoComment)
@@ -255,7 +257,7 @@ export default function Page() {
                         </Box>
 
                         <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-                            Please allow popup window to login into Reddit chat.
+                            Configure your DM settings. Redora will auto-send up to ${maxDMPerDay} DMs daily to qualified leads.
                         </Typography>
 
                         <Box display="flex" alignItems="center" gap={2}>
@@ -297,7 +299,7 @@ export default function Page() {
                         </Box>
 
                         <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-                            Configure your automation preferences.
+                            Set your comment automation preferences. Redora will automatically post up to ${maxCommentPerDay} comments per day on relevant posts to engage qualified leads.
                         </Typography>
 
                         <Box mb={5}>
@@ -317,7 +319,7 @@ export default function Page() {
                             />
 
                             <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
-                                RedoraAI will automatically post comments on posts ≥ Min Relevancy Score
+                                Only post comments on posts ≥ Min Relevancy Score
                             </Typography>
                         </Box>
 
