@@ -100,6 +100,9 @@ const (
 	// PortalServiceConnectRedditProcedure is the fully-qualified name of the PortalService's
 	// ConnectReddit RPC.
 	PortalServiceConnectRedditProcedure = "/doota.portal.v1.PortalService/ConnectReddit"
+	// PortalServiceGetLeadInteractionsProcedure is the fully-qualified name of the PortalService's
+	// GetLeadInteractions RPC.
+	PortalServiceGetLeadInteractionsProcedure = "/doota.portal.v1.PortalService/GetLeadInteractions"
 )
 
 // These variables are the protoreflect.Descriptor objects for the RPCs defined in this package.
@@ -128,6 +131,7 @@ var (
 	portalServiceSuggestKeywordsAndSourcesMethodDescriptor = portalServiceServiceDescriptor.Methods().ByName("SuggestKeywordsAndSources")
 	portalServiceUpdateAutomationSettingsMethodDescriptor  = portalServiceServiceDescriptor.Methods().ByName("UpdateAutomationSettings")
 	portalServiceConnectRedditMethodDescriptor             = portalServiceServiceDescriptor.Methods().ByName("ConnectReddit")
+	portalServiceGetLeadInteractionsMethodDescriptor       = portalServiceServiceDescriptor.Methods().ByName("GetLeadInteractions")
 )
 
 // PortalServiceClient is a client for the doota.portal.v1.PortalService service.
@@ -158,6 +162,7 @@ type PortalServiceClient interface {
 	SuggestKeywordsAndSources(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v11.Project], error)
 	UpdateAutomationSettings(context.Context, *connect.Request[v1.UpdateAutomationSettingRequest]) (*connect.Response[v1.Organization], error)
 	ConnectReddit(context.Context, *connect.Request[emptypb.Empty]) (*connect.ServerStreamForClient[v1.ConnectRedditResponse], error)
+	GetLeadInteractions(context.Context, *connect.Request[v1.GetLeadInteractionsRequest]) (*connect.Response[v1.GetLeadInteractionsResponse], error)
 }
 
 // NewPortalServiceClient constructs a client for the doota.portal.v1.PortalService service. By
@@ -308,6 +313,12 @@ func NewPortalServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(portalServiceConnectRedditMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
+		getLeadInteractions: connect.NewClient[v1.GetLeadInteractionsRequest, v1.GetLeadInteractionsResponse](
+			httpClient,
+			baseURL+PortalServiceGetLeadInteractionsProcedure,
+			connect.WithSchema(portalServiceGetLeadInteractionsMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -336,6 +347,7 @@ type portalServiceClient struct {
 	suggestKeywordsAndSources *connect.Client[emptypb.Empty, v11.Project]
 	updateAutomationSettings  *connect.Client[v1.UpdateAutomationSettingRequest, v1.Organization]
 	connectReddit             *connect.Client[emptypb.Empty, v1.ConnectRedditResponse]
+	getLeadInteractions       *connect.Client[v1.GetLeadInteractionsRequest, v1.GetLeadInteractionsResponse]
 }
 
 // GetConfig calls doota.portal.v1.PortalService.GetConfig.
@@ -453,6 +465,11 @@ func (c *portalServiceClient) ConnectReddit(ctx context.Context, req *connect.Re
 	return c.connectReddit.CallServerStream(ctx, req)
 }
 
+// GetLeadInteractions calls doota.portal.v1.PortalService.GetLeadInteractions.
+func (c *portalServiceClient) GetLeadInteractions(ctx context.Context, req *connect.Request[v1.GetLeadInteractionsRequest]) (*connect.Response[v1.GetLeadInteractionsResponse], error) {
+	return c.getLeadInteractions.CallUnary(ctx, req)
+}
+
 // PortalServiceHandler is an implementation of the doota.portal.v1.PortalService service.
 type PortalServiceHandler interface {
 	GetConfig(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.Config], error)
@@ -481,6 +498,7 @@ type PortalServiceHandler interface {
 	SuggestKeywordsAndSources(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v11.Project], error)
 	UpdateAutomationSettings(context.Context, *connect.Request[v1.UpdateAutomationSettingRequest]) (*connect.Response[v1.Organization], error)
 	ConnectReddit(context.Context, *connect.Request[emptypb.Empty], *connect.ServerStream[v1.ConnectRedditResponse]) error
+	GetLeadInteractions(context.Context, *connect.Request[v1.GetLeadInteractionsRequest]) (*connect.Response[v1.GetLeadInteractionsResponse], error)
 }
 
 // NewPortalServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -627,6 +645,12 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(portalServiceConnectRedditMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
+	portalServiceGetLeadInteractionsHandler := connect.NewUnaryHandler(
+		PortalServiceGetLeadInteractionsProcedure,
+		svc.GetLeadInteractions,
+		connect.WithSchema(portalServiceGetLeadInteractionsMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/doota.portal.v1.PortalService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case PortalServiceGetConfigProcedure:
@@ -675,6 +699,8 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 			portalServiceUpdateAutomationSettingsHandler.ServeHTTP(w, r)
 		case PortalServiceConnectRedditProcedure:
 			portalServiceConnectRedditHandler.ServeHTTP(w, r)
+		case PortalServiceGetLeadInteractionsProcedure:
+			portalServiceGetLeadInteractionsHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -774,4 +800,8 @@ func (UnimplementedPortalServiceHandler) UpdateAutomationSettings(context.Contex
 
 func (UnimplementedPortalServiceHandler) ConnectReddit(context.Context, *connect.Request[emptypb.Empty], *connect.ServerStream[v1.ConnectRedditResponse]) error {
 	return connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.ConnectReddit is not implemented"))
+}
+
+func (UnimplementedPortalServiceHandler) GetLeadInteractions(context.Context, *connect.Request[v1.GetLeadInteractionsRequest]) (*connect.Response[v1.GetLeadInteractionsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.GetLeadInteractions is not implemented"))
 }

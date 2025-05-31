@@ -102,6 +102,7 @@ type LeadInteractionRepository interface {
 	GetLeadInteractionsToExecute(ctx context.Context, statuses []models.LeadInteractionStatus) ([]*models.LeadInteraction, error)
 	SetLeadInteractionStatusProcessing(ctx context.Context, id string) error
 	IsInteractionExists(ctx context.Context, interaction *models.LeadInteraction) (bool, error)
+	GetAugmentedLeadInteractions(ctx context.Context, projectID string, dateRange pbportal.DateRangeFilter) ([]*models.AugmentedLeadInteraction, error)
 }
 
 type LeadsFilter struct {

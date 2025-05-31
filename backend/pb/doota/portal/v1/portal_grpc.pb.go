@@ -44,6 +44,7 @@ const (
 	PortalService_SuggestKeywordsAndSources_FullMethodName = "/doota.portal.v1.PortalService/SuggestKeywordsAndSources"
 	PortalService_UpdateAutomationSettings_FullMethodName  = "/doota.portal.v1.PortalService/UpdateAutomationSettings"
 	PortalService_ConnectReddit_FullMethodName             = "/doota.portal.v1.PortalService/ConnectReddit"
+	PortalService_GetLeadInteractions_FullMethodName       = "/doota.portal.v1.PortalService/GetLeadInteractions"
 )
 
 // PortalServiceClient is the client API for PortalService service.
@@ -76,6 +77,7 @@ type PortalServiceClient interface {
 	SuggestKeywordsAndSources(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*v1.Project, error)
 	UpdateAutomationSettings(ctx context.Context, in *UpdateAutomationSettingRequest, opts ...grpc.CallOption) (*Organization, error)
 	ConnectReddit(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (PortalService_ConnectRedditClient, error)
+	GetLeadInteractions(ctx context.Context, in *GetLeadInteractionsRequest, opts ...grpc.CallOption) (*GetLeadInteractionsResponse, error)
 }
 
 type portalServiceClient struct {
@@ -316,6 +318,15 @@ func (x *portalServiceConnectRedditClient) Recv() (*ConnectRedditResponse, error
 	return m, nil
 }
 
+func (c *portalServiceClient) GetLeadInteractions(ctx context.Context, in *GetLeadInteractionsRequest, opts ...grpc.CallOption) (*GetLeadInteractionsResponse, error) {
+	out := new(GetLeadInteractionsResponse)
+	err := c.cc.Invoke(ctx, PortalService_GetLeadInteractions_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PortalServiceServer is the server API for PortalService service.
 // All implementations must embed UnimplementedPortalServiceServer
 // for forward compatibility
@@ -346,6 +357,7 @@ type PortalServiceServer interface {
 	SuggestKeywordsAndSources(context.Context, *emptypb.Empty) (*v1.Project, error)
 	UpdateAutomationSettings(context.Context, *UpdateAutomationSettingRequest) (*Organization, error)
 	ConnectReddit(*emptypb.Empty, PortalService_ConnectRedditServer) error
+	GetLeadInteractions(context.Context, *GetLeadInteractionsRequest) (*GetLeadInteractionsResponse, error)
 	mustEmbedUnimplementedPortalServiceServer()
 }
 
@@ -421,6 +433,9 @@ func (UnimplementedPortalServiceServer) UpdateAutomationSettings(context.Context
 }
 func (UnimplementedPortalServiceServer) ConnectReddit(*emptypb.Empty, PortalService_ConnectRedditServer) error {
 	return status.Errorf(codes.Unimplemented, "method ConnectReddit not implemented")
+}
+func (UnimplementedPortalServiceServer) GetLeadInteractions(context.Context, *GetLeadInteractionsRequest) (*GetLeadInteractionsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetLeadInteractions not implemented")
 }
 func (UnimplementedPortalServiceServer) mustEmbedUnimplementedPortalServiceServer() {}
 
@@ -852,6 +867,24 @@ func (x *portalServiceConnectRedditServer) Send(m *ConnectRedditResponse) error 
 	return x.ServerStream.SendMsg(m)
 }
 
+func _PortalService_GetLeadInteractions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetLeadInteractionsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortalServiceServer).GetLeadInteractions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortalService_GetLeadInteractions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortalServiceServer).GetLeadInteractions(ctx, req.(*GetLeadInteractionsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // PortalService_ServiceDesc is the grpc.ServiceDesc for PortalService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -946,6 +979,10 @@ var PortalService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateAutomationSettings",
 			Handler:    _PortalService_UpdateAutomationSettings_Handler,
+		},
+		{
+			MethodName: "GetLeadInteractions",
+			Handler:    _PortalService_GetLeadInteractions_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

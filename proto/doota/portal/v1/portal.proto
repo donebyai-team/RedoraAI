@@ -36,6 +36,16 @@ service PortalService {
   rpc SuggestKeywordsAndSources(.google.protobuf.Empty) returns (doota.core.v1.Project);
   rpc UpdateAutomationSettings(UpdateAutomationSettingRequest) returns (Organization);
   rpc ConnectReddit(.google.protobuf.Empty) returns (stream ConnectRedditResponse);
+  rpc GetLeadInteractions(GetLeadInteractionsRequest) returns (GetLeadInteractionsResponse);
+}
+
+message GetLeadInteractionsRequest {
+  DateRangeFilter date_range = 1;
+  doota.core.v1.LeadInteractionStatus status = 2;
+}
+
+message GetLeadInteractionsResponse {
+  repeated doota.core.v1.LeadInteraction interactions = 1;
 }
 
 message ConnectRedditResponse {

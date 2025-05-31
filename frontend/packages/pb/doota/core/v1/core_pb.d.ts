@@ -359,6 +359,77 @@ export declare type Lead = Message<"doota.core.v1.Lead"> & {
 export declare const LeadSchema: GenMessage<Lead>;
 
 /**
+ * @generated from message doota.core.v1.LeadInteraction
+ */
+export declare type LeadInteraction = Message<"doota.core.v1.LeadInteraction"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: string project_id = 2;
+   */
+  projectId: string;
+
+  /**
+   * @generated from field: string lead_id = 3;
+   */
+  leadId: string;
+
+  /**
+   * @generated from field: doota.core.v1.LeadInteractionType interaction_type = 4;
+   */
+  interactionType: LeadInteractionType;
+
+  /**
+   * @generated from field: string from = 5;
+   */
+  from: string;
+
+  /**
+   * @generated from field: string to = 6;
+   */
+  to: string;
+
+  /**
+   * @generated from field: doota.core.v1.LeadInteractionStatus status = 7;
+   */
+  status: LeadInteractionStatus;
+
+  /**
+   * @generated from field: string reason = 8;
+   */
+  reason: string;
+
+  /**
+   * @generated from field: doota.core.v1.LeadMetadata lead_metadata = 9;
+   */
+  leadMetadata?: LeadMetadata;
+
+  /**
+   * @generated from field: string post_title = 10;
+   */
+  postTitle: string;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp created_at = 11;
+   */
+  createdAt?: Timestamp;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp scheduled_at = 12;
+   */
+  scheduledAt?: Timestamp;
+};
+
+/**
+ * Describes the message doota.core.v1.LeadInteraction.
+ * Use `create(LeadInteractionSchema)` to create a new message.
+ */
+export declare const LeadInteractionSchema: GenMessage<LeadInteraction>;
+
+/**
  * @generated from message doota.core.v1.Keyword
  */
 export declare type Keyword = Message<"doota.core.v1.Keyword"> & {
@@ -596,6 +667,71 @@ export enum SourceType {
  * Describes the enum doota.core.v1.SourceType.
  */
 export declare const SourceTypeSchema: GenEnum<SourceType>;
+
+/**
+ * @generated from enum doota.core.v1.LeadInteractionType
+ */
+export enum LeadInteractionType {
+  /**
+   * @generated from enum value: LEAD_INTERACTION_UNSPECIFIED = 0;
+   */
+  LEAD_INTERACTION_UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: LEAD_INTERACTION_COMMENT = 1;
+   */
+  LEAD_INTERACTION_COMMENT = 1,
+
+  /**
+   * @generated from enum value: LEAD_INTERACTION_DM = 2;
+   */
+  LEAD_INTERACTION_DM = 2,
+}
+
+/**
+ * Describes the enum doota.core.v1.LeadInteractionType.
+ */
+export declare const LeadInteractionTypeSchema: GenEnum<LeadInteractionType>;
+
+/**
+ * @generated from enum doota.core.v1.LeadInteractionStatus
+ */
+export enum LeadInteractionStatus {
+  /**
+   * @generated from enum value: LEAD_INTERACTION_STATUS_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: LEAD_INTERACTION_STATUS_SENT = 1;
+   */
+  SENT = 1,
+
+  /**
+   * @generated from enum value: LEAD_INTERACTION_STATUS_CREATED = 2;
+   */
+  CREATED = 2,
+
+  /**
+   * @generated from enum value: LEAD_INTERACTION_STATUS_FAILED = 3;
+   */
+  FAILED = 3,
+
+  /**
+   * @generated from enum value: LEAD_INTERACTION_STATUS_PROCESSING = 4;
+   */
+  PROCESSING = 4,
+
+  /**
+   * @generated from enum value: LEAD_INTERACTION_STATUS_REMOVED = 5;
+   */
+  REMOVED = 5,
+}
+
+/**
+ * Describes the enum doota.core.v1.LeadInteractionStatus.
+ */
+export declare const LeadInteractionStatusSchema: GenEnum<LeadInteractionStatus>;
 
 /**
  * @generated from enum doota.core.v1.LeadStatus

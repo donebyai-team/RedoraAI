@@ -30,6 +30,7 @@ export const routes = {
     dashboard: '/dashboard',
     keywords: '/keywords',
     leads: '/leads',
+    interactions: '/interactions',
     edit_product: '/settings/product',
     integrations: '/settings/integrations',
     automation: '/settings/automation',

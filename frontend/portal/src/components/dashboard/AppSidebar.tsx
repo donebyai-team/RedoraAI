@@ -9,7 +9,8 @@ import {
   Workflow,
   CreditCard,
   Tag,
-  Edit
+  Edit,
+  Zap
 } from "lucide-react";
 import {
   Sidebar,
@@ -59,6 +60,12 @@ export function AppSidebar() {
       path: routes.new.leads,
       icon: MessageSquare,
       active: isActive(routes.new.leads),
+    },
+    {
+      title: "Interactions",
+      path: routes.new.interactions,
+      icon: Zap,
+      active: isActive(routes.new.interactions),
     },
   ];
 

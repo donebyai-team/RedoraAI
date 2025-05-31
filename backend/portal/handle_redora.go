@@ -178,6 +178,29 @@ func (p *Portal) CreateOrEditProject(ctx context.Context, c *connect.Request[pbp
 	return connect.NewResponse(projectProto), nil
 }
 
+func (p *Portal) GetLeadInteractions(ctx context.Context, c *connect.Request[pbportal.GetLeadInteractionsRequest]) (*connect.Response[pbportal.GetLeadInteractionsResponse], error) {
+	actor, err := p.gethAuthContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	project, err := p.getProject(ctx, c.Header(), actor.OrganizationID)
+	if err != nil {
+		return nil, err
+	}
+
+	interactions, err := p.db.GetAugmentedLeadInteractions(ctx, project.ID, c.Msg.GetDateRange())
+	if err != nil {
+		return nil, err
+	}
+
+	leadProtos := make([]*pbcore.LeadInteraction, 0, len(interactions))
+	for _, interaction := range interactions {
+		leadProtos = append(leadProtos, new(pbcore.LeadInteraction).FromModel(interaction))
+	}
+
+	return connect.NewResponse(&pbportal.GetLeadInteractionsResponse{Interactions: leadProtos}), nil
+}
+
 func (p *Portal) SuggestKeywordsAndSources(ctx context.Context, c *connect.Request[emptypb.Empty]) (*connect.Response[pbcore.Project], error) {
 	actor, err := p.gethAuthContext(ctx)
 	if err != nil {

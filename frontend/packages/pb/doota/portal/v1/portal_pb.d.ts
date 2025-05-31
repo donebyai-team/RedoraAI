@@ -4,13 +4,50 @@
 
 import type { GenEnum, GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv1";
 import type { Message } from "@bufbuild/protobuf";
-import type { Keyword, Lead, LeadStatus, Project, ProjectSchema, Source, SourceSchema, Subscription } from "../../core/v1/core_pb";
+import type { Keyword, Lead, LeadInteraction, LeadInteractionStatus, LeadStatus, Project, ProjectSchema, Source, SourceSchema, Subscription } from "../../core/v1/core_pb";
 import type { EmptySchema, Timestamp } from "@bufbuild/protobuf/wkt";
 
 /**
  * Describes the file doota/portal/v1/portal.proto.
  */
 export declare const file_doota_portal_v1_portal: GenFile;
+
+/**
+ * @generated from message doota.portal.v1.GetLeadInteractionsRequest
+ */
+export declare type GetLeadInteractionsRequest = Message<"doota.portal.v1.GetLeadInteractionsRequest"> & {
+  /**
+   * @generated from field: doota.portal.v1.DateRangeFilter date_range = 1;
+   */
+  dateRange: DateRangeFilter;
+
+  /**
+   * @generated from field: doota.core.v1.LeadInteractionStatus status = 2;
+   */
+  status: LeadInteractionStatus;
+};
+
+/**
+ * Describes the message doota.portal.v1.GetLeadInteractionsRequest.
+ * Use `create(GetLeadInteractionsRequestSchema)` to create a new message.
+ */
+export declare const GetLeadInteractionsRequestSchema: GenMessage<GetLeadInteractionsRequest>;
+
+/**
+ * @generated from message doota.portal.v1.GetLeadInteractionsResponse
+ */
+export declare type GetLeadInteractionsResponse = Message<"doota.portal.v1.GetLeadInteractionsResponse"> & {
+  /**
+   * @generated from field: repeated doota.core.v1.LeadInteraction interactions = 1;
+   */
+  interactions: LeadInteraction[];
+};
+
+/**
+ * Describes the message doota.portal.v1.GetLeadInteractionsResponse.
+ * Use `create(GetLeadInteractionsResponseSchema)` to create a new message.
+ */
+export declare const GetLeadInteractionsResponseSchema: GenMessage<GetLeadInteractionsResponse>;
 
 /**
  * @generated from message doota.portal.v1.ConnectRedditResponse
@@ -1285,6 +1322,14 @@ export declare const PortalService: GenService<{
     methodKind: "server_streaming";
     input: typeof EmptySchema;
     output: typeof ConnectRedditResponseSchema;
+  },
+  /**
+   * @generated from rpc doota.portal.v1.PortalService.GetLeadInteractions
+   */
+  getLeadInteractions: {
+    methodKind: "unary";
+    input: typeof GetLeadInteractionsRequestSchema;
+    output: typeof GetLeadInteractionsResponseSchema;
   },
 }>;
 

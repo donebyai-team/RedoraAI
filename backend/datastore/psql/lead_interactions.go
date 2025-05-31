@@ -19,6 +19,7 @@ func init() {
 		"lead_interactions/query_interaction_to_execute.sql",
 		"lead_interactions/set_interaction_status_processing.sql",
 		"lead_interactions/query_interaction_by_to_from.sql",
+		"lead_interactions/query_interactions.sql",
 	})
 }
 
@@ -44,6 +45,15 @@ func (r *Database) GetLeadInteractions(ctx context.Context, projectID string, st
 	return getMany[models.LeadInteraction](ctx, r, "lead_interactions/query_interaction_by_project.sql", map[string]any{
 		"project_id":     projectID,
 		"status":         status,
+		"start_datetime": sqlNullTime(startDateTime),
+		"end_datetime":   sqlNullTime(endDateTime),
+	})
+}
+
+func (r *Database) GetAugmentedLeadInteractions(ctx context.Context, projectID string, dateRange pbportal.DateRangeFilter) ([]*models.AugmentedLeadInteraction, error) {
+	startDateTime, endDateTime := GetDateRange(dateRange, time.Now().UTC())
+	return getMany[models.AugmentedLeadInteraction](ctx, r, "lead_interactions/query_interactions.sql", map[string]any{
+		"project_id":     projectID,
 		"start_datetime": sqlNullTime(startDateTime),
 		"end_datetime":   sqlNullTime(endDateTime),
 	})
