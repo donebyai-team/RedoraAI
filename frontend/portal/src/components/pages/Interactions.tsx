@@ -215,7 +215,7 @@ export default function Interaction() {
                                     Failed ({interactions.filter(i => i.status === LeadInteractionStatus.FAILED).length})
                                 </SelectItem>
                                 <SelectItem value={LeadInteractionStatus.REMOVED.toString()}>
-                                    Failed ({interactions.filter(i => i.status === LeadInteractionStatus.REMOVED).length})
+                                    Removed ({interactions.filter(i => i.status === LeadInteractionStatus.REMOVED).length})
                                 </SelectItem>
                             </SelectContent>
                         </Select>
@@ -272,17 +272,20 @@ export default function Interaction() {
                                                     u/{interaction.from}
                                                 </a>
                                             </div>
-                                            <div>
-                                                <span className="font-medium">To:</span>{" "}
-                                                <a
-                                                    href={`https://www.reddit.com/user/${interaction.to}`}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="inline-flex items-center gap-1"
-                                                >
-                                                    u/{interaction.to}
-                                                </a>
-                                            </div>
+                                            {interaction.interactionType === LeadInteractionType.LEAD_INTERACTION_DM && (
+                                                <div>
+                                                    <span className="font-medium">To:</span>{" "}
+                                                    <a
+                                                        href={`https://www.reddit.com/user/${interaction.to}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="inline-flex items-center gap-1"
+                                                    >
+                                                        u/{interaction.to}
+                                                    </a>
+                                                </div>
+                                            )}
+
                                             <div className="md:col-span-2">
                                                 <span className="font-medium">Post:</span>{" "}
                                                 {interaction.leadMetadata?.postUrl ? (
@@ -309,7 +312,7 @@ export default function Interaction() {
                                     </div>
 
                                     {/* Action buttons */}
-                                    {/* <div className="flex flex-col gap-2">
+                                    <div className="flex flex-col gap-2">
                                         {interaction.status === LeadInteractionStatus.SENT && (
                                             <Dialog>
                                                 <a
@@ -322,7 +325,7 @@ export default function Interaction() {
                                                         View {getInteractionLabel(interaction.interactionType)}
                                                     </Button>
                                                 </a>
-                                                <DialogContent className="max-w-2xl">
+                                                {/* <DialogContent className="max-w-2xl">
                                                     <DialogHeader>
                                                         <DialogTitle>
                                                             {interaction.interactionType} to {interaction.to}
@@ -357,11 +360,11 @@ export default function Interaction() {
                                                             Sent at {getFormattedDate(interaction.scheduledAt)}
                                                         </div>
                                                     </div>
-                                                </DialogContent>
+                                                </DialogContent> */}
                                             </Dialog>
                                         )}
 
-                                        {interaction.status === LeadInteractionStatus.CREATED && (
+                                        {/* {interaction.status === LeadInteractionStatus.CREATED && (
                                             <Button
                                                 variant="destructive"
                                                 size="sm"
@@ -371,14 +374,14 @@ export default function Interaction() {
                                                 <X className="h-3 w-3" />
                                                 Cancel
                                             </Button>
-                                        )}
-                                    </div> */}
+                                        )} */}
+                                    </div>
                                 </div>
                             </Card>
                         ))}
                     </div>
 
-                    {filteredInteractions.length === 0 && isLoading && (
+                    {filteredInteractions.length === 0 && !isLoading && (
                         <div className="text-center py-8">
                             <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                             <h3 className="text-lg font-medium mb-2">No interactions found</h3>
