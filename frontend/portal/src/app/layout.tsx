@@ -27,12 +27,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
 
       <body>
-      {/* ✅ HubSpot Chat Script */}
-      <Script
+        {/* ✅ HubSpot Chat Script */}
+        <Script
           id="hubspot-chat"
           strategy="afterInteractive"
           src="//js-na2.hs-scripts.com/242526027.js"
-      />
+        />
+        <Script
+          id="clarity-script"
+          type="text/javascript"
+          dangerouslySetInnerHTML={{
+            __html: `(function(c,l,a,r,i,t,y){
+            c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+            t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+            y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+            })(window, document, "clarity", "script", "rt2azu4mlk");`
+          }}
+        />
         <StoreProvider>
           <NextElementRegistryProvider>
             <ConfigGuard fallback={<FallbackSpinner />}>
