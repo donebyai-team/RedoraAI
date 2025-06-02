@@ -337,12 +337,17 @@ func (r browserless) SendDM(ctx context.Context, params DMParams) ([]byte, error
 		return nil, fmt.Errorf("clicking send failed: %w", err)
 	}
 
+	// Screenshot after chat page load (optional)
+	r.storeScreenshot("click_send", params.ID, page)
+
 	page.WaitForTimeout(1500)
 
 	updatedCookies, err := pageContext.Cookies()
 	if err != nil {
 		return nil, err
 	}
+
+	r.logger.Info("updated cookies", zap.String("interaction", params.ID), zap.Int("cookies", len(updatedCookies)))
 
 	return json.Marshal(updatedCookies)
 }
