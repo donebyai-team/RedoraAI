@@ -24,7 +24,7 @@ func NewLeadAnalysis(db datastore.Repository, logger *zap.Logger) *LeadAnalysis 
 
 func (a LeadAnalysis) GenerateLeadAnalysis(ctx context.Context, projectID string, dateRange pbportal.DateRangeFilter) (*pbportal.LeadAnalysis, error) {
 	analysis := pbportal.LeadAnalysis{}
-	// Relevant leads
+	// Relevant leads check
 	leadsData, err := a.db.CountLeadByCreatedAt(ctx, projectID, dailyPostsRelevancyScore, dateRange)
 	if err != nil {
 		return nil, err
