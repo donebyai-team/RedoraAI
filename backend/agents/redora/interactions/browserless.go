@@ -231,7 +231,7 @@ func NewBrowserlessClient(token string, debugFileStore dstore.Store, logger *zap
 	return &browserless{Token: token, logger: logger, debugFileStore: debugFileStore}
 }
 
-func (r browserless) SendDM(ctx context.Context, params DMParams) ([]byte, error) {
+func (r browserless) SendDM(ctx context.Context, params DMParams) (cookies []byte, err error) {
 	pw, err := playwright.Run()
 	if err != nil {
 		return nil, fmt.Errorf("playwright start failed: %w", err)
@@ -340,6 +340,15 @@ func (r browserless) SendDM(ctx context.Context, params DMParams) ([]byte, error
 	// Screenshot after chat page load (optional)
 	r.storeScreenshot("click_send", params.ID, page)
 
+	// Check for error banner on chat page
+	if alert, _ := page.QuerySelector("faceplate-banner[appearance='error']"); alert != nil {
+		msg, _ := alert.GetAttribute("msg")
+		if msg != "" {
+			return nil, fmt.Errorf("chat error: %s", msg)
+		}
+		return nil, fmt.Errorf("chat error: invalid user")
+	}
+
 	page.WaitForTimeout(1500)
 
 	updatedCookies, err := pageContext.Cookies()
@@ -358,11 +367,11 @@ func (r browserless) storeScreenshot(stage, id string, page playwright.Page) {
 		FullPage: playwright.Bool(true), // Optional: capture full page
 	})
 	if screenShotErr != nil {
-		r.logger.Warn("failed to take chat screenshot", zap.Error(screenShotErr))
+		r.logger.Error("failed to take chat screenshot", zap.Error(screenShotErr))
 	} else {
 		buf := bytes.NewBuffer(byteData)
 		if errFileStore := r.debugFileStore.WriteObject(goCtx.Background(), filePath, buf); errFileStore != nil {
-			r.logger.Debug("failed to save chat screenshot", zap.Error(errFileStore), zap.String("output_name", filePath))
+			r.logger.Error("failed to save chat screenshot", zap.Error(errFileStore), zap.String("output_name", filePath))
 		}
 	}
 }

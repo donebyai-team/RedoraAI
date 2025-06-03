@@ -206,7 +206,7 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 	//	return nil, err
 	//}
 	//_, err = browserLessClient.SendDM(context.Background(), interactions.DMParams{
-	//	To:      "t2_1ctydt6n8g",
+	//	To:      "t2_19wvzj68ml",
 	//	Message: "hello",
 	//	ID:      "unique_id",
 	//	Cookie:  andType.GetRedditDMLoginConfig().Cookies,
