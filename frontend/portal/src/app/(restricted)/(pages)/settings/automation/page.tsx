@@ -11,6 +11,7 @@ import { isPlatformAdmin } from '@doota/ui-core/helper/role'
 import { Box } from '@mui/system'
 import { Typography, Card, CardContent, Slider, Switch, styled } from '@mui/material'
 import toast from 'react-hot-toast'
+import Link from 'next/link'
 
 const StyledSlider = styled(Slider)(() => ({
     color: '#111827', // Dark color for the track
@@ -257,10 +258,20 @@ export default function Page() {
                         </Box>
 
                         <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-                            {`Configure your DM settings. Redora will auto-send up to ${maxDMPerDay} DMs daily to qualified leads. Your credentials are never stored — we use browser cookies to simulate real user behavior when sending DMs.`}
+                            {`Redora will auto-send up to ${maxDMPerDay} DMs daily to qualified leads. Your credentials are never stored — we use browser cookies to simulate real user behavior when sending DMs.`}
                         </Typography>
 
-                        <Box display="flex" alignItems="center" gap={2}>
+                        <Typography variant="body2" color="text.secondary">
+                            You should log in using your Reddit email (or username) and password. If your account doesn’t have a password set, follow the guide below to set one:
+                        </Typography>
+
+                        <Typography sx={{ mt: 2 }} variant="body2" color="primary">
+                            <Link href="https://www.reddit.com/r/help/comments/18aurro/how_do_i_add_a_password_to_my_account/" target="_blank" rel="noopener">
+                                How do I add a password to my account? — Reddit Help
+                            </Link>
+                        </Typography>
+
+                        <Box sx={{ mt: 5 }} display="flex" alignItems="center" gap={2}>
                             {getIntegrationByType(integrations, IntegrationType.REDDIT_DM_LOGIN) ? (
                                 <>
                                     <Typography variant="body2" color="green" fontWeight="bold">
