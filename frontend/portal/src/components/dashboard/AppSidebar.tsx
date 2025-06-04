@@ -31,6 +31,7 @@ import Link from "next/link";
 import { routes } from '@doota/ui-core/routing'
 import { useAuth } from "@doota/ui-core/hooks/useAuth";
 import { Badge } from "@/components/ui/badge";
+import { Image } from "@doota/ui-core/atoms/Image";
 
 export function AppSidebar() {
   const location = usePathname();
@@ -113,8 +114,8 @@ export function AppSidebar() {
       <SidebarHeader className="pb-0">
         <div className="flex items-center justify-between p-2">
           <Link href="/dashboard" className="flex items-center gap-2 px-2">
-            <div className="bg-gradient-to-r from-primary to-purple-500 text-white p-1.5 rounded-md">
-              <MessageSquare className="h-4 w-4" />
+            <div className="text-white mr-1">
+              <Image width={35} height={35} alt='doota logo' priority imageKey='logo_circle' />
             </div>
             <span className="font-bold text-xl">Redora</span>
           </Link>
