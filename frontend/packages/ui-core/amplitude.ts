@@ -3,6 +3,10 @@ import { init, track, identify, setUserId, Identify } from '@amplitude/analytics
 let amplitudeInitialized = false;
 
 export function initAmplitude(apiKey: string) {
+    if (!apiKey) {
+        console.warn('Amplitude API key not found in env')
+    }
+
     if (!amplitudeInitialized) {
         init(apiKey, { defaultTracking: true });
         amplitudeInitialized = true;
