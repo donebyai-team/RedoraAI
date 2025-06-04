@@ -1,11 +1,14 @@
 import { FC, ReactNode, createContext, useEffect, useState } from 'react'
 import { JWT, Organization, User } from '@doota/pb/doota/portal/v1/portal_pb'
 import toast from 'react-hot-toast'
+
 import { errorToMessage } from '@doota/pb/utils/errors'
 import { FullStory, isInitialized as isFullStoryInitialized } from '@fullstory/browser'
 import { useClientsContext } from './ClientContext'
 import { TokenStore, OrganizationStore } from '@doota/store'
 import { Subscription, SubscriptionPlanID } from '@doota/pb/doota/core/v1/core_pb'
+import { initAmplitude, logDailyVisit } from '../amplitude'
+import { isPlatformAdmin } from '../helper/role'
 
 type SubscriptionDetails = {
   planName: string;
@@ -65,6 +68,9 @@ export const BaseAuthProvider: FC<Props> = ({
   const { portalClient } = useClientsContext()
 
   useEffect(() => {
+    const apiKey = process.env.NEXT_PUBLIC_AMPLITUDE_API_KEY!
+    initAmplitude(apiKey)
+
     const initAuth = async (): Promise<void> => {
       const jwt = await tokenStore.Get()
       if (jwt === undefined) {
@@ -145,6 +151,21 @@ export const BaseAuthProvider: FC<Props> = ({
       const user = await getUser()
       setUser(user)
       setFullStoreIdentity(user)
+
+      if (!isPlatformAdmin(user) && user.organizations.length > 0) {
+        const orgID = user.organizations[0].id
+        let name = user.organizations[0].name
+        if (user.projects.length > 0) {
+          name = name + "-" + user.projects[0].name
+        }
+        const plan = user.organizations[0].featureFlags?.subscription?.planId
+
+        logDailyVisit(orgID, name, {
+          plan: plan,
+          page: window.location.pathname,
+        })
+      }
+
     } catch (err) {
       if (onRefreshSessionError) {
         onRefreshSessionError(err)
