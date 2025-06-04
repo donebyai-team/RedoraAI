@@ -48,7 +48,7 @@ export function SummaryCards({ counts }: PropType) {
         </CardContent>
       </Card>
 
-      <Link href={"/settings/integrations"}>
+      <Link href={"/interactions"}>
         <Card className="border-primary/10 shadow-md bg-gradient-to-br from-background to-blue-500/10 cursor-pointer">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
