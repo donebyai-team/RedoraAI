@@ -7,9 +7,9 @@ import { browserTokenStore } from '@doota/ui-core/provider/BrowserStores'
 import { routes } from '@doota/ui-core/routing'
 import { useAppDispatch } from '../../../store/hooks'
 import {
+  goToStep,
   setIsOnboardingDone,
   setProject,
-  setStep,
 } from '../../../store/Onboarding/OnboardingSlice'
 import { Project } from '@doota/pb/doota/core/v1/core_pb'
 import { isActivePath } from '../../utils/url'
@@ -29,15 +29,15 @@ const AuthGuard = ({ children, fallback }: AuthGuardProps) => {
   const isEditProduct = isActivePath(routes.new.edit_product, path);
 
   function calculateNextStep(data: Project | null): number {
-    if (!data) return 0;
+    if (!data) return 1;
     const { id, website, name, description, targetPersona, keywords, sources } = data
     const hasBasicInfo = Boolean(id && website && name && description && targetPersona)
     const hasKeywords = Array.isArray(keywords) && keywords.length > 0
     const hasSources = Array.isArray(sources) && sources.length > 0
-    if (hasBasicInfo && hasKeywords && hasSources) return 2
-    if (hasBasicInfo && hasKeywords) return 2
-    if (hasBasicInfo) return 1
-    return 0
+    if (hasBasicInfo && hasKeywords && hasSources) return 3
+    if (hasBasicInfo && hasKeywords) return 3
+    if (hasBasicInfo) return 2
+    return 1
   }
 
   useEffect(() => {
@@ -60,15 +60,14 @@ const AuthGuard = ({ children, fallback }: AuthGuardProps) => {
         dispatch(setIsOnboardingDone(isOnboardingDone))
         dispatch(setProject(data))
         if (!isEditProduct) {
-          dispatch(setStep(nextStep))
+          dispatch(goToStep(nextStep))
         }
 
         if (!isOnboardingDone && !path.startsWith(routes.app.auth.onboarding)) {
           router.replace(routes.app.auth.onboarding)
           return
         } else if (isOnboardingDone && path.startsWith(routes.app.auth.onboarding)) {
-          // router.replace(routes.new.dashboard)
-          setIsReady(true)
+          router.replace(routes.new.dashboard)
           return
         }
       }

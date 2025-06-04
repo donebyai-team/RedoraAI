@@ -1,39 +1,162 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { X, Plus, Lightbulb } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@doota/ui-core/hooks/useAuth";
+import { finishOnboarding, prevStep, setIsOnboardingDone, setProject } from "@/store/Onboarding/OnboardingSlice";
+import { toast } from "@/hooks/use-toast";
+import { portalClient } from "@/services/grpc";
+import { Source } from "@doota/pb/doota/core/v1/core_pb";
+import { routes } from "@doota/ui-core/routing";
 
-interface SubredditsStepProps {
-  data: string[];
-  onUpdate: (subreddits: string[]) => void;
-  onFinish: () => void;
-  onPrev: () => void;
+const MAX_SUBREDDITS = 8;
+
+interface SubredditFormValues {
+  sources: Source[];
+  newSubreddit: string;
 }
 
-const SUGGESTED_SUBREDDITS = [
-  "r/entrepreneur", "r/startups", "r/marketing", "r/smallbusiness",
-  "r/SaaS", "r/digitalnomad", "r/growthstrategy", "r/sales",
-  "r/productivity", "r/business", "r/freelance", "r/socialmedia",
-  "r/ecommerce", "r/webdev", "r/SEO"
-];
+export default function SubredditsStep() {
 
-const MAX_SUBREDDITS = 8; // This could be dynamic based on subscription plan
+  const routers = useRouter();
+  const { setUser } = useAuth()
+  const project = useAppSelector((state) => state.stepper.project);
+  const listOfSuggestedSources = project?.suggestedSources ?? [];
+  const [loadingSubredditId, setLoadingSubredditId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [pendingSources, setPendingSources] = useState<string[]>([]);
+  const dispatch = useAppDispatch();
 
-export default function SubredditsStep({ data, onUpdate, onFinish, onPrev }: SubredditsStepProps) {
-  const [subreddits, setSubreddits] = useState<string[]>(data);
-  const [newSubreddit, setNewSubreddit] = useState("");
-  const [error, setError] = useState("");
+  const {
+    handleSubmit,
+    watch,
+    setValue,
+    setError,
+    register,
+    formState: { errors }
+  } = useForm<SubredditFormValues>({
+    defaultValues: {
+      sources: project?.sources ?? [],
+      newSubreddit: ""
+    },
+  });
 
-  useEffect(() => {
-    onUpdate(subreddits);
-  }, [subreddits, onUpdate]);
+  const sources = watch("sources");
+
+  const handleAddSubreddit = async (subredditName: string) => {
+    const trimmed = subredditName.trim();
+    if (!trimmed) return;
+
+    const plainName = trimmed.replace(/^r\//i, "");
+    const nameToSend = `r/${plainName}`;
+
+    if (sources.some((s) => s.name.toLowerCase() === plainName.toLowerCase()) ||
+      pendingSources.includes(plainName.toLowerCase())) {
+      toast({
+        title: "Error",
+        description: `${nameToSend} is already being tracked`,
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setPendingSources((prev) => [...prev, plainName.toLowerCase()]);
+    setLoadingSubredditId(plainName);
+    setValue("newSubreddit", "");
+
+    try {
+      const result = await portalClient.addSource({ name: nameToSend });
+      const updatedSources = [...sources, result];
+
+      setValue("sources", updatedSources);
+      if (project) {
+        dispatch(setProject({ ...project, sources: updatedSources }));
+      }
+    } catch (err: any) {
+      const message = err?.response?.data?.message || err.message || "Failed to add";
+      toast({
+        title: "Error",
+        description: message,
+        variant: "destructive"
+      });
+    } finally {
+      setPendingSources((prev) =>
+        prev.filter((name) => name !== plainName.toLowerCase())
+      );
+      setLoadingSubredditId(null);
+    }
+  };
+
+  const handleRemoveSubreddit = async (source: Source) => {
+    setLoadingSubredditId(source.id);
+    try {
+      await portalClient.removeSource({ id: source.id });
+
+      const updatedSources = sources.filter((item) => item.id !== source.id);
+
+      setValue("sources", updatedSources);
+      // toast.success(`Removed r/${source.name}`);
+      if (project) {
+        dispatch(setProject({ ...project, sources: updatedSources }));
+      }
+
+    } catch (err: any) {
+      const message = err?.response?.data?.message || err.message || "Failed to remove";
+      toast({
+        title: "Error",
+        description: message,
+        variant: "destructive"
+      });
+    } finally {
+      setLoadingSubredditId(null);
+    }
+  };
+
+  const handleFinish = () => {
+    if (sources.length === 0) {
+      setError("newSubreddit", { message: "Please add at least one subreddit" });
+      return;
+    }
+
+    if (!project) return;
+    setIsLoading(true);
+
+    try {
+      dispatch(setProject(project));
+      dispatch(setIsOnboardingDone(true));
+      dispatch(finishOnboarding());
+      setUser(prev => prev ? {
+        ...prev,
+        isOnboardingDone: true,
+        projects: [...prev.projects, project]
+      } : null);
+      routers.push(routes.new.dashboard);
+    } catch (err: any) {
+      const message = err?.response?.data?.message || err.message || "Something went wrong";
+      toast({
+        title: "Error",
+        description: message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const availableSuggestions = listOfSuggestedSources.filter((subreddit) => {
+    const plainName = subreddit.replace(/^r\//i, "").toLowerCase();
+    return !sources.some((s) => s.name.toLowerCase() === plainName);
+  });
 
   const formatSubreddit = (input: string) => {
-    let formatted = input.trim().toLowerCase();
+    const formatted = input.trim().toLowerCase();
     if (formatted.startsWith("r/")) {
       return formatted;
     }
@@ -46,73 +169,26 @@ export default function SubredditsStep({ data, onUpdate, onFinish, onPrev }: Sub
     return formatted;
   };
 
-  const addSubreddit = (subreddit: string) => {
-    const formattedSubreddit = formatSubreddit(subreddit);
-    
-    if (!formattedSubreddit || formattedSubreddit === "r/") {
-      setError("Please enter a subreddit name");
-      return;
-    }
-
-    if (subreddits.includes(formattedSubreddit)) {
-      setError("This subreddit is already added");
-      return;
-    }
-
-    if (subreddits.length >= MAX_SUBREDDITS) {
-      setError(`You can only add up to ${MAX_SUBREDDITS} subreddits`);
-      return;
-    }
-
-    setSubreddits(prev => [...prev, formattedSubreddit]);
-    setNewSubreddit("");
-    setError("");
+  const onSubmit = async (data: SubredditFormValues) => {
+    await handleAddSubreddit(data.newSubreddit);
   };
-
-  const removeSubreddit = (subredditToRemove: string) => {
-    setSubreddits(prev => prev.filter(subreddit => subreddit !== subredditToRemove));
-    setError("");
-  };
-
-  const addSuggestedSubreddit = (subreddit: string) => {
-    addSubreddit(subreddit);
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      addSubreddit(newSubreddit);
-    }
-  };
-
-  const handleFinish = () => {
-    if (subreddits.length === 0) {
-      setError("Please add at least one subreddit");
-      return;
-    }
-    onFinish();
-  };
-
-  const availableSuggestions = SUGGESTED_SUBREDDITS.filter(
-    suggestion => !subreddits.includes(suggestion.toLowerCase())
-  );
 
   return (
     <div className="space-y-6">
       {/* Current Subreddits */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <Label>Your Subreddits ({subreddits.length}/{MAX_SUBREDDITS})</Label>
-          <Badge variant="secondary">{MAX_SUBREDDITS - subreddits.length} remaining</Badge>
+          <Label>Your Subreddits ({sources.length}/{MAX_SUBREDDITS})</Label>
+          <Badge variant="secondary">{MAX_SUBREDDITS - sources.length} remaining</Badge>
         </div>
-        
-        {subreddits.length > 0 ? (
+
+        {sources.length > 0 ? (
           <div className="flex flex-wrap gap-2">
-            {subreddits.map((subreddit) => (
-              <Badge key={subreddit} variant="default" className="flex items-center gap-1">
-                {subreddit}
+            {sources.map((subreddit) => (
+              <Badge key={subreddit.id} variant="default" className="flex items-center gap-1">
+                {subreddit.name}
                 <button
-                  onClick={() => removeSubreddit(subreddit)}
+                  onClick={() => handleRemoveSubreddit(subreddit)}
                   className="ml-1 hover:bg-primary-foreground/20 rounded-full p-0.5"
                 >
                   <X className="w-3 h-3" />
@@ -126,35 +202,49 @@ export default function SubredditsStep({ data, onUpdate, onFinish, onPrev }: Sub
       </div>
 
       {/* Add New Subreddit */}
-      <div className="space-y-2">
-        <Label htmlFor="newSubreddit">Add Subreddit</Label>
-        <div className="flex gap-2">
-          <Input
-            id="newSubreddit"
-            value={newSubreddit}
-            onChange={(e) => {
-              setNewSubreddit(e.target.value);
-              setError("");
-            }}
-            onKeyPress={handleKeyPress}
-            placeholder="Enter subreddit (e.g., entrepreneur or r/entrepreneur)"
-            className={error ? "border-destructive" : ""}
-            disabled={subreddits.length >= MAX_SUBREDDITS}
-          />
-          <Button
-            type="button"
-            onClick={() => addSubreddit(newSubreddit)}
-            disabled={subreddits.length >= MAX_SUBREDDITS}
-            size="icon"
-          >
-            <Plus className="w-4 h-4" />
-          </Button>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <div className="space-y-2">
+          <Label htmlFor="newSubreddit">Add Subreddit</Label>
+          <div className="flex gap-2">
+            <Input
+              id="newSubreddit"
+              {...register("newSubreddit", {
+                validate: (value) => {
+                  const formatted = formatSubreddit(value);
+
+                  if (!formatted || formatted === "r/") {
+                    return "Please enter a subreddit name";
+                  }
+
+                  if (sources.map(item => item.name).includes(formatted)) {
+                    return "This subreddit is already added";
+                  }
+
+                  if (sources.length >= MAX_SUBREDDITS) {
+                    return `You can only add up to ${MAX_SUBREDDITS} subreddits`;
+                  }
+
+                  return true;
+                },
+              })}
+              placeholder="Enter subreddit (e.g., entrepreneur or r/entrepreneur)"
+              className={errors.newSubreddit?.message ? "border-destructive" : ""}
+              disabled={sources.length >= MAX_SUBREDDITS}
+            />
+            <Button
+              type="submit"
+              disabled={sources.length >= MAX_SUBREDDITS}
+              size="icon"
+            >
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+          {errors.newSubreddit?.message && <p className="text-sm text-destructive">{errors.newSubreddit?.message}</p>}
+          <p className="text-sm text-muted-foreground">
+            You can enter with or without the "r/" prefix
+          </p>
         </div>
-        {error && <p className="text-sm text-destructive">{error}</p>}
-        <p className="text-sm text-muted-foreground">
-          You can enter with or without the "r/" prefix
-        </p>
-      </div>
+      </form>
 
       {/* Suggested Subreddits */}
       {availableSuggestions.length > 0 && (
@@ -167,13 +257,13 @@ export default function SubredditsStep({ data, onUpdate, onFinish, onPrev }: Sub
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
-              {availableSuggestions.slice(0, 8).map((suggestion) => (
+              {availableSuggestions.map((suggestion) => (
                 <Button
                   key={suggestion}
                   variant="outline"
                   size="sm"
-                  onClick={() => addSuggestedSubreddit(suggestion)}
-                  disabled={subreddits.length >= MAX_SUBREDDITS}
+                  onClick={() => handleAddSubreddit(suggestion)}
+                  disabled={sources.length >= MAX_SUBREDDITS}
                   className="h-8"
                 >
                   <Plus className="w-3 h-3 mr-1" />
@@ -181,11 +271,6 @@ export default function SubredditsStep({ data, onUpdate, onFinish, onPrev }: Sub
                 </Button>
               ))}
             </div>
-            {availableSuggestions.length > 8 && (
-              <p className="text-sm text-muted-foreground mt-2">
-                And {availableSuggestions.length - 8} more suggestions...
-              </p>
-            )}
           </CardContent>
         </Card>
       )}
@@ -205,10 +290,10 @@ export default function SubredditsStep({ data, onUpdate, onFinish, onPrev }: Sub
 
       {/* Navigation */}
       <div className="flex justify-between">
-        <Button variant="outline" onClick={onPrev}>
+        <Button variant="outline" onClick={() => dispatch(prevStep())}>
           Back to Keywords
         </Button>
-        <Button onClick={handleFinish} className="bg-green-600 hover:bg-green-700">
+        <Button onClick={handleFinish} disabled={isLoading || sources.length === 0} className="bg-green-600 hover:bg-green-700">
           Complete Setup
         </Button>
       </div>

@@ -2,16 +2,16 @@ import { Project } from '@doota/pb/doota/core/v1/core_pb'
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 
 interface StepperState {
-  activeStep: number
-  skipped: number[]
-  project: Project | null
-  isOnboardingDone: boolean | null
-  loading: boolean
+  currentStep: number;
+  completedSteps: number[];
+  project: Project | null;
+  isOnboardingDone: boolean | null;
+  loading: boolean;
 }
 
 const initialState: StepperState = {
-  activeStep: 0,
-  skipped: [],
+  currentStep: 1,
+  completedSteps: [],
   project: null,
   isOnboardingDone: null,
   loading: false
@@ -21,25 +21,22 @@ const stepperSlice = createSlice({
   name: 'stepper',
   initialState,
   reducers: {
-    // Replace Set operations with array logic:
-    nextStep: state => {
-      state.skipped = state.skipped.filter(step => step !== state.activeStep)
-      state.activeStep += 1
+    goToStep(state, action: PayloadAction<number>) {
+      state.currentStep = action.payload;
     },
-    skipStep: (state, action: PayloadAction<number>) => {
-      if (!state.skipped.includes(action.payload)) {
-        state.skipped.push(action.payload)
+    nextStep(state) {
+      if (!state.completedSteps.includes(state.currentStep)) {
+        state.completedSteps.push(state.currentStep);
       }
+      state.currentStep += 1;
     },
-    prevStep: state => {
-      state.activeStep = Math.max(0, state.activeStep - 1)
+    prevStep(state) {
+      if (state.currentStep > 1) state.currentStep -= 1;
     },
-    resetStepper: state => {
-      state.activeStep = 0
-      state.skipped = []
-    },
-    setStep: (state, action: PayloadAction<number>) => {
-      state.activeStep = action.payload
+    finishOnboarding(state) {
+      if (!state.completedSteps.includes(state.currentStep)) {
+        state.completedSteps.push(state.currentStep);
+      }
     },
     setProject: (state, action: PayloadAction<Project>) => {
       state.project = action.payload
@@ -53,7 +50,14 @@ const stepperSlice = createSlice({
   }
 })
 
-export const { nextStep, prevStep, resetStepper, skipStep, setStep, setProject, setIsOnboardingDone, setLoading } =
-  stepperSlice.actions
+export const { 
+  goToStep,
+  nextStep,
+  prevStep,
+  finishOnboarding,
+  setProject,
+  setIsOnboardingDone,
+  setLoading,
+} = stepperSlice.actions
 
 export const stepperReducer = stepperSlice.reducer

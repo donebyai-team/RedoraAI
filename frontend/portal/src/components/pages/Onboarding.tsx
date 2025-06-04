@@ -2,25 +2,13 @@
 
 "use client";
 
-import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check } from "lucide-react";
-import { toast } from "@/hooks/use-toast";
 import ProductDetailsStep from "@/components/onboarding/ProductDetailsStep";
 import KeywordsStep from "@/components/onboarding/KeywordsStep";
 import SubredditsStep from "@/components/onboarding/SubredditsStep";
-import { useRouter } from "next/navigation";
-
-export interface OnboardingData {
-  productDetails: {
-    website: string;
-    productName: string;
-    description: string;
-    targetPersona: string;
-  };
-  keywords: string[];
-  subreddits: string[];
-}
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { goToStep } from "@/store/Onboarding/OnboardingSlice";
 
 const STEPS = [
   {
@@ -44,84 +32,18 @@ const STEPS = [
 ];
 
 export default function Onboarding() {
-  const router = useRouter();
-  const [currentStep, setCurrentStep] = useState(1);
-  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
-  const [data, setData] = useState<OnboardingData>({
-    productDetails: {
-      website: "",
-      productName: "",
-      description: "",
-      targetPersona: "",
-    },
-    keywords: [],
-    subreddits: [],
-  });
 
-  const updateData = (stepData: Partial<OnboardingData>) => {
-    setData(prev => ({ ...prev, ...stepData }));
-  };
-
-  const markStepCompleted = (step: number) => {
-    if (!completedSteps.includes(step)) {
-      setCompletedSteps(prev => [...prev, step]);
-    }
-  };
-
-  const goToStep = (step: number) => {
-    setCurrentStep(step);
-  };
-
-  const nextStep = () => {
-    if (currentStep < STEPS.length) {
-      markStepCompleted(currentStep);
-      setCurrentStep(currentStep + 1);
-    }
-  };
-
-  const prevStep = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-    }
-  };
-
-  const finishOnboarding = () => {
-    markStepCompleted(currentStep);
-    toast({
-      title: "Onboarding completed!",
-      description: "Your account is now set up and ready to use.",
-    });
-    router.push("/dashboard");
-  };
+  const { currentStep, completedSteps } = useAppSelector((state) => state.stepper);
+  const dispatch = useAppDispatch();
 
   const renderStep = () => {
     switch (currentStep) {
       case 1:
-        return (
-          <ProductDetailsStep
-            data={data.productDetails}
-            onUpdate={(productDetails) => updateData({ productDetails })}
-            onNext={nextStep}
-          />
-        );
+        return (<ProductDetailsStep />);
       case 2:
-        return (
-          <KeywordsStep
-            data={data.keywords}
-            onUpdate={(keywords) => updateData({ keywords })}
-            onNext={nextStep}
-            onPrev={prevStep}
-          />
-        );
+        return (<KeywordsStep />);
       case 3:
-        return (
-          <SubredditsStep
-            data={data.subreddits}
-            onUpdate={(subreddits) => updateData({ subreddits })}
-            onFinish={finishOnboarding}
-            onPrev={prevStep}
-          />
-        );
+        return (<SubredditsStep />);
       default:
         return null;
     }
@@ -142,13 +64,13 @@ export default function Onboarding() {
                     <div className="flex items-start gap-3">
                       {/* Step Circle */}
                       <button
-                        onClick={() => goToStep(step.id)}
+                        onClick={() => dispatch(goToStep(step.id))}
                         disabled={!completedSteps.includes(step.id) && step.id !== currentStep}
                         className={`group relative flex items-center justify-center w-10 h-10 rounded-xl text-sm font-bold transition-all duration-300 flex-shrink-0 ${completedSteps.includes(step.id)
-                            ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg shadow-green-200/50"
-                            : step.id === currentStep
-                              ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-200/50"
-                              : "bg-gray-100 text-gray-400 border-2 border-gray-200 hover:border-gray-300"
+                          ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg shadow-green-200/50"
+                          : step.id === currentStep
+                            ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-200/50"
+                            : "bg-gray-100 text-gray-400 border-2 border-gray-200 hover:border-gray-300"
                           } ${(completedSteps.includes(step.id) || step.id === currentStep)
                             ? "cursor-pointer hover:scale-105"
                             : "cursor-not-allowed"
@@ -169,7 +91,7 @@ export default function Onboarding() {
                       {/* Step Content */}
                       <div className="flex-1 min-w-0">
                         <div className={`font-semibold text-sm mb-1 transition-colors ${step.id === currentStep ? "text-blue-600" :
-                            completedSteps.includes(step.id) ? "text-green-600" : "text-gray-500"
+                          completedSteps.includes(step.id) ? "text-green-600" : "text-gray-500"
                           }`}>
                           {step.title}
                         </div>
@@ -183,10 +105,10 @@ export default function Onboarding() {
                     {index < STEPS.length - 1 && (
                       <div className="flex justify-start ml-5 mt-4 mb-2">
                         <div className={`w-0.5 h-6 rounded-full transition-all duration-500 ${completedSteps.includes(step.id) ?
-                            "bg-gradient-to-b from-green-400 to-emerald-500" :
-                            step.id === currentStep ?
-                              "bg-gradient-to-b from-blue-400 to-indigo-500" :
-                              "bg-gray-200"
+                          "bg-gradient-to-b from-green-400 to-emerald-500" :
+                          step.id === currentStep ?
+                            "bg-gradient-to-b from-blue-400 to-indigo-500" :
+                            "bg-gray-200"
                           }`}>
                         </div>
                       </div>
@@ -205,8 +127,8 @@ export default function Onboarding() {
                   <CardHeader className="pb-4 pt-6 px-8 flex-shrink-0">
                     <div className="flex items-center gap-3">
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-base ${completedSteps.includes(currentStep) ?
-                          "bg-gradient-to-r from-green-500 to-emerald-600" :
-                          "bg-gradient-to-r from-blue-500 to-indigo-600"
+                        "bg-gradient-to-r from-green-500 to-emerald-600" :
+                        "bg-gradient-to-r from-blue-500 to-indigo-600"
                         }`}>
                         {completedSteps.includes(currentStep) ? (
                           <Check className="w-5 h-5" />
@@ -238,4 +160,3 @@ export default function Onboarding() {
     </div>
   );
 }
-

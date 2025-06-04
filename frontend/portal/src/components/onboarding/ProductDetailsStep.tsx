@@ -1,86 +1,113 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
-import { Globe, Loader2 } from "lucide-react";
+// import { Globe, Loader2 } from "lucide-react";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { useForm } from "react-hook-form";
+import { nextStep, setProject } from "@/store/Onboarding/OnboardingSlice";
+import { portalClient } from "@/services/grpc";
+import { setLoading } from "@/store/Source/sourceSlice";
 
-interface ProductDetails {
+interface ProductFormValues {
   website: string;
-  productName: string;
+  name: string;
   description: string;
   targetPersona: string;
 }
 
-interface ProductDetailsStepProps {
-  data: ProductDetails;
-  onUpdate: (data: ProductDetails) => void;
-  onNext: () => void;
-}
+export default function ProductDetailsStep() {
 
-const fetchWebsiteMetadata = async (url: string) => {
-  try {
-    // In a real app, you'd call your backend API or use a service like LinkPreview
-    // For now, we'll simulate the API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-    // Mock response based on common website patterns
-    const domain = new URL(url).hostname.replace('www.', '');
-    const companyName = domain.split('.')[0];
-
-    return {
-      title: `${companyName.charAt(0).toUpperCase() + companyName.slice(1)}`,
-      description: `Innovative solutions and services provided by ${companyName}`,
-    };
-  } catch (error) {
-    throw new Error("Failed to fetch website metadata");
-  }
-};
-
-export default function ProductDetailsStep({ data, onUpdate, onNext }: ProductDetailsStepProps) {
-  const [formData, setFormData] = useState<ProductDetails>(data);
+  const project = useAppSelector((state) => state.stepper.project);
+  const dispatch = useAppDispatch();
   const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<Partial<ProductDetails>>({});
+
+  const {
+    handleSubmit,
+    setValue,
+    clearErrors,
+    register,
+    formState: { errors },
+    watch,
+  } = useForm<ProductFormValues>({
+    defaultValues: {
+      website: project?.website ?? "",
+      name: project?.name ?? "",
+      description: project?.description ?? "",
+      targetPersona: project?.targetPersona ?? "",
+    },
+  });
+
+  const website = watch("website");
+  const name = watch("name");
+  const description = watch("description");
+  const targetPersona = watch("targetPersona");
+
+  const fetchMeta = useCallback(async (url: string) => {
+    if (!url) return;
+
+    const normalizedUrl = url.startsWith("http://") || url.startsWith("https://")
+      ? url
+      : `https://${url}`;
+
+    try {
+      setLoading(true);
+      const res = await fetch(`/api/fetch-meta?url=${encodeURIComponent(normalizedUrl)}`);
+      const data = await res.json();
+
+      setValue("name", data.title || "");
+      setValue("description", data.description || "");
+
+      if (data.title) {
+        clearErrors("name");
+      }
+
+      if (data.description) {
+        clearErrors("description");
+      }
+    } catch (err) {
+      console.log(err);
+      setValue("name", "");
+      setValue("description", "");
+      clearErrors("name");
+      clearErrors("description");
+    } finally {
+      setLoading(false);
+    }
+  }, [setValue, clearErrors]);
 
   useEffect(() => {
-    onUpdate(formData);
-  }, [formData, onUpdate]);
+    const timer = setTimeout(() => {
+      if (website && website !== project?.website) {
+        fetchMeta(website);
+      }
+    }, 700);
 
-  const handleWebsiteChange = (website: string) => {
-    setFormData(prev => ({ ...prev, website }));
-    setErrors(prev => ({ ...prev, website: "" }));
-  };
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [website]);
 
-  const fetchMetadata = async () => {
-    if (!formData.website) {
-      setErrors(prev => ({ ...prev, website: "Please enter a website URL" }));
-      return;
-    }
-
-    try {
-      new URL(formData.website);
-    } catch {
-      setErrors(prev => ({ ...prev, website: "Please enter a valid URL" }));
-      return;
-    }
+  const onSubmit = async (data: ProductFormValues) => {
+    const cleanedData = Object.fromEntries(Object.entries(data).map(([k, v]) => [k, typeof v === "string" ? v.trim() : v])) as ProductFormValues;
 
     setIsLoading(true);
+
     try {
-      const metadata = await fetchWebsiteMetadata(formData.website);
-      setFormData(prev => ({
-        ...prev,
-        productName: metadata.title,
-        description: metadata.description,
-      }));
+      const body = {
+        ...(project?.id && { id: project.id }),
+        ...cleanedData,
+      };
+
+      const result = await portalClient.createOrEditProject(body);
+      dispatch(setProject(result));
+      dispatch(nextStep());
+    } catch (err: any) {
+      const message = err?.response?.data?.message || err.message || "Something went wrong";
       toast({
-        title: "Website metadata fetched!",
-        description: "Product name and description have been pre-filled.",
-      });
-    } catch (error) {
-      toast({
-        title: "Failed to fetch metadata",
-        description: "Please fill in the details manually.",
+        title: "Error",
+        description: message,
         variant: "destructive",
       });
     } finally {
@@ -88,147 +115,133 @@ export default function ProductDetailsStep({ data, onUpdate, onNext }: ProductDe
     }
   };
 
-  const validateForm = () => {
-    const newErrors: Partial<ProductDetails> = {};
-
-    if (!formData.website.trim()) {
-      newErrors.website = "Website is required";
-    } else {
-      try {
-        new URL(formData.website);
-      } catch {
-        newErrors.website = "Please enter a valid URL";
-      }
-    }
-
-    if (!formData.productName.trim()) {
-      newErrors.productName = "Product name is required";
-    } else if (formData.productName.length < 3 || formData.productName.length > 30) {
-      newErrors.productName = "Product name must be between 3 and 30 characters";
-    } else {
-      const wordCount = formData.productName.trim().split(/\s+/).length;
-      if (wordCount > 3) {
-        newErrors.productName = "Product name can have maximum 3 words";
-      }
-    }
-
-    if (!formData.description.trim()) {
-      newErrors.description = "Description is required";
-    } else if (formData.description.length < 10) {
-      newErrors.description = "Description must be at least 10 characters";
-    }
-
-    if (!formData.targetPersona.trim()) {
-      newErrors.targetPersona = "Target persona is required";
-    } else if (formData.targetPersona.length < 10) {
-      newErrors.targetPersona = "Target persona must be at least 10 characters";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleNext = () => {
-    if (validateForm()) {
-      onNext();
-    }
-  };
-
   return (
-    <div className="space-y-6">
-      {/* Website URL */}
-      <div className="space-y-2">
-        <Label htmlFor="website">Website URL *</Label>
-        <div className="flex gap-2">
-          <div className="flex-1">
-            <Input
-              id="website"
-              type="url"
-              placeholder="https://example.com - We'll automatically fetch your product details from your website to save you time"
-              value={formData.website}
-              onChange={(e) => handleWebsiteChange(e.target.value)}
-              className={errors.website ? "border-destructive" : ""}
-            />
-            {errors.website && (
-              <p className="text-sm text-destructive mt-1">{errors.website}</p>
-            )}
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <div className="space-y-6">
+
+        {/* Website URL */}
+        <div className="space-y-2">
+          <Label htmlFor="website">Website URL *</Label>
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <Input
+                id="website"                
+                placeholder="https://example.com - We'll automatically fetch your product details from your website to save you time"
+                {...register('website', {
+                  required: "Website url is required",
+                  validate: (value: string) => value.trim().length > 0 || "This field cannot be empty.",
+                })}
+                className={errors.website?.message ? "border-destructive" : ""}
+                disabled={isLoading}
+              />
+              {errors.website?.message && (
+                <p className="text-sm text-destructive mt-1">{errors.website?.message}</p>
+              )}
+            </div>
           </div>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={fetchMetadata}
-            disabled={isLoading || !formData.website}
-          >
-            {isLoading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Globe className="w-4 h-4" />
-            )}
-            Fetch
+        </div>
+
+        {/* Product Name */}
+        <div className="space-y-2">
+          <Label htmlFor="productName">Product Name *</Label>
+          <Input
+            id="productName"
+            {...register('name', {
+              required: "Product name is required",
+              validate: (value) => {
+                const trimmed = value.trim();
+
+                if (!trimmed) {
+                  return "Product name is required";
+                }
+
+                if (trimmed.length < 3 || trimmed.length > 30) {
+                  return "Product name must be between 3 and 30 characters";
+                }
+
+                const wordCount = trimmed.split(/\s+/).length;
+                if (wordCount > 3) {
+                  return "Product name can have maximum 3 words";
+                }
+
+                return true;
+              },
+            })}
+            placeholder="Keep it simple and recognizable - we'll use this to identify when people mention your product"
+            className={errors.name?.message ? "border-destructive" : ""}
+            disabled={isLoading}
+          />
+          {errors.name?.message && (
+            <p className="text-sm text-destructive">{errors.name?.message}</p>
+          )}
+          <p className="text-xs text-muted-foreground">
+            {name.length}/30 characters • {name.trim().split(/\s+/).filter(word => word.length > 0).length}/3 words
+          </p>
+        </div>
+
+        {/* Description */}
+        <div className="space-y-2">
+          <Label htmlFor="description">Product Description *</Label>
+          <Textarea
+            id="description"
+            {...register("description", {
+              required: "Description is required",
+              validate: (value) => {
+                const trimmed = value.trim();
+
+                if (!trimmed) return "Description is required";
+                if (trimmed.length < 10) return "Description must be at least 10 characters";
+
+                return true;
+              },
+            })}
+            placeholder="Describe what your product does and what problems it solves - this helps us find relevant discussions where people might need your solution"
+            className={errors.description?.message ? "border-destructive" : ""}
+            rows={3}
+            disabled={isLoading}
+          />
+          {errors.description?.message && (
+            <p className="text-sm text-destructive">{errors.description?.message}</p>
+          )}
+          <p className="text-xs text-muted-foreground">
+            {description.length} characters (minimum 10)
+          </p>
+        </div>
+
+        {/* Target Persona */}
+        <div className="space-y-2">
+          <Label htmlFor="targetPersona">Target Persona *</Label>
+          <Input
+            id="targetPersona"
+            {...register("targetPersona", {
+              required: "Target persona is required",
+              validate: (value) => {
+                const trimmed = value.trim();
+
+                if (!trimmed) return "Target persona is required";
+                if (trimmed.length < 10) return "Target persona must be at least 10 characters";
+
+                return true;
+              },
+            })}
+            placeholder="Who is your ideal customer? This helps us identify the right communities and conversations where your audience hangs out"
+            className={errors.targetPersona?.message ? "border-destructive" : ""}
+            disabled={isLoading}
+          />
+          {errors.targetPersona?.message && (
+            <p className="text-sm text-destructive">{errors.targetPersona?.message}</p>
+          )}
+          <p className="text-xs text-muted-foreground">
+            {targetPersona.length} characters (minimum 10)
+          </p>
+        </div>
+
+        <div className="flex justify-end">
+          <Button type="submit" disabled={isLoading}>
+            Continue to Keywords
           </Button>
         </div>
       </div>
-
-      {/* Product Name */}
-      <div className="space-y-2">
-        <Label htmlFor="productName">Product Name *</Label>
-        <Input
-          id="productName"
-          value={formData.productName}
-          onChange={(e) => setFormData(prev => ({ ...prev, productName: e.target.value }))}
-          placeholder="Keep it simple and recognizable - we'll use this to identify when people mention your product"
-          className={errors.productName ? "border-destructive" : ""}
-        />
-        {errors.productName && (
-          <p className="text-sm text-destructive">{errors.productName}</p>
-        )}
-        <p className="text-xs text-muted-foreground">
-          {formData.productName.length}/30 characters • {formData.productName.trim().split(/\s+/).filter(word => word.length > 0).length}/3 words
-        </p>
-      </div>
-
-      {/* Description */}
-      <div className="space-y-2">
-        <Label htmlFor="description">Product Description *</Label>
-        <Textarea
-          id="description"
-          value={formData.description}
-          onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-          placeholder="Describe what your product does and what problems it solves - this helps us find relevant discussions where people might need your solution"
-          className={errors.description ? "border-destructive" : ""}
-          rows={3}
-        />
-        {errors.description && (
-          <p className="text-sm text-destructive">{errors.description}</p>
-        )}
-        <p className="text-xs text-muted-foreground">
-          {formData.description.length} characters (minimum 10)
-        </p>
-      </div>
-
-      {/* Target Persona */}
-      <div className="space-y-2">
-        <Label htmlFor="targetPersona">Target Persona *</Label>
-        <Input
-          id="targetPersona"
-          value={formData.targetPersona}
-          onChange={(e) => setFormData(prev => ({ ...prev, targetPersona: e.target.value }))}
-          placeholder="Who is your ideal customer? This helps us identify the right communities and conversations where your audience hangs out"
-          className={errors.targetPersona ? "border-destructive" : ""}
-        />
-        {errors.targetPersona && (
-          <p className="text-sm text-destructive">{errors.targetPersona}</p>
-        )}
-        <p className="text-xs text-muted-foreground">
-          {formData.targetPersona.length} characters (minimum 10)
-        </p>
-      </div>
-
-      <div className="flex justify-end">
-        <Button onClick={handleNext} disabled={isLoading}>
-          Continue to Keywords
-        </Button>
-      </div>
-    </div>
+    </form>
   );
 }
