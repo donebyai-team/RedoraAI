@@ -45,6 +45,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             })(window, document, "clarity", "script", "rt2azu4mlk");`
           }}
         />
+
+        <Script src="https://cdn.amplitude.com/libs/analytics-browser-2.11.1-min.js.gz" />
+        <Script src="https://cdn.amplitude.com/libs/plugin-session-replay-browser-1.8.0-min.js.gz" />
+        <Script
+          id="amplitude-scripts"
+          type="text/javascript"
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.amplitude.add(window.sessionReplay.plugin({sampleRate: 1}));window.amplitude.init('e678ed1fa2f36bf86c1527a2f8fb9862', {"autocapture":{"elementInteractions":true}});
+            `,
+          }}
+        />
+
         <StoreProvider>
           <NextElementRegistryProvider>
             <ConfigGuard fallback={<FallbackSpinner />}>
