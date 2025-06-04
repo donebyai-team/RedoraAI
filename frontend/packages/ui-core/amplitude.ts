@@ -4,7 +4,7 @@ let amplitudeInitialized = false;
 
 export function initAmplitude(apiKey: string) {
     if (!amplitudeInitialized) {
-        init(apiKey);
+        init(apiKey, { defaultTracking: true });
         amplitudeInitialized = true;
     }
 }
@@ -30,4 +30,5 @@ export function logDailyVisit(customerId: string, productName: string, metadata:
         timestamp: new Date().toISOString(),
         ...metadata,
     });
+    console.log("daily visit event sent")
 }
