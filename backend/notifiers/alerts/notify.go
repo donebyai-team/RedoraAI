@@ -140,7 +140,7 @@ func (s *SlackNotifier) SendLeadsSummaryEmail(ctx context.Context, summary LeadS
 		<html>
 		<body style="font-family: Arial, sans-serif; background-color: #f7f9fc; padding: 20px;">
 		  <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 30px; border-radius: 8px;">
-		    <h2>Daily Reddit Posts Summary — <strong>RedoraAI</strong></h2>
+		    <h2>Daily Reddit Posts Summary</h2>
 		    <p><strong>Product:</strong> %s</p>
 		    <p><strong>Posts Analyzed:</strong> %d</p>
 		    <p><strong>Automated Comments Scheduled:</strong> %d</p>
@@ -155,7 +155,7 @@ func (s *SlackNotifier) SendLeadsSummaryEmail(ctx context.Context, summary LeadS
 		  </div>
 		</body>
 		</html>
-	`, summary.ProjectName, summary.TotalPostsAnalysed, summary.TotalCommentsScheduled, summary.TotalDMScheduled, summary.DailyCount, "https://app.redoraai.com/dashboard/leads")
+	`, summary.ProjectName, summary.TotalPostsAnalysed, summary.TotalCommentsScheduled, summary.TotalDMScheduled, summary.DailyCount, "https://app.redoraai.com/dashboard")
 
 	params := &resend.SendEmailRequest{
 		From:    "RedoraAI <leads@alerts.redoraai.com>",
@@ -227,10 +227,10 @@ func (s *SlackNotifier) SendLeadsSummary(ctx context.Context, summary LeadSummar
 		s.logger.Info("no integration configured for alerts, skipped")
 	}
 
-	leadsURL := "https://app.redoraai.com/dashboard/leads"
+	leadsURL := "https://app.redoraai.com/dashboard"
 
 	msg := fmt.Sprintf(
-		"*📊 Daily Reddit Posts Summary — RedoraAI*\n"+
+		"*📊 Daily Reddit Posts Summary*\n"+
 			"*Product:* %s\n"+
 			"*Posts Analyzed:* %d\n"+
 			"*Automated Comments Scheduled:* %d\n"+
