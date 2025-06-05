@@ -8,7 +8,10 @@ import ProductDetailsStep from "@/components/onboarding/ProductDetailsStep";
 import KeywordsStep from "@/components/onboarding/KeywordsStep";
 import SubredditsStep from "@/components/onboarding/SubredditsStep";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { goToStep } from "@/store/Onboarding/OnboardingSlice";
+import { goToStep, resetStepper } from "@/store/Onboarding/OnboardingSlice";
+import { useEffect } from "react";
+import { usePathname } from "next/navigation";
+import { routes } from "@doota/ui-core/routing";
 
 const STEPS = [
   {
@@ -35,6 +38,9 @@ export default function Onboarding() {
 
   const { currentStep, completedSteps } = useAppSelector((state) => state.stepper);
   const dispatch = useAppDispatch();
+  const path = usePathname();
+
+  const isEditProduct = routes.new.edit_product === path;
 
   const renderStep = () => {
     switch (currentStep) {
@@ -48,6 +54,16 @@ export default function Onboarding() {
         return null;
     }
   };
+
+  const onStepsClick = (step: number) => {
+    dispatch(goToStep(step));
+  };
+
+  useEffect(() => {
+    if (resetStepper && isEditProduct) {
+      dispatch(resetStepper());
+    }
+  }, [dispatch, isEditProduct]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-12 px-6">
@@ -64,7 +80,7 @@ export default function Onboarding() {
                     <div className="flex items-start gap-3">
                       {/* Step Circle */}
                       <button
-                        onClick={() => dispatch(goToStep(step.id))}
+                        onClick={() => onStepsClick(step.id)}
                         disabled={!completedSteps.includes(step.id) && step.id !== currentStep}
                         className={`group relative flex items-center justify-center w-10 h-10 rounded-xl text-sm font-bold transition-all duration-300 flex-shrink-0 ${completedSteps.includes(step.id)
                           ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg shadow-green-200/50"

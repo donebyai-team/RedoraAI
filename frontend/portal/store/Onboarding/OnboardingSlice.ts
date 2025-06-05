@@ -41,6 +41,10 @@ const stepperSlice = createSlice({
     prevStep(state) {
       if (state.currentStep > 1) state.currentStep -= 1;
     },
+    resetStepper(state) {
+      state.currentStep = initialState.currentStep;
+      state.completedSteps = initialState.completedSteps;
+    },
     finishOnboarding(state) {
       if (!state.completedSteps.includes(state.currentStep)) {
         state.completedSteps.push(state.currentStep);
@@ -66,6 +70,7 @@ export const {
   setProject,
   setIsOnboardingDone,
   setLoading,
+  resetStepper
 } = stepperSlice.actions
 
 export const stepperReducer = stepperSlice.reducer

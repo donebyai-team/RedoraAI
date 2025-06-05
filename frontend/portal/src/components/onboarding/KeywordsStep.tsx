@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { X, Plus, Lightbulb, Loader2 } from "lucide-react";
+import { X, Plus, Lightbulb } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -210,19 +210,21 @@ export default function KeywordsStep() {
       </form>
 
       {/* Suggested Keywords */}
-      {suggestionLoading ? (
-        <div className="flex justify-center items-center my-10">
-          <Loader2 className="w-10 h-10 animate-spin" />
-        </div>
-      ) : availableSuggestions.length > 0 && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Lightbulb className="w-4 h-4" />
-              Suggested Keywords
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Lightbulb className="w-4 h-4" />
+            Suggested Keywords
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {suggestionLoading ? (
+            <div className="flex justify-center items-center my-14">
+              <p className="text-sm text-muted-foreground">
+                {`Please wait while fetching suggestion keywords or subreddits...`}
+              </p>
+            </div>
+          ) : availableSuggestions.length > 0 ? (
             <div className="flex flex-wrap gap-2">
               {availableSuggestions.map((suggestion) => (
                 <Button
@@ -238,9 +240,16 @@ export default function KeywordsStep() {
                 </Button>
               ))}
             </div>
-          </CardContent>
-        </Card>
-      )}
+          ) : (
+            <div className="flex justify-center items-center my-14">
+              <p className="text-sm text-muted-foreground">
+                {`No suggestion keywords or subreddits found.`}
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
 
       {/* Navigation */}
       <div className="flex justify-between">
