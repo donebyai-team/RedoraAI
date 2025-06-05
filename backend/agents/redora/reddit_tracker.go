@@ -445,12 +445,15 @@ const (
 )
 
 func (s *redditKeywordTracker) sendAutomatedDM(ctx context.Context, org *models.Organization, redditConfig *models.RedditConfig, redditLead *models.Lead) error {
-	if redditConfig == nil {
-		return nil
-	}
 	if !org.FeatureFlags.EnableAutoDM {
 		return nil
 	}
+
+	from := org.Name
+	if redditConfig != nil {
+		from = redditConfig.Name
+	}
+
 	// Continue
 	redisKey := dailyCounterKey(org.ID)
 	shouldDM, err := s.state.CheckIfUnderLimitAndIncrement(ctx, redisKey, keyDMScheduledPerDay, org.FeatureFlags.GetMaxDMsPerDay(), 24*time.Hour)
@@ -462,7 +465,7 @@ func (s *redditKeywordTracker) sendAutomatedDM(ctx context.Context, org *models.
 		interaction, err := s.automatedInteractions.ScheduleDM(ctx, &models.LeadInteraction{
 			LeadID:    redditLead.ID,
 			ProjectID: redditLead.ProjectID,
-			From:      redditConfig.Name,
+			From:      from,
 			To:        redditLead.Author,
 		})
 		if err != nil {
