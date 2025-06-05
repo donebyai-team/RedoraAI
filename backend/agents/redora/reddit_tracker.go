@@ -445,6 +445,9 @@ const (
 )
 
 func (s *redditKeywordTracker) sendAutomatedDM(ctx context.Context, org *models.Organization, redditConfig *models.RedditConfig, redditLead *models.Lead) error {
+	if redditConfig == nil {
+		return nil
+	}
 	if !org.FeatureFlags.EnableAutoDM {
 		return nil
 	}
@@ -482,6 +485,9 @@ func (s *redditKeywordTracker) sendAutomatedDM(ctx context.Context, org *models.
 var ignoreOldEnoughChecksForOrgs = []string{"0d40bd4d-15ba-48d1-b3db-7d8dae22b7dd"}
 
 func (s *redditKeywordTracker) sendAutomatedComment(ctx context.Context, org *models.Organization, redditConfig *models.RedditConfig, redditLead *models.Lead) error {
+	if redditConfig == nil {
+		return nil
+	}
 	isOldEnough := redditConfig.IsUserOldEnough(2)
 	if utils.Contains(ignoreOldEnoughChecksForOrgs, org.ID) {
 		isOldEnough = true

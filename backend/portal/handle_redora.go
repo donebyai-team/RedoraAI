@@ -519,7 +519,7 @@ func (p *Portal) UpdateAutomationSettings(ctx context.Context, c *connect.Reques
 	if c.Msg.Comment != nil {
 		integration, err := p.db.GetIntegrationByOrgAndType(ctx, actor.OrganizationID, models.IntegrationTypeREDDIT)
 		if err != nil {
-			if errors.Is(err, datastore.IntegrationNotFoundOrActive) {
+			if errors.Is(err, datastore.NotFound) {
 				return nil, status.New(codes.InvalidArgument, "Please connect your reddit in integrations to enable automated comments").Err()
 			}
 			return nil, err
