@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -27,20 +27,28 @@ import { DashboardFooter } from "@/components/dashboard/DashboardFooter";
 import { RedditAccount } from "@/components/reddit-accounts/RedditAccountBadge";
 import { useClientsContext } from "@doota/ui-core/context/ClientContext";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
-import { setError, setIsLoading, setNewTabList } from "../../../store/Lead/leadSlice";
-import { RootState } from "../../../store/store";
-import { LeadAnalysis } from "@doota/pb/doota/portal/v1/portal_pb";
+import { setError, setIsLoading, setLeadStatusFilter, setNewTabList } from "../../../store/Lead/leadSlice";
+import { DateRangeFilter, LeadAnalysis } from "@doota/pb/doota/portal/v1/portal_pb";
 // import { setAccounts, setLoading } from "@/store/Reddit/RedditSlice";
 // import { ConnectRedditPrompt } from "../dashboard/ConnectRedditPrompt";
 import { useRedditIntegrationStatus } from "../Leads/Tabs/useRedditIntegrationStatus";
 import { AnnouncementBanner } from "../dashboard/AnnouncementBanner";
+import { LeadStatus } from "@doota/pb/doota/core/v1/core_pb";
+
+interface FetchFilters {
+  status: LeadStatus | null;
+  relevancyScore?: number;
+  subReddit?: string;
+  dateRange?: DateRangeFilter;
+  pageCount?: number;
+}
 
 export default function Dashboard() {
   const { portalClient } = useClientsContext()
   const dispatch = useAppDispatch();
-  const project = useAppSelector((state: RootState) => state.stepper.project);
-  const { dateRange, leadStatusFilter, isLoading } = useAppSelector((state: RootState) => state.lead);
-  const { relevancyScore, subReddit } = useAppSelector((state: RootState) => state.parems);
+  const project = useAppSelector((state) => state.stepper.project);
+  const { dateRange, leadStatusFilter, isLoading } = useAppSelector((state) => state.lead);
+  const { relevancyScore, subReddit } = useAppSelector((state) => state.parems);
   const { isConnected, loading: isLoadingRedditIntegrationStatus } = useRedditIntegrationStatus();
 
   // Sample Reddit accounts
@@ -80,103 +88,74 @@ export default function Dashboard() {
 
   const [counts, setCounts] = useState<LeadAnalysis | undefined>(undefined);
   const [defaultAccountId, setDefaultAccountId] = useState<string>("account1");
-  // const [postAccountAssignments, setPostAccountAssignments] = useState<Record<string, string>>({});
-  // console.log(postAccountAssignments);
-
-  // const handleAction = (action: string, postId: string) => {
-  //   console.log(postId);
-  //   // Demo function to handle actions like commenting, sending DM, etc.
-  //   setIsLoading(true);
-
-  //   setTimeout(() => {
-  //     setIsLoading(false);
-
-  //     if (action === "comment") {
-  //       toast({
-  //         title: "Comment posted",
-  //         description: "Your comment has been posted successfully.",
-  //       });
-  //     } else if (action === "dm") {
-  //       toast({
-  //         title: "Message sent",
-  //         description: "Your direct message has been sent.",
-  //       });
-  //     } else if (action === "save") {
-  //       toast({
-  //         title: "Post saved",
-  //         description: "This post has been saved for later.",
-  //       });
-  //     } else if (action === "skip") {
-  //       toast({
-  //         title: "Post skipped",
-  //         description: "This post has been marked as skipped.",
-  //       });
-  //     }
-  //   }, 1000);
-  // };
 
   const handleDefaultAccountChange = (accountId: string) => {
     setDefaultAccountId(accountId);
   };
 
-  // const handlePostAccountChange = (postId: string, accountId: string) => {
-  //   setPostAccountAssignments(prev => ({
-  //     ...prev,
-  //     [postId]: accountId
-  //   }));
-  // };
+  const hasCheckedInitialLeads = useRef(false);
+
+  const tryFetch = async ({ status, relevancyScore, subReddit, dateRange, pageCount = 10, }: FetchFilters) => {
+    const result = await portalClient.getRelevantLeads({
+      ...(relevancyScore && { relevancyScore }),
+      ...(subReddit && { subReddit }),
+      ...(status && { status }),
+      ...(dateRange && { dateRange }),
+      pageCount,
+    });
+
+    return result;
+  };
 
   useEffect(() => {
 
-    const getAllRelevantLeads = async () => {
+    const getInitialLeads = async () => {
+
       dispatch(setIsLoading(true));
 
       try {
-        const result = await portalClient.getRelevantLeads({
-          ...(relevancyScore && { relevancyScore }),
-          ...(subReddit && { subReddit }),
-          ...(leadStatusFilter && { status: leadStatusFilter }),
-          dateRange,
-          pageCount: 10
-        });
-        const allLeads = result.leads ?? [];
-        const counts = result?.analysis;
-        setCounts(counts);
-        dispatch(setNewTabList(allLeads));
+        if (!hasCheckedInitialLeads.current) {
+          const leadStatusPriority: LeadStatus[] = [LeadStatus.NEW, LeadStatus.COMPLETED];
 
-      } catch (err: any) {
+          for (const status of leadStatusPriority) {
+            const result = await tryFetch({ status, relevancyScore, dateRange });
+            const leads = result.leads ?? [];
+
+            if (leads.length > 0) {
+              dispatch(setNewTabList(leads));
+              dispatch(setLeadStatusFilter(status));
+              setCounts(result.analysis);
+              break;
+            }
+
+            if (!leads.length && status === LeadStatus.COMPLETED) {
+              dispatch(setNewTabList([]));
+              dispatch(setLeadStatusFilter(LeadStatus.NEW));
+              setCounts(undefined);
+            }
+          }
+
+          hasCheckedInitialLeads.current = true;
+        } else {
+          const response = await tryFetch({ status: leadStatusFilter, relevancyScore, subReddit, dateRange });
+          dispatch(setNewTabList(response.leads ?? []));
+          setCounts(response.analysis);
+        }
+      }
+      catch (err: any) {
         const message = err?.response?.data?.message || err.message || "Something went wrong";
-        toast({
-          title: "Error",
-          description: message,
-        });
+        toast({ title: "Error", description: message });
         dispatch(setError(message));
       } finally {
         dispatch(setIsLoading(false));
       }
     };
 
-    getAllRelevantLeads();
-
+    if (isConnected) {
+      getInitialLeads();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [relevancyScore, subReddit, dateRange, leadStatusFilter]);
-
-  // get all reddit account
-  // useEffect(() => {
-  //   dispatch(setLoading(true));
-  //   portalClient.getIntegrations({})
-  //     .then((res) => {
-  //       dispatch(setAccounts(res.integrations));
-  //     })
-  //     .catch((err) => {
-  //       dispatch(setError('Failed to fetch integrations'));
-  //       console.error("Error fetching integrations:", err);
-  //     })
-  //     .finally(() => {
-  //       dispatch(setLoading(false));
-  //     });
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, []);
+  }, [isConnected, dateRange, relevancyScore, subReddit, leadStatusFilter, dispatch]);
 
   return (
     <>
@@ -190,7 +169,6 @@ export default function Dashboard() {
           buttonHref="/settings/integrations"
         />
       ) : null}
-
 
       <div className="flex-1 overflow-auto">
         <main className="container mx-auto px-4 py-6 md:px-6">
@@ -206,48 +184,46 @@ export default function Dashboard() {
 
               <SummaryCards counts={counts} />
 
-              {isLoadingRedditIntegrationStatus ?
-                <>Loading</>
-                :
-                <div className="flex-1 flex flex-col space-y-4 mt-6">
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-background/95 py-2">
-                    <h2 className="text-xl font-semibold">Latest Tracked Posts</h2>
-                    <FilterControls />
-                  </div>
-
-                  {isLoading ? (
-                    <div className="space-y-4">
-                      {[...Array(3)].map((_, i) => (
-                        <Card key={i} className="border-primary/10 shadow-md">
-                          <CardContent className="p-6">
-                            <div className="space-y-2">
-                              <Skeleton className="h-4 w-[200px]" />
-                              <Skeleton className="h-4 w-full" />
-                              <Skeleton className="h-4 w-[80%]" />
-                              <div className="flex gap-2 pt-2">
-                                <Skeleton className="h-9 w-20" />
-                                <Skeleton className="h-9 w-20" />
-                                <Skeleton className="h-9 w-20" />
-                                <Skeleton className="h-9 w-20" />
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="flex-1">
-                      <LeadFeed
-                      // onAction={handleAction}
-                      // redditAccounts={redditAccounts}
-                      // defaultAccountId={defaultAccountId}
-                      // onAccountChange={handlePostAccountChange}
-                      />
-                    </div>
-                  )}
+              {isLoadingRedditIntegrationStatus ? (<>
+                Loading
+              </>) : (<div className="flex-1 flex flex-col space-y-4 mt-6">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-background/95 py-2">
+                  <h2 className="text-xl font-semibold">Latest Tracked Posts</h2>
+                  <FilterControls />
                 </div>
-              }
 
+                {isLoading ? (
+                  <div className="space-y-4">
+                    {[...Array(3)].map((_, i) => (
+                      <Card key={i} className="border-primary/10 shadow-md">
+                        <CardContent className="p-6">
+                          <div className="space-y-2">
+                            <Skeleton className="h-4 w-[200px]" />
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-[80%]" />
+                            <div className="flex gap-2 pt-2">
+                              <Skeleton className="h-9 w-20" />
+                              <Skeleton className="h-9 w-20" />
+                              <Skeleton className="h-9 w-20" />
+                              <Skeleton className="h-9 w-20" />
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex-1">
+                    <LeadFeed
+                    // onAction={handleAction}
+                    // redditAccounts={redditAccounts}
+                    // defaultAccountId={defaultAccountId}
+                    // onAccountChange={handlePostAccountChange}
+                    />
+                  </div>
+                )}
+              </div>
+              )}
             </div>
 
             {/* Sidebar */}

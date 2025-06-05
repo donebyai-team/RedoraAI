@@ -1,63 +1,69 @@
 // import { Filter } from "lucide-react";
-import {useAppDispatch, useAppSelector} from "@/store/hooks";
-import {setDateRange, setLeadStatusFilter} from "@/store/Lead/leadSlice";
-import {LeadStatus} from "@doota/pb/doota/core/v1/core_pb";
-import {DateRangeFilter} from "@doota/pb/doota/portal/v1/portal_pb";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { setDateRange, setLeadStatusFilter } from "@/store/Lead/leadSlice";
+import { LeadStatus } from "@doota/pb/doota/core/v1/core_pb";
+import { DateRangeFilter } from "@doota/pb/doota/portal/v1/portal_pb";
+
+const dateRangeOptions: Record<string, { label: string; value: DateRangeFilter }> = {
+  "1": { label: "Today", value: DateRangeFilter.DATE_RANGE_TODAY },
+  "2": { label: "Yesterday", value: DateRangeFilter.DATE_RANGE_YESTERDAY },
+  "3": { label: "Last 7 days", value: DateRangeFilter.DATE_RANGE_7_DAYS },
+};
+
+const leadStatusOptions: Record<string, { label: string; value: LeadStatus }> = {
+  "0": { label: "New", value: LeadStatus.NEW },
+  "1": { label: "Responded", value: LeadStatus.COMPLETED },
+  "2": { label: "Skipped", value: LeadStatus.NOT_RELEVANT },
+  "3": { label: "Saved", value: LeadStatus.LEAD },
+};
+
+function getKeyFromEnum<T>(options: Record<string, { label: string; value: T }>, value: T): string | undefined {
+  return Object.entries(options).find(([, opt]) => opt.value === value)?.[0];
+}
+
+function DropdownFilter<T>({ options, selectedValue, onChange }: { options: Record<string, { label: string; value: T }>; selectedValue: T; onChange: (value: T) => void; }) {
+  const selectedKey = getKeyFromEnum(options, selectedValue);
+
+  return (
+    <div className="relative">
+      <select
+        className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1"
+        value={selectedKey}
+        onChange={(e) => {
+          const selected = options[e.target.value];
+          if (selected) onChange(selected.value);
+        }}
+      >
+        {Object.entries(options).map(([key, { label }]) => (
+          <option key={key} value={key}>
+            {label}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
 
 export function FilterControls({ isLeadStatusFilter = true }: { isLeadStatusFilter?: boolean }) {
 
-  const { dateRange } = useAppSelector((state) => state.lead);
+  const { dateRange, leadStatusFilter } = useAppSelector((state) => state.lead);
   const dispatch = useAppDispatch();
-
-  const handleDateRangeChange = (value: string) => {
-    const map: Record<string, DateRangeFilter> = {
-      "1": DateRangeFilter.DATE_RANGE_TODAY,
-      "2": DateRangeFilter.DATE_RANGE_YESTERDAY,
-      "3": DateRangeFilter.DATE_RANGE_7_DAYS,
-    };
-
-    dispatch(setDateRange(map[value] ?? DateRangeFilter.DATE_RANGE_UNSPECIFIED));
-  };
-
-  const handleLeadStatusFilterChange = (value: string) => {
-    const map: Record<string, LeadStatus> = {
-      "0": LeadStatus.NEW,
-      "1": LeadStatus.COMPLETED,
-      "2": LeadStatus.NOT_RELEVANT,
-      "3": LeadStatus.LEAD,
-    };
-
-    dispatch(setLeadStatusFilter(map[value] ?? null));
-  };
 
   return (
     <div className="flex flex-wrap gap-2 items-center">
       {isLeadStatusFilter && (
-        <div className="relative">
-          <select
-            className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1"
-            // value={leadStatusFilter ?? ""}
-            onChange={(event) => handleLeadStatusFilterChange(event.target.value)}
-          >
-            <option value="0">New</option>
-            <option value="1">Responded</option>
-            <option value="2">Skipped</option>
-            <option value="3">Saved</option>
-          </select>
-        </div>
+        <DropdownFilter
+          options={leadStatusOptions}
+          selectedValue={leadStatusFilter}
+          onChange={(val) => dispatch(setLeadStatusFilter(val))}
+        />
       )}
 
-      <div className="relative">
-        <select
-          className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1"
-          value={dateRange}
-          onChange={(event) => handleDateRangeChange(event.target.value)}
-        >
-          <option value="1">Today</option>
-          <option value="2">Yesterday</option>
-          <option value="3">Last 7 days</option>
-        </select>
-      </div>
+      <DropdownFilter
+        options={dateRangeOptions}
+        selectedValue={dateRange}
+        onChange={(val) => dispatch(setDateRange(val))}
+      />
 
       {/* <div className="relative">
         <select className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1">
