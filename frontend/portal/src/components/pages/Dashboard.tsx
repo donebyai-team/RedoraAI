@@ -30,7 +30,7 @@ import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { setError, setIsLoading, setNewTabList } from "../../../store/Lead/leadSlice";
 import { RootState } from "../../../store/store";
 import { LeadAnalysis } from "@doota/pb/doota/portal/v1/portal_pb";
-// import { setAccounts, setLoading } from "@/store/Reddit/RedditSlice";
+import { setAccounts, setLoading } from "@/store/Reddit/RedditSlice";
 // import { ConnectRedditPrompt } from "../dashboard/ConnectRedditPrompt";
 import { useRedditIntegrationStatus } from "../Leads/Tabs/useRedditIntegrationStatus";
 import { AnnouncementBanner } from "../dashboard/AnnouncementBanner";
@@ -161,22 +161,22 @@ export default function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [relevancyScore, subReddit, dateRange, leadStatusFilter]);
 
-  // get all reddit account
-  // useEffect(() => {
-  //   dispatch(setLoading(true));
-  //   portalClient.getIntegrations({})
-  //     .then((res) => {
-  //       dispatch(setAccounts(res.integrations));
-  //     })
-  //     .catch((err) => {
-  //       dispatch(setError('Failed to fetch integrations'));
-  //       console.error("Error fetching integrations:", err);
-  //     })
-  //     .finally(() => {
-  //       dispatch(setLoading(false));
-  //     });
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, []);
+  // get all reddit account, used in Leed Feed
+  useEffect(() => {
+    dispatch(setLoading(true));
+    portalClient.getIntegrations({})
+      .then((res) => {
+        dispatch(setAccounts(res.integrations));
+      })
+      .catch((err) => {
+        dispatch(setError('Failed to fetch integrations'));
+        console.error("Error fetching integrations:", err);
+      })
+      .finally(() => {
+        dispatch(setLoading(false));
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <>
