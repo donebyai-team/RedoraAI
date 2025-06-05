@@ -28,11 +28,16 @@ type OauthClient struct {
 }
 
 type userAgentTransport struct {
-	base http.RoundTripper
+	userName string
+	base     http.RoundTripper
 }
 
 func (u *userAgentTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	req.Header.Set("User-Agent", "linux:com.reddit.scraper:v0.1")
+	if u.userName != "" {
+		req.Header.Set("User-Agent", fmt.Sprintf("com.redoraai:v0.1 by (/u/%s)", u.userName))
+	} else {
+		req.Header.Set("User-Agent", "com.redoraai:v0.1 by (redora)")
+	}
 	return u.base.RoundTrip(req)
 }
 
@@ -41,7 +46,7 @@ func NewRedditOauthClient(logger *zap.Logger, db datastore.Repository, clientID,
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
 		RedirectURL:  redirectURL,
-		Scopes:       []string{"identity", "read", "modconfig", "mysubreddits", "submit", "privatemessages", "subscribe"},
+		Scopes:       []string{"identity", "read", "mysubreddits", "submit", "subscribe"},
 		Endpoint: oauth2.Endpoint{
 			AuthURL:  redditAuthURL,
 			TokenURL: redditTokenURL,
@@ -90,26 +95,31 @@ func (c *OauthClient) GetOrCreate(ctx context.Context, orgID string, forceAuth b
 
 func (r *OauthClient) newRedditClient(ctx context.Context, orgID string, forceAuth bool) (*Client, error) {
 	integration, err := r.db.GetIntegrationByOrgAndType(ctx, orgID, models.IntegrationTypeREDDIT)
-	if err != nil && errors.Is(err, datastore.NotFound) {
-		// If forceAuth is false and integration doesn't exist, return a client with no config.
+
+	// If integration is not found or inactive
+	if err != nil {
+		if errors.Is(err, datastore.NotFound) {
+			if !forceAuth {
+				return NewClientWithOutConfig(r.logger), nil
+			}
+			return nil, datastore.IntegrationNotFoundOrActive
+		}
+		return nil, err
+	}
+
+	if integration == nil || integration.State != models.IntegrationStateACTIVE {
 		if !forceAuth {
 			return NewClientWithOutConfig(r.logger), nil
 		}
 		return nil, datastore.IntegrationNotFoundOrActive
 	}
 
-	if err != nil {
-		return nil, err
-	}
-
-	if integration.State != models.IntegrationStateACTIVE {
-		return nil, datastore.IntegrationNotFoundOrActive
-	}
+	redditUserConfig := integration.GetRedditConfig()
 
 	client := &Client{
 		logger:      r.logger,
-		config:      integration.GetRedditConfig(),
-		httpClient:  newHTTPClient(),
+		config:      redditUserConfig,
+		httpClient:  newHTTPClient(redditUserConfig.Name),
 		oauthConfig: r.config,
 		baseURL:     redditAPIBase,
 		unAuthorizedErrorCallback: func(ctx context.Context) {

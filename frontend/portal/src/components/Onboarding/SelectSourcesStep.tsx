@@ -136,7 +136,7 @@ export default function SelectSourcesStep() {
                     projects: [...prev.projects, project]
                 } : null);
                 // toast.success("Sources saved successfully");
-                routers.push(routes.app.home);
+                routers.push(routes.new.dashboard);
             } catch (err: any) {
                 const message = err?.response?.data?.message || err.message || "Something went wrong";
                 toast.error(message);

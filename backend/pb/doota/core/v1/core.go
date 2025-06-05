@@ -27,7 +27,6 @@ func (i *SubscriptionStatus) FromModel(model models.SubscriptionStatus) {
 
 func (u *UsageLimit) FromModel(model *models.UsageLimits) *UsageLimit {
 	u.PerDay = int32(model.PerDay)
-	u.PerMonth = int32(model.PerMonth)
 	return u
 }
 
@@ -53,7 +52,11 @@ func (u *Source_RedditMetadata) FromModel(metadata *models.SubRedditMetadata) *S
 
 func (u *Source) FromModel(source *models.Source, details isSource_Details) *Source {
 	u.Id = source.ID
-	u.Name = source.Name
+	if source.SourceType == models.SourceTypeSUBREDDIT {
+		u.Name = fmt.Sprintf("r/%s", source.Name)
+	} else {
+		u.Name = source.Name
+	}
 	u.Description = source.Description
 	u.SourceType.FromModel(source.SourceType)
 	u.Details = details

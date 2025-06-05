@@ -161,6 +161,7 @@ func (a *AuthUsecase) createUserForEmail(ctx context.Context, email string, emai
 
 	// notify admin
 	go a.alertNotifier.SendNewUserAlert(context.Background(), createdUser.Email)
+	go a.alertNotifier.SendWelcomeEmail(context.Background(), org.ID)
 
 	return createdUser, nil
 }

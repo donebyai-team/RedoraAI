@@ -7,7 +7,7 @@ toolchain go1.23.4
 require (
 	connectrpc.com/connect v1.14.0
 	github.com/KimMachineGun/automemlimit v0.6.0
-	github.com/VapiAI/server-sdk-go v0.4.0
+	//github.com/VapiAI/server-sdk-go v0.4.0
 	github.com/coreos/go-oidc/v3 v3.13.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/drone/envsubst v1.0.3
@@ -59,7 +59,7 @@ require (
 
 //replace github.com/tmc/langchaingo => github.com/streamingfast/langchaingo v0.1.9-0.20241203182852-7b3db2b92bc1
 
-replace github.com/VapiAI/server-sdk-go => github.com/shank318/server-sdk-go v0.0.1
+//replace github.com/VapiAI/server-sdk-go => github.com/shank318/server-sdk-go v0.0.1
 
 require (
 	cel.dev/expr v0.18.0 // indirect

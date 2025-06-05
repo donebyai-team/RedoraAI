@@ -4,13 +4,66 @@
 
 import type { GenEnum, GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv1";
 import type { Message } from "@bufbuild/protobuf";
-import type { Keyword, Lead, LeadStatus, Project, ProjectSchema, Source, SourceSchema, Subscription } from "../../core/v1/core_pb";
+import type { Keyword, Lead, LeadInteraction, LeadInteractionStatus, LeadStatus, Project, ProjectSchema, Source, SourceSchema, Subscription } from "../../core/v1/core_pb";
 import type { EmptySchema, Timestamp } from "@bufbuild/protobuf/wkt";
 
 /**
  * Describes the file doota/portal/v1/portal.proto.
  */
 export declare const file_doota_portal_v1_portal: GenFile;
+
+/**
+ * @generated from message doota.portal.v1.GetLeadInteractionsRequest
+ */
+export declare type GetLeadInteractionsRequest = Message<"doota.portal.v1.GetLeadInteractionsRequest"> & {
+  /**
+   * @generated from field: doota.portal.v1.DateRangeFilter date_range = 1;
+   */
+  dateRange: DateRangeFilter;
+
+  /**
+   * @generated from field: doota.core.v1.LeadInteractionStatus status = 2;
+   */
+  status: LeadInteractionStatus;
+};
+
+/**
+ * Describes the message doota.portal.v1.GetLeadInteractionsRequest.
+ * Use `create(GetLeadInteractionsRequestSchema)` to create a new message.
+ */
+export declare const GetLeadInteractionsRequestSchema: GenMessage<GetLeadInteractionsRequest>;
+
+/**
+ * @generated from message doota.portal.v1.GetLeadInteractionsResponse
+ */
+export declare type GetLeadInteractionsResponse = Message<"doota.portal.v1.GetLeadInteractionsResponse"> & {
+  /**
+   * @generated from field: repeated doota.core.v1.LeadInteraction interactions = 1;
+   */
+  interactions: LeadInteraction[];
+};
+
+/**
+ * Describes the message doota.portal.v1.GetLeadInteractionsResponse.
+ * Use `create(GetLeadInteractionsResponseSchema)` to create a new message.
+ */
+export declare const GetLeadInteractionsResponseSchema: GenMessage<GetLeadInteractionsResponse>;
+
+/**
+ * @generated from message doota.portal.v1.ConnectRedditResponse
+ */
+export declare type ConnectRedditResponse = Message<"doota.portal.v1.ConnectRedditResponse"> & {
+  /**
+   * @generated from field: string url = 1;
+   */
+  url: string;
+};
+
+/**
+ * Describes the message doota.portal.v1.ConnectRedditResponse.
+ * Use `create(ConnectRedditResponseSchema)` to create a new message.
+ */
+export declare const ConnectRedditResponseSchema: GenMessage<ConnectRedditResponse>;
 
 /**
  * @generated from message doota.portal.v1.UpdateAutomationSettingRequest
@@ -124,6 +177,11 @@ export declare type GetLeadsByStatusRequest = Message<"doota.portal.v1.GetLeadsB
    * @generated from field: doota.portal.v1.DateRangeFilter date_range = 4;
    */
   dateRange: DateRangeFilter;
+
+  /**
+   * @generated from field: int32 page_count = 5;
+   */
+  pageCount: number;
 };
 
 /**
@@ -160,6 +218,11 @@ export declare type GetRelevantLeadsRequest = Message<"doota.portal.v1.GetReleva
    * @generated from field: doota.core.v1.LeadStatus status = 5;
    */
   status: LeadStatus;
+
+  /**
+   * @generated from field: int32 page_count = 6;
+   */
+  pageCount: number;
 };
 
 /**
@@ -704,6 +767,11 @@ export declare type AutomationSetting = Message<"doota.portal.v1.AutomationSetti
    * @generated from field: float relevancy_score = 2;
    */
   relevancyScore: number;
+
+  /**
+   * @generated from field: int64 max_per_day = 3;
+   */
+  maxPerDay: bigint;
 };
 
 /**
@@ -785,6 +853,22 @@ export declare type Integrations = Message<"doota.portal.v1.Integrations"> & {
  * Use `create(IntegrationsSchema)` to create a new message.
  */
 export declare const IntegrationsSchema: GenMessage<Integrations>;
+
+/**
+ * @generated from message doota.portal.v1.RevokeIntegrationRequest
+ */
+export declare type RevokeIntegrationRequest = Message<"doota.portal.v1.RevokeIntegrationRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+};
+
+/**
+ * Describes the message doota.portal.v1.RevokeIntegrationRequest.
+ * Use `create(RevokeIntegrationRequestSchema)` to create a new message.
+ */
+export declare const RevokeIntegrationRequestSchema: GenMessage<RevokeIntegrationRequest>;
 
 /**
  * @generated from message doota.portal.v1.GetIntegrationRequest
@@ -1005,6 +1089,11 @@ export enum IntegrationType {
    * @generated from enum value: INTEGRATION_TYPE_REDDIT = 3;
    */
   REDDIT = 3,
+
+  /**
+   * @generated from enum value: INTEGRATION_TYPE_REDDIT_DM_LOGIN = 4;
+   */
+  REDDIT_DM_LOGIN = 4,
 }
 
 /**
@@ -1071,6 +1160,14 @@ export declare const PortalService: GenService<{
     methodKind: "unary";
     input: typeof GetIntegrationRequestSchema;
     output: typeof IntegrationSchema;
+  },
+  /**
+   * @generated from rpc doota.portal.v1.PortalService.RevokeIntegration
+   */
+  revokeIntegration: {
+    methodKind: "unary";
+    input: typeof RevokeIntegrationRequestSchema;
+    output: typeof EmptySchema;
   },
   /**
    * @generated from rpc doota.portal.v1.PortalService.Batch
@@ -1203,12 +1300,36 @@ export declare const PortalService: GenService<{
     output: typeof ProjectSchema;
   },
   /**
+   * @generated from rpc doota.portal.v1.PortalService.SuggestKeywordsAndSources
+   */
+  suggestKeywordsAndSources: {
+    methodKind: "unary";
+    input: typeof EmptySchema;
+    output: typeof ProjectSchema;
+  },
+  /**
    * @generated from rpc doota.portal.v1.PortalService.UpdateAutomationSettings
    */
   updateAutomationSettings: {
     methodKind: "unary";
     input: typeof UpdateAutomationSettingRequestSchema;
     output: typeof OrganizationSchema;
+  },
+  /**
+   * @generated from rpc doota.portal.v1.PortalService.ConnectReddit
+   */
+  connectReddit: {
+    methodKind: "server_streaming";
+    input: typeof EmptySchema;
+    output: typeof ConnectRedditResponseSchema;
+  },
+  /**
+   * @generated from rpc doota.portal.v1.PortalService.GetLeadInteractions
+   */
+  getLeadInteractions: {
+    methodKind: "unary";
+    input: typeof GetLeadInteractionsRequestSchema;
+    output: typeof GetLeadInteractionsResponseSchema;
   },
 }>;
 

@@ -45,13 +45,16 @@ var _ Serializable = (*RedditDMLoginConfig)(nil)
 type RedditDMLoginConfig struct {
 	Username string `json:"username"`
 	Password string `json:"-"`
+	Cookies  string `json:"-"`
 }
 
 func (i *RedditDMLoginConfig) EncryptedData() []byte {
 	toEncrypt := struct {
 		Password string `json:"password"`
+		Cookies  string `json:"cookies"`
 	}{
 		Password: i.Password,
+		Cookies:  i.Cookies,
 	}
 	data, err := json.Marshal(toEncrypt)
 	if err != nil {
@@ -81,12 +84,14 @@ func (i *Integration) GetRedditDMLoginConfig() *RedditDMLoginConfig {
 
 	encryptedData := struct {
 		Password string `json:"password"`
+		Cookies  string `json:"cookies"`
 	}{}
 
 	if err := json.Unmarshal([]byte(i.EncryptedConfig), &encryptedData); err != nil {
 		panic(fmt.Errorf("unable to unmarshal reddit config: %w", err))
 	}
 	out.Password = encryptedData.Password
+	out.Cookies = encryptedData.Cookies
 	return &out
 }
 

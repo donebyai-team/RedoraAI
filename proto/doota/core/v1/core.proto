@@ -119,6 +119,36 @@ message Lead {
   repeated string intents = 15;
 }
 
+enum LeadInteractionType {
+  LEAD_INTERACTION_UNSPECIFIED = 0;
+  LEAD_INTERACTION_COMMENT= 1;
+  LEAD_INTERACTION_DM = 2;
+}
+
+enum LeadInteractionStatus {
+  LEAD_INTERACTION_STATUS_UNSPECIFIED = 0;
+  LEAD_INTERACTION_STATUS_SENT= 1;
+  LEAD_INTERACTION_STATUS_CREATED = 2;
+  LEAD_INTERACTION_STATUS_FAILED = 3;
+  LEAD_INTERACTION_STATUS_PROCESSING = 4;
+  LEAD_INTERACTION_STATUS_REMOVED= 5;
+}
+
+message LeadInteraction {
+  string id =1;
+  string project_id=2;
+  string lead_id=3;
+  LeadInteractionType interaction_type = 4;
+  string from = 5;
+  string to = 6;
+  LeadInteractionStatus status = 7;
+  string reason = 8;
+  LeadMetadata lead_metadata = 9;
+  string post_title = 10;
+  google.protobuf.Timestamp created_at = 11;
+  google.protobuf.Timestamp scheduled_at = 12;
+}
+
 enum LeadStatus {
   NEW = 0;
   NOT_RELEVANT = 1;
@@ -146,6 +176,7 @@ message Project {
   repeated Source sources = 7;
   repeated string suggested_keywords = 8;
   repeated string suggested_sources = 9;
+  bool is_active = 10;
 }
 
 enum SubscriptionStatus {

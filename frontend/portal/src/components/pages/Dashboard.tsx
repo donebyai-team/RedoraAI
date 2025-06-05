@@ -29,13 +29,19 @@ import { useClientsContext } from "@doota/ui-core/context/ClientContext";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { setError, setIsLoading, setNewTabList } from "../../../store/Lead/leadSlice";
 import { RootState } from "../../../store/store";
-import { DateRangeFilter, LeadAnalysis } from "@doota/pb/doota/portal/v1/portal_pb";
+import { LeadAnalysis } from "@doota/pb/doota/portal/v1/portal_pb";
+// import { setAccounts, setLoading } from "@/store/Reddit/RedditSlice";
+// import { ConnectRedditPrompt } from "../dashboard/ConnectRedditPrompt";
+import { useRedditIntegrationStatus } from "../Leads/Tabs/useRedditIntegrationStatus";
+import { AnnouncementBanner } from "../dashboard/AnnouncementBanner";
 
 export default function Dashboard() {
   const { portalClient } = useClientsContext()
   const dispatch = useAppDispatch();
-  const { isLoading } = useAppSelector((state: RootState) => state.lead);
+  const project = useAppSelector((state: RootState) => state.stepper.project);
+  const { dateRange, leadStatusFilter, isLoading } = useAppSelector((state: RootState) => state.lead);
   const { relevancyScore, subReddit } = useAppSelector((state: RootState) => state.parems);
+  const { isConnected, loading: isLoadingRedditIntegrationStatus } = useRedditIntegrationStatus();
 
   // Sample Reddit accounts
   const redditAccounts: RedditAccount[] = [
@@ -73,53 +79,52 @@ export default function Dashboard() {
   ];
 
   const [counts, setCounts] = useState<LeadAnalysis | undefined>(undefined);
-  const [dateRange, setDateRange] = useState<DateRangeFilter>(DateRangeFilter.DATE_RANGE_UNSPECIFIED);
   const [defaultAccountId, setDefaultAccountId] = useState<string>("account1");
-  const [postAccountAssignments, setPostAccountAssignments] = useState<Record<string, string>>({});
-  console.log(postAccountAssignments);
+  // const [postAccountAssignments, setPostAccountAssignments] = useState<Record<string, string>>({});
+  // console.log(postAccountAssignments);
 
-  const handleAction = (action: string, postId: string) => {
-    console.log(postId);
-    // Demo function to handle actions like commenting, sending DM, etc.
-    setIsLoading(true);
+  // const handleAction = (action: string, postId: string) => {
+  //   console.log(postId);
+  //   // Demo function to handle actions like commenting, sending DM, etc.
+  //   setIsLoading(true);
 
-    setTimeout(() => {
-      setIsLoading(false);
+  //   setTimeout(() => {
+  //     setIsLoading(false);
 
-      if (action === "comment") {
-        toast({
-          title: "Comment posted",
-          description: "Your comment has been posted successfully.",
-        });
-      } else if (action === "dm") {
-        toast({
-          title: "Message sent",
-          description: "Your direct message has been sent.",
-        });
-      } else if (action === "save") {
-        toast({
-          title: "Post saved",
-          description: "This post has been saved for later.",
-        });
-      } else if (action === "skip") {
-        toast({
-          title: "Post skipped",
-          description: "This post has been marked as skipped.",
-        });
-      }
-    }, 1000);
-  };
+  //     if (action === "comment") {
+  //       toast({
+  //         title: "Comment posted",
+  //         description: "Your comment has been posted successfully.",
+  //       });
+  //     } else if (action === "dm") {
+  //       toast({
+  //         title: "Message sent",
+  //         description: "Your direct message has been sent.",
+  //       });
+  //     } else if (action === "save") {
+  //       toast({
+  //         title: "Post saved",
+  //         description: "This post has been saved for later.",
+  //       });
+  //     } else if (action === "skip") {
+  //       toast({
+  //         title: "Post skipped",
+  //         description: "This post has been marked as skipped.",
+  //       });
+  //     }
+  //   }, 1000);
+  // };
 
   const handleDefaultAccountChange = (accountId: string) => {
     setDefaultAccountId(accountId);
   };
 
-  const handlePostAccountChange = (postId: string, accountId: string) => {
-    setPostAccountAssignments(prev => ({
-      ...prev,
-      [postId]: accountId
-    }));
-  };
+  // const handlePostAccountChange = (postId: string, accountId: string) => {
+  //   setPostAccountAssignments(prev => ({
+  //     ...prev,
+  //     [postId]: accountId
+  //   }));
+  // };
 
   useEffect(() => {
 
@@ -130,8 +135,9 @@ export default function Dashboard() {
         const result = await portalClient.getRelevantLeads({
           ...(relevancyScore && { relevancyScore }),
           ...(subReddit && { subReddit }),
+          ...(leadStatusFilter && { status: leadStatusFilter }),
           dateRange,
-          // pageNo: 1,
+          pageCount: 10
         });
         const allLeads = result.leads ?? [];
         const counts = result?.analysis;
@@ -153,21 +159,38 @@ export default function Dashboard() {
     getAllRelevantLeads();
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [relevancyScore, subReddit, dateRange]);
+  }, [relevancyScore, subReddit, dateRange, leadStatusFilter]);
 
-  const handleDateRangeChange = (value: string) => {
-    const map: Record<string, DateRangeFilter> = {
-      "1": DateRangeFilter.DATE_RANGE_TODAY,
-      "2": DateRangeFilter.DATE_RANGE_YESTERDAY,
-      "3": DateRangeFilter.DATE_RANGE_7_DAYS,
-    };
-
-    setDateRange(map[value] ?? DateRangeFilter.DATE_RANGE_UNSPECIFIED);
-  };
+  // get all reddit account
+  // useEffect(() => {
+  //   dispatch(setLoading(true));
+  //   portalClient.getIntegrations({})
+  //     .then((res) => {
+  //       dispatch(setAccounts(res.integrations));
+  //     })
+  //     .catch((err) => {
+  //       dispatch(setError('Failed to fetch integrations'));
+  //       console.error("Error fetching integrations:", err);
+  //     })
+  //     .finally(() => {
+  //       dispatch(setLoading(false));
+  //     });
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, []);
 
   return (
     <>
       <DashboardHeader />
+      {project && !project.isActive ? (
+        <AnnouncementBanner message="⚠️ Your account has been paused due to inactivity. Please contact support to enable it." />
+      ) : (!isConnected && !isLoadingRedditIntegrationStatus) ? (
+        <AnnouncementBanner
+          message="⚠️ Connect your Reddit account to get real-time alerts and auto-reply to trending posts."
+          buttonText="Connect now →"
+          buttonHref="/settings/integrations"
+        />
+      ) : null}
+
 
       <div className="flex-1 overflow-auto">
         <main className="container mx-auto px-4 py-6 md:px-6">
@@ -183,43 +206,48 @@ export default function Dashboard() {
 
               <SummaryCards counts={counts} />
 
-              <div className="flex-1 flex flex-col space-y-4 mt-6">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-background/95 py-2">
-                  <h2 className="text-xl font-semibold">Active Leads</h2>
-                  <FilterControls onChange={handleDateRangeChange} />
-                </div>
+              {isLoadingRedditIntegrationStatus ?
+                <>Loading</>
+                :
+                <div className="flex-1 flex flex-col space-y-4 mt-6">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-background/95 py-2">
+                    <h2 className="text-xl font-semibold">Latest Tracked Posts</h2>
+                    <FilterControls />
+                  </div>
 
-                {isLoading ? (
-                  <div className="space-y-4">
-                    {[...Array(3)].map((_, i) => (
-                      <Card key={i} className="border-primary/10 shadow-md">
-                        <CardContent className="p-6">
-                          <div className="space-y-2">
-                            <Skeleton className="h-4 w-[200px]" />
-                            <Skeleton className="h-4 w-full" />
-                            <Skeleton className="h-4 w-[80%]" />
-                            <div className="flex gap-2 pt-2">
-                              <Skeleton className="h-9 w-20" />
-                              <Skeleton className="h-9 w-20" />
-                              <Skeleton className="h-9 w-20" />
-                              <Skeleton className="h-9 w-20" />
+                  {isLoading ? (
+                    <div className="space-y-4">
+                      {[...Array(3)].map((_, i) => (
+                        <Card key={i} className="border-primary/10 shadow-md">
+                          <CardContent className="p-6">
+                            <div className="space-y-2">
+                              <Skeleton className="h-4 w-[200px]" />
+                              <Skeleton className="h-4 w-full" />
+                              <Skeleton className="h-4 w-[80%]" />
+                              <div className="flex gap-2 pt-2">
+                                <Skeleton className="h-9 w-20" />
+                                <Skeleton className="h-9 w-20" />
+                                <Skeleton className="h-9 w-20" />
+                                <Skeleton className="h-9 w-20" />
+                              </div>
                             </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="flex-1">
-                    <LeadFeed
-                      onAction={handleAction}
-                      redditAccounts={redditAccounts}
-                      defaultAccountId={defaultAccountId}
-                      onAccountChange={handlePostAccountChange}
-                    />
-                  </div>
-                )}
-              </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex-1">
+                      <LeadFeed
+                      // onAction={handleAction}
+                      // redditAccounts={redditAccounts}
+                      // defaultAccountId={defaultAccountId}
+                      // onAccountChange={handlePostAccountChange}
+                      />
+                    </div>
+                  )}
+                </div>
+              }
+
             </div>
 
             {/* Sidebar */}

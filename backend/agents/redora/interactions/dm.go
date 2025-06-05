@@ -5,17 +5,17 @@ import (
 	"errors"
 	"fmt"
 	"github.com/shank318/doota/datastore"
-	"github.com/shank318/doota/errorx"
 	"github.com/shank318/doota/models"
 	"github.com/shank318/doota/utils"
 	"go.uber.org/zap"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	"strings"
 )
 
 type DMParams struct {
+	ID       string
 	Username string
 	Password string
+	Cookie   string // json array
 	To       string
 	Message  string
 }
@@ -24,11 +24,17 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 	if interaction.Type != models.LeadInteractionTypeDM {
 		return fmt.Errorf("interaction type is not DM")
 	}
-	r.logger.Info("sending reddit DM", zap.String("from", interaction.From))
+	r.logger.Info("sending reddit DM",
+		zap.String("interaction_id", interaction.ID),
+		zap.String("from", interaction.From))
 
 	redditLead, err := r.db.GetLeadByID(ctx, interaction.ProjectID, interaction.LeadID)
 	if err != nil {
 		return err
+	}
+
+	if strings.TrimSpace(utils.FormatDM(redditLead.LeadMetadata.SuggestedDM)) == "" {
+		return fmt.Errorf("no DM message found")
 	}
 
 	defer func() {
@@ -45,10 +51,31 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 		}
 	}()
 
+	if strings.TrimSpace(utils.FormatDM(redditLead.LeadMetadata.SuggestedDM)) == "" {
+		err := fmt.Errorf("no DM message found")
+		interaction.Status = models.LeadInteractionStatusFAILED
+		interaction.Reason = err.Error()
+		return err
+	}
+
 	// case: if auto DM disabled
 	if !interaction.Organization.FeatureFlags.EnableAutoDM {
 		interaction.Status = models.LeadInteractionStatusFAILED
 		interaction.Reason = "auto DM is disabled for this organization"
+		return nil
+	}
+
+	// Check the interaction should not exist
+	exists, err := r.db.IsInteractionExists(ctx, interaction)
+	if err != nil {
+		interaction.Status = models.LeadInteractionStatusFAILED
+		interaction.Reason = fmt.Sprintf("failed to check if interaction exists: %s", err.Error())
+		return err
+	}
+
+	if exists {
+		interaction.Status = models.LeadInteractionStatusFAILED
+		interaction.Reason = "DM already exists"
 		return nil
 	}
 
@@ -59,11 +86,17 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 		return err
 	}
 
-	redditClient, err := r.redditOauthClient.GetOrCreate(ctx, interaction.Organization.ID, true)
+	if integration.State != models.IntegrationStateACTIVE {
+		interaction.Status = models.LeadInteractionStatusFAILED
+		interaction.Reason = "dm integration not found or inactive"
+		return fmt.Errorf(interaction.Reason)
+	}
+
+	redditClient, err := r.redditOauthClient.GetOrCreate(ctx, interaction.Organization.ID, false)
 	if err != nil {
 		if errors.Is(err, datastore.IntegrationNotFoundOrActive) {
 			interaction.Status = models.LeadInteractionStatusFAILED
-			interaction.Reason = "integration not found or inactive"
+			interaction.Reason = "oauth integration not found or inactive"
 		} else {
 			interaction.Status = models.LeadInteractionStatusFAILED
 			interaction.Reason = err.Error()
@@ -80,7 +113,7 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 
 	if user == nil || user.ID == "" {
 		interaction.Status = models.LeadInteractionStatusFAILED
-		interaction.Reason = "user is nil"
+		interaction.Reason = "user does not exist or suspended"
 		return nil
 	}
 
@@ -91,13 +124,24 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 
 	loginConfig := integration.GetRedditDMLoginConfig()
 
-	if err = r.browserLessClient.SendDM(DMParams{
+	updatedCookies, err := r.browserLessClient.SendDM(ctx, DMParams{
+		ID:       interaction.ID,
+		Cookie:   loginConfig.Cookies,
 		Username: loginConfig.Username,
 		Password: loginConfig.Password,
 		To:       fmt.Sprintf("t2_%s", user.ID),
 		Message:  utils.FormatDM(redditLead.LeadMetadata.SuggestedDM),
-	}); err != nil {
+	})
+	if err != nil {
 		interaction.Reason = fmt.Sprintf("failed to send DM: %v", err)
+		interaction.Status = models.LeadInteractionStatusFAILED
+		return err
+	}
+
+	loginConfig.Cookies = string(updatedCookies)
+	_, err = r.db.UpsertIntegration(ctx, integration)
+	if err != nil {
+		interaction.Reason = fmt.Sprintf("failed to update integration: %v", err)
 		interaction.Status = models.LeadInteractionStatusFAILED
 		return err
 	}
@@ -107,28 +151,43 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 	redditLead.LeadMetadata.AutomatedDMSent = true
 	redditLead.Status = models.LeadStatusCOMPLETED
 
+	r.logger.Info("successfully sent reddit DM",
+		zap.String("interaction_id", interaction.ID),
+		zap.String("from", interaction.From))
+
 	return nil
 }
 
-func (r redditInteractions) CheckIfLogin(ctx context.Context, orgID string) error {
-	integration, err := r.db.GetIntegrationByOrgAndType(ctx, orgID, models.IntegrationTypeREDDITDMLOGIN)
+type loginCallback func() error
+
+func (r redditInteractions) Authenticate(ctx context.Context, orgID string) (string, loginCallback, error) {
+	cdp, err := r.browserLessClient.StartLogin(ctx)
 	if err != nil {
-		return err
+		return "", nil, err
 	}
 
-	loginConfig := integration.GetRedditDMLoginConfig()
-	err = r.browserLessClient.CheckIfLogin(DMParams{
-		Username: loginConfig.Username,
-		Password: loginConfig.Password,
-	})
-	var loginErr *errorx.LoginError
-	if err != nil && errors.As(err, &loginErr) {
-		r.logger.Warn("failed to login to reddit", zap.Error(err), zap.String("org_id", orgID))
-		return status.Error(codes.InvalidArgument, loginErr.Reason)
-	} else if err != nil {
-		r.logger.Warn("failed to login to reddit", zap.Error(err), zap.String("org_id", orgID))
-		return status.Error(codes.Internal, "unable login to reddit")
-	}
+	return cdp.LiveURL, func() error {
+		cookies, err := r.browserLessClient.WaitAndGetCookies(ctx, cdp.BrowserWSEndpoint)
+		if err != nil {
+			return err
+		}
 
-	return nil
+		integration := &models.Integration{
+			OrganizationID: orgID,
+			State:          models.IntegrationStateACTIVE,
+			Type:           models.IntegrationTypeREDDITDMLOGIN,
+		}
+
+		out := &models.RedditDMLoginConfig{
+			Cookies: string(cookies),
+		}
+		integration = models.SetIntegrationType(integration, models.IntegrationTypeREDDITDMLOGIN, out)
+		_, err = r.db.UpsertIntegration(ctx, integration)
+		if err != nil {
+			r.logger.Warn("failed to update integration", zap.Error(err), zap.String("org_id", orgID))
+			return err
+		}
+		r.logger.Info("successfully logged in to reddit", zap.String("org_id", orgID))
+		return nil
+	}, nil
 }

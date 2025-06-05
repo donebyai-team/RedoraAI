@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import {
-  Bell,
+  // Bell,
   Settings,
   LogOut,
   User,
@@ -17,8 +17,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
+import { useAuth } from "@doota/ui-core/hooks/useAuth";
+import { routes } from "@doota/ui-core/routing";
 
 export function DashboardHeader() {
+
+  const { logout } = useAuth();
+
+  const handleLogout = () => {
+    logout()
+  };
+
   return (
     <header className="border-b border-primary/10 bg-background/95 py-3 px-4 md:px-6">
       <div className="container mx-auto">
@@ -30,10 +39,10 @@ export function DashboardHeader() {
 
           {/* Right section - Notifications and Profile */}
           <div className="flex items-center gap-1 md:gap-2">
-            <Button variant="ghost" size="icon" className="relative">
+            {/* <Button variant="ghost" size="icon" className="relative">
               <Bell className="h-4 w-4" />
               <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-primary" />
-            </Button>
+            </Button> */}
 
             {/* Profile Dropdown */}
             <DropdownMenu>
@@ -47,20 +56,20 @@ export function DashboardHeader() {
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
+                {/* <DropdownMenuItem asChild>
                   <Link href="/profile" className="cursor-pointer">
                     <User className="h-4 w-4 mr-2" />
                     Profile
                   </Link>
-                </DropdownMenuItem>
+                </DropdownMenuItem> */}
                 <DropdownMenuItem asChild>
-                  <Link href="/settings" className="cursor-pointer">
+                  <Link href={routes.new.integrations} className="cursor-pointer">
                     <Settings className="h-4 w-4 mr-2" />
                     Global Settings
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="h-4 w-4 mr-2" />
                   Logout
                 </DropdownMenuItem>

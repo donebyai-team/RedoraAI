@@ -15,6 +15,7 @@ import (
 	"github.com/shank318/doota/portal"
 	"github.com/shank318/doota/portal/state"
 	"github.com/shank318/doota/services"
+	"github.com/streamingfast/dstore"
 	"os"
 	"regexp"
 	"strings"
@@ -41,6 +42,7 @@ var StartCmd = cli.Command(startCmdE,
 		flags.String("common-browserless-api-key", "", "Browserless api key")
 		flags.String("common-openai-api-key", "", "OpenAI API key")
 		flags.String("common-openai-debug-store", "data/debugstore", "OpenAI debug store")
+		flags.String("common-playwright-debug-store", "data/debugstore", "PlayWright debug store")
 		flags.String("common-openai-organization", "", "OpenAI Organization")
 		flags.String("common-langsmith-api-key", "", "Langsmith API key")
 		flags.String("common-langsmith-project", "", "Langsmith project name")
@@ -191,14 +193,23 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		alerts.NewSlackNotifier(sflags.MustGetString(cmd, "common-resend-api-key"), deps.DataStore, logger),
 	)
 
-	browserLessClient := interactions.NewBrowserlessClient(sflags.MustGetString(cmd, "common-browserless-api-key"))
+	debugStore, err := dstore.NewStore(sflags.MustGetString(cmd, "common-playwright-debug-store"), "", "", true)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create debug store: %w", err)
+	}
+
+	browserLessClient := interactions.NewBrowserlessClient(sflags.MustGetString(cmd, "common-browserless-api-key"), debugStore, logger)
 	interactionService := interactions.NewRedditInteractions(deps.DataStore, browserLessClient, redditOauthClient, logger)
 
-	//err = interactionService.SendDM(context.Background(), interactions.DMParams{
-	//	Username: "shank.agarwal318@gmail.com",
-	//	Password: "Shank@123",
-	//	To:       "t2_1ctydt6n8g",
-	//	Message:  "Hi",
+	//andType, err := deps.DataStore.GetIntegrationByOrgAndType(context.Background(), "5b5955de-a4c1-4bb5-9358-c3c2ba34fdf6", models.IntegrationTypeREDDITDMLOGIN)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//_, err = browserLessClient.SendDM(context.Background(), interactions.DMParams{
+	//	To:      "t2_19wvzj68ml",
+	//	Message: "hello",
+	//	ID:      "unique_id",
+	//	Cookie:  andType.GetRedditDMLoginConfig().Cookies,
 	//})
 	//if err != nil {
 	//	return nil, err
@@ -345,6 +356,14 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 
 	redditOauthClient := reddit.NewRedditOauthClient(logger, deps.DataStore, sflags.MustGetString(cmd, "portal-reddit-client-id"), sflags.MustGetString(cmd, "portal-reddit-client-secret"), sflags.MustGetString(cmd, "portal-reddit-redirect-url"))
 
+	debugStore, err := dstore.NewStore(sflags.MustGetString(cmd, "common-playwright-debug-store"), "", "", true)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create debug store: %w", err)
+	}
+
+	browserLessClient := interactions.NewBrowserlessClient(sflags.MustGetString(cmd, "common-browserless-api-key"), debugStore, logger)
+	interactionService := interactions.NewRedditInteractions(deps.DataStore, browserLessClient, redditOauthClient, logger)
+
 	p := portal.New(
 		deps.AIClient,
 		redditOauthClient,
@@ -364,6 +383,7 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		zlog.Named("portal"),
 		tracer,
 		alertNotifier,
+		interactionService,
 	)
 	return p, nil
 }

@@ -39,19 +39,28 @@ const fields: FieldConfig[] = [
         name: "website",
         label: "Website URL",
         placeholder: "donebyai.team",
-        rules: { required: "Website url is required" },
+        rules: {
+            required: "Website url is required",
+            validate: (value: string) => value.trim().length > 0 || "This field cannot be empty.",
+        },
     },
     {
         name: "name",
         label: "Product Name",
         placeholder: "e.g., MiraAI",
-        rules: { required: "Product name is required" },
+        rules: {
+            required: "Product name is required",
+            validate: (value: string) => value.trim().length > 0 || "This field cannot be empty.",
+        },
     },
     {
         name: "description",
         label: "Product Description",
         placeholder: "MiraAI talks to your inbound leads over SMS and WhatsApp like a human, qualifying prospects and scheduling calls with your sales team.",
-        rules: { required: "Description is required" },
+        rules: {
+            required: "Description is required",
+            validate: (value: string) => value.trim().length > 0 || "This field cannot be empty.",
+        },
         multiline: true,
         rows: 3,
         helperText: "Add what your product does in brief between 15-20 words",
@@ -60,7 +69,10 @@ const fields: FieldConfig[] = [
         name: "targetPersona",
         label: "Target Audience",
         placeholder: "e.g., Developers, Marketers, Small Business Owners",
-        rules: { required: "Target audience is required" },
+        rules: {
+            required: "Target audience is required",
+            validate: (value: string) => value.trim().length > 0 || "This field cannot be empty.",
+        },
         multiline: true,
         rows: 3,
         helperText: "Briefly explain what kind of customer you are targeting in 15-20 words",
@@ -96,7 +108,6 @@ export default function ProductInformationStep() {
     const fetchMeta = useCallback(async (url: string) => {
         if (!url) return;
 
-        // Prepend https:// if no scheme is present
         const normalizedUrl = url.startsWith("http://") || url.startsWith("https://")
             ? url
             : `https://${url}`;
@@ -109,10 +120,19 @@ export default function ProductInformationStep() {
             setValue("name", data.title || "");
             setValue("description", data.description || "");
 
-            if (data.title) clearErrors("name");
-            if (data.description) clearErrors("description");
-        } catch {
-            // silently fail
+            if (data.title) {
+                clearErrors("name");
+            }
+
+            if (data.description) {
+                clearErrors("description");
+            }
+        } catch (err) {
+            console.log(err);
+            setValue("name", "");
+            setValue("description", "");
+            clearErrors("name");
+            clearErrors("description");
         } finally {
             setLoadingMeta(false);
         }
@@ -129,12 +149,14 @@ export default function ProductInformationStep() {
     }, [website, project?.website, fetchMeta]);
 
     const onSubmit = async (data: ProductFormValues) => {
+        const cleanedData = Object.fromEntries(Object.entries(data).map(([k, v]) => [k, typeof v === "string" ? v.trim() : v])) as ProductFormValues;
+
         setIsLoading(true);
 
         try {
             const body = {
                 ...(project?.id && { id: project.id }),
-                ...data,
+                ...cleanedData,
             };
 
             const result = await portalClient.createOrEditProject(body);
@@ -159,24 +181,26 @@ export default function ProductInformationStep() {
                         name={field.name}
                         control={control}
                         rules={field.rules}
-                        render={({ field: controllerField }) => (
+                        render={({ field: { onChange, onBlur, value, ref } }) => (
                             <TextField
-                                {...controllerField}
                                 size="small"
                                 fullWidth
                                 label={field.label}
                                 placeholder={field.placeholder}
                                 multiline={field.multiline}
                                 rows={field.rows}
+                                value={value}
+                                onChange={(e) => onChange(e.target.value)}
+                                onBlur={onBlur}
+                                inputRef={ref}
                                 disabled={isLoading || loadingMeta}
                                 error={!!errors[field.name]}
                                 helperText={errors[field.name]?.message ?? field.helperText}
-                                FormHelperTextProps={{
-                                    sx: { ml: 1.5, fontSize: "0.75rem" },
-                                }}
+                                FormHelperTextProps={{ sx: { ml: 1.5, fontSize: "0.75rem" } }}
                             />
                         )}
                     />
+
                 ))}
 
                 {loadingMeta && (

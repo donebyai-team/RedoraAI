@@ -26,7 +26,7 @@ const AuthGuard = ({ children, fallback }: AuthGuardProps) => {
   const dispatch = useAppDispatch()
   const [isReady, setIsReady] = useState(false)
 
-  const isEditProduct = isActivePath(routes.app.settings.edit_product, path);
+  const isEditProduct = isActivePath(routes.new.edit_product, path);
 
   function calculateNextStep(data: Project | null): number {
     if (!data) return 0;
@@ -67,7 +67,7 @@ const AuthGuard = ({ children, fallback }: AuthGuardProps) => {
           router.replace(routes.app.auth.onboarding)
           return
         } else if (isOnboardingDone && path.startsWith(routes.app.auth.onboarding)) {
-          router.replace(routes.app.home)
+          router.replace(routes.new.dashboard)
           return
         }
       }

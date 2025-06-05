@@ -5,8 +5,8 @@ import { routes } from '@doota/ui-core/routing'
 import toast from 'react-hot-toast'
 import { useAuth } from '@doota/ui-core/hooks/useAuth'
 import { JWT } from '@doota/pb/doota/portal/v1/portal_pb'
-import { LoginPanel } from '@doota/ui-core/components/LoginPanel'
 import { Box } from '@mui/material'
+import { LoginPanel } from '@/components/pages/Login'
 
 export default function Page() {
   const { login } = useAuth()
@@ -20,7 +20,7 @@ export default function Page() {
         }}
         onPasswordlessVerified={async (jwt: JWT) => {
           return login(jwt).then(() => {
-            window.location.href = routes.app.home
+            window.location.href = routes.new.dashboard
           })
         }}
         onPasswordlessVerifyError={(errorMessage: string) => {

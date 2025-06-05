@@ -2,21 +2,24 @@
 import React, { useCallback, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
+// import {
+//   Select,
+//   SelectContent,
+//   SelectItem,
+//   SelectTrigger,
+//   SelectValue,
+// } from "@/components/ui/select";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { RedditAccount, RedditAccountBadge } from "@/components/reddit-accounts/RedditAccountBadge";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Info } from "lucide-react";
+  RedditAccount,
+  // RedditAccountBadge 
+} from "@/components/reddit-accounts/RedditAccountBadge";
+// import {
+//   Tooltip,
+//   TooltipContent,
+//   TooltipProvider,
+//   TooltipTrigger,
+// } from "@/components/ui/tooltip";
+// // import { Info } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { RootState } from "@/store/store";
 import { useDebounce } from "@doota/ui-core/hooks/useDebounce";
@@ -30,6 +33,7 @@ interface RelevancyScoreSidebarProps {
 
 export function RelevancyScoreSidebar({ accounts = [], defaultAccountId = "", onDefaultAccountChange }: RelevancyScoreSidebarProps) {
   const defaultAccount = accounts.find(acc => acc.id === defaultAccountId);
+  console.log(defaultAccount, onDefaultAccountChange)
   const { relevancyScore } = useAppSelector((state: RootState) => state.parems);
   const [relevancy_score, setRelevancy_Score] = useState<number>(relevancyScore);
   const dispatch = useAppDispatch();
@@ -61,15 +65,16 @@ export function RelevancyScoreSidebar({ accounts = [], defaultAccountId = "", on
           <Slider
             value={[relevancy_score]}
             onValueChange={handleRelevancyChange}
-            min={0}
-            step={10}
+            min={80}
+            max={100}
+            step={5}
           />
           <p className="mt-1 text-xs text-muted-foreground">
             Only show leads with score above this threshold
           </p>
         </div>
 
-        <div className="pt-2 border-t">
+        {/* <div className="pt-2 border-t">
           <div className="flex items-start justify-between mb-2">
             <span className="text-sm font-medium">Default Reddit Account</span>
             <TooltipProvider>
@@ -132,7 +137,7 @@ export function RelevancyScoreSidebar({ accounts = [], defaultAccountId = "", on
           <p className="mt-1 text-xs text-muted-foreground">
             This account will be used for all new leads by default
           </p>
-        </div>
+        </div> */}
       </CardContent>
     </Card>
   );

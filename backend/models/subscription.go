@@ -7,8 +7,7 @@ import (
 )
 
 type UsageLimits struct {
-	PerDay   int `json:"per_day"`
-	PerMonth int `json:"per_month"`
+	PerDay int64 `json:"per_day"`
 }
 
 type SubscriptionPlanMetadata struct {
@@ -32,46 +31,40 @@ type SubscriptionPlan struct {
 	Metadata    SubscriptionPlanMetadata `json:"metadata"`
 }
 
-var RedoraPlans = map[SubscriptionPlanType]SubscriptionPlan{
+var RedoraPlans = map[SubscriptionPlanType]*SubscriptionPlan{
 	SubscriptionPlanTypeFREE: {
 		PlanType:    SubscriptionPlanTypeFREE,
 		Description: "Free plan with limited usage to try out the platform",
 		Price:       0.0,
-		Interval:    7, // 14-day trial
+		Interval:    365 * 10, // 10 years
 		Metadata: SubscriptionPlanMetadata{
 			Comments: UsageLimits{
-				PerDay:   5,
-				PerMonth: 50,
+				PerDay: 5,
 			},
 			DMs: UsageLimits{
-				PerDay:   2,
-				PerMonth: 20,
+				PerDay: 5,
 			},
 			RelevantPosts: UsageLimits{
-				PerDay:   25,
-				PerMonth: 750,
+				PerDay: 5,
 			},
-			MaxSources:  5,
-			MaxKeywords: 5,
+			MaxSources:  2,
+			MaxKeywords: 1,
 		},
 	},
 	SubscriptionPlanTypeFOUNDER: {
 		PlanType:    SubscriptionPlanTypeFOUNDER,
 		Description: "Perfect for individual founders reaching out to niche communities",
-		Price:       29.99,
+		Price:       39.99,
 		Interval:    30,
 		Metadata: SubscriptionPlanMetadata{
 			Comments: UsageLimits{
-				PerDay:   30,
-				PerMonth: 300,
+				PerDay: 25,
 			},
 			DMs: UsageLimits{
-				PerDay:   10,
-				PerMonth: 100,
+				PerDay: 25,
 			},
 			RelevantPosts: UsageLimits{
-				PerDay:   50,
-				PerMonth: 500,
+				PerDay: 25,
 			},
 			MaxSources:  5,
 			MaxKeywords: 5,
@@ -84,39 +77,35 @@ var RedoraPlans = map[SubscriptionPlanType]SubscriptionPlan{
 		Interval:    30,
 		Metadata: SubscriptionPlanMetadata{
 			Comments: UsageLimits{
-				PerDay:   100,
-				PerMonth: 1000,
+				PerDay: 50,
 			},
 			DMs: UsageLimits{
-				PerDay:   40,
-				PerMonth: 400,
+				PerDay: 50,
 			},
 			RelevantPosts: UsageLimits{
-				PerDay:   200,
-				PerMonth: 2000,
+				PerDay: 50,
 			},
-			MaxSources:  5,
-			MaxKeywords: 5,
+			MaxSources:  20,
+			MaxKeywords: 20,
 		},
 	},
 	SubscriptionPlanTypeGROWTH: {
 		PlanType:    SubscriptionPlanTypeGROWTH,
 		Description: "For startups scaling user outreach and engagement",
-		Price:       49.99,
+		Price:       149.99,
 		Interval:    30,
 		Metadata: SubscriptionPlanMetadata{
 			Comments: UsageLimits{
-				PerDay:   60,
-				PerMonth: 600,
+				PerDay: 100,
 			},
 			DMs: UsageLimits{
-				PerDay:   25,
-				PerMonth: 250,
+				PerDay: 100,
 			},
 			RelevantPosts: UsageLimits{
-				PerDay:   100,
-				PerMonth: 1000,
+				PerDay: 100,
 			},
+			MaxSources:  20,
+			MaxKeywords: 20,
 		},
 	},
 }

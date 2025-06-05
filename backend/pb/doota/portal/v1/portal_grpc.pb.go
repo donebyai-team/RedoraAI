@@ -21,26 +21,30 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	PortalService_GetConfig_FullMethodName                = "/doota.portal.v1.PortalService/GetConfig"
-	PortalService_Self_FullMethodName                     = "/doota.portal.v1.PortalService/Self"
-	PortalService_GetIntegration_FullMethodName           = "/doota.portal.v1.PortalService/GetIntegration"
-	PortalService_Batch_FullMethodName                    = "/doota.portal.v1.PortalService/Batch"
-	PortalService_CreateCustomerCase_FullMethodName       = "/doota.portal.v1.PortalService/CreateCustomerCase"
-	PortalService_PasswordlessStart_FullMethodName        = "/doota.portal.v1.PortalService/PasswordlessStart"
-	PortalService_PasswordlessVerify_FullMethodName       = "/doota.portal.v1.PortalService/PasswordlessVerify"
-	PortalService_OauthAuthorize_FullMethodName           = "/doota.portal.v1.PortalService/OauthAuthorize"
-	PortalService_OauthCallback_FullMethodName            = "/doota.portal.v1.PortalService/OauthCallback"
-	PortalService_SocialLoginCallback_FullMethodName      = "/doota.portal.v1.PortalService/SocialLoginCallback"
-	PortalService_GetIntegrations_FullMethodName          = "/doota.portal.v1.PortalService/GetIntegrations"
-	PortalService_CreateKeywords_FullMethodName           = "/doota.portal.v1.PortalService/CreateKeywords"
-	PortalService_AddSource_FullMethodName                = "/doota.portal.v1.PortalService/AddSource"
-	PortalService_GetSources_FullMethodName               = "/doota.portal.v1.PortalService/GetSources"
-	PortalService_RemoveSource_FullMethodName             = "/doota.portal.v1.PortalService/RemoveSource"
-	PortalService_GetRelevantLeads_FullMethodName         = "/doota.portal.v1.PortalService/GetRelevantLeads"
-	PortalService_GetLeadsByStatus_FullMethodName         = "/doota.portal.v1.PortalService/GetLeadsByStatus"
-	PortalService_UpdateLeadStatus_FullMethodName         = "/doota.portal.v1.PortalService/UpdateLeadStatus"
-	PortalService_CreateOrEditProject_FullMethodName      = "/doota.portal.v1.PortalService/CreateOrEditProject"
-	PortalService_UpdateAutomationSettings_FullMethodName = "/doota.portal.v1.PortalService/UpdateAutomationSettings"
+	PortalService_GetConfig_FullMethodName                 = "/doota.portal.v1.PortalService/GetConfig"
+	PortalService_Self_FullMethodName                      = "/doota.portal.v1.PortalService/Self"
+	PortalService_GetIntegration_FullMethodName            = "/doota.portal.v1.PortalService/GetIntegration"
+	PortalService_RevokeIntegration_FullMethodName         = "/doota.portal.v1.PortalService/RevokeIntegration"
+	PortalService_Batch_FullMethodName                     = "/doota.portal.v1.PortalService/Batch"
+	PortalService_CreateCustomerCase_FullMethodName        = "/doota.portal.v1.PortalService/CreateCustomerCase"
+	PortalService_PasswordlessStart_FullMethodName         = "/doota.portal.v1.PortalService/PasswordlessStart"
+	PortalService_PasswordlessVerify_FullMethodName        = "/doota.portal.v1.PortalService/PasswordlessVerify"
+	PortalService_OauthAuthorize_FullMethodName            = "/doota.portal.v1.PortalService/OauthAuthorize"
+	PortalService_OauthCallback_FullMethodName             = "/doota.portal.v1.PortalService/OauthCallback"
+	PortalService_SocialLoginCallback_FullMethodName       = "/doota.portal.v1.PortalService/SocialLoginCallback"
+	PortalService_GetIntegrations_FullMethodName           = "/doota.portal.v1.PortalService/GetIntegrations"
+	PortalService_CreateKeywords_FullMethodName            = "/doota.portal.v1.PortalService/CreateKeywords"
+	PortalService_AddSource_FullMethodName                 = "/doota.portal.v1.PortalService/AddSource"
+	PortalService_GetSources_FullMethodName                = "/doota.portal.v1.PortalService/GetSources"
+	PortalService_RemoveSource_FullMethodName              = "/doota.portal.v1.PortalService/RemoveSource"
+	PortalService_GetRelevantLeads_FullMethodName          = "/doota.portal.v1.PortalService/GetRelevantLeads"
+	PortalService_GetLeadsByStatus_FullMethodName          = "/doota.portal.v1.PortalService/GetLeadsByStatus"
+	PortalService_UpdateLeadStatus_FullMethodName          = "/doota.portal.v1.PortalService/UpdateLeadStatus"
+	PortalService_CreateOrEditProject_FullMethodName       = "/doota.portal.v1.PortalService/CreateOrEditProject"
+	PortalService_SuggestKeywordsAndSources_FullMethodName = "/doota.portal.v1.PortalService/SuggestKeywordsAndSources"
+	PortalService_UpdateAutomationSettings_FullMethodName  = "/doota.portal.v1.PortalService/UpdateAutomationSettings"
+	PortalService_ConnectReddit_FullMethodName             = "/doota.portal.v1.PortalService/ConnectReddit"
+	PortalService_GetLeadInteractions_FullMethodName       = "/doota.portal.v1.PortalService/GetLeadInteractions"
 )
 
 // PortalServiceClient is the client API for PortalService service.
@@ -52,6 +56,7 @@ type PortalServiceClient interface {
 	// rpc AddUser(AddUserRequest) returns (User);
 	// rpc RenewUser(RenewUserRequest) returns (.google.protobuf.Empty);
 	GetIntegration(ctx context.Context, in *GetIntegrationRequest, opts ...grpc.CallOption) (*Integration, error)
+	RevokeIntegration(ctx context.Context, in *RevokeIntegrationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	Batch(ctx context.Context, in *BatchReq, opts ...grpc.CallOption) (*BatchResp, error)
 	CreateCustomerCase(ctx context.Context, in *CreateCustomerCaseReq, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	PasswordlessStart(ctx context.Context, in *PasswordlessStartRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
@@ -69,7 +74,10 @@ type PortalServiceClient interface {
 	GetLeadsByStatus(ctx context.Context, in *GetLeadsByStatusRequest, opts ...grpc.CallOption) (*GetLeadsResponse, error)
 	UpdateLeadStatus(ctx context.Context, in *UpdateLeadStatusRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	CreateOrEditProject(ctx context.Context, in *CreateProjectRequest, opts ...grpc.CallOption) (*v1.Project, error)
+	SuggestKeywordsAndSources(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*v1.Project, error)
 	UpdateAutomationSettings(ctx context.Context, in *UpdateAutomationSettingRequest, opts ...grpc.CallOption) (*Organization, error)
+	ConnectReddit(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (PortalService_ConnectRedditClient, error)
+	GetLeadInteractions(ctx context.Context, in *GetLeadInteractionsRequest, opts ...grpc.CallOption) (*GetLeadInteractionsResponse, error)
 }
 
 type portalServiceClient struct {
@@ -101,6 +109,15 @@ func (c *portalServiceClient) Self(ctx context.Context, in *emptypb.Empty, opts 
 func (c *portalServiceClient) GetIntegration(ctx context.Context, in *GetIntegrationRequest, opts ...grpc.CallOption) (*Integration, error) {
 	out := new(Integration)
 	err := c.cc.Invoke(ctx, PortalService_GetIntegration_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *portalServiceClient) RevokeIntegration(ctx context.Context, in *RevokeIntegrationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, PortalService_RevokeIntegration_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -251,9 +268,59 @@ func (c *portalServiceClient) CreateOrEditProject(ctx context.Context, in *Creat
 	return out, nil
 }
 
+func (c *portalServiceClient) SuggestKeywordsAndSources(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*v1.Project, error) {
+	out := new(v1.Project)
+	err := c.cc.Invoke(ctx, PortalService_SuggestKeywordsAndSources_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *portalServiceClient) UpdateAutomationSettings(ctx context.Context, in *UpdateAutomationSettingRequest, opts ...grpc.CallOption) (*Organization, error) {
 	out := new(Organization)
 	err := c.cc.Invoke(ctx, PortalService_UpdateAutomationSettings_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *portalServiceClient) ConnectReddit(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (PortalService_ConnectRedditClient, error) {
+	stream, err := c.cc.NewStream(ctx, &PortalService_ServiceDesc.Streams[0], PortalService_ConnectReddit_FullMethodName, opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &portalServiceConnectRedditClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type PortalService_ConnectRedditClient interface {
+	Recv() (*ConnectRedditResponse, error)
+	grpc.ClientStream
+}
+
+type portalServiceConnectRedditClient struct {
+	grpc.ClientStream
+}
+
+func (x *portalServiceConnectRedditClient) Recv() (*ConnectRedditResponse, error) {
+	m := new(ConnectRedditResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *portalServiceClient) GetLeadInteractions(ctx context.Context, in *GetLeadInteractionsRequest, opts ...grpc.CallOption) (*GetLeadInteractionsResponse, error) {
+	out := new(GetLeadInteractionsResponse)
+	err := c.cc.Invoke(ctx, PortalService_GetLeadInteractions_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -269,6 +336,7 @@ type PortalServiceServer interface {
 	// rpc AddUser(AddUserRequest) returns (User);
 	// rpc RenewUser(RenewUserRequest) returns (.google.protobuf.Empty);
 	GetIntegration(context.Context, *GetIntegrationRequest) (*Integration, error)
+	RevokeIntegration(context.Context, *RevokeIntegrationRequest) (*emptypb.Empty, error)
 	Batch(context.Context, *BatchReq) (*BatchResp, error)
 	CreateCustomerCase(context.Context, *CreateCustomerCaseReq) (*emptypb.Empty, error)
 	PasswordlessStart(context.Context, *PasswordlessStartRequest) (*emptypb.Empty, error)
@@ -286,7 +354,10 @@ type PortalServiceServer interface {
 	GetLeadsByStatus(context.Context, *GetLeadsByStatusRequest) (*GetLeadsResponse, error)
 	UpdateLeadStatus(context.Context, *UpdateLeadStatusRequest) (*emptypb.Empty, error)
 	CreateOrEditProject(context.Context, *CreateProjectRequest) (*v1.Project, error)
+	SuggestKeywordsAndSources(context.Context, *emptypb.Empty) (*v1.Project, error)
 	UpdateAutomationSettings(context.Context, *UpdateAutomationSettingRequest) (*Organization, error)
+	ConnectReddit(*emptypb.Empty, PortalService_ConnectRedditServer) error
+	GetLeadInteractions(context.Context, *GetLeadInteractionsRequest) (*GetLeadInteractionsResponse, error)
 	mustEmbedUnimplementedPortalServiceServer()
 }
 
@@ -302,6 +373,9 @@ func (UnimplementedPortalServiceServer) Self(context.Context, *emptypb.Empty) (*
 }
 func (UnimplementedPortalServiceServer) GetIntegration(context.Context, *GetIntegrationRequest) (*Integration, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetIntegration not implemented")
+}
+func (UnimplementedPortalServiceServer) RevokeIntegration(context.Context, *RevokeIntegrationRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RevokeIntegration not implemented")
 }
 func (UnimplementedPortalServiceServer) Batch(context.Context, *BatchReq) (*BatchResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Batch not implemented")
@@ -351,8 +425,17 @@ func (UnimplementedPortalServiceServer) UpdateLeadStatus(context.Context, *Updat
 func (UnimplementedPortalServiceServer) CreateOrEditProject(context.Context, *CreateProjectRequest) (*v1.Project, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateOrEditProject not implemented")
 }
+func (UnimplementedPortalServiceServer) SuggestKeywordsAndSources(context.Context, *emptypb.Empty) (*v1.Project, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SuggestKeywordsAndSources not implemented")
+}
 func (UnimplementedPortalServiceServer) UpdateAutomationSettings(context.Context, *UpdateAutomationSettingRequest) (*Organization, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateAutomationSettings not implemented")
+}
+func (UnimplementedPortalServiceServer) ConnectReddit(*emptypb.Empty, PortalService_ConnectRedditServer) error {
+	return status.Errorf(codes.Unimplemented, "method ConnectReddit not implemented")
+}
+func (UnimplementedPortalServiceServer) GetLeadInteractions(context.Context, *GetLeadInteractionsRequest) (*GetLeadInteractionsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetLeadInteractions not implemented")
 }
 func (UnimplementedPortalServiceServer) mustEmbedUnimplementedPortalServiceServer() {}
 
@@ -417,6 +500,24 @@ func _PortalService_GetIntegration_Handler(srv interface{}, ctx context.Context,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(PortalServiceServer).GetIntegration(ctx, req.(*GetIntegrationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PortalService_RevokeIntegration_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RevokeIntegrationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortalServiceServer).RevokeIntegration(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortalService_RevokeIntegration_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortalServiceServer).RevokeIntegration(ctx, req.(*RevokeIntegrationRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -709,6 +810,24 @@ func _PortalService_CreateOrEditProject_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PortalService_SuggestKeywordsAndSources_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortalServiceServer).SuggestKeywordsAndSources(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortalService_SuggestKeywordsAndSources_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortalServiceServer).SuggestKeywordsAndSources(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _PortalService_UpdateAutomationSettings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateAutomationSettingRequest)
 	if err := dec(in); err != nil {
@@ -723,6 +842,45 @@ func _PortalService_UpdateAutomationSettings_Handler(srv interface{}, ctx contex
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(PortalServiceServer).UpdateAutomationSettings(ctx, req.(*UpdateAutomationSettingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PortalService_ConnectReddit_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(emptypb.Empty)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(PortalServiceServer).ConnectReddit(m, &portalServiceConnectRedditServer{stream})
+}
+
+type PortalService_ConnectRedditServer interface {
+	Send(*ConnectRedditResponse) error
+	grpc.ServerStream
+}
+
+type portalServiceConnectRedditServer struct {
+	grpc.ServerStream
+}
+
+func (x *portalServiceConnectRedditServer) Send(m *ConnectRedditResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func _PortalService_GetLeadInteractions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetLeadInteractionsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortalServiceServer).GetLeadInteractions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortalService_GetLeadInteractions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortalServiceServer).GetLeadInteractions(ctx, req.(*GetLeadInteractionsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -745,6 +903,10 @@ var PortalService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetIntegration",
 			Handler:    _PortalService_GetIntegration_Handler,
+		},
+		{
+			MethodName: "RevokeIntegration",
+			Handler:    _PortalService_RevokeIntegration_Handler,
 		},
 		{
 			MethodName: "Batch",
@@ -811,10 +973,24 @@ var PortalService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _PortalService_CreateOrEditProject_Handler,
 		},
 		{
+			MethodName: "SuggestKeywordsAndSources",
+			Handler:    _PortalService_SuggestKeywordsAndSources_Handler,
+		},
+		{
 			MethodName: "UpdateAutomationSettings",
 			Handler:    _PortalService_UpdateAutomationSettings_Handler,
 		},
+		{
+			MethodName: "GetLeadInteractions",
+			Handler:    _PortalService_GetLeadInteractions_Handler,
+		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "ConnectReddit",
+			Handler:       _PortalService_ConnectReddit_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "doota/portal/v1/portal.proto",
 }

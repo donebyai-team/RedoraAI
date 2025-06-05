@@ -14,6 +14,7 @@ export const PortalExecutionRuntimeProvider: FC<{ children: ReactNode }> = ({ ch
         imageSourceRegistry: {
           logo: '/images/logo.svg',
           logo_new: '/images/logo_new.png',
+            logo_circle: '/images/logo_circle.png',
           dat_logo: '/images/dat_logo.png',
           dat_fuel_gauge_logo: '/images/dat_fuel_gauge_logo.png'
         },

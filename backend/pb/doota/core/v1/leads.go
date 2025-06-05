@@ -24,6 +24,22 @@ func (r *LeadType) FromModel(status models.LeadType) {
 	*r = LeadType(enum)
 }
 
+func (r *LeadInteractionType) FromModel(status models.LeadInteractionType) {
+	enum, found := LeadInteractionType_value["LEAD_INTERACTION_"+strings.ToUpper(string(status))]
+	if !found {
+		panic(fmt.Errorf("unknown lead interaction type %q", status))
+	}
+	*r = LeadInteractionType(enum)
+}
+
+func (r *LeadInteractionStatus) FromModel(status models.LeadInteractionStatus) {
+	enum, found := LeadInteractionStatus_value["LEAD_INTERACTION_STATUS_"+strings.ToUpper(string(status))]
+	if !found {
+		panic(fmt.Errorf("unknown lead interaction status %q", status))
+	}
+	*r = LeadInteractionStatus(enum)
+}
+
 func (u *Lead) FromModel(lead *models.AugmentedLead) *Lead {
 	u.Id = lead.ID
 	u.ProjectId = lead.ProjectID
@@ -46,6 +62,23 @@ func (u *Lead) FromModel(lead *models.AugmentedLead) *Lead {
 	return u
 }
 
+func (u *LeadInteraction) FromModel(lead *models.AugmentedLeadInteraction) *LeadInteraction {
+	u.Id = lead.ID
+	u.ProjectId = lead.ProjectID
+	u.From = lead.From
+	u.To = lead.To
+	u.Reason = lead.Reason
+	u.Status.FromModel(lead.Status)
+	u.InteractionType.FromModel(lead.Type)
+	u.CreatedAt = timestamppb.New(lead.CreatedAt)
+	if lead.ScheduledAt != nil {
+		u.ScheduledAt = timestamppb.New(*lead.ScheduledAt)
+	}
+	u.PostTitle = lead.PostTitle
+	u.LeadMetadata = new(LeadMetadata).FromModel(lead.LeadMetadata)
+	return u
+}
+
 func (u *Keyword) FromModel(lead *models.Keyword) *Keyword {
 	u.Id = lead.ID
 	u.Name = lead.Keyword
@@ -58,6 +91,7 @@ func (u *Project) FromModel(product *models.Project, sources []*models.Source, k
 	u.Description = product.ProductDescription
 	u.Website = product.WebsiteURL
 	u.TargetPersona = product.CustomerPersona
+	u.IsActive = product.IsActive
 
 	sourcesProto := make([]*Source, 0, len(sources))
 	for _, source := range sources {

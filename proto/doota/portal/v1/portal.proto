@@ -14,6 +14,7 @@ service PortalService {
 //  rpc AddUser(AddUserRequest) returns (User);
 //  rpc RenewUser(RenewUserRequest) returns (.google.protobuf.Empty);
   rpc GetIntegration(GetIntegrationRequest) returns (Integration);
+  rpc RevokeIntegration(RevokeIntegrationRequest) returns (.google.protobuf.Empty);
   rpc Batch(BatchReq) returns (BatchResp);
   rpc CreateCustomerCase(CreateCustomerCaseReq) returns (.google.protobuf.Empty);
   rpc PasswordlessStart(PasswordlessStartRequest) returns (.google.protobuf.Empty);
@@ -32,7 +33,23 @@ service PortalService {
   rpc GetLeadsByStatus(GetLeadsByStatusRequest) returns (GetLeadsResponse);
   rpc UpdateLeadStatus(UpdateLeadStatusRequest) returns (.google.protobuf.Empty);
   rpc CreateOrEditProject(CreateProjectRequest) returns (doota.core.v1.Project);
+  rpc SuggestKeywordsAndSources(.google.protobuf.Empty) returns (doota.core.v1.Project);
   rpc UpdateAutomationSettings(UpdateAutomationSettingRequest) returns (Organization);
+  rpc ConnectReddit(.google.protobuf.Empty) returns (stream ConnectRedditResponse);
+  rpc GetLeadInteractions(GetLeadInteractionsRequest) returns (GetLeadInteractionsResponse);
+}
+
+message GetLeadInteractionsRequest {
+  DateRangeFilter date_range = 1;
+  doota.core.v1.LeadInteractionStatus status = 2;
+}
+
+message GetLeadInteractionsResponse {
+  repeated doota.core.v1.LeadInteraction interactions = 1;
+}
+
+message ConnectRedditResponse {
+  string url = 1;
 }
 
 message UpdateAutomationSettingRequest {
@@ -61,6 +78,7 @@ message GetLeadsByStatusRequest {
   doota.core.v1.LeadStatus status = 1;
   int32 page_no = 3;
   DateRangeFilter date_range = 4;
+  int32 page_count = 5;
 }
 
 enum DateRangeFilter {
@@ -76,6 +94,7 @@ message GetRelevantLeadsRequest {
   int32 page_no = 3;
   DateRangeFilter date_range = 4;
   doota.core.v1.LeadStatus status = 5;
+  int32 page_count = 6;
 }
 
 message GetLeadsResponse {
@@ -210,6 +229,7 @@ message OrganizationFeatureFlags {
 message AutomationSetting {
   bool enabled = 1;
   float relevancy_score = 2;
+  int64 max_per_day = 3;
 }
 
 message Integration {
@@ -230,6 +250,10 @@ message Integrations {
   repeated Integration integrations = 1;
 }
 
+message RevokeIntegrationRequest {
+  string id =1;
+}
+
 message GetIntegrationRequest { IntegrationType type = 1; }
 
 enum IntegrationType {
@@ -237,6 +261,7 @@ enum IntegrationType {
   INTEGRATION_TYPE_MICROSOFT = 1;
   INTEGRATION_TYPE_GOOGLE = 2;
   INTEGRATION_TYPE_REDDIT = 3;
+  INTEGRATION_TYPE_REDDIT_DM_LOGIN = 4;
 }
 
 enum IntegrationState {

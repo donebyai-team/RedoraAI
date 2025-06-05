@@ -11,11 +11,12 @@ import (
 	"github.com/shank318/doota/utils"
 	"go.uber.org/zap"
 	"math/rand"
+	"strings"
 	"time"
 )
 
 type AutomatedInteractions interface {
-	CheckIfLogin(ctx context.Context, orgID string) error
+	Authenticate(ctx context.Context, orgID string) (string, loginCallback, error)
 	SendDM(ctx context.Context, interaction *models.LeadInteraction) error
 	ScheduleComment(ctx context.Context, leadInteraction *models.LeadInteraction) (*models.LeadInteraction, error)
 	ScheduleDM(ctx context.Context, leadInteraction *models.LeadInteraction) (*models.LeadInteraction, error)
@@ -46,7 +47,9 @@ func (r redditInteractions) SendComment(ctx context.Context, interaction *models
 	if interaction.Type != models.LeadInteractionTypeCOMMENT {
 		return fmt.Errorf("interaction type is not comment")
 	}
-	r.logger.Info("sending reddit comment", zap.String("from", interaction.From))
+	r.logger.Info("sending reddit comment",
+		zap.String("interaction_id", interaction.ID),
+		zap.String("from", interaction.From))
 
 	redditLead, err := r.db.GetLeadByID(ctx, interaction.ProjectID, interaction.LeadID)
 	if err != nil {
@@ -66,6 +69,13 @@ func (r redditInteractions) SendComment(ctx context.Context, interaction *models
 			r.logger.Warn("failed to update lead status for automated comment", zap.Error(err), zap.String("lead_id", redditLead.ID))
 		}
 	}()
+
+	if strings.TrimSpace(utils.FormatComment(redditLead.LeadMetadata.SuggestedComment)) == "" {
+		err := fmt.Errorf("no comment message found")
+		interaction.Status = models.LeadInteractionStatusFAILED
+		interaction.Reason = err.Error()
+		return err
+	}
 
 	// case: if auto comment disabled
 	if !interaction.Organization.FeatureFlags.EnableAutoComment {
@@ -116,6 +126,10 @@ func (r redditInteractions) SendComment(ctx context.Context, interaction *models
 		redditLead.LeadMetadata.AutomatedCommentURL = fmt.Sprintf("https://www.reddit.com/%s", interaction.Metadata.Permalink)
 		redditLead.Status = models.LeadStatusCOMPLETED
 	}
+
+	r.logger.Info("successfully sent reddit comment",
+		zap.String("interaction_id", interaction.ID),
+		zap.String("from", interaction.From))
 
 	return nil
 }

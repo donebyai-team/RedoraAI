@@ -268,6 +268,23 @@ type LeadInteraction struct {
 	Organization *Organization            `db:"-"`
 }
 
+type AugmentedLeadInteraction struct {
+	ID           string                   `db:"id"`
+	ProjectID    string                   `db:"project_id"`
+	LeadID       string                   `db:"lead_id"`
+	Type         LeadInteractionType      `db:"type"`
+	From         string                   `db:"from_user"`
+	To           string                   `db:"to_user"`
+	Status       LeadInteractionStatus    `db:"status"`
+	Reason       string                   `db:"reason"`
+	Metadata     LeadInteractionsMetadata `db:"metadata"`
+	ScheduledAt  *time.Time               `db:"schedule_at"`
+	CreatedAt    time.Time                `db:"created_at"`
+	UpdatedAt    *time.Time               `db:"updated_at"`
+	LeadMetadata LeadMetadata             `db:"lead_metadata"`
+	PostTitle    string                   `db:"post_title"`
+}
+
 type LeadInteractionsMetadata struct {
 	Permalink     string `json:"permalink"`
 	ReferenceID   string `json:"referenceID"`

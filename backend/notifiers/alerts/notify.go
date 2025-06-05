@@ -15,12 +15,13 @@ import (
 )
 
 type LeadSummary struct {
-	OrgID              string
-	UserID             string
-	ProjectName        string
-	TotalPostsAnalysed uint32
-	TotalCommentsSent  uint32
-	DailyCount         uint32
+	OrgID                  string
+	UserID                 string
+	ProjectName            string
+	TotalPostsAnalysed     uint32
+	TotalCommentsScheduled uint32
+	TotalDMScheduled       uint32
+	DailyCount             uint32
 }
 
 type AlertNotifier interface {
@@ -30,6 +31,8 @@ type AlertNotifier interface {
 	SendNewUserAlert(ctx context.Context, orgName string)
 	SendUserActivity(ctx context.Context, activity, orgName, redditUsername string)
 	SendNewProductAddedAlert(ctx context.Context, productName, website string)
+	SendWelcomeEmail(ctx context.Context, orgID string)
+	SendRedditChatConnectedAlert(ctx context.Context, email string)
 }
 
 type SlackNotifier struct {
@@ -92,6 +95,18 @@ func (s *SlackNotifier) SendNewProductAddedAlert(ctx context.Context, productNam
 	}
 }
 
+func (s *SlackNotifier) SendRedditChatConnectedAlert(ctx context.Context, email string) {
+	msg := fmt.Sprintf(
+		"*DM Automation Enabled*\n"+
+			"*Email:* %s",
+		email,
+	)
+
+	if err := s.send(ctx, msg, redoraChannel); err != nil {
+		s.logger.Error("failed to send new user alert to Slack", zap.Error(err))
+	}
+}
+
 func (s *SlackNotifier) SendNewUserAlert(ctx context.Context, email string) {
 	msg := fmt.Sprintf(
 		"*New User Onboarded*\n"+
@@ -115,41 +130,125 @@ func (s *SlackNotifier) SendLeadsSummaryEmail(ctx context.Context, summary LeadS
 	}
 
 	to := make([]string, 0, len(users))
-
 	for _, user := range users {
 		to = append(to, user.Email)
 	}
 
-	htmlBody := fmt.Sprintf(`
-		<!DOCTYPE html>
-		<html>
-		<body style="font-family: Arial, sans-serif; background-color: #f7f9fc; padding: 20px;">
-		  <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 30px; border-radius: 8px;">
-		    <h2>Daily Reddit Posts Summary — <strong>RedoraAI</strong></h2>
-		    <p><strong>Product:</strong> %s</p>
-		    <p><strong>Posts Analyzed:</strong> %d</p>
-		    <p><strong>Automated Comments Scheduled:</strong> %d</p>
-		    <p><strong>Relevant Posts Found:</strong> <strong>%d</strong></p>
-		    <p>🔗 <a href="%s">View all leads in your dashboard</a></p>
-		    <hr>
-		    <footer style="font-size: 12px; color: #888;">
-		      <p><strong>RedoraAI</strong> — AI for Intelligent Lead Generation</p>
-		      <p>Need help? <a href="mailto:shashank@donebyai.team">shashank@donebyai.team</a></p>
-		    </footer>
-		  </div>
-		</body>
-		</html>
-	`, summary.ProjectName, summary.TotalPostsAnalysed, summary.TotalCommentsSent, summary.DailyCount, "https://app.redoraai.com/dashboard/leads")
+	var cc []string
+
+	var htmlBody string
+	if summary.DailyCount < 2 {
+		cc = []string{"shashank@donebyai.team", "adarsh@redoraai.com"}
+		htmlBody = fmt.Sprintf(`
+			<!DOCTYPE html>
+			<html>
+			<body style="font-family: Arial, sans-serif; background-color: #f7f9fc; padding: 20px;">
+			  <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 30px; border-radius: 8px;">
+			    <h2>We Didn't Find Many Relevant Posts Today</h2>
+			    <p><strong>Product:</strong> %s</p>
+			    <p><strong>Posts Analyzed:</strong> %d</p>
+			    <p><strong>Relevant Posts Found:</strong> <strong>%d</strong></p>
+			    <p>It looks like your current subreddits or keywords may not be returning enough relevant posts.</p>
+			    <p>👉 Consider updating them in your <a href="https://app.redoraai.com/dashboard">RedoraAI Dashboard</a> to improve your lead discovery.</p>
+			    <hr>
+			    <footer style="font-size: 12px; color: #888;">
+			      <p><strong>RedoraAI</strong> — AI for Intelligent Lead Generation</p>
+			      <p>Need help? <a href="mailto:adarsh@redoraai.com">adarsh@redoraai.com</a></p>
+			    </footer>
+			  </div>
+			</body>
+			</html>
+		`, summary.ProjectName, summary.TotalPostsAnalysed, summary.DailyCount)
+	} else {
+		htmlBody = fmt.Sprintf(`
+			<!DOCTYPE html>
+			<html>
+			<body style="font-family: Arial, sans-serif; background-color: #f7f9fc; padding: 20px;">
+			  <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 30px; border-radius: 8px;">
+			    <h2>Daily Reddit Posts Summary</h2>
+			    <p><strong>Product:</strong> %s</p>
+			    <p><strong>Posts Analyzed:</strong> %d</p>
+			    <p><strong>Automated Comments Scheduled:</strong> %d</p>
+				<p><strong>Automated DM Scheduled:</strong> %d</p>
+			    <p><strong>Relevant Posts Found:</strong> <strong>%d</strong></p>
+			    <p>🔗 <a href="%s">View all leads in your dashboard</a></p>
+			    <hr>
+			    <footer style="font-size: 12px; color: #888;">
+			      <p><strong>RedoraAI</strong> — AI for Intelligent Lead Generation</p>
+			      <p>Need help? <a href="mailto:adarsh@redoraai.com">adarsh@redoraai.com</a></p>
+			    </footer>
+			  </div>
+			</body>
+			</html>
+		`, summary.ProjectName, summary.TotalPostsAnalysed, summary.TotalCommentsScheduled, summary.TotalDMScheduled, summary.DailyCount, "https://app.redoraai.com/dashboard")
+	}
 
 	params := &resend.SendEmailRequest{
 		From:    "RedoraAI <leads@alerts.redoraai.com>",
 		To:      to,
-		Subject: "📊Daily Lead Summary",
+		Subject: "📊 Daily Lead Summary",
 		Html:    htmlBody,
+	}
+
+	if cc != nil && len(cc) > 0 {
+		params.Cc = cc
 	}
 
 	_, err = s.ResendClient.Emails.Send(params)
 	return err
+}
+
+func (s *SlackNotifier) SendWelcomeEmail(ctx context.Context, orgID string) {
+	users, err := s.db.GetUsersByOrgID(ctx, orgID)
+	if err != nil {
+		s.logger.Error("failed to send welcome email", zap.Error(err))
+		return
+	}
+
+	// Only send it for the first one
+	if len(users) == 0 || len(users) > 1 {
+		return
+	}
+
+	htmlBody := fmt.Sprintf(`
+	<!DOCTYPE html>
+	<html>
+	<body style="font-family: Arial, sans-serif; background-color: #f7f9fc; padding: 20px;">
+	  <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 30px; border-radius: 8px;">
+	    <h2>Welcome to <strong>RedoraAI</strong> 👋</h2>
+	    <p>We're excited to have you onboard! RedoraAI helps you discover and engage with high-intent leads from Reddit — automatically.</p>
+	    
+	    <h3>🚀 Here’s how to get started:</h3>
+	    <ol>
+	      <li><strong>Tell us about your product</strong> — so we can tailor your outreach.</li>
+	      <li><strong>Select keywords & subreddits</strong> — to track relevant discussions.</li>
+	      <li><strong>Enable Redora Copilot</strong> — to automate intelligent comments and DMs to potential leads.</li>
+	    </ol>
+	    
+	    <p>🔗 <a href="https://app.redoraai.com/onboarding" style="color: #3366cc;">Begin Onboarding Now</a></p>
+	    
+	    <hr>
+	    <footer style="font-size: 12px; color: #888;">
+			<p><strong>RedoraAI</strong> — AI for Intelligent Lead Generation</p>
+			<p>Need help? <a href="mailto:adarsh@redoraai.com">adarsh@redoraai.com</a></p>
+		</footer>
+	  </div>
+	</body>
+	</html>
+`)
+
+	params := &resend.SendEmailRequest{
+		From:    "RedoraAI <welcome@alerts.redoraai.com>",
+		To:      []string{users[0].Email},
+		Cc:      []string{"shashank@donebyai.team", "adarsh@redoraai.com"},
+		Subject: "🔥Welcome aboard — here’s what to do next",
+		Html:    htmlBody,
+	}
+
+	_, err = s.ResendClient.Emails.Send(params)
+	if err != nil {
+		s.logger.Error("failed to send welcome email", zap.Error(err))
+	}
 }
 
 func (s *SlackNotifier) SendLeadsSummary(ctx context.Context, summary LeadSummary) error {
@@ -158,18 +257,20 @@ func (s *SlackNotifier) SendLeadsSummary(ctx context.Context, summary LeadSummar
 		s.logger.Info("no integration configured for alerts, skipped")
 	}
 
-	leadsURL := "https://app.redoraai.com/dashboard/leads"
+	leadsURL := "https://app.redoraai.com/dashboard"
 
 	msg := fmt.Sprintf(
-		"*📊 Daily Reddit Posts Summary — RedoraAI*\n"+
+		"*📊 Daily Reddit Posts Summary*\n"+
 			"*Product:* %s\n"+
 			"*Posts Analyzed:* %d\n"+
 			"*Automated Comments Scheduled:* %d\n"+
+			"*Automated DM Scheduled:* %d\n"+
 			"*Relevant Posts Found:* *%d*\n\n"+
 			"🔗 <%s|View all posts in your dashboard>",
 		summary.ProjectName,
 		summary.TotalPostsAnalysed,
-		summary.TotalCommentsSent,
+		summary.TotalCommentsScheduled,
+		summary.TotalDMScheduled,
 		summary.DailyCount,
 		leadsURL,
 	)

@@ -13,6 +13,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func (r *Client) GetUser(ctx context.Context, userID string) (*User, error) {
@@ -279,8 +280,8 @@ func (r *Client) GetPostWithAllComments(ctx context.Context, postID string) (*Po
 }
 
 func (r *Client) isTokenExpired() bool {
-	// Refresh if within 60 seconds of expiry
-	return true
+	const buffer = 10 * time.Minute
+	return time.Now().Add(buffer).After(r.config.ExpiresAt)
 }
 
 func (r *Client) refreshToken(ctx context.Context) error {
@@ -290,15 +291,8 @@ func (r *Client) refreshToken(ctx context.Context) error {
 		RefreshToken: r.config.RefreshToken,
 		Expiry:       r.config.ExpiresAt,
 	}
-
-	client := &http.Client{
-		Transport: &userAgentTransport{
-			base: http.DefaultTransport,
-		},
-	}
-
 	// Create a token source that can refresh
-	ctx = context.WithValue(ctx, oauth2.HTTPClient, client)
+	ctx = context.WithValue(ctx, oauth2.HTTPClient, r.httpClient.HTTPClient)
 	tokenSource := r.oauthConfig.TokenSource(ctx, oldToken)
 
 	newToken, err := tokenSource.Token()

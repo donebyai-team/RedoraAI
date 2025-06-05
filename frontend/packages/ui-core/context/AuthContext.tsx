@@ -1,10 +1,19 @@
 import { FC, ReactNode, createContext, useEffect, useState } from 'react'
 import { JWT, Organization, User } from '@doota/pb/doota/portal/v1/portal_pb'
 import toast from 'react-hot-toast'
+
 import { errorToMessage } from '@doota/pb/utils/errors'
 import { FullStory, isInitialized as isFullStoryInitialized } from '@fullstory/browser'
 import { useClientsContext } from './ClientContext'
 import { TokenStore, OrganizationStore } from '@doota/store'
+import { Subscription, SubscriptionPlanID } from '@doota/pb/doota/core/v1/core_pb'
+import { initAmplitude, logDailyVisit } from '../amplitude'
+import { isPlatformAdmin } from '../helper/role'
+
+type SubscriptionDetails = {
+  planName: string;
+  subscription: Subscription | undefined;
+};
 
 export type AuthValuesType = {
   user: User | null
@@ -17,6 +26,8 @@ export type AuthValuesType = {
 
   setOrganization: (org: Organization) => Promise<void>
   setUser: React.Dispatch<React.SetStateAction<User | null>>
+  getOrganization: () => Organization | null
+  getPlanDetails: () => SubscriptionDetails,
 }
 
 // ** Defaults
@@ -29,7 +40,9 @@ const defaultProvider: AuthValuesType = {
   logout: () => Promise.resolve(),
 
   setOrganization: () => Promise.resolve(),
-  setUser: () => { }
+  setUser: () => { },
+  getOrganization: () => null,
+  getPlanDetails: () => ({ planName: "", subscription: undefined }),
 }
 
 export const AuthContext = createContext<AuthValuesType>(defaultProvider)
@@ -55,6 +68,9 @@ export const BaseAuthProvider: FC<Props> = ({
   const { portalClient } = useClientsContext()
 
   useEffect(() => {
+    const apiKey = process.env.NEXT_PUBLIC_AMPLITUDE_API_KEY!
+    initAmplitude(apiKey)
+
     const initAuth = async (): Promise<void> => {
       const jwt = await tokenStore.Get()
       if (jwt === undefined) {
@@ -135,6 +151,21 @@ export const BaseAuthProvider: FC<Props> = ({
       const user = await getUser()
       setUser(user)
       setFullStoreIdentity(user)
+
+      if (!isPlatformAdmin(user) && user.organizations.length > 0) {
+        const orgID = user.organizations[0].id
+        let name = user.organizations[0].name
+        if (user.projects.length > 0) {
+          name = name + "-" + user.projects[0].name
+        }
+        const plan = user.organizations[0].featureFlags?.subscription?.planId
+
+        logDailyVisit(orgID, name, {
+          plan: plan,
+          page: window.location.pathname,
+        })
+      }
+
     } catch (err) {
       if (onRefreshSessionError) {
         onRefreshSessionError(err)
@@ -142,6 +173,35 @@ export const BaseAuthProvider: FC<Props> = ({
     }
     setLoading(false)
   }
+
+  const getOrganization = () => {
+    if (organization) {
+      return organization;
+    }
+    return user?.organizations?.[0] ?? null;
+  }
+
+  const getPlanDetails = (): SubscriptionDetails => {
+    const currentOrganization = getOrganization();
+    const subscription = currentOrganization?.featureFlags?.subscription ?? { planId: null };
+
+    const planId = subscription?.planId;
+    if (!planId) {
+      return {
+        planName: "FREE",
+        subscription: undefined
+      };
+    }
+
+    const planKey = Object.entries(SubscriptionPlanID).find(([, value]) => value === planId)?.[0];
+    const planName = planKey?.replace("SUBSCRIPTION_PLAN_", "") ?? "FREE";
+
+    return {
+      planName,
+      subscription
+    };
+  };
+
 
   const values = {
     user,
@@ -155,7 +215,9 @@ export const BaseAuthProvider: FC<Props> = ({
       await organizationStore.Set(org)
       setOrganization(org)
     },
-    setUser
+    setUser,
+    getOrganization,
+    getPlanDetails
   }
 
   return <AuthContext.Provider value={values}>{children}</AuthContext.Provider>

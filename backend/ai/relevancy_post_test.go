@@ -29,15 +29,16 @@ func TestRelevancyOutputFormatting(t *testing.T) {
 		source  *models.Source
 	}{
 		{
-			name:  "MiraaAI - mini course for solo creators",
-			model: models.LLMModel("redora-dev-gpt-4.1-2025-04-14"),
-			//model: models.LLMModel("redora-gemini-2.5-flash-preview-04-17"),
+			name: "MiraaAI - mini course for solo creators",
+			//model: models.LLMModel("redora-dev-gpt-4.1-2025-04-14"),
+			model: models.LLMModel("redora-gemini-2.5-flash-preview-04-17"),
 			project: &models.Project{
 				ID:                 "XXX",
 				OrganizationID:     "XXXXX",
 				Name:               "MiraaAI",
 				ProductDescription: "Miraa helps B2B SaaS businesses generate high quality leads and organic growth via Content-led SEO and GEO. We offers services like Content, SEO, and Reddit lead generation",
 				CustomerPersona:    "Founders, CMOs, CEOs, and Head of marketing/growth",
+				WebsiteURL:         "https://miraa.ai/",
 			},
 			source: &models.Source{
 				Name: "bigseo",
