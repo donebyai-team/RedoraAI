@@ -230,6 +230,8 @@ UPDATE organizations SET feature_flags = jsonb_set(feature_flags, '{enable_load_
 UPDATE organizations SET feature_flags = jsonb_set(feature_flags, '{enable_auto_comment}', 'true') WHERE id='e250ced8-7441-4805-b9dd-2686d9492c4f'
 UPDATE organizations SET feature_flags = jsonb_set(feature_flags, '{relevancy_llm_model}', '"redora-dev-claude-thinking"') WHERE id='e250ced8-7441-4805-b9dd-2686d9492c4f'
 update projects set is_active=false where id='d1732e25-386a-48dc-9851-a8fea2156bf2';
+UPDATE organizations SET feature_flags = jsonb_set(feature_flags,'{subscription,metadata,relevant_posts,per_day}','5',false) WHERE id='8c0ca052-82f2-439f-ac74-a360b4624599';
+
 ```
 
 ## Seed DB
