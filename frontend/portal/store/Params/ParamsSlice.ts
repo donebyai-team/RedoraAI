@@ -8,7 +8,7 @@ interface ParamsStateTyeps {
 
 // Initial state
 const initialState: ParamsStateTyeps = {
-    relevancyScore: 90,
+    relevancyScore: 80,
     subReddit: "",
 };
 
