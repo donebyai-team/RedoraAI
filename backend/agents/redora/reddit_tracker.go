@@ -66,7 +66,7 @@ func (s *redditKeywordTracker) WithLogger(logger *zap.Logger) KeywordTracker {
 }
 
 func (s *redditKeywordTracker) TrackKeyword(ctx context.Context, tracker *models.AugmentedKeywordTracker) error {
-	redditClient, err := s.redditOauthClient.GetOrCreate(ctx, tracker.Project.OrganizationID, true)
+	redditClient, err := s.redditOauthClient.GetOrCreate(ctx, tracker.Project.OrganizationID, false)
 	if err != nil {
 		if errors.Is(err, datastore.IntegrationNotFoundOrActive) {
 			return nil

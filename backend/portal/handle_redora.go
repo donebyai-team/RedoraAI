@@ -517,6 +517,18 @@ func (p *Portal) UpdateAutomationSettings(ctx context.Context, c *connect.Reques
 	}
 
 	if c.Msg.Comment != nil {
+		integration, err := p.db.GetIntegrationByOrgAndType(ctx, actor.OrganizationID, models.IntegrationTypeREDDIT)
+		if err != nil {
+			if errors.Is(err, datastore.IntegrationNotFoundOrActive) {
+				return nil, status.New(codes.InvalidArgument, "Please connect your reddit in integrations to enable automated comments").Err()
+			}
+			return nil, err
+		}
+
+		if integration == nil || integration.State != models.IntegrationStateACTIVE {
+			return nil, status.New(codes.InvalidArgument, "Please connect your reddit in integrations to enable automated comments").Err()
+		}
+
 		if c.Msg.Comment.RelevancyScore < 80 {
 			return nil, status.New(codes.InvalidArgument, "relevancy score should be at least 80").Err()
 		}

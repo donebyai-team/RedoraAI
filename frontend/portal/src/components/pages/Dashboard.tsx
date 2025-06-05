@@ -30,8 +30,8 @@ import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { setError, setIsLoading, setNewTabList } from "../../../store/Lead/leadSlice";
 import { RootState } from "../../../store/store";
 import { LeadAnalysis } from "@doota/pb/doota/portal/v1/portal_pb";
-import { setAccounts, setLoading } from "@/store/Reddit/RedditSlice";
-import { ConnectRedditPrompt } from "../dashboard/ConnectRedditPrompt";
+// import { setAccounts, setLoading } from "@/store/Reddit/RedditSlice";
+// import { ConnectRedditPrompt } from "../dashboard/ConnectRedditPrompt";
 import { useRedditIntegrationStatus } from "../Leads/Tabs/useRedditIntegrationStatus";
 import { AnnouncementBanner } from "../dashboard/AnnouncementBanner";
 
@@ -162,28 +162,35 @@ export default function Dashboard() {
   }, [relevancyScore, subReddit, dateRange, leadStatusFilter]);
 
   // get all reddit account
-  useEffect(() => {
-    dispatch(setLoading(true));
-    portalClient.getIntegrations({})
-      .then((res) => {
-        dispatch(setAccounts(res.integrations));
-      })
-      .catch((err) => {
-        dispatch(setError('Failed to fetch integrations'));
-        console.error("Error fetching integrations:", err);
-      })
-      .finally(() => {
-        dispatch(setLoading(false));
-      });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // useEffect(() => {
+  //   dispatch(setLoading(true));
+  //   portalClient.getIntegrations({})
+  //     .then((res) => {
+  //       dispatch(setAccounts(res.integrations));
+  //     })
+  //     .catch((err) => {
+  //       dispatch(setError('Failed to fetch integrations'));
+  //       console.error("Error fetching integrations:", err);
+  //     })
+  //     .finally(() => {
+  //       dispatch(setLoading(false));
+  //     });
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, []);
 
   return (
     <>
       <DashboardHeader />
-      {project && !project.isActive && (
+      {project && !project.isActive ? (
         <AnnouncementBanner message="⚠️ Your account has been paused due to inactivity. Please contact support to enable it." />
-      )}
+      ) : (!isConnected && !isLoadingRedditIntegrationStatus) ? (
+        <AnnouncementBanner
+          message="⚠️ Connect your Reddit account to get real-time alerts and auto-reply to trending posts."
+          buttonText="Connect now →"
+          buttonHref="/settings/integrations"
+        />
+      ) : null}
+
 
       <div className="flex-1 overflow-auto">
         <main className="container mx-auto px-4 py-6 md:px-6">
@@ -202,46 +209,43 @@ export default function Dashboard() {
               {isLoadingRedditIntegrationStatus ?
                 <>Loading</>
                 :
-                isConnected ?
-                  <div className="flex-1 flex flex-col space-y-4 mt-6">
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-background/95 py-2">
-                      <h2 className="text-xl font-semibold">Latest Tracked Posts</h2>
-                      <FilterControls />
-                    </div>
-
-                    {isLoading ? (
-                      <div className="space-y-4">
-                        {[...Array(3)].map((_, i) => (
-                          <Card key={i} className="border-primary/10 shadow-md">
-                            <CardContent className="p-6">
-                              <div className="space-y-2">
-                                <Skeleton className="h-4 w-[200px]" />
-                                <Skeleton className="h-4 w-full" />
-                                <Skeleton className="h-4 w-[80%]" />
-                                <div className="flex gap-2 pt-2">
-                                  <Skeleton className="h-9 w-20" />
-                                  <Skeleton className="h-9 w-20" />
-                                  <Skeleton className="h-9 w-20" />
-                                  <Skeleton className="h-9 w-20" />
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="flex-1">
-                        <LeadFeed
-                        // onAction={handleAction}
-                        // redditAccounts={redditAccounts}
-                        // defaultAccountId={defaultAccountId}
-                        // onAccountChange={handlePostAccountChange}
-                        />
-                      </div>
-                    )}
+                <div className="flex-1 flex flex-col space-y-4 mt-6">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-background/95 py-2">
+                    <h2 className="text-xl font-semibold">Latest Tracked Posts</h2>
+                    <FilterControls />
                   </div>
-                  :
-                  <ConnectRedditPrompt />
+
+                  {isLoading ? (
+                    <div className="space-y-4">
+                      {[...Array(3)].map((_, i) => (
+                        <Card key={i} className="border-primary/10 shadow-md">
+                          <CardContent className="p-6">
+                            <div className="space-y-2">
+                              <Skeleton className="h-4 w-[200px]" />
+                              <Skeleton className="h-4 w-full" />
+                              <Skeleton className="h-4 w-[80%]" />
+                              <div className="flex gap-2 pt-2">
+                                <Skeleton className="h-9 w-20" />
+                                <Skeleton className="h-9 w-20" />
+                                <Skeleton className="h-9 w-20" />
+                                <Skeleton className="h-9 w-20" />
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex-1">
+                      <LeadFeed
+                      // onAction={handleAction}
+                      // redditAccounts={redditAccounts}
+                      // defaultAccountId={defaultAccountId}
+                      // onAccountChange={handlePostAccountChange}
+                      />
+                    </div>
+                  )}
+                </div>
               }
 
             </div>

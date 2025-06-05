@@ -92,7 +92,7 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 		return fmt.Errorf(interaction.Reason)
 	}
 
-	redditClient, err := r.redditOauthClient.GetOrCreate(ctx, interaction.Organization.ID, true)
+	redditClient, err := r.redditOauthClient.GetOrCreate(ctx, interaction.Organization.ID, false)
 	if err != nil {
 		if errors.Is(err, datastore.IntegrationNotFoundOrActive) {
 			interaction.Status = models.LeadInteractionStatusFAILED
