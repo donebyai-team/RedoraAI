@@ -11,6 +11,7 @@ import { PortalClientProvider } from '../provider/PortalClientProvider'
 import { PortalExecutionRuntimeProvider } from '../provider/PortalExecutionRuntimeProvider'
 import StoreProvider from '../../store/StoreProvider'
 import Script from 'next/script'
+import NotificationProvider from '@/components/layout/notification'
 
 export const metadata = {
   title: 'RedoraAI',
@@ -64,7 +65,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <ConfigProvider>
                   <PortalExecutionRuntimeProvider>
                     <ThemeRegistry>
-                      {children}
+                      <NotificationProvider>
+                        {children}
+                      </NotificationProvider>
                       <StyledReactHotToast>
                         <Toaster position='top-right' toastOptions={{ className: 'react-hot-toast mt-[47px]' }} />
                       </StyledReactHotToast>

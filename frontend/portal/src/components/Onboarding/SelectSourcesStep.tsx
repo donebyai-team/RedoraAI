@@ -39,7 +39,7 @@ export default function SelectSourcesStep() {
     const dispatch = useDispatch();
     const routers = useRouter();
     const { setUser } = useAuth()
-    const activeStep = useAppSelector((state: RootState) => state.stepper.activeStep);
+    const activeStep = useAppSelector((state: RootState) => state.stepper.currentStep);
     const project = useAppSelector((state: RootState) => state.stepper.project);
     const listOfSuggestedSources = project?.suggestedSources ?? [];
     const { portalClient } = useClientsContext();

@@ -34,7 +34,7 @@ export interface TrackKeywordFormValues {
 
 export default function TrackKeywordStep() {
     const dispatch = useDispatch();
-    const activeStep = useAppSelector((state: RootState) => state.stepper.activeStep);
+    const activeStep = useAppSelector((state: RootState) => state.stepper.currentStep);
     const project = useAppSelector((state: RootState) => state.stepper.project);
     const listOfSuggestedKeywords = project?.suggestedKeywords ?? [];
     const { portalClient } = useClientsContext();

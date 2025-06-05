@@ -36,10 +36,10 @@ export const steps = [
 
 export default function OnboadingForm() {
 
-    const activeStep = useAppSelector((state: RootState) => state.stepper.activeStep);
+    const activeStep = useAppSelector((state: RootState) => state.stepper.currentStep);
     const pathname = usePathname();
-    const { skipped, loading } = useAppSelector((state: RootState) => state.stepper);
-    const isStepSkipped = (step: number) => skipped.includes(step);
+    const { completedSteps, loading } = useAppSelector((state: RootState) => state.stepper);
+    const isStepSkipped = (step: number) => completedSteps.includes(step);
     const isEditProduct = isActivePath(routes.app.settings.edit_product, pathname);
 
     if (loading) {
