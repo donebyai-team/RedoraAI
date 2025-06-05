@@ -30,5 +30,14 @@ module.exports = {
         apexcharts: path.resolve(__dirname, './node_modules/apexcharts')
       }
     }
-  }
+  },
+  async redirects() {
+    return [
+      {
+        source: '/dashboard/leads',
+        destination: '/dashboard',
+        permanent: true,
+      },
+    ];
+  },
 }
