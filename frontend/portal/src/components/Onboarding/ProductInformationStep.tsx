@@ -81,7 +81,7 @@ const fields: FieldConfig[] = [
 
 export default function ProductInformationStep() {
     const dispatch = useDispatch();
-    const activeStep = useAppSelector((state: RootState) => state.stepper.activeStep);
+    const activeStep = useAppSelector((state: RootState) => state.stepper.currentStep);
     const project = useAppSelector((state: RootState) => state.stepper.project);
     const { portalClient } = useClientsContext();
 

@@ -44,7 +44,7 @@ import { LeadTabStatus, setActiveTab, setCompletedList, setDiscardedTabList, set
 import { Lead, LeadStatus } from '@doota/pb/doota/core/v1/core_pb'
 import { GetLeadsResponse } from '@doota/pb/doota/portal/v1/portal_pb'
 import { isSameDay } from './Leads/Tabs/NewTab'
-import { setStep } from '../../store/Onboarding/OnboardingSlice'
+import { goToStep } from '../../store/Onboarding/OnboardingSlice'
 
 export const LoadigSkeletons = ({ count, height }: { count: number, height: number | string }) => (
   [...Array(count)].map((_, i) => (
@@ -163,7 +163,7 @@ const NavBar: FC = () => {
   }
 
   const handleEditProductClick = () => {
-    dispatch(setStep(0))
+    dispatch(goToStep(1))
     router.push(routes.app.settings.edit_product);
   };
 

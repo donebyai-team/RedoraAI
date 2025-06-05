@@ -11,8 +11,7 @@ import { useForm } from "react-hook-form";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { portalClient } from "@/services/grpc";
 import { nextStep, prevStep, setProject } from "@/store/Onboarding/OnboardingSlice";
-
-const MAX_KEYWORDS = 10;
+import { useAuth } from "@doota/ui-core/hooks/useAuth";
 
 export interface TrackKeywordFormValues {
   keywords: string[];
@@ -21,6 +20,8 @@ export interface TrackKeywordFormValues {
 
 export default function KeywordsStep() {
 
+  const { planDetails } = useAuth();
+  const MAX_KEYWORDS = planDetails.subscription?.maxKeywords as number;
   const project = useAppSelector((state) => state.stepper.project);
   const [suggestionLoading, setSuggestionLoading] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -210,7 +211,7 @@ export default function KeywordsStep() {
 
       {/* Suggested Keywords */}
       {suggestionLoading ? (
-        <div className="flex justify-center items-center my-5">
+        <div className="flex justify-center items-center my-10">
           <Loader2 className="w-10 h-10 animate-spin" />
         </div>
       ) : availableSuggestions.length > 0 && (

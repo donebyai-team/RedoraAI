@@ -22,7 +22,15 @@ const stepperSlice = createSlice({
   initialState,
   reducers: {
     goToStep(state, action: PayloadAction<number>) {
-      state.currentStep = action.payload;
+      const targetStep = action.payload;
+
+      for (let step = 1; step < targetStep; step++) {
+        if (!state.completedSteps.includes(step)) {
+          state.completedSteps.push(step);
+        }
+      }
+
+      state.currentStep = targetStep;
     },
     nextStep(state) {
       if (!state.completedSteps.includes(state.currentStep)) {
@@ -50,7 +58,7 @@ const stepperSlice = createSlice({
   }
 })
 
-export const { 
+export const {
   goToStep,
   nextStep,
   prevStep,

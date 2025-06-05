@@ -16,8 +16,6 @@ import { portalClient } from "@/services/grpc";
 import { Source } from "@doota/pb/doota/core/v1/core_pb";
 import { routes } from "@doota/ui-core/routing";
 
-const MAX_SUBREDDITS = 8;
-
 interface SubredditFormValues {
   sources: Source[];
   newSubreddit: string;
@@ -26,13 +24,14 @@ interface SubredditFormValues {
 export default function SubredditsStep() {
 
   const routers = useRouter();
-  const { setUser } = useAuth()
+  const { setUser, planDetails } = useAuth()
   const project = useAppSelector((state) => state.stepper.project);
   const listOfSuggestedSources = project?.suggestedSources ?? [];
   const [loadingSubredditId, setLoadingSubredditId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [pendingSources, setPendingSources] = useState<string[]>([]);
   const dispatch = useAppDispatch();
+  const MAX_SUBREDDITS = planDetails.subscription?.maxSources as number;
 
   const {
     handleSubmit,
@@ -57,8 +56,7 @@ export default function SubredditsStep() {
     const plainName = trimmed.replace(/^r\//i, "");
     const nameToSend = `r/${plainName}`;
 
-    if (sources.some((s) => s.name.toLowerCase() === plainName.toLowerCase()) ||
-      pendingSources.includes(plainName.toLowerCase())) {
+    if (sources.some((s) => s.name.toLowerCase() === plainName.toLowerCase()) || pendingSources.includes(plainName.toLowerCase())) {
       toast({
         title: "Error",
         description: `${nameToSend} is already being tracked`,
@@ -68,8 +66,7 @@ export default function SubredditsStep() {
     }
 
     setPendingSources((prev) => [...prev, plainName.toLowerCase()]);
-    setLoadingSubredditId(plainName);
-    setValue("newSubreddit", "");
+    setLoadingSubredditId(nameToSend);
 
     try {
       const result = await portalClient.addSource({ name: nameToSend });
@@ -79,6 +76,7 @@ export default function SubredditsStep() {
       if (project) {
         dispatch(setProject({ ...project, sources: updatedSources }));
       }
+      setValue("newSubreddit", "");
     } catch (err: any) {
       const message = err?.response?.data?.message || err.message || "Failed to add";
       toast({
@@ -185,7 +183,7 @@ export default function SubredditsStep() {
         {sources.length > 0 ? (
           <div className="flex flex-wrap gap-2">
             {sources.map((subreddit) => (
-              <Badge key={subreddit.id} variant="default" className="flex items-center gap-1">
+              <Badge key={subreddit.id} variant="default" className={`flex items-center gap-1 ${loadingSubredditId === subreddit.id ? "opacity-25" : ""}`}>
                 {subreddit.name}
                 <button
                   onClick={() => handleRemoveSubreddit(subreddit)}
@@ -229,11 +227,11 @@ export default function SubredditsStep() {
               })}
               placeholder="Enter subreddit (e.g., entrepreneur or r/entrepreneur)"
               className={errors.newSubreddit?.message ? "border-destructive" : ""}
-              disabled={sources.length >= MAX_SUBREDDITS}
+              disabled={sources.length >= MAX_SUBREDDITS || loadingSubredditId !== null}
             />
             <Button
               type="submit"
-              disabled={sources.length >= MAX_SUBREDDITS}
+              disabled={sources.length >= MAX_SUBREDDITS || loadingSubredditId !== null}
               size="icon"
             >
               <Plus className="w-4 h-4" />
@@ -263,7 +261,7 @@ export default function SubredditsStep() {
                   variant="outline"
                   size="sm"
                   onClick={() => handleAddSubreddit(suggestion)}
-                  disabled={sources.length >= MAX_SUBREDDITS}
+                  disabled={sources.length >= MAX_SUBREDDITS || loadingSubredditId === suggestion}
                   className="h-8"
                 >
                   <Plus className="w-3 h-3 mr-1" />

@@ -15,6 +15,8 @@ type SubscriptionDetails = {
   subscription: Subscription | undefined;
 };
 
+const DEFAULT_PLAN = { planName: "", subscription: undefined };
+
 export type AuthValuesType = {
   user: User | null
   organization: Organization | null
@@ -28,6 +30,7 @@ export type AuthValuesType = {
   setUser: React.Dispatch<React.SetStateAction<User | null>>
   getOrganization: () => Organization | null
   getPlanDetails: () => SubscriptionDetails,
+  planDetails: SubscriptionDetails,
 }
 
 // ** Defaults
@@ -42,7 +45,8 @@ const defaultProvider: AuthValuesType = {
   setOrganization: () => Promise.resolve(),
   setUser: () => { },
   getOrganization: () => null,
-  getPlanDetails: () => ({ planName: "", subscription: undefined }),
+  getPlanDetails: () => DEFAULT_PLAN,
+  planDetails: DEFAULT_PLAN,
 }
 
 export const AuthContext = createContext<AuthValuesType>(defaultProvider)
@@ -202,6 +206,7 @@ export const BaseAuthProvider: FC<Props> = ({
     };
   };
 
+  const planDetails = getPlanDetails();
 
   const values = {
     user,
@@ -217,7 +222,8 @@ export const BaseAuthProvider: FC<Props> = ({
     },
     setUser,
     getOrganization,
-    getPlanDetails
+    getPlanDetails,
+    planDetails,
   }
 
   return <AuthContext.Provider value={values}>{children}</AuthContext.Provider>

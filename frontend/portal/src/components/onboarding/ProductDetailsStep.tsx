@@ -125,7 +125,7 @@ export default function ProductDetailsStep() {
           <div className="flex gap-2">
             <div className="flex-1">
               <Input
-                id="website"                
+                id="website"
                 placeholder="https://example.com - We'll automatically fetch your product details from your website to save you time"
                 {...register('website', {
                   required: "Website url is required",
@@ -145,6 +145,7 @@ export default function ProductDetailsStep() {
         <div className="space-y-2">
           <Label htmlFor="productName">Product Name *</Label>
           <Input
+            type="text"
             id="productName"
             {...register('name', {
               required: "Product name is required",
