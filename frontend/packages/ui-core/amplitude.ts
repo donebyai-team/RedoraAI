@@ -3,8 +3,12 @@ import { init, track, identify, setUserId, Identify } from '@amplitude/analytics
 let amplitudeInitialized = false;
 
 export function initAmplitude(apiKey: string) {
+    if (!apiKey) {
+        console.warn('Amplitude API key not found in env')
+    }
+
     if (!amplitudeInitialized) {
-        init(apiKey);
+        init(apiKey, { defaultTracking: true });
         amplitudeInitialized = true;
     }
 }
@@ -30,4 +34,5 @@ export function logDailyVisit(customerId: string, productName: string, metadata:
         timestamp: new Date().toISOString(),
         ...metadata,
     });
+    console.log("daily visit event sent")
 }
