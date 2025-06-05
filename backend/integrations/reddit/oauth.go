@@ -95,19 +95,22 @@ func (c *OauthClient) GetOrCreate(ctx context.Context, orgID string, forceAuth b
 
 func (r *OauthClient) newRedditClient(ctx context.Context, orgID string, forceAuth bool) (*Client, error) {
 	integration, err := r.db.GetIntegrationByOrgAndType(ctx, orgID, models.IntegrationTypeREDDIT)
-	if err != nil && errors.Is(err, datastore.NotFound) {
-		// If forceAuth is false and integration doesn't exist, return a client with no config.
-		if !forceAuth {
-			return NewClientWithOutConfig(r.logger), nil
-		}
-		return nil, datastore.IntegrationNotFoundOrActive
-	}
 
+	// If integration is not found or inactive
 	if err != nil {
+		if errors.Is(err, datastore.NotFound) {
+			if !forceAuth {
+				return NewClientWithOutConfig(r.logger), nil
+			}
+			return nil, datastore.IntegrationNotFoundOrActive
+		}
 		return nil, err
 	}
 
-	if integration.State != models.IntegrationStateACTIVE {
+	if integration == nil || integration.State != models.IntegrationStateACTIVE {
+		if !forceAuth {
+			return NewClientWithOutConfig(r.logger), nil
+		}
 		return nil, datastore.IntegrationNotFoundOrActive
 	}
 

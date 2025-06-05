@@ -66,7 +66,7 @@ func (s *redditKeywordTracker) WithLogger(logger *zap.Logger) KeywordTracker {
 }
 
 func (s *redditKeywordTracker) TrackKeyword(ctx context.Context, tracker *models.AugmentedKeywordTracker) error {
-	redditClient, err := s.redditOauthClient.GetOrCreate(ctx, tracker.Project.OrganizationID, true)
+	redditClient, err := s.redditOauthClient.GetOrCreate(ctx, tracker.Project.OrganizationID, false)
 	if err != nil {
 		if errors.Is(err, datastore.IntegrationNotFoundOrActive) {
 			return nil
@@ -448,6 +448,12 @@ func (s *redditKeywordTracker) sendAutomatedDM(ctx context.Context, org *models.
 	if !org.FeatureFlags.EnableAutoDM {
 		return nil
 	}
+
+	from := org.Name
+	if redditConfig != nil {
+		from = redditConfig.Name
+	}
+
 	// Continue
 	redisKey := dailyCounterKey(org.ID)
 	shouldDM, err := s.state.CheckIfUnderLimitAndIncrement(ctx, redisKey, keyDMScheduledPerDay, org.FeatureFlags.GetMaxDMsPerDay(), 24*time.Hour)
@@ -459,7 +465,7 @@ func (s *redditKeywordTracker) sendAutomatedDM(ctx context.Context, org *models.
 		interaction, err := s.automatedInteractions.ScheduleDM(ctx, &models.LeadInteraction{
 			LeadID:    redditLead.ID,
 			ProjectID: redditLead.ProjectID,
-			From:      redditConfig.Name,
+			From:      from,
 			To:        redditLead.Author,
 		})
 		if err != nil {
@@ -482,6 +488,9 @@ func (s *redditKeywordTracker) sendAutomatedDM(ctx context.Context, org *models.
 var ignoreOldEnoughChecksForOrgs = []string{"0d40bd4d-15ba-48d1-b3db-7d8dae22b7dd"}
 
 func (s *redditKeywordTracker) sendAutomatedComment(ctx context.Context, org *models.Organization, redditConfig *models.RedditConfig, redditLead *models.Lead) error {
+	if redditConfig == nil {
+		return nil
+	}
 	isOldEnough := redditConfig.IsUserOldEnough(2)
 	if utils.Contains(ignoreOldEnoughChecksForOrgs, org.ID) {
 		isOldEnough = true
