@@ -35,6 +35,7 @@ export const routes = {
     integrations: '/settings/integrations',
     automation: '/settings/automation',
     billing: '/settings/billing',
+    onboarding: '/onboarding',
   }
 }
 
