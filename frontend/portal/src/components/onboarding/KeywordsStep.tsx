@@ -221,7 +221,7 @@ export default function KeywordsStep() {
           {suggestionLoading ? (
             <div className="flex justify-center items-center my-14">
               <p className="text-sm text-muted-foreground">
-                {`Please wait while fetching suggestion keywords or subreddits...`}
+                {`Please wait while we are generating suggestions keywords or subreddit for you...`}
               </p>
             </div>
           ) : availableSuggestions.length > 0 ? (
@@ -243,13 +243,12 @@ export default function KeywordsStep() {
           ) : (
             <div className="flex justify-center items-center my-14">
               <p className="text-sm text-muted-foreground">
-                {`No suggestion keywords or subreddits found.`}
+                {`No suggestion keywords found.`}
               </p>
             </div>
           )}
         </CardContent>
       </Card>
-
 
       {/* Navigation */}
       <div className="flex justify-between">

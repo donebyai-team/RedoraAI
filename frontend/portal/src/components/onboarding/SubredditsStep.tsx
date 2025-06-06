@@ -148,11 +148,6 @@ export default function SubredditsStep() {
     }
   };
 
-  const availableSuggestions = listOfSuggestedSources.filter((subreddit) => {
-    const plainName = subreddit.replace(/^r\//i, "").toLowerCase();
-    return !sources.some((s) => s.name.toLowerCase() === plainName);
-  });
-
   const formatSubreddit = (input: string) => {
     const formatted = input.trim().toLowerCase();
     if (formatted.startsWith("r/")) {
@@ -170,6 +165,12 @@ export default function SubredditsStep() {
   const onSubmit = async (data: SubredditFormValues) => {
     await handleAddSubreddit(data.newSubreddit);
   };
+  const normalizeSubredditName = (name: string) => name?.replace(/^r\//i, "").toLowerCase();
+
+  const availableSuggestions = listOfSuggestedSources.filter((subreddit) => {
+    const plainName = normalizeSubredditName(subreddit);
+    return !sources.some((s) => normalizeSubredditName(s.name) === plainName);
+  });
 
   return (
     <div className="space-y-6">

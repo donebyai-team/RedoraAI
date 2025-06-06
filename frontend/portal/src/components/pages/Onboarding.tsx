@@ -36,7 +36,8 @@ const STEPS = [
 
 export default function Onboarding() {
 
-  const { currentStep, completedSteps } = useAppSelector((state) => state.stepper);
+  const { currentStep, completedSteps, project } = useAppSelector((state) => state.stepper);
+  console.log("####_project_data ", project);
   const dispatch = useAppDispatch();
   const path = usePathname();
 
