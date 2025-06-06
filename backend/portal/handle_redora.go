@@ -432,6 +432,8 @@ func (p *Portal) RemoveSource(ctx context.Context, c *connect.Request[pbportal.R
 	return connect.NewResponse(&emptypb.Empty{}), nil
 }
 
+const minRelevancyScoreFilter = 80
+
 func (p *Portal) GetRelevantLeads(ctx context.Context, c *connect.Request[pbportal.GetRelevantLeadsRequest]) (*connect.Response[pbportal.GetLeadsResponse], error) {
 	status, err := models.ParseLeadStatus(c.Msg.Status.String())
 	if err != nil {
@@ -440,6 +442,11 @@ func (p *Portal) GetRelevantLeads(ctx context.Context, c *connect.Request[pbport
 
 	if c.Msg.PageCount <= 0 {
 		c.Msg.PageCount = pageCount
+	}
+
+	if c.Msg.RelevancyScore < minRelevancyScoreFilter {
+		c.Msg.RelevancyScore = minRelevancyScoreFilter
+		p.logger.Info(fmt.Sprintf("received less than 80 score to filter, defaulting to %d", minRelevancyScoreFilter))
 	}
 
 	if status != models.LeadStatusNEW {
