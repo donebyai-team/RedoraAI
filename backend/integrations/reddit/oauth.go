@@ -74,12 +74,12 @@ func NewRedditOauthClient(logger *zap.Logger, db datastore.Repository, clientID,
 
 // GetOrCreate returns a cached RedditClient or creates it if needed
 func (c *OauthClient) GetOrCreate(ctx context.Context, orgID string, forceAuth bool) (*Client, error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	if client, ok := c.clientCache[orgID]; ok {
-		return client, nil
-	}
+	//c.mu.Lock()
+	//defer c.mu.Unlock()
+	//
+	//if client, ok := c.clientCache[orgID]; ok {
+	//	return client, nil
+	//}
 
 	client, err := c.newRedditClient(ctx, orgID, forceAuth)
 	if err != nil {
@@ -87,9 +87,9 @@ func (c *OauthClient) GetOrCreate(ctx context.Context, orgID string, forceAuth b
 	}
 
 	// Do not cache if auth is not required
-	if !forceAuth {
-		c.clientCache[orgID] = client
-	}
+	//if !forceAuth {
+	//	c.clientCache[orgID] = client
+	//}
 	return client, nil
 }
 

@@ -58,7 +58,8 @@ export default function Page() {
     // send api call async
     portalClient.revokeIntegration({ id: id })
       .then(() => {
-        handleSaveAutomation({ Comment: { enable: false }, dm: { enable: false } })
+        // disable comments as reddit integration depends on that
+        handleSaveAutomation({ Comment: { enable: false } })
         console.log("successfully revoked")
       })
       .catch((err) => {
