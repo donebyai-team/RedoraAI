@@ -123,10 +123,16 @@ func (r *OauthClient) newRedditClient(ctx context.Context, orgID string, forceAu
 		oauthConfig: r.config,
 		baseURL:     redditAPIBase,
 		unAuthorizedErrorCallback: func(ctx context.Context) {
-			integration.State = models.IntegrationStateAUTHREVOKED
-			integration, err = r.db.UpsertIntegration(ctx, integration)
-			if err != nil {
-				r.logger.Error("failed to update reddit integration state to auth_revoked", zap.Error(err))
+			r.logger.Info("unauthorized error callback, revoking auth of integration", zap.String("integration_id", integration.ID))
+			integrationToUpdate, errUpdate := r.db.GetIntegrationByOrgAndType(ctx, orgID, models.IntegrationTypeREDDIT)
+			if errUpdate != nil {
+				r.logger.Error("failed to get integration", zap.String("integration_id", integration.ID), zap.Error(err))
+			} else {
+				integrationToUpdate.State = models.IntegrationStateAUTHREVOKED
+				_, errUpdate = r.db.UpsertIntegration(ctx, integrationToUpdate)
+				if err != nil {
+					r.logger.Error("failed to update reddit integration state to auth_revoked", zap.Error(err))
+				}
 			}
 		},
 	}
