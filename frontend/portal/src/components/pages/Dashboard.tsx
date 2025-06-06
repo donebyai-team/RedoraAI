@@ -150,11 +150,10 @@ export default function Dashboard() {
       }
     };
 
-    if (isConnected) {
       getInitialLeads();
-    }
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isConnected, dateRange, relevancyScore, subReddit, leadStatusFilter]);
+  }, [dateRange, relevancyScore, subReddit, leadStatusFilter]);
 
   // get all reddit account, used in Leed Feed
   useEffect(() => {
