@@ -53,7 +53,6 @@ export default function ProductDetailsStep() {
   const [hasFetchedMeta, setHasFetchedMeta] = useState(false);
   const [webSiteMetadataStatus, setWebSiteMetadataStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
 
-
   const fetchMeta = useCallback(async (url: string) => {
     if (!url) return;
 
@@ -128,6 +127,9 @@ export default function ProductDetailsStep() {
       setIsLoading(false);
     }
   };
+
+  // not disable button on edit product page
+  const isButtonDisable = isOnboardingPage ? (webSiteMetadataStatus === "idle" || webSiteMetadataStatus === "loading") : false;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -262,7 +264,7 @@ export default function ProductDetailsStep() {
         )}
 
         <div className="flex justify-end">
-          <Button type="submit" disabled={isLoading || webSiteMetadataStatus === "idle" || webSiteMetadataStatus === "loading"}>
+          <Button type="submit" disabled={isLoading || isButtonDisable}>
             Continue to Keywords
           </Button>
         </div>
