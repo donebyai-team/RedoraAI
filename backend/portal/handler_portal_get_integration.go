@@ -58,18 +58,21 @@ func (p *Portal) RevokeIntegration(ctx context.Context, c *connect.Request[pbpor
 func (p *Portal) protoIntegration(integration *models.Integration) *pbportal.Integration {
 	switch integration.Type {
 	case models.IntegrationTypeREDDIT:
-		redditConfig := integration.GetRedditConfig()
-		return &pbportal.Integration{
+		resp := &pbportal.Integration{
 			Id:             integration.ID,
 			OrganizationId: integration.OrganizationID,
 			Type:           pbportal.IntegrationType_INTEGRATION_TYPE_REDDIT,
 			Status:         mapIntegrationState(integration.State),
-			Details: &pbportal.Integration_Reddit{
+		}
+		if integration.State == models.IntegrationStateACTIVE {
+			redditConfig := integration.GetRedditConfig()
+			resp.Details = &pbportal.Integration_Reddit{
 				Reddit: &pbportal.RedditIntegration{
 					UserName: redditConfig.Name,
 				},
-			},
+			}
 		}
+		return resp
 	case models.IntegrationTypeREDDITDMLOGIN:
 		return &pbportal.Integration{
 			Id:             integration.ID,
