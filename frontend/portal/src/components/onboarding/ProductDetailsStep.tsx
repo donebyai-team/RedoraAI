@@ -10,6 +10,8 @@ import { useForm } from "react-hook-form";
 import { nextStep, setProject } from "@/store/Onboarding/OnboardingSlice";
 import { portalClient } from "@/services/grpc";
 import { setLoading } from "@/store/Source/sourceSlice";
+import { routes } from "@doota/ui-core/routing";
+import { usePathname } from "next/navigation";
 
 interface ProductFormValues {
   website: string;
@@ -23,6 +25,10 @@ export default function ProductDetailsStep() {
   const project = useAppSelector((state) => state.stepper.project);
   const dispatch = useAppDispatch();
   const [isLoading, setIsLoading] = useState(false);
+  const pathname = usePathname();
+  const isOnboardingPage = pathname === routes.new.onboarding;
+  // const isEditProductPage = pathname === routes.new.edit_product;
+
 
   const {
     handleSubmit,
@@ -44,6 +50,9 @@ export default function ProductDetailsStep() {
   const name = watch("name");
   const description = watch("description");
   const targetPersona = watch("targetPersona");
+  const [hasFetchedMeta, setHasFetchedMeta] = useState(false);
+  const [webSiteMetadataStatus, setWebSiteMetadataStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+
 
   const fetchMeta = useCallback(async (url: string) => {
     if (!url) return;
@@ -52,8 +61,9 @@ export default function ProductDetailsStep() {
       ? url
       : `https://${url}`;
 
+    setWebSiteMetadataStatus("loading");
+    setLoading(true);
     try {
-      setLoading(true);
       const res = await fetch(`/api/fetch-meta?url=${encodeURIComponent(normalizedUrl)}`);
       const data = await res.json();
 
@@ -67,14 +77,18 @@ export default function ProductDetailsStep() {
       if (data.description) {
         clearErrors("description");
       }
+
+      setWebSiteMetadataStatus("success");
     } catch (err) {
       console.log(err);
       setValue("name", "");
       setValue("description", "");
       clearErrors("name");
       clearErrors("description");
+      setWebSiteMetadataStatus("error");
     } finally {
       setLoading(false);
+      setHasFetchedMeta(true);
     }
   }, [setValue, clearErrors]);
 
@@ -141,104 +155,114 @@ export default function ProductDetailsStep() {
           </div>
         </div>
 
-        {/* Product Name */}
-        <div className="space-y-2">
-          <Label htmlFor="productName">Product Name *</Label>
-          <Input
-            type="text"
-            id="productName"
-            {...register('name', {
-              required: "Product name is required",
-              validate: (value) => {
-                const trimmed = value.trim();
+        {isOnboardingPage && !hasFetchedMeta && webSiteMetadataStatus === "loading" && (
+          <p className="text-sm text-muted-foreground italic">Please wait while we fetch your website details...</p>
+        )}
+        {isOnboardingPage && !hasFetchedMeta && webSiteMetadataStatus === "error" && (
+          <p className="text-sm text-destructive italic">Failed to fetch website metadata. You can enter details manually.</p>
+        )}
+        {(!isOnboardingPage || (isOnboardingPage && hasFetchedMeta)) && (
+          <>
+            {/* Product Name */}
+            <div className="space-y-2">
+              <Label htmlFor="productName">Product Name *</Label>
+              <Input
+                type="text"
+                id="productName"
+                {...register('name', {
+                  required: "Product name is required",
+                  validate: (value) => {
+                    const trimmed = value.trim();
 
-                if (!trimmed) {
-                  return "Product name is required";
-                }
+                    if (!trimmed) {
+                      return "Product name is required";
+                    }
 
-                if (trimmed.length < 3 || trimmed.length > 30) {
-                  return "Product name must be between 3 and 30 characters";
-                }
+                    if (trimmed.length < 3 || trimmed.length > 30) {
+                      return "Product name must be between 3 and 30 characters";
+                    }
 
-                const wordCount = trimmed.split(/\s+/).length;
-                if (wordCount > 3) {
-                  return "Product name can have maximum 3 words";
-                }
+                    const wordCount = trimmed.split(/\s+/).length;
+                    if (wordCount > 3) {
+                      return "Product name can have maximum 3 words";
+                    }
 
-                return true;
-              },
-            })}
-            placeholder="Keep it simple and recognizable - we'll use this to identify when people mention your product"
-            className={errors.name?.message ? "border-destructive" : ""}
-            disabled={isLoading}
-          />
-          {errors.name?.message && (
-            <p className="text-sm text-destructive">{errors.name?.message}</p>
-          )}
-          <p className="text-xs text-muted-foreground">
-            {name.length}/30 characters • {name.trim().split(/\s+/).filter(word => word.length > 0).length}/3 words
-          </p>
-        </div>
+                    return true;
+                  },
+                })}
+                placeholder="Keep it simple and recognizable - we'll use this to identify when people mention your product"
+                className={errors.name?.message ? "border-destructive" : ""}
+                disabled={isLoading}
+              />
+              {errors.name?.message && (
+                <p className="text-sm text-destructive">{errors.name?.message}</p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                {name.length}/30 characters • {name.trim().split(/\s+/).filter(word => word.length > 0).length}/3 words
+              </p>
+            </div>
 
-        {/* Description */}
-        <div className="space-y-2">
-          <Label htmlFor="description">Product Description *</Label>
-          <Textarea
-            id="description"
-            {...register("description", {
-              required: "Description is required",
-              validate: (value) => {
-                const trimmed = value.trim();
+            {/* Description */}
+            <div className="space-y-2">
+              <Label htmlFor="description">Product Description *</Label>
+              <Textarea
+                id="description"
+                {...register("description", {
+                  required: "Description is required",
+                  validate: (value) => {
+                    const trimmed = value.trim();
 
-                if (!trimmed) return "Description is required";
-                if (trimmed.length < 10) return "Description must be at least 10 characters";
+                    if (!trimmed) return "Description is required";
+                    if (trimmed.length < 10) return "Description must be at least 10 characters";
 
-                return true;
-              },
-            })}
-            placeholder="Describe what your product does and what problems it solves - this helps us find relevant discussions where people might need your solution"
-            className={errors.description?.message ? "border-destructive" : ""}
-            rows={3}
-            disabled={isLoading}
-          />
-          {errors.description?.message && (
-            <p className="text-sm text-destructive">{errors.description?.message}</p>
-          )}
-          <p className="text-xs text-muted-foreground">
-            {description.length} characters (minimum 10)
-          </p>
-        </div>
+                    return true;
+                  },
+                })}
+                placeholder="Describe what your product does and what problems it solves - this helps us find relevant discussions where people might need your solution"
+                className={errors.description?.message ? "border-destructive" : ""}
+                rows={3}
+                disabled={isLoading}
+              />
+              {errors.description?.message && (
+                <p className="text-sm text-destructive">{errors.description?.message}</p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                {description.length} characters (minimum 10)
+              </p>
+            </div>
 
-        {/* Target Persona */}
-        <div className="space-y-2">
-          <Label htmlFor="targetPersona">Target Persona *</Label>
-          <Input
-            id="targetPersona"
-            {...register("targetPersona", {
-              required: "Target persona is required",
-              validate: (value) => {
-                const trimmed = value.trim();
+            {/* Target Persona */}
+            <div className="space-y-2">
+              <Label htmlFor="targetPersona">Target Persona *</Label>
+              <Input
+                id="targetPersona"
+                {...register("targetPersona", {
+                  required: "Target persona is required",
+                  validate: (value) => {
+                    const trimmed = value.trim();
 
-                if (!trimmed) return "Target persona is required";
-                if (trimmed.length < 10) return "Target persona must be at least 10 characters";
+                    if (!trimmed) return "Target persona is required";
+                    if (trimmed.length < 10) return "Target persona must be at least 10 characters";
 
-                return true;
-              },
-            })}
-            placeholder="Who is your ideal customer? This helps us identify the right communities and conversations where your audience hangs out"
-            className={errors.targetPersona?.message ? "border-destructive" : ""}
-            disabled={isLoading}
-          />
-          {errors.targetPersona?.message && (
-            <p className="text-sm text-destructive">{errors.targetPersona?.message}</p>
-          )}
-          <p className="text-xs text-muted-foreground">
-            {targetPersona.length} characters (minimum 10)
-          </p>
-        </div>
+                    return true;
+                  },
+                })}
+                placeholder="Who is your ideal customer? This helps us identify the right communities and conversations where your audience hangs out"
+                className={errors.targetPersona?.message ? "border-destructive" : ""}
+                disabled={isLoading}
+              />
+              {errors.targetPersona?.message && (
+                <p className="text-sm text-destructive">{errors.targetPersona?.message}</p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                {targetPersona.length} characters (minimum 10)
+              </p>
+            </div>
+          </>
+        )}
 
         <div className="flex justify-end">
-          <Button type="submit" disabled={isLoading}>
+          <Button type="submit" disabled={isLoading || webSiteMetadataStatus === "idle" || webSiteMetadataStatus === "loading"}>
             Continue to Keywords
           </Button>
         </div>

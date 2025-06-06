@@ -11,6 +11,9 @@ export async function GET(request: Request): Promise<Response> {
         });
     }
 
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000); // 5 seconds
+
     try {
         const res = await fetch(url, {
             headers: {
@@ -18,7 +21,10 @@ export async function GET(request: Request): Promise<Response> {
                     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ' +
                     '(KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36',
             },
+            signal: controller.signal,
         });
+
+        clearTimeout(timeout);
 
         const html = await res.text();
         const $ = cheerio.load(html);
@@ -30,20 +36,25 @@ export async function GET(request: Request): Promise<Response> {
             '';
 
         return new Response(
-            JSON.stringify({
-                title,
-                description,
-            }),
+            JSON.stringify({ title, description }),
             {
                 status: 200,
                 headers: { 'Content-Type': 'application/json' },
             }
         );
-    } catch (error) {
+    } catch (error: any) {
         console.error('Fetch meta error:', error);
-        return new Response(JSON.stringify({ error: 'Failed to fetch metadata' }), {
-            status: 500,
-            headers: { 'Content-Type': 'application/json' },
-        });
+
+        const isTimeout = error.name === 'AbortError';
+
+        return new Response(
+            JSON.stringify({
+                error: isTimeout ? 'Request timed out after 5 seconds' : 'Failed to fetch metadata',
+            }),
+            {
+                status: 500,
+                headers: { 'Content-Type': 'application/json' },
+            }
+        );
     }
 }
