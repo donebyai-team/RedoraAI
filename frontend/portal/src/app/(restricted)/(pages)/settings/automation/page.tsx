@@ -192,20 +192,12 @@ export default function Page() {
         }
     };
 
-    const handleDisconnectReddit = (id: string) => {
+    const handleDisconnectDM = (id: string) => {
         // immediately remove
         setIntegrations((prev) =>
             prev.filter((i) => i.id !== id)
         )
-        // send api call async
-        portalClient.revokeIntegration({ id: id })
-            .then(() => {
-                handleSaveAutomation({ dm: { enabled: false } })
-                console.log("successfully revoked")
-            })
-            .catch((err) => {
-                console.error("Error disconnecting integrations:", err);
-            })
+        handleSaveAutomation({ dm: { enabled: false } })
     }
 
     const handleScoreChange = (_event: Event, newValue: number | number[]) => {
@@ -281,7 +273,7 @@ export default function Page() {
                                         variant="outlined"
                                         color="error"
                                         size="small"
-                                        onClick={() => handleDisconnectReddit(getIntegrationByType(integrations, IntegrationType.REDDIT_DM_LOGIN)?.id!)}
+                                        onClick={() => handleDisconnectDM(getIntegrationByType(integrations, IntegrationType.REDDIT_DM_LOGIN)?.id!)}
                                     >
                                         Disconnect
                                     </Button>
