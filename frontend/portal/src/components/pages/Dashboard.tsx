@@ -29,8 +29,7 @@ import { useClientsContext } from "@doota/ui-core/context/ClientContext";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { setError, setIsLoading, setLeadStatusFilter, setNewTabList } from "../../../store/Lead/leadSlice";
 import { DateRangeFilter, LeadAnalysis } from "@doota/pb/doota/portal/v1/portal_pb";
-// import { setAccounts, setLoading } from "@/store/Reddit/RedditSlice";
-// import { ConnectRedditPrompt } from "../dashboard/ConnectRedditPrompt";
+import { setAccounts, setLoading } from "@/store/Reddit/RedditSlice";
 import { useRedditIntegrationStatus } from "../Leads/Tabs/useRedditIntegrationStatus";
 import { AnnouncementBanner } from "../dashboard/AnnouncementBanner";
 import { LeadStatus } from "@doota/pb/doota/core/v1/core_pb";
@@ -156,6 +155,23 @@ export default function Dashboard() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isConnected, dateRange, relevancyScore, subReddit, leadStatusFilter, dispatch]);
+
+  // get all reddit account, used in Leed Feed
+  useEffect(() => {
+    dispatch(setLoading(true));
+    portalClient.getIntegrations({})
+      .then((res) => {
+        dispatch(setAccounts(res.integrations));
+      })
+      .catch((err) => {
+        dispatch(setError('Failed to fetch integrations'));
+        console.error("Error fetching integrations:", err);
+      })
+      .finally(() => {
+        dispatch(setLoading(false));
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <>
