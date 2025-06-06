@@ -117,7 +117,7 @@ export default function Dashboard() {
           const leadStatusPriority: LeadStatus[] = [LeadStatus.NEW, LeadStatus.COMPLETED];
 
           for (const status of leadStatusPriority) {
-            const result = await tryFetch({ status, relevancyScore, dateRange });
+            const result = await tryFetch({ status });
             const leads = result.leads ?? [];
 
             if (leads.length > 0) {
@@ -150,11 +150,10 @@ export default function Dashboard() {
       }
     };
 
-    if (isConnected) {
       getInitialLeads();
-    }
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isConnected, dateRange, relevancyScore, subReddit, leadStatusFilter, dispatch]);
+  }, [dateRange, relevancyScore, subReddit, leadStatusFilter]);
 
   // get all reddit account, used in Leed Feed
   useEffect(() => {
