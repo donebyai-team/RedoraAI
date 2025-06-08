@@ -3,6 +3,7 @@ import he from "he";
 import ReactMarkdown from 'react-markdown';
 import { ChevronUp, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleTrigger } from "@radix-ui/react-collapsible";
 
 interface HtmlRendererProps {
   htmlString: string;

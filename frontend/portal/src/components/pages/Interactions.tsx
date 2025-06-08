@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog } from "@/components/ui/dialog";
-import { MessageSquare, MessageCircle, Calendar, AlertCircle, CheckCircle, Clock, ExternalLink, Eye, X, ChevronDown, ChevronUp } from "lucide-react";
+import { MessageSquare, MessageCircle, Calendar, AlertCircle, CheckCircle, Clock, ExternalLink, Eye } from "lucide-react";
 import { setLoading, setError } from "@/store/Source/sourceSlice";
 import { useClientsContext } from "@doota/ui-core/context/ClientContext";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
