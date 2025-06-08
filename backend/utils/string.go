@@ -64,14 +64,14 @@ func CleanSubredditName(input string) string {
 
 func FormatComment(input string) string {
 	// Replace \n\n with actual newlines (i.e., two newlines for paragraph breaks)
-	input = strings.ReplaceAll(input, `\n\n`, "\n\n")
-
-	// Replace \n with actual single newlines (line breaks)
-	input = strings.ReplaceAll(input, `\n`, "\n")
-
-	// IMP: Reddit consider one new line as 2
-	re := regexp.MustCompile(`\n{2,}`)
-	input = re.ReplaceAllString(input, "\n")
+	//input = strings.ReplaceAll(input, `\n\n`, "\n\n")
+	//
+	//// Replace \n with actual single newlines (line breaks)
+	//input = strings.ReplaceAll(input, `\n`, "\n")
+	//
+	//// IMP: Reddit consider one new line as 2
+	//re := regexp.MustCompile(`\n{2,}`)
+	//input = re.ReplaceAllString(input, "\n")
 
 	// Replace em dashes with commas
 	input = strings.ReplaceAll(input, "—", ",")
