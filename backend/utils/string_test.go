@@ -74,11 +74,11 @@ func TestFormatComment(t *testing.T) {
 		expected string
 	}{
 		{
-			// Test with multiple paragraphs
-			input: `Really appreciate the detailed breakdown of your options! \n\nI've seen local service businesses get good results blending a lean city-specific site with a strong content hub that shows off niche expertise. Sometimes that knowledge attracts referrals beyond your main market, which isn't a bad thing. \n\nCurious if you've started drafting any FAQ posts yet, or are you still mapping strategy?`,
-			expected: `Really appreciate the detailed breakdown of your options! 
-I've seen local service businesses get good results blending a lean city-specific site with a strong content hub that shows off niche expertise. Sometimes that knowledge attracts referrals beyond your main market, which isn't a bad thing. 
-Curious if you've started drafting any FAQ posts yet, or are you still mapping strategy?`,
+			input: `It sounds like you've built something really solid with the tournament management system. Hitting that wall with sales, marketing, and engagement when you're technically focused and also juggling a full-time job and family is completely understandable.\n\nIt's definitely a common challenge for founders, especially bootstrappers.\n\nI recently started working on a tool related to this, Vidpilot, to help create viral video memes that drive engagement. It's something I'm building to tackle these exact kinds of marketing hurdles without needing design skills.\n\nWhat specific marketing channels have you been trying to focus on so far?`,
+			expected: `It sounds like you've built something really solid with the tournament management system. Hitting that wall with sales, marketing, and engagement when you're technically focused and also juggling a full-time job and family is completely understandable.
+It's definitely a common challenge for founders, especially bootstrappers.
+I recently started working on a tool related to this, Vidpilot, to help create viral video memes that drive engagement. It's something I'm building to tackle these exact kinds of marketing hurdles without needing design skills.
+What specific marketing channels have you been trying to focus on so far?`,
 		},
 	}
 

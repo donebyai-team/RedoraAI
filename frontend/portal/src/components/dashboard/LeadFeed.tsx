@@ -263,9 +263,9 @@ export function LeadFeed() {
                   </div>
                 </div>
 
-                <ScrollArea className="h-40">
-                  <HtmlBodyRenderer htmlString={post.metadata?.descriptionHtml || ""} />
-                </ScrollArea>
+                {/* <ScrollArea className="h-40"> */}
+                <HtmlBodyRenderer htmlString={post.metadata?.descriptionHtml || ""} />
+                {/* </ScrollArea> */}
 
                 {/* Last matched info */}
                 <div className="text-xs text-muted-foreground">

@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Collapsible, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Dialog } from "@/components/ui/dialog";
 import { MessageSquare, MessageCircle, Calendar, AlertCircle, CheckCircle, Clock, ExternalLink, Eye, X, ChevronDown, ChevronUp } from "lucide-react";
 import { setLoading, setError } from "@/store/Source/sourceSlice";
 import { useClientsContext } from "@doota/ui-core/context/ClientContext";
@@ -14,44 +13,8 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { LeadInteraction, LeadInteractionStatus, LeadInteractionType } from "@doota/pb/doota/core/v1/core_pb";
 import { getFormattedDate } from "@/utils/format";
 import { RootState } from "@/store/store";
+import { CollapsibleText } from "../Html/HtmlRenderer";
 
-const CollapsibleText = ({ text }: { text: string }) => {
-    const [isOpen, setIsOpen] = useState(false);
-    const shouldCollapse = text.length > 100; // Collapse if text is longer than 100 characters
-
-    if (!shouldCollapse) {
-        return (
-            <p className="text-sm text-gray-700">
-                {text}
-            </p>
-        );
-    }
-
-    return (
-        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-            <div className="space-y-2">
-                <p className="text-sm text-gray-700">
-                    {isOpen ? text : `${text.substring(0, 100)}...`}
-                </p>
-                <CollapsibleTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-auto p-0 text-blue-600 hover:text-blue-800">
-                        <span className="flex items-center gap-1 text-xs">
-                            {isOpen ? (
-                                <>
-                                    Read less <ChevronUp className="h-3 w-3" />
-                                </>
-                            ) : (
-                                <>
-                                    Read more <ChevronDown className="h-3 w-3" />
-                                </>
-                            )}
-                        </span>
-                    </Button>
-                </CollapsibleTrigger>
-            </div>
-        </Collapsible>
-    );
-};
 
 export default function Interaction() {
     const { portalClient } = useClientsContext();
