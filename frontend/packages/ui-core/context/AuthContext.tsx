@@ -31,6 +31,7 @@ export type AuthValuesType = {
   getOrganization: () => Organization | null
   getPlanDetails: () => SubscriptionDetails,
   planDetails: SubscriptionDetails,
+  currentOrganization: Organization | null,
 }
 
 // ** Defaults
@@ -47,6 +48,7 @@ const defaultProvider: AuthValuesType = {
   getOrganization: () => null,
   getPlanDetails: () => DEFAULT_PLAN,
   planDetails: DEFAULT_PLAN,
+  currentOrganization: null
 }
 
 export const AuthContext = createContext<AuthValuesType>(defaultProvider)
@@ -207,6 +209,7 @@ export const BaseAuthProvider: FC<Props> = ({
   };
 
   const planDetails = getPlanDetails();
+  const currentOrganization = getOrganization();
 
   const values = {
     user,
@@ -224,6 +227,7 @@ export const BaseAuthProvider: FC<Props> = ({
     getOrganization,
     getPlanDetails,
     planDetails,
+    currentOrganization
   }
 
   return <AuthContext.Provider value={values}>{children}</AuthContext.Provider>
