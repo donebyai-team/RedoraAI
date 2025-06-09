@@ -313,18 +313,37 @@ func (r browserless) SendDM(ctx context.Context, params DMParams) (cookies []byt
 	}
 
 	// Wait for message textarea to load
-	locator := page.Locator("rs-message-composer textarea[name='message']")
-	if err = locator.WaitFor(playwright.LocatorWaitForOptions{
-		Timeout: playwright.Float(20000),
-	}); err != nil {
-		return nil, fmt.Errorf("message textarea not found: %w", err)
+	selectors := []string{
+		"textarea[name='message']",
+		"textarea[aria-label='Write message']",
+		"rs-message-composer-old textarea[name='message']",
+		"rs-message-composer textarea[name='message']",
+	}
+
+	var locator playwright.Locator
+	found := false
+
+	for _, sel := range selectors {
+		locator = page.Locator(sel)
+		err = locator.WaitFor(playwright.LocatorWaitForOptions{
+			Timeout: playwright.Float(20000), // short timeout per selector
+		})
+		if err == nil {
+			found = true
+			r.logger.Info("found text area", zap.String("selector", sel))
+			break
+		}
+	}
+
+	if !found || locator == nil {
+		return nil, fmt.Errorf("message textarea not found using any of the selectors")
 	}
 
 	if err := locator.Fill(params.Message); err != nil {
 		return nil, fmt.Errorf("filling message failed: %w", err)
 	}
 
-	sendBtn := page.Locator("rs-message-composer button[aria-label='Send message']")
+	sendBtn := page.Locator("button[aria-label='Send message']")
 	if err = sendBtn.WaitFor(playwright.LocatorWaitForOptions{
 		Timeout: playwright.Float(5000),
 	}); err != nil {
