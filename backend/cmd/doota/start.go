@@ -201,6 +201,16 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 	browserLessClient := interactions.NewBrowserlessClient(sflags.MustGetString(cmd, "common-browserless-api-key"), debugStore, logger)
 	interactionService := interactions.NewRedditInteractions(deps.DataStore, browserLessClient, redditOauthClient, logger)
 
+	//organizations, err := deps.DataStore.GetOrganizations(context.Background())
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//for _, org := range organizations {
+	//	org.FeatureFlags.Subscription = psql.CreateFreeSubscription()
+	//	deps.DataStore.UpdateOrganization(context.Background(), org)
+	//}
+
 	//andType, err := deps.DataStore.GetIntegrationByOrgAndType(context.Background(), "5b5955de-a4c1-4bb5-9358-c3c2ba34fdf6", models.IntegrationTypeREDDITDMLOGIN)
 	//if err != nil {
 	//	return nil, err

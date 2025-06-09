@@ -13,6 +13,7 @@ func init() {
 		"project/query_project_by_id.sql",
 		"project/query_project_by_name.sql",
 		"project/update_project.sql",
+		"project/update_project_is_active.sql",
 	})
 }
 
@@ -43,6 +44,16 @@ func (r *Database) CreateProject(ctx context.Context, project *models.Project) (
 
 	project.ID = id
 	return project, nil
+}
+
+func (r *Database) UpdateProjectIsActive(ctx context.Context, orgID string, isActive bool) error {
+	stmt := r.mustGetStmt("project/update_project_is_active.sql")
+
+	_, err := stmt.ExecContext(ctx, map[string]interface{}{
+		"is_active":       isActive,
+		"organization_id": orgID,
+	})
+	return err
 }
 
 func (r *Database) UpdateProject(ctx context.Context, project *models.Project) (*models.Project, error) {

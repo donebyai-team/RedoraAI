@@ -38,11 +38,15 @@ type OrganizationFeatureFlags struct {
 	Activities        []OrgActivity `json:"activities"`
 }
 
+func (f OrganizationFeatureFlags) GetSubscription() *Subscription {
+	return f.Subscription
+}
+
 func (f OrganizationFeatureFlags) GetSubscriptionPlanMetadata() SubscriptionPlanMetadata {
-	//if f.Subscription == nil {
-	//	return RedoraPlans[SubscriptionPlanTypeFREE].Metadata
-	//}
-	return RedoraPlans[SubscriptionPlanTypeFREE].Metadata
+	if f.Subscription == nil {
+		return RedoraPlans[SubscriptionPlanTypeFREE].Metadata
+	}
+	return f.Subscription.Metadata
 }
 
 func (f OrganizationFeatureFlags) GetMaxKeywordAllowed() int {

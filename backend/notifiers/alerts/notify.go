@@ -33,6 +33,7 @@ type AlertNotifier interface {
 	SendNewProductAddedAlert(ctx context.Context, productName, website string)
 	SendWelcomeEmail(ctx context.Context, orgID string)
 	SendRedditChatConnectedAlert(ctx context.Context, email string)
+	SendTrialExpiredEmail(ctx context.Context, orgID string, trialDays int) error
 }
 
 type SlackNotifier struct {
@@ -192,6 +193,57 @@ func (s *SlackNotifier) SendLeadsSummaryEmail(ctx context.Context, summary LeadS
 
 	if cc != nil && len(cc) > 0 {
 		params.Cc = cc
+	}
+
+	_, err = s.ResendClient.Emails.Send(params)
+	return err
+}
+
+func (s *SlackNotifier) SendTrialExpiredEmail(ctx context.Context, orgID string, trialDays int) error {
+	users, err := s.db.GetUsersByOrgID(ctx, orgID)
+	if err != nil {
+		return err
+	}
+
+	if len(users) == 0 {
+		return nil
+	}
+
+	to := make([]string, 0, len(users))
+	for _, user := range users {
+		to = append(to, user.Email)
+	}
+
+	htmlBody := fmt.Sprintf(`
+		<!DOCTYPE html>
+		<html>
+		<body style="font-family: Arial, sans-serif; background-color: #f7f9fc; padding: 20px;">
+		  <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 30px; border-radius: 8px;">
+		    <h2>Your Free Trial Has Expired</h2>
+		    <p>Your %d-day free trial on RedoraAI has ended. To continue receiving relevant Reddit leads and automated outreach, please upgrade your plan.</p>
+		    <p>🚀 Unlock full access and keep your growth going!</p>
+		    <div style="margin: 20px 0;">
+		      <a href="https://app.redoraai.com" 
+		         style="display: inline-block; padding: 12px 24px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 6px;">
+		        Upgrade Your Plan
+		      </a>
+		    </div>
+		    <hr>
+		    <footer style="font-size: 12px; color: #888;">
+		      <p><strong>RedoraAI</strong> — AI for Intelligent Lead Generation</p>
+		      <p>Need help or have questions? <a href="mailto:adarsh@redoraai.com">adarsh@redoraai.com</a></p>
+		    </footer>
+		  </div>
+		</body>
+		</html>
+	`, trialDays)
+
+	params := &resend.SendEmailRequest{
+		From:    "RedoraAI <leads@alerts.redoraai.com>",
+		To:      to,
+		Cc:      []string{"shashank@donebyai.team", "adarsh@redoraai.com"},
+		Subject: "🚫 Your RedoraAI Trial Has Ended — Upgrade to Stay Live",
+		Html:    htmlBody,
 	}
 
 	_, err = s.ResendClient.Emails.Send(params)

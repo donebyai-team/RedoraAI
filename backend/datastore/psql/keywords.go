@@ -196,11 +196,6 @@ func (r *Database) GetKeywordTrackers(ctx context.Context) ([]*models.AugmentedK
 			return nil, fmt.Errorf("failed to get organization %q: %w", tracker.ProjectID, err)
 		}
 
-		// Skip the tracking if the subscription is expired
-		if org.FeatureFlags.IsSubscriptionExpired() {
-			continue
-		}
-
 		keyword, err := r.GetKeywordByID(ctx, tracker.KeywordID)
 		if err != nil && errors.Is(err, datastore.NotFound) {
 			continue

@@ -84,6 +84,7 @@ type ProjectRepository interface {
 	GetProject(ctx context.Context, id string) (*models.Project, error)
 	GetProjectByName(ctx context.Context, name, orgID string) (*models.Project, error)
 	UpdateProject(ctx context.Context, project *models.Project) (*models.Project, error)
+	UpdateProjectIsActive(ctx context.Context, orgID string, isActive bool) error
 }
 
 type SourceRepository interface {

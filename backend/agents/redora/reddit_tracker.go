@@ -66,6 +66,11 @@ func (s *redditKeywordTracker) WithLogger(logger *zap.Logger) KeywordTracker {
 }
 
 func (s *redditKeywordTracker) TrackKeyword(ctx context.Context, tracker *models.AugmentedKeywordTracker) error {
+	if !s.shouldTrack(tracker) {
+		go s.disableProject(ctx, tracker.Organization)
+		return nil
+	}
+
 	redditClient, err := s.redditOauthClient.GetOrCreate(ctx, tracker.Project.OrganizationID, false)
 	if err != nil {
 		if errors.Is(err, datastore.IntegrationNotFoundOrActive) {
@@ -115,6 +120,55 @@ func (s *redditKeywordTracker) isTrackingDone(ctx context.Context, projectID str
 	}
 
 	return true, nil
+}
+
+func (s *redditKeywordTracker) shouldTrack(tracker *models.AugmentedKeywordTracker) bool {
+	if tracker.Organization.FeatureFlags.IsSubscriptionExpired() {
+		return false
+	}
+	return tracker.Project.IsActive
+}
+
+func (s *redditKeywordTracker) disableProject(ctx context.Context, organization *models.Organization) {
+	isDisableProjectKey := fmt.Sprintf("disable_project:%s", organization.ID)
+	// Check if a call is already running across organizations
+	isRunning, err := s.state.IsRunning(ctx, isDisableProjectKey)
+	if err != nil {
+		s.logger.Error("failed to check if disable project is running", zap.Error(err))
+		return
+	}
+	if isRunning {
+		return
+	}
+
+	// Try to acquire the lock
+	if err := s.state.Acquire(ctx, organization.ID, isDisableProjectKey); err != nil {
+		s.logger.Warn("could not acquire lock for daily_tracking_summary, skipped", zap.Error(err))
+		return
+	}
+
+	defer func() {
+		if err := s.state.Release(ctx, isDisableProjectKey); err != nil {
+			s.logger.Error("failed to release lock on daily_tracking_summary", zap.Error(err))
+		}
+	}()
+
+	// Reason expired
+	if organization.FeatureFlags.IsSubscriptionExpired() {
+		// disable project and notify
+		err := s.db.UpdateProjectIsActive(ctx, organization.ID, false)
+		if err != nil {
+			s.logger.Error("failed to update project isActive", zap.Error(err))
+			return
+		}
+
+		// Notify User
+		err = s.alertNotifier.SendTrialExpiredEmail(ctx, organization.ID, 7)
+		if err != nil {
+			s.logger.Error("failed to send trial expired email", zap.Error(err))
+			return
+		}
+	}
 }
 
 func (s *redditKeywordTracker) sendAlert(ctx context.Context, project *models.Project) {
