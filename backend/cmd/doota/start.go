@@ -225,8 +225,11 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 	//	return nil, err
 	//}
 
+	alertNotifier := alerts.NewSlackNotifier(sflags.MustGetString(cmd, "common-resend-api-key"), deps.DataStore, logger)
+
 	interactionsSpooler := interactions.NewSpooler(
 		deps.DataStore,
+		alertNotifier,
 		deps.ConversationState,
 		interactionService,
 		nil,

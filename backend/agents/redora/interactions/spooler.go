@@ -6,6 +6,7 @@ import (
 	"github.com/shank318/doota/agents/state"
 	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/models"
+	"github.com/shank318/doota/notifiers/alerts"
 	"go.uber.org/zap"
 	"time"
 )
@@ -16,11 +17,12 @@ type Spooler struct {
 	pollingInterval       time.Duration
 	automatedInteractions AutomatedInteractions
 	rateLimiter           RateLimiter
+	notifier              alerts.AlertNotifier
 	logger                *zap.Logger
 }
 
-func NewSpooler(db datastore.Repository, state state.ConversationState, automatedInteractions AutomatedInteractions, rateLimiter RateLimiter, pollingInterval time.Duration, logger *zap.Logger) *Spooler {
-	return &Spooler{db: db, state: state, automatedInteractions: automatedInteractions, rateLimiter: rateLimiter, pollingInterval: pollingInterval, logger: logger}
+func NewSpooler(db datastore.Repository, notifier alerts.AlertNotifier, state state.ConversationState, automatedInteractions AutomatedInteractions, rateLimiter RateLimiter, pollingInterval time.Duration, logger *zap.Logger) *Spooler {
+	return &Spooler{db: db, state: state, notifier: notifier, automatedInteractions: automatedInteractions, rateLimiter: rateLimiter, pollingInterval: pollingInterval, logger: logger}
 }
 
 func (s *Spooler) Start(ctx context.Context) {
@@ -72,18 +74,18 @@ func (s *Spooler) processInteraction(ctx context.Context, tracker *models.LeadIn
 			}
 		}()
 
+		var err error
 		if tracker.Type == models.LeadInteractionTypeCOMMENT {
 			err = s.automatedInteractions.SendComment(ctx, tracker)
-			if err != nil {
-				s.logger.Error("failed to send Comment interaction", zap.String("interaction", tracker.ID), zap.Error(err))
-			}
 		} else if tracker.Type == models.LeadInteractionTypeDM {
 			err = s.automatedInteractions.SendDM(ctx, tracker)
-			if err != nil {
-				s.logger.Error("failed to send DM interaction", zap.String("interaction", tracker.ID), zap.Error(err))
+		}
+		if err != nil {
+			s.logger.Error("failed to send interaction", zap.String("interaction_type", tracker.Type.String()), zap.Error(err))
+			if s.notifier != nil {
+				s.notifier.SendInteractionError(ctx, tracker.ID, err)
 			}
 		}
-
 	}()
 
 	return nil

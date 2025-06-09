@@ -34,6 +34,7 @@ type AlertNotifier interface {
 	SendWelcomeEmail(ctx context.Context, orgID string)
 	SendRedditChatConnectedAlert(ctx context.Context, email string)
 	SendTrialExpiredEmail(ctx context.Context, orgID string, trialDays int) error
+	SendInteractionError(ctx context.Context, interactionID string, err error)
 }
 
 type SlackNotifier struct {
@@ -60,6 +61,17 @@ func (s *SlackNotifier) SendTrackingError(ctx context.Context, trackingID, proje
 		"*Product:* %s\n"+
 		"*TrackerID:* %s\n"+
 		"*Error:* %s", project, trackingID, err.Error())
+	err = s.send(ctx, msg, alertsChannel)
+	if err != nil {
+		s.logger.Error("failed to send error alert to redora channel", zap.Error(err))
+		return
+	}
+}
+
+func (s *SlackNotifier) SendInteractionError(ctx context.Context, interactionID string, err error) {
+	msg := fmt.Sprintf("*Interaction Error*\n "+
+		"*InteractionID:* %s\n"+
+		"*Error:* %s", interactionID, err.Error())
 	err = s.send(ctx, msg, alertsChannel)
 	if err != nil {
 		s.logger.Error("failed to send error alert to redora channel", zap.Error(err))
