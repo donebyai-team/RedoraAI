@@ -32,10 +32,11 @@ import { routes } from '@doota/ui-core/routing'
 import { useAuth } from "@doota/ui-core/hooks/useAuth";
 import { Badge } from "@/components/ui/badge";
 import { Image } from "@doota/ui-core/atoms/Image";
+import { getFreePlanDateStatus } from "@/utils/format";
 
 export function AppSidebar() {
   const location = usePathname();
-  const { getPlanDetails } = useAuth();
+  const { getPlanDetails, currentOrganization } = useAuth();
   const { planName } = getPlanDetails();
   // const [open, setOpen] = useState(true);
 
@@ -167,7 +168,7 @@ export function AppSidebar() {
             <div className="text-xs flex items-center text-muted-foreground gap-2.5">
               <p>Current Plan:</p>
               <Badge variant={"default"} className="px-1.5 py-0.5 flex items-center">
-                <span className="text-xs">{planName}</span>
+                <span className="text-xs">{planName} {getFreePlanDateStatus(currentOrganization?.featureFlags?.subscription?.expiresAt)}</span>
               </Badge>
             </div>
           </div>

@@ -32,7 +32,8 @@ import { DateRangeFilter, LeadAnalysis } from "@doota/pb/doota/portal/v1/portal_
 import { setAccounts, setLoading } from "@/store/Reddit/RedditSlice";
 import { useRedditIntegrationStatus } from "../Leads/Tabs/useRedditIntegrationStatus";
 import { AnnouncementBanner } from "../dashboard/AnnouncementBanner";
-import { LeadStatus } from "@doota/pb/doota/core/v1/core_pb";
+import { LeadStatus, SubscriptionStatus } from "@doota/pb/doota/core/v1/core_pb";
+import { useAuth } from "@doota/ui-core/hooks/useAuth";
 
 interface FetchFilters {
   status: LeadStatus | null;
@@ -44,6 +45,7 @@ interface FetchFilters {
 
 export default function Dashboard() {
   const { portalClient } = useClientsContext()
+  const { currentOrganization } = useAuth()
   const dispatch = useAppDispatch();
   const project = useAppSelector((state) => state.stepper.project);
   const { dateRange, leadStatusFilter, isLoading } = useAppSelector((state) => state.lead);
@@ -171,10 +173,19 @@ export default function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // check user plan is expire ot not
+  const isPLanExpire = (currentOrganization && currentOrganization?.featureFlags?.subscription?.status === SubscriptionStatus.EXPIRED);
+
   return (
     <>
       <DashboardHeader />
-      {project && !project.isActive ? (
+      {isPLanExpire ? (
+        <AnnouncementBanner
+          message="🚫 Your free trial has ended. Please upgrade your plan to continue using RedoraAI."
+          buttonText="Upgrade now →"
+          buttonHref="/settings/billing"
+        />
+      ) : project && !project.isActive ? (
         <AnnouncementBanner message="⚠️ Your account has been paused due to inactivity. Please contact support to enable it." />
       ) : (!isConnected && !isLoadingRedditIntegrationStatus) ? (
         <AnnouncementBanner

@@ -18,6 +18,27 @@ export function getFormattedDate(timestamp: Timestamp | undefined): string {
   }
 }
 
+export function getFreePlanDateStatus(expiredAt?: Timestamp | undefined): string {
+  if (!expiredAt) return "";
+
+  const expiryDate = new Date(Number(expiredAt.seconds) * 1000);
+  const today = new Date();
+
+  expiryDate.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
+
+  const diffInMs = expiryDate.getTime() - today.getTime();
+  const diffInDays = Math.ceil(diffInMs / (1000 * 60 * 60 * 24));
+
+  if (diffInDays > 0) {
+    return `(${diffInDays} days left)`;
+  } else if (diffInDays === 0) {
+    return `(expires today)`;
+  } else {
+    return "";
+  }
+}
+
 export const getSubredditName = (list: SourceTyeps[], id: string) => {
   const name = list?.find(reddit => reddit.id === id)?.name ?? "N/A";
   return name;
