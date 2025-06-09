@@ -2,7 +2,8 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  Brain, Mail,
+  Brain,
+  // Mail,
   MessageSquare,
   Save,
   Send,
@@ -52,7 +53,7 @@ export function LeadFeed() {
   const [selectedLeadId, setSelectedLeadId] = useState<string>("");
   // const [recentlyUsedAccounts, setRecentlyUsedAccounts] = useState<Record<string, Date>>({});
   const { newTabList, leadStatusFilter } = useAppSelector((state: RootState) => state.lead);
-  const { subredditList } = useAppSelector((state: RootState) => state.source);
+  // const { subredditList } = useAppSelector((state: RootState) => state.source);
   const { accounts: redditAccounts } = useAppSelector((state) => state.reddit);
   const dispatch = useAppDispatch();
 
@@ -204,6 +205,9 @@ export function LeadFeed() {
       setSelectedLeadId("");
     }
   };
+
+  // show post action button (Save as Lead,Mark as Responded,Skip)
+  const isShowActionButton = (leadStatusFilter === null || leadStatusFilter === LeadStatus.NEW);
 
   if (newTabList?.length === 0) {
     return (
@@ -416,7 +420,7 @@ export function LeadFeed() {
                     </div>
                   )}
 
-                  {(leadStatusFilter === null) && (<>
+                  {isShowActionButton ? (<>
                     <button
                       onClick={() => handleLeadStatusUpdate(LeadStatus.LEAD, post.id)}
                       className="inline-flex items-center justify-center text-sm font-medium h-9 px-4 py-2 rounded-md border border-input bg-background hover:bg-accent"
@@ -442,7 +446,7 @@ export function LeadFeed() {
                       <X className="h-4 w-4 mr-2" />
                       Skip
                     </button>
-                  </>)}
+                  </>) : null}
 
                   {/* {post.metadata?.suggestedDm &&
                     <button

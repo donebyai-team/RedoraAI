@@ -117,7 +117,7 @@ export default function Dashboard() {
           const leadStatusPriority: LeadStatus[] = [LeadStatus.NEW, LeadStatus.COMPLETED];
 
           for (const status of leadStatusPriority) {
-            const result = await tryFetch({ status });
+            const result = await tryFetch({ status, relevancyScore });
             const leads = result.leads ?? [];
 
             if (leads.length > 0) {
@@ -140,8 +140,7 @@ export default function Dashboard() {
           dispatch(setNewTabList(response.leads ?? []));
           setCounts(response.analysis);
         }
-      }
-      catch (err: any) {
+      } catch (err: any) {
         const message = err?.response?.data?.message || err.message || "Something went wrong";
         toast({ title: "Error", description: message });
         dispatch(setError(message));
@@ -150,7 +149,7 @@ export default function Dashboard() {
       }
     };
 
-      getInitialLeads();
+    getInitialLeads();
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dateRange, relevancyScore, subReddit, leadStatusFilter]);
