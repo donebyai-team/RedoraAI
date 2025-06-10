@@ -1,6 +1,6 @@
 'use client'
 
-import { ReactNode, ReactElement, useEffect, useState } from 'react'
+import { ReactNode, ReactElement, useEffect, useState, useRef } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@doota/ui-core/hooks/useAuth'
 import { browserTokenStore } from '@doota/ui-core/provider/BrowserStores'
@@ -40,6 +40,8 @@ const AuthGuard = ({ children, fallback }: AuthGuardProps) => {
     return 1
   }
 
+  const hasCheckedInitialLoad = useRef(false);
+
   useEffect(() => {
     const checkAuthAndSetup = async () => {
       if (authLoading) return
@@ -58,7 +60,10 @@ const AuthGuard = ({ children, fallback }: AuthGuardProps) => {
 
         const nextStep = calculateNextStep(data)
         dispatch(setIsOnboardingDone(isOnboardingDone))
-        dispatch(setProject(data))
+        if (!hasCheckedInitialLoad.current) {
+          dispatch(setProject(data));
+          hasCheckedInitialLoad.current = true;
+        }
         if (!isEditProduct) {
           dispatch(goToStep(nextStep))
         }

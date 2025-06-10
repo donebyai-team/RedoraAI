@@ -128,8 +128,12 @@ export default function ProductDetailsStep() {
     }
   };
 
-  // not disable button on edit product page
-  const isButtonDisable = isOnboardingPage ? (webSiteMetadataStatus === "idle" || webSiteMetadataStatus === "loading") : false;
+  // Show Other field of step one has already metadata details
+  const hasAlreadyMetadata = (name || description);
+  
+  // Not disable button on edit product page
+  const isButtonDisable = isOnboardingPage ? hasAlreadyMetadata ? false : (webSiteMetadataStatus === "idle" || webSiteMetadataStatus === "loading") : false;
+
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -163,7 +167,7 @@ export default function ProductDetailsStep() {
         {isOnboardingPage && !hasFetchedMeta && webSiteMetadataStatus === "error" && (
           <p className="text-sm text-destructive italic">Failed to fetch website metadata. You can enter details manually.</p>
         )}
-        {(!isOnboardingPage || (isOnboardingPage && hasFetchedMeta)) && (
+        {(!isOnboardingPage || (isOnboardingPage && hasFetchedMeta) || hasAlreadyMetadata) && (
           <>
             {/* Product Name */}
             <div className="space-y-2">
