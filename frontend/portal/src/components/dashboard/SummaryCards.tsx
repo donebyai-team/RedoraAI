@@ -69,24 +69,26 @@ export function SummaryCards({ counts }: PropType) {
         </Card>
       </Link>
 
-      <Card className="border-primary/10 shadow-md bg-gradient-to-br from-background to-green-500/10">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">DM Sent</p>
-              <h3 className="text-2xl font-bold">{counts?.dmSent ?? "0"}</h3>
+      <Link href={"/interactions"}>
+        <Card className="border-primary/10 shadow-md bg-gradient-to-br from-background to-green-500/10">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">DM Sent</p>
+                <h3 className="text-2xl font-bold">{counts?.dmSent ?? "0"}</h3>
+              </div>
+              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <Send className="h-5 w-5 text-primary" />
+              </div>
             </div>
-            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <Send className="h-5 w-5 text-primary" />
-            </div>
-          </div>
-          {counts?.dmScheduled as number > 0 && (
-            <p className="text-xs text-muted-foreground mt-2">
-              {counts?.dmScheduled} Scheduled
-            </p>
-          )}
-        </CardContent>
-      </Card>
+            {counts?.dmScheduled as number > 0 && (
+              <p className="text-xs text-muted-foreground mt-2">
+                {counts?.dmScheduled} Scheduled
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </Link>
     </div>
   );
 }
