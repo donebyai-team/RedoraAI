@@ -1,0 +1,109 @@
+package services
+
+import (
+	"context"
+	"fmt"
+	"github.com/dodopayments/dodopayments-go"
+	"github.com/dodopayments/dodopayments-go/option"
+	"github.com/shank318/doota/datastore"
+	"github.com/shank318/doota/datastore/psql"
+	"github.com/shank318/doota/models"
+	"go.uber.org/zap"
+)
+
+type SubscriptionService interface {
+	Create(ctx context.Context, orgID string) (*models.Subscription, error)
+}
+
+type dodoSubscriptionService struct {
+	db     datastore.Repository
+	client *dodopayments.Client
+	logger *zap.Logger
+}
+
+const (
+	proPlanID     = "pdt_h2V8lsZsVRO88Q19pCjU8"
+	founderPlanID = "pdt_1Arsz78Oy4pyi4MJbYeSb"
+)
+
+var planToProductID = map[models.SubscriptionPlanType]string{
+	models.SubscriptionPlanTypeFOUNDER: founderPlanID,
+	models.SubscriptionPlanTypeAGENCY:  proPlanID,
+}
+
+func NewDodoSubscriptionService(db datastore.Repository, token string, logger *zap.Logger, isTest bool) *dodoSubscriptionService {
+	client := dodopayments.NewClient(
+		option.WithBearerToken(token),
+	)
+	if isTest {
+		client.Options = append(client.Options, option.WithEnvironmentTestMode())
+	}
+
+	return &dodoSubscriptionService{db: db, client: client}
+}
+
+func (d dodoSubscriptionService) Create(ctx context.Context, plan models.SubscriptionPlanType, orgID, returnURL string) (*models.Subscription, error) {
+	productId, ok := planToProductID[plan]
+	if !ok {
+		return nil, fmt.Errorf("invalid plan type: %s", plan)
+	}
+
+	subscription, err := d.client.Subscriptions.New(context.TODO(), dodopayments.SubscriptionNewParams{
+		Billing: dodopayments.F(dodopayments.BillingAddressParam{
+			City:    dodopayments.F("Bangalore"),
+			Country: dodopayments.F(dodopayments.CountryCodeIn),
+			State:   dodopayments.F("Karnataka"),
+			Street:  dodopayments.F("Bannergetta"),
+			Zipcode: dodopayments.F("560068"),
+		}),
+		ReturnURL: dodopayments.F(returnURL),
+		Customer: dodopayments.F[dodopayments.CustomerRequestUnionParam](dodopayments.CustomerRequestParam{
+			CustomerID: dodopayments.F(orgID),
+		}),
+		ProductID: dodopayments.F(productId),
+		Quantity:  dodopayments.F(int64(1)),
+	})
+
+	if err != nil {
+		d.logger.Error("error creating subscription", zap.Error(err))
+		return nil, fmt.Errorf("error creating subscription: %w", err)
+	}
+
+	if subscription == nil || subscription.SubscriptionID == "" {
+		return nil, fmt.Errorf("error creating subscription: invalid subscription")
+	}
+
+	subscriptionPlan := psql.CreateFreeSubscription(plan)
+	subscriptionPlan.OrganizationID = orgID
+	subscriptionPlan.ExternalID = &subscription.SubscriptionID
+	subscriptionPlan.PaymentLink = subscription.PaymentLink
+
+	createSubscription, err := d.db.CreateSubscription(ctx, subscriptionPlan, nil)
+	if err != nil {
+		return nil, fmt.Errorf("error creating subscription: %w", err)
+	}
+
+	return createSubscription, nil
+}
+
+func (d dodoSubscriptionService) Verify(ctx context.Context, subscriptionID, orgID string) (*models.Subscription, error) {
+	subscription, err := d.db.GetSubscriptionByIDAndOrg(ctx, subscriptionID, orgID)
+	if err != nil {
+		return nil, err
+	}
+
+	externalSub, err := d.client.Subscriptions.Get(ctx, *subscription.ExternalID)
+	if err != nil {
+		return nil, fmt.Errorf("error verifying subscription: %w", err)
+	}
+
+	if externalSub == nil {
+		return nil, fmt.Errorf("error verifying subscription: invalid subscription")
+	}
+
+	if externalSub.Status == dodopayments.SubscriptionStatusActive {
+		// update org and subscription
+	}
+
+	return subscription, nil
+}

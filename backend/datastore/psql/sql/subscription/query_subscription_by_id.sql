@@ -1,0 +1,1 @@
+select * from subscriptions where organization_id = :organization_id and id= :id;

@@ -124,6 +124,7 @@ type Subscription struct {
 	CreatedAt      time.Time                `db:"created_at" json:"created_at"`
 	ExpiresAt      time.Time                `db:"expires_at" json:"expires_at"`
 	UpdatedAt      *time.Time               `db:"updated_at" json:"updated_at,omitempty"`
+	PaymentLink    string                   `db:"-" json:"payment_link"`
 }
 
 func (b SubscriptionPlanMetadata) Value() (driver.Value, error) {

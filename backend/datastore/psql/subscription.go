@@ -10,6 +10,7 @@ func init() {
 	registerFiles([]string{
 		"subscription/create_subscription.sql",
 		"subscription/query_subscription_by_orgid.sql",
+		"subscription/query_subscription_by_id.sql",
 	})
 }
 
@@ -36,5 +37,12 @@ func (r *Database) CreateSubscription(ctx context.Context, sub *models.Subscript
 func (r *Database) GetSubscriptionByOrgID(ctx context.Context, orgID string) (*models.Subscription, error) {
 	return getOne[models.Subscription](ctx, r, "subscription/query_subscription_by_orgid.sql", map[string]any{
 		"organization_id": orgID,
+	})
+}
+
+func (r *Database) GetSubscriptionByIDAndOrg(ctx context.Context, id, orgID string) (*models.Subscription, error) {
+	return getOne[models.Subscription](ctx, r, "subscription/query_subscription_by_id.sql", map[string]any{
+		"organization_id": orgID,
+		"id":              id,
 	})
 }

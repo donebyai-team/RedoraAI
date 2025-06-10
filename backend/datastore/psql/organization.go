@@ -33,7 +33,7 @@ func (r *Database) CreateOrganization(ctx context.Context, organization *models.
 	var id string
 
 	// Create a free sub and store it in a feature flag for faster access
-	subscription := CreateFreeSubscription()
+	subscription := CreateFreeSubscription(models.SubscriptionPlanTypeFREE)
 	organization.FeatureFlags.Subscription = subscription
 
 	err = stmt.GetContext(ctx, &id, map[string]interface{}{
@@ -59,8 +59,8 @@ func (r *Database) CreateOrganization(ctx context.Context, organization *models.
 	return organization, nil
 }
 
-func CreateFreeSubscription() *models.Subscription {
-	plan := models.RedoraPlans[models.SubscriptionPlanTypeFREE]
+func CreateFreeSubscription(planType models.SubscriptionPlanType) *models.Subscription {
+	plan := models.RedoraPlans[planType]
 	now := time.Now()
 	expiresAt := now.Add(time.Duration(plan.Interval) * 24 * time.Hour)
 	return &models.Subscription{

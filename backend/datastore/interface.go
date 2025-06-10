@@ -48,6 +48,7 @@ type OrganizationRepository interface {
 type SubscriptionRepository interface {
 	CreateSubscription(ctx context.Context, sub *models.Subscription, tx *sqlx.Tx) (*models.Subscription, error)
 	GetSubscriptionByOrgID(ctx context.Context, orgID string) (*models.Subscription, error)
+	GetSubscriptionByIDAndOrg(ctx context.Context, id, orgID string) (*models.Subscription, error)
 }
 
 type IntegrationRepository interface {

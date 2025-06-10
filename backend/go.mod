@@ -43,7 +43,7 @@ require (
 	github.com/streamingfast/shutter v1.5.0
 	github.com/stretchr/testify v1.10.0
 	github.com/test-go/testify v1.1.4
-	github.com/tidwall/gjson v1.17.0
+	github.com/tidwall/gjson v1.18.0
 	github.com/uptrace/opentelemetry-go-extra/otelsqlx v0.3.2
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.51.0
 	go.opentelemetry.io/otel v1.30.0
@@ -87,6 +87,7 @@ require (
 	github.com/distribution/reference v0.6.0 // indirect
 	github.com/docker/docker v26.1.5+incompatible // indirect
 	github.com/docker/go-units v0.5.0 // indirect
+	github.com/dodopayments/dodopayments-go v1.32.0 // indirect
 	github.com/envoyproxy/go-control-plane v0.12.0 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.0.4 // indirect
 	github.com/eoscanada/eos-go v0.9.1-0.20200415144303-2adb25bcdeca // indirect
