@@ -46,7 +46,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
 
-        <Script src="https://cdn.amplitude.com/libs/analytics-browser-2.11.1-min.js.gz" />
+        {/* <Script src="https://cdn.amplitude.com/libs/analytics-browser-2.11.1-min.js.gz" />
         <Script src="https://cdn.amplitude.com/libs/plugin-session-replay-browser-1.8.0-min.js.gz" />
         <Script
           id="amplitude-scripts"
@@ -56,7 +56,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               window.amplitude.add(window.sessionReplay.plugin({sampleRate: 1}));window.amplitude.init('e678ed1fa2f36bf86c1527a2f8fb9862', {"autocapture":{"elementInteractions":true}});
             `,
           }}
-        />
+        /> */}
 
         <StoreProvider>
           <NextElementRegistryProvider>

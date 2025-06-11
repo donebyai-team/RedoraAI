@@ -6,6 +6,8 @@ import {
   Settings,
   LogOut,
   User,
+  X,
+  PanelLeft,
 } from "lucide-react";
 import { WorkspaceSwitcher } from "@/components/workspace/WorkspaceSwitcher";
 import {
@@ -19,10 +21,15 @@ import {
 import Link from "next/link";
 import { useAuth } from "@doota/ui-core/hooks/useAuth";
 import { routes } from "@doota/ui-core/routing";
+import { useSidebar } from "../ui/sidebar";
 
 export function DashboardHeader() {
 
   const { logout } = useAuth();
+  const { open, isMobile, toggleSidebar, openMobile } = useSidebar();
+
+  // Show trigger if mobile OR if desktop and sidebar is closed
+  const shouldShowTrigger = isMobile || !open;
 
   const handleLogout = () => {
     logout()
@@ -34,6 +41,20 @@ export function DashboardHeader() {
         <div className="flex items-center justify-between">
           {/* Left section - Workspace Switcher */}
           <div className="flex items-center space-x-4">
+            {shouldShowTrigger && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={toggleSidebar}
+              >
+                {isMobile && openMobile ? (
+                  <X className="h-4 w-4" />
+                ) : (
+                  <PanelLeft className="h-4 w-4" />
+                )}
+              </Button>
+            )}
             <WorkspaceSwitcher />
           </div>
 
