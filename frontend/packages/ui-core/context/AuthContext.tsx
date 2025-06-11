@@ -169,7 +169,7 @@ export const BaseAuthProvider: FC<Props> = ({
         }
         const plan = user.organizations[0].featureFlags?.subscription?.planId
         logDailyVisit(orgID, name, {
-          plan: plan,
+          plan: plan?.toString(),
           page: window.location.pathname,
         })
       }
