@@ -16,10 +16,8 @@ const (
 	SubscriptionPlanTypeFREE SubscriptionPlanType = "FREE"
 	// SubscriptionPlanTypeFOUNDER is a SubscriptionPlanType of type FOUNDER.
 	SubscriptionPlanTypeFOUNDER SubscriptionPlanType = "FOUNDER"
-	// SubscriptionPlanTypeAGENCY is a SubscriptionPlanType of type AGENCY.
-	SubscriptionPlanTypeAGENCY SubscriptionPlanType = "AGENCY"
-	// SubscriptionPlanTypeGROWTH is a SubscriptionPlanType of type GROWTH.
-	SubscriptionPlanTypeGROWTH SubscriptionPlanType = "GROWTH"
+	// SubscriptionPlanTypePRO is a SubscriptionPlanType of type PRO.
+	SubscriptionPlanTypePRO SubscriptionPlanType = "PRO"
 )
 
 var ErrInvalidSubscriptionPlanType = errors.New("not a valid SubscriptionPlanType")
@@ -39,8 +37,7 @@ func (x SubscriptionPlanType) IsValid() bool {
 var _SubscriptionPlanTypeValue = map[string]SubscriptionPlanType{
 	"FREE":    SubscriptionPlanTypeFREE,
 	"FOUNDER": SubscriptionPlanTypeFOUNDER,
-	"AGENCY":  SubscriptionPlanTypeAGENCY,
-	"GROWTH":  SubscriptionPlanTypeGROWTH,
+	"PRO":     SubscriptionPlanTypePRO,
 }
 
 // ParseSubscriptionPlanType attempts to convert a string to a SubscriptionPlanType.

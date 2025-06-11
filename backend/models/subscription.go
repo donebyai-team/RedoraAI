@@ -20,7 +20,7 @@ type SubscriptionPlanMetadata struct {
 
 //go:generate go-enum -f=$GOFILE
 
-// ENUM(FREE, FOUNDER, AGENCY, GROWTH)
+// ENUM(FREE, FOUNDER, PRO)
 type SubscriptionPlanType string
 
 type SubscriptionPlan struct {

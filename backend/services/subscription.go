@@ -28,7 +28,12 @@ const (
 
 var planToProductID = map[models.SubscriptionPlanType]string{
 	models.SubscriptionPlanTypeFOUNDER: founderPlanID,
-	models.SubscriptionPlanTypeAGENCY:  proPlanID,
+	models.SubscriptionPlanTypePRO:     proPlanID,
+}
+
+var addOnIDMap = map[string]string{
+	"adn_yIJQyUyFuX5tn2GYqqns5": "source",
+	"adn_GQZ66G74wNJUH9yEuNxMG": "keyword",
 }
 
 func NewDodoSubscriptionService(db datastore.Repository, token string, logger *zap.Logger, isTest bool) *dodoSubscriptionService {
@@ -43,26 +48,61 @@ func NewDodoSubscriptionService(db datastore.Repository, token string, logger *z
 }
 
 func (d dodoSubscriptionService) Create(ctx context.Context, plan models.SubscriptionPlanType, orgID, returnURL string) (*models.Subscription, error) {
+	// check if externalID exists
+	// if yes, call dodo and verify if the plan is active, if active return error
+	// if yes, call dodo and verify if the plan is cancelled, then create new subbscription
+	// if yes, call dodo and verify if same plan or not, if same plan return error
+	// if not same plan, change plan call
+	// if externamID not exists then update sub with external ID(temp hack)
+	// On verify get the external id and check if active then update org and subscription
+	// On verify get the external id and check if not active then ?
+	// Listen webhook for renewal, update org and subsription
+	// If cancelled via webhook or via us, update org and subsription and disable project
+	// Check other webhook status ?
+	//
+
+	organization, err := d.db.GetOrganizationById(ctx, orgID)
+	if err != nil {
+		return nil, err
+	}
+	existingSub := organization.FeatureFlags.GetSubscription()
+
+	if existingSub.PlanID == plan {
+		return nil, fmt.Errorf("plan %s already exists", plan)
+	}
+
 	productId, ok := planToProductID[plan]
 	if !ok {
 		return nil, fmt.Errorf("invalid plan type: %s", plan)
 	}
 
-	subscription, err := d.client.Subscriptions.New(context.TODO(), dodopayments.SubscriptionNewParams{
-		Billing: dodopayments.F(dodopayments.BillingAddressParam{
-			City:    dodopayments.F("Bangalore"),
-			Country: dodopayments.F(dodopayments.CountryCodeIn),
-			State:   dodopayments.F("Karnataka"),
-			Street:  dodopayments.F("Bannergetta"),
-			Zipcode: dodopayments.F("560068"),
-		}),
-		ReturnURL: dodopayments.F(returnURL),
-		Customer: dodopayments.F[dodopayments.CustomerRequestUnionParam](dodopayments.CustomerRequestParam{
-			CustomerID: dodopayments.F(orgID),
-		}),
-		ProductID: dodopayments.F(productId),
-		Quantity:  dodopayments.F(int64(1)),
-	})
+	var externalSubResponse *dodopayments.SubscriptionNewResponse
+
+	if existingSub == nil || existingSub.ExternalID == nil {
+		// create fresh
+		externalSubResponse, err = d.client.Subscriptions.New(context.TODO(), dodopayments.SubscriptionNewParams{
+			Billing: dodopayments.F(dodopayments.BillingAddressParam{
+				City:    dodopayments.F("Bangalore"),
+				Country: dodopayments.F(dodopayments.CountryCodeIn),
+				State:   dodopayments.F("Karnataka"),
+				Street:  dodopayments.F("Bannergetta"),
+				Zipcode: dodopayments.F("560068"),
+			}),
+			ReturnURL: dodopayments.F(returnURL),
+			Customer: dodopayments.F[dodopayments.CustomerRequestUnionParam](dodopayments.CustomerRequestParam{
+				CustomerID: dodopayments.F(orgID),
+			}),
+			ProductID: dodopayments.F(productId),
+			Quantity:  dodopayments.F(int64(1)),
+		})
+	} else {
+		// upgrade
+		err = d.client.Subscriptions.ChangePlan(ctx, *existingSub.ExternalID, dodopayments.SubscriptionChangePlanParams{
+			ProductID:            dodopayments.F(productId),
+			ProrationBillingMode: dodopayments.F(dodopayments.SubscriptionChangePlanParamsProrationBillingModeProratedImmediately),
+			Quantity:             dodopayments.F(int64(1)),
+		})
+	}
 
 	if err != nil {
 		d.logger.Error("error creating subscription", zap.Error(err))
@@ -88,6 +128,11 @@ func (d dodoSubscriptionService) Create(ctx context.Context, plan models.Subscri
 
 func (d dodoSubscriptionService) Verify(ctx context.Context, subscriptionID, orgID string) (*models.Subscription, error) {
 	subscription, err := d.db.GetSubscriptionByIDAndOrg(ctx, subscriptionID, orgID)
+	if err != nil {
+		return nil, err
+	}
+
+	organization, err := d.db.GetOrganizationById(ctx, orgID)
 	if err != nil {
 		return nil, err
 	}
