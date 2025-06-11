@@ -13,6 +13,8 @@ import StoreProvider from '../../store/StoreProvider'
 import Script from 'next/script'
 import NotificationProvider from '@/components/layout/notification'
 
+// const amplitudeApiKey = process.env.NEXT_PUBLIC_AMPLITUDE_API_KEY || '';
+
 export const metadata = {
   title: 'RedoraAI',
   description: ''
@@ -28,35 +30,41 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
 
       <body>
-        {/* ✅ HubSpot Chat Script */}
+         {/* ✅ HubSpot Chat Script */}
         <Script
           id="hubspot-chat"
           strategy="afterInteractive"
           src="//js-na2.hs-scripts.com/242526027.js"
         />
+
+        {/* ✅ Clarity Script */}
         <Script
           id="clarity-script"
           type="text/javascript"
           dangerouslySetInnerHTML={{
             __html: `(function(c,l,a,r,i,t,y){
-            c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-            t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-            y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+              c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+              t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+              y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
             })(window, document, "clarity", "script", "rt2azu4mlk");`
           }}
         />
 
-        <Script src="https://cdn.amplitude.com/libs/analytics-browser-2.11.1-min.js.gz" />
+        {/* ✅ Amplitude Scripts */}
+        {/* <Script src="https://cdn.amplitude.com/libs/analytics-browser-2.11.1-min.js.gz" />
         <Script src="https://cdn.amplitude.com/libs/plugin-session-replay-browser-1.8.0-min.js.gz" />
         <Script
           id="amplitude-scripts"
           type="text/javascript"
           dangerouslySetInnerHTML={{
             __html: `
-              window.amplitude.add(window.sessionReplay.plugin({sampleRate: 1}));window.amplitude.init('e678ed1fa2f36bf86c1527a2f8fb9862', {"autocapture":{"elementInteractions":true}});
+              window.amplitude.add(window.sessionReplay.plugin({ sampleRate: 1 }));
+              window.amplitude.init('${amplitudeApiKey}', {
+                autocapture: { elementInteractions: true }
+              });
             `,
           }}
-        />
+        /> */}
 
         <StoreProvider>
           <NextElementRegistryProvider>
