@@ -5,9 +5,13 @@ import { buildAppUrl } from "@/app/routes";
 import { IntegrationType, JWT } from "@doota/pb/doota/portal/v1/portal_pb";
 import { errorToMessage } from "@doota/pb/utils/errors";
 import { useClientsContext } from "@doota/ui-core/context/ClientContext";
-import { useIsExecutionRuntimeInPortal } from "@doota/ui-core/hooks/useExecutionRuntime";
+// import { useIsExecutionRuntimeInPortal } from "@doota/ui-core/hooks/useExecutionRuntime";
 import { routes } from "@doota/ui-core/routing";
 import { Logo } from "@doota/ui-core/components/Logo";
+import { toast } from "@/hooks/use-toast";
+import { Input } from "../ui/input";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "../ui/input-otp";
+import { useRouter } from "next/navigation";
 
 type Props = {
   onPasswordlessStarted: (message: string) => void
@@ -19,7 +23,7 @@ type Props = {
 export const LoginPanel: FC<Props> = ({
   // onPasswordlessStarted,
   onPasswordlessStartError,
-  // onPasswordlessVerified,
+  onPasswordlessVerified,
   // onPasswordlessVerifyError
 }) => {
   // const [optState, setOPTState] = useState<'start' | 'verify'>('start')
@@ -27,7 +31,6 @@ export const LoginPanel: FC<Props> = ({
   // const [code, setCode] = useState('')
   const [isLoading, setIsLoading] = useState(false);
   const { portalClient } = useClientsContext()
-  const isInPortal = useIsExecutionRuntimeInPortal()
 
   const handleLoginWithGoogleButton = () => {
     setIsLoading(true);
@@ -46,10 +49,91 @@ export const LoginPanel: FC<Props> = ({
       })
   }
 
-  let topBoxSx = {}
-  if (isInPortal) {
-    topBoxSx = { borderWidth: 1, borderStyle: 'solid', borderColor: 'divider' }
-  }
+  const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [showOtp, setShowOtp] = useState(false);
+  const [isEmailLoading, setIsEmailLoading] = useState(false);
+  const [emailError, setEmailError] = useState("");
+  const navigate = useRouter();
+
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const handleEmailSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) {
+      setEmailError("Email is required");
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      setEmailError("Please enter a valid email address");
+      return;
+    }
+
+    setEmailError("");
+    setIsEmailLoading(true);
+
+    try {
+      // Simulate sending OTP to email
+      await portalClient.passwordlessStart({ email: email });
+      
+      setShowOtp(true);
+      toast({
+        title: "OTP sent",
+        description: `Verification code sent to ${email}`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to send verification code. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsEmailLoading(false);
+    }
+  };
+
+  const handleOtpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (otp.length !== 6) return;
+
+    setIsEmailLoading(true);
+
+    try {
+      // Simulate OTP verification
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      const token = await portalClient.passwordlessVerify({ email: email, code: otp });
+      onPasswordlessVerified(token);
+      
+      navigate.push("/dashboard");
+      
+    } catch (error) {
+      toast({
+        title: "Invalid code",
+        description: "Please check your verification code and try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsEmailLoading(false);
+    }
+  };
+
+  const handleBackToEmail = () => {
+    setShowOtp(false);
+    setOtp("");
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+    if (emailError) {
+      setEmailError("");
+    }
+  };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20 flex items-center justify-center p-4">
@@ -57,25 +141,115 @@ export const LoginPanel: FC<Props> = ({
         <Card className="border-2 border-primary/20 shadow-md">
           {/* Logo Section */}
           <CardHeader className="text-center pb-6">
-            <div className='flex w-full justify-center mb-5'>
+            <div className="flex justify-center mb-4">
               <Logo />
             </div>
 
-            <CardTitle className="mt-5 text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">
+            <CardTitle className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">
               Redora
             </CardTitle>
             <CardDescription className="text-base">
-              AI-Powered Reddit Lead Generation
+              Sign in to discover your next customers
             </CardDescription>
           </CardHeader>
 
           <CardContent className="space-y-6 px-6">
-            {/* Welcome Section */}
-            <div className="text-center space-y-2">
-              {/* <h2 className="text-xl font-semibold">Welcome Back</h2> */}
-              <p className="text-sm text-muted-foreground">
-                Sign in to discover your next customers
-              </p>
+            {/* Email Login Section */}
+            {!showOtp ? (
+              <form onSubmit={handleEmailSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={handleEmailChange}
+                    required
+                    className={emailError ? "border-destructive" : ""}
+                  />
+                  {emailError && (
+                    <p className="text-sm text-destructive">{emailError}</p>
+                  )}
+                </div>
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="w-full h-12 text-base font-medium"
+                  disabled={isEmailLoading || !email}
+                >
+                  {isEmailLoading ? (
+                    <div className="flex items-center gap-3">
+                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-r-transparent"></div>
+                      <span>Sending code...</span>
+                    </div>
+                  ) : (
+                    "Continue with Email"
+                  )}
+                </Button>
+              </form>
+            ) : (
+              <form onSubmit={handleOtpSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <label htmlFor="otp" className="text-sm font-medium">
+                    Verification Code
+                  </label>
+                  <p className="text-sm text-muted-foreground">
+                    Enter the 6-digit code sent to {email}
+                  </p>
+                  <div className="flex justify-center">
+                    <InputOTP
+                      value={otp}
+                      onChange={(value) => setOtp(value)}
+                      maxLength={6}
+                    >
+                      <InputOTPGroup>
+                        <InputOTPSlot index={0} />
+                        <InputOTPSlot index={1} />
+                        <InputOTPSlot index={2} />
+                        <InputOTPSlot index={3} />
+                        <InputOTPSlot index={4} />
+                        <InputOTPSlot index={5} />
+                      </InputOTPGroup>
+                    </InputOTP>
+                  </div>
+                </div>
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="w-full h-12 text-base font-medium"
+                  disabled={isEmailLoading || otp.length !== 6}
+                >
+                  {isEmailLoading ? (
+                    <div className="flex items-center gap-3">
+                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-r-transparent"></div>
+                      <span>Verifying...</span>
+                    </div>
+                  ) : (
+                    "Verify & Sign In"
+                  )}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="lg"
+                  className="w-full"
+                  onClick={handleBackToEmail}
+                >
+                  Back to Email
+                </Button>
+              </form>
+            )}
+
+            {/* Divider */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Or continue with
+                </span>
+              </div>
             </div>
 
             {/* Google Login Button */}
@@ -163,9 +337,6 @@ export const LoginPanel: FC<Props> = ({
 
               <p className="text-sm text-muted-foreground mt-4">
                 Ready to transform your lead generation?{" "}
-                {/* <span className="text-primary font-medium hover:underline cursor-pointer">
-                  Watch Demo
-                </span> */}
               </p>
             </div>
           </CardFooter>
