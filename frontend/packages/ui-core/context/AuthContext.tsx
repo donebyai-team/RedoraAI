@@ -10,12 +10,18 @@ import { Subscription, SubscriptionPlanID } from '@doota/pb/doota/core/v1/core_p
 import { initAmplitude, logDailyVisit } from '../amplitude'
 import { isPlatformAdmin } from '../helper/role'
 
+export enum SubscriptionPlan {
+  FREE = "FREE",
+  FOUNDER = "Founder",
+  PRO = "Pro",
+}
+
 type SubscriptionDetails = {
-  planName: string;
+  planName: SubscriptionPlan;
   subscription: Subscription | undefined;
 };
 
-const DEFAULT_PLAN = { planName: "", subscription: undefined };
+const DEFAULT_PLAN = { planName: SubscriptionPlan.FREE, subscription: undefined };
 
 export type AuthValuesType = {
   user: User | null
@@ -194,13 +200,29 @@ export const BaseAuthProvider: FC<Props> = ({
     const planId = subscription?.planId;
     if (!planId) {
       return {
-        planName: "FREE",
+        planName: SubscriptionPlan.FREE,
         subscription: undefined
       };
     }
 
     const planKey = Object.entries(SubscriptionPlanID).find(([, value]) => value === planId)?.[0];
-    const planName = planKey?.replace("SUBSCRIPTION_PLAN_", "") ?? "FREE";
+    const normalizedPlanKey = planKey?.replace("SUBSCRIPTION_PLAN_", "");
+
+    let planName: SubscriptionPlan;
+
+    switch (normalizedPlanKey) {
+      case "FREE":
+        planName = SubscriptionPlan.FREE;
+        break;
+      case "FOUNDER":
+        planName = SubscriptionPlan.FOUNDER;
+        break;
+      case "AGENCY":
+        planName = SubscriptionPlan.PRO;
+        break;
+      default:
+        planName = SubscriptionPlan.FREE;
+    }
 
     return {
       planName,
