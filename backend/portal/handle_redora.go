@@ -594,8 +594,13 @@ func (p *Portal) GetLeadsByStatus(ctx context.Context, c *connect.Request[pbport
 	if err != nil {
 		return nil, err
 	}
+
+	statuses := []string{status.String()}
+	if status == models.LeadStatusCOMPLETED {
+		statuses = append(statuses, models.LeadStatusAIRESPONDED.String())
+	}
 	leads, err := p.db.GetLeadsByStatus(ctx, project.ID, datastore.LeadsFilter{
-		Status:    status,
+		Statuses:  statuses,
 		Limit:     int(c.Msg.PageCount),
 		DateRange: c.Msg.DateRange,
 		Offset:    int(c.Msg.PageNo), // starting with 0
