@@ -39,6 +39,19 @@ export function getFreePlanDateStatus(expiredAt?: Timestamp | undefined): string
   }
 }
 
+export function formatTimestampToReadableDate(timestamp?: Timestamp): string {
+  if (!timestamp || !timestamp.seconds) return "No expiry";
+
+  const millis = Number(timestamp.seconds) * 1000 + Number(timestamp.nanos || 0) / 1_000_000;
+  const date = new Date(millis);
+
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+};
+
 export const getSubredditName = (list: SourceTyeps[], id: string) => {
   const name = list?.find(reddit => reddit.id === id)?.name ?? "N/A";
   return name;
