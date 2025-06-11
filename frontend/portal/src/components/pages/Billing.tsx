@@ -1,7 +1,6 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CreditCard, Calendar, Star, Crown, Zap, Check } from "lucide-react";
@@ -89,48 +88,12 @@ const plans: PlanInfo[] = [
 
 export default function Billing() {
     const { planDetails } = useAuth();
-    const [subscription, setSubscription] = useState<UserSubscription>({
-        plan: SubscriptionPlan.FREE,
-        expiryDate: undefined,
-        isActive: false,
-    });
-    const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        // Simulate fetching subscription data
-        const fetchSubscriptionData = async () => {
-            try {
-                setTimeout(() => {
-                    setSubscription({
-                        plan: planDetails?.planName,
-                        expiryDate: planDetails.subscription?.expiresAt,
-                        isActive: planDetails.subscription?.status === SubscriptionStatus.ACTIVE,
-                    });
-                    setLoading(false);
-                }, 1000);
-            } catch (error) {
-                console.error("Error fetching subscription:", error);
-                setLoading(false);
-            }
-        };
-
-        fetchSubscriptionData();
-    }, [planDetails]);
-
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
-                <DashboardHeader />
-                <main className="container mx-auto px-4 py-6 md:px-6">
-                    <div className="animate-pulse">
-                        <div className="h-8 bg-gray-200 rounded w-1/4 mb-2"></div>
-                        <div className="h-4 bg-gray-200 rounded w-1/2 mb-6"></div>
-                        <div className="h-64 bg-gray-200 rounded"></div>
-                    </div>
-                </main>
-            </div>
-        );
-    }
+    const subscription: UserSubscription = {
+        plan: planDetails.planName,
+        expiryDate: planDetails.subscription?.expiresAt,
+        isActive: planDetails.subscription?.status === SubscriptionStatus.ACTIVE,
+    };
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
