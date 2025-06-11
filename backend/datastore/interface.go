@@ -109,7 +109,7 @@ type LeadInteractionRepository interface {
 type LeadsFilter struct {
 	RelevancyScore float32
 	Sources        []string
-	Status         models.LeadStatus
+	Statuses       []string
 	Limit          int
 	Offset         int
 	DateRange      pbportal.DateRangeFilter

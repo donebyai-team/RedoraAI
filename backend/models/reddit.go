@@ -164,7 +164,7 @@ func (a *PostIntents) Scan(src interface{}) error {
 // ENUM(COMMENT, POST)
 type LeadType string
 
-// ENUM(NEW, COMPLETED, NOT_RELEVANT, LEAD)
+// ENUM(NEW, COMPLETED, NOT_RELEVANT, LEAD, AI_RESPONDED)
 type LeadStatus string
 
 type Lead struct {

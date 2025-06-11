@@ -68,7 +68,7 @@ func (r *Database) UpdateLeadStatus(ctx context.Context, lead *models.Lead) erro
 func (r *Database) GetLeadsByStatus(ctx context.Context, projectID string, filter datastore.LeadsFilter) ([]*models.AugmentedLead, error) {
 	startDateTime, endDateTime := GetDateRange(filter.DateRange, time.Now().UTC())
 	return getMany[models.AugmentedLead](ctx, r, "leads/query_lead_by_status.sql", map[string]any{
-		"status":         filter.Status,
+		"status":         pq.Array(filter.Statuses),
 		"project_id":     projectID,
 		"limit":          filter.Limit,
 		"offset":         filter.Offset * filter.Limit,

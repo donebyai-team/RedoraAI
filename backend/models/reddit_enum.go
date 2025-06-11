@@ -100,6 +100,8 @@ const (
 	LeadStatusNOTRELEVANT LeadStatus = "NOT_RELEVANT"
 	// LeadStatusLEAD is a LeadStatus of type LEAD.
 	LeadStatusLEAD LeadStatus = "LEAD"
+	// LeadStatusAIRESPONDED is a LeadStatus of type AI_RESPONDED.
+	LeadStatusAIRESPONDED LeadStatus = "AI_RESPONDED"
 )
 
 var ErrInvalidLeadStatus = errors.New("not a valid LeadStatus")
@@ -121,6 +123,7 @@ var _LeadStatusValue = map[string]LeadStatus{
 	"COMPLETED":    LeadStatusCOMPLETED,
 	"NOT_RELEVANT": LeadStatusNOTRELEVANT,
 	"LEAD":         LeadStatusLEAD,
+	"AI_RESPONDED": LeadStatusAIRESPONDED,
 }
 
 // ParseLeadStatus attempts to convert a string to a LeadStatus.
