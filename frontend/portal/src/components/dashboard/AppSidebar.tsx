@@ -10,7 +10,9 @@ import {
   CreditCard,
   Tag,
   Edit,
-  Zap
+  Zap,
+  X,
+  PanelLeft
 } from "lucide-react";
 import {
   Sidebar,
@@ -23,8 +25,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  // SidebarProvider,
-  SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
@@ -33,8 +34,12 @@ import { useAuth } from "@doota/ui-core/hooks/useAuth";
 import { Badge } from "@/components/ui/badge";
 import { Image } from "@doota/ui-core/atoms/Image";
 import { getFreePlanDateStatus } from "@/utils/format";
+import { Button } from "../ui/button";
 
 export function AppSidebar() {
+
+  const { isMobile, toggleSidebar, openMobile } = useSidebar();
+
   const location = usePathname();
   const { getPlanDetails, currentOrganization } = useAuth();
   const { planName } = getPlanDetails();
@@ -120,7 +125,18 @@ export function AppSidebar() {
             </div>
             <span className="font-bold text-xl">Redora</span>
           </Link>
-          <SidebarTrigger />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={toggleSidebar}
+          >
+            {isMobile && openMobile ? (
+              <X className="h-4 w-4" />
+            ) : (
+              <PanelLeft className="h-4 w-4" />
+            )}
+          </Button>
         </div>
       </SidebarHeader>
 
