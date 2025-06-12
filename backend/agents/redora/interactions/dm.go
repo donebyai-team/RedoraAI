@@ -51,6 +51,18 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 		}
 	}()
 
+	if redditLead.Status == models.LeadStatusNOTRELEVANT {
+		interaction.Status = models.LeadInteractionStatusFAILED
+		interaction.Reason = "Skipped, as user marked it as not relevant"
+		return nil
+	}
+
+	if redditLead.Status == models.LeadStatusCOMPLETED {
+		interaction.Status = models.LeadInteractionStatusFAILED
+		interaction.Reason = "Skipped, as user has marked it responded manually"
+		return nil
+	}
+
 	if strings.TrimSpace(utils.FormatDM(redditLead.LeadMetadata.SuggestedDM)) == "" {
 		err := fmt.Errorf("no DM message found")
 		interaction.Status = models.LeadInteractionStatusFAILED

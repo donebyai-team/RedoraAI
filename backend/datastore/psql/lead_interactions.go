@@ -20,6 +20,7 @@ func init() {
 		"lead_interactions/set_interaction_status_processing.sql",
 		"lead_interactions/query_interaction_by_to_from.sql",
 		"lead_interactions/query_interactions.sql",
+		"lead_interactions/query_interaction_by_lead_id.sql",
 	})
 }
 
@@ -138,6 +139,12 @@ func (r *Database) SetLeadInteractionStatusProcessing(ctx context.Context, id st
 	}
 
 	return nil
+}
+
+func (r *Database) GetLeadInteractionByLeadID(ctx context.Context, leadID string) ([]*models.LeadInteraction, error) {
+	return getMany[models.LeadInteraction](ctx, r, "lead_interactions/query_interaction_by_lead_id.sql", map[string]any{
+		"lead_id": leadID,
+	})
 }
 
 func (r *Database) UpdateLeadInteraction(ctx context.Context, reddit *models.LeadInteraction) error {

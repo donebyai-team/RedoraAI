@@ -70,6 +70,18 @@ func (r redditInteractions) SendComment(ctx context.Context, interaction *models
 		}
 	}()
 
+	if redditLead.Status == models.LeadStatusNOTRELEVANT {
+		interaction.Status = models.LeadInteractionStatusFAILED
+		interaction.Reason = "Skipped, as user marked it as not relevant"
+		return nil
+	}
+
+	if redditLead.Status == models.LeadStatusCOMPLETED {
+		interaction.Status = models.LeadInteractionStatusFAILED
+		interaction.Reason = "Skipped, as user has marked it responded manually"
+		return nil
+	}
+
 	if strings.TrimSpace(utils.FormatComment(redditLead.LeadMetadata.SuggestedComment)) == "" {
 		err := fmt.Errorf("no comment message found")
 		interaction.Status = models.LeadInteractionStatusFAILED
