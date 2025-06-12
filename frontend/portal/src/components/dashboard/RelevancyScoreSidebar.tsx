@@ -33,7 +33,7 @@ interface RelevancyScoreSidebarProps {
 
 export function RelevancyScoreSidebar({ accounts = [], defaultAccountId = "", onDefaultAccountChange }: RelevancyScoreSidebarProps) {
   const defaultAccount = accounts.find(acc => acc.id === defaultAccountId);
-  console.log(defaultAccount, onDefaultAccountChange)
+  // console.log(defaultAccount, onDefaultAccountChange)
   const { relevancyScore } = useAppSelector((state: RootState) => state.parems);
   const [relevancy_score, setRelevancy_Score] = useState<number>(relevancyScore);
   const dispatch = useAppDispatch();

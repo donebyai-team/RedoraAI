@@ -16,7 +16,7 @@ export function useRedditIntegrationStatus() {
         try {
             const result = await portalClient.getIntegrations({});
             const resp = result.integrations?.[0];
-            console.log("integration response", resp)
+            // console.log("integration response", resp)
             const status = resp.status === DootaIntegrationState.ACTIVE;
             dispatch(setSuccess(status));
         } catch (err: any) {
