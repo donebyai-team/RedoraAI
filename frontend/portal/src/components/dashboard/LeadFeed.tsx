@@ -163,7 +163,7 @@ export function LeadFeed({ loadMoreLeads, hasMore, isFetchingMore }: LeadFeedPro
         window.open(linkToOpen, '_blank');
       } catch (err: any) {
         const message = err?.message || "Fallback: Copy failed";
-        console.log(message);
+        // console.log(message);
       } finally {
         document.body.removeChild(textArea);
       }
@@ -172,7 +172,7 @@ export function LeadFeed({ loadMoreLeads, hasMore, isFetchingMore }: LeadFeedPro
         .then(() => window.open(linkToOpen, '_blank'))
         .catch((err: any) => {
           const message = err?.message || "Clipboard copy failed";
-          console.log(message);
+          // console.log(message);
         });
     }
   };

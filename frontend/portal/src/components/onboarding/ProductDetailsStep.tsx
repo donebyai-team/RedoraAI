@@ -79,7 +79,7 @@ export default function ProductDetailsStep() {
 
       setWebSiteMetadataStatus("success");
     } catch (err) {
-      console.log(err);
+      // console.log(err);
       setValue("name", "");
       setValue("description", "");
       clearErrors("name");

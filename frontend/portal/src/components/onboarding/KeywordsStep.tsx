@@ -101,7 +101,7 @@ export default function KeywordsStep() {
       dispatch(setProject({ ...project, keywords: result.keywords }));
       dispatch(nextStep());
     } catch (err: any) {
-      console.log("###_eerr ", err);
+      // console.log("###_eerr ", err);
       const message = err?.response?.data?.message || err.message || "Something went wrong";
       toast({
         title: "Error",

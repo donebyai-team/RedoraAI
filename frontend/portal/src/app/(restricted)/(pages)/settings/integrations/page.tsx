@@ -60,7 +60,7 @@ export default function Page() {
       .then(() => {
         // disable comments as reddit integration depends on that
         handleSaveAutomation({ Comment: { enable: false } })
-        console.log("successfully revoked")
+        // console.log("successfully revoked")
       })
       .catch((err) => {
         console.error("Error disconnecting integrations:", err);
