@@ -9,10 +9,10 @@ import { Slider } from "@/components/ui/slider";
 //   SelectTrigger,
 //   SelectValue,
 // } from "@/components/ui/select";
-import {
-  RedditAccount,
-  // RedditAccountBadge 
-} from "@/components/reddit-accounts/RedditAccountBadge";
+// import {
+//   RedditAccount,
+//   RedditAccountBadge 
+// } from "@/components/reddit-accounts/RedditAccountBadge";
 // import {
 //   Tooltip,
 //   TooltipContent,
@@ -25,15 +25,7 @@ import { RootState } from "@/store/store";
 import { useDebounce } from "@doota/ui-core/hooks/useDebounce";
 import { setRelevancyScore } from "@/store/Params/ParamsSlice";
 
-interface RelevancyScoreSidebarProps {
-  accounts?: RedditAccount[];
-  defaultAccountId?: string;
-  onDefaultAccountChange?: (accountId: string) => void;
-}
-
-export function RelevancyScoreSidebar({ accounts = [], defaultAccountId = "", onDefaultAccountChange }: RelevancyScoreSidebarProps) {
-  const defaultAccount = accounts.find(acc => acc.id === defaultAccountId);
-  // console.log(defaultAccount, onDefaultAccountChange)
+export function RelevancyScoreSidebar() {
   const { relevancyScore } = useAppSelector((state: RootState) => state.parems);
   const [relevancy_score, setRelevancy_Score] = useState<number>(relevancyScore);
   const dispatch = useAppDispatch();
