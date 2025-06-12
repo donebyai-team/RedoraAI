@@ -149,7 +149,7 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 	interaction.Status = models.LeadInteractionStatusSENT
 	interaction.Reason = ""
 	redditLead.LeadMetadata.AutomatedDMSent = true
-	redditLead.Status = models.LeadStatusCOMPLETED
+	redditLead.Status = models.LeadStatusAIRESPONDED
 
 	r.logger.Info("successfully sent reddit DM",
 		zap.String("interaction_id", interaction.ID),

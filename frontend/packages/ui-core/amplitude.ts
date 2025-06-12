@@ -2,20 +2,22 @@ import { init, track, identify, setUserId, Identify } from '@amplitude/analytics
 
 let amplitudeInitialized = false;
 
-export function initAmplitude(apiKey: string) {
+export function initAmplitude(apiKey?: string) {
     if (!apiKey) {
-        console.warn('Amplitude API key not found in env')
+        console.log('Amplitude API key not found in env')
+        return
     }
 
     if (!amplitudeInitialized) {
         init(apiKey, { defaultTracking: true });
         amplitudeInitialized = true;
+        console.log('Amplitude initialized')
     }
 }
 
 export function logDailyVisit(customerId: string, productName: string, metadata: Record<string, any> = {}) {
     if (!amplitudeInitialized) {
-        console.warn('Amplitude not initialized');
+        console.log('Amplitude not initialized');
         return;
     }
 
@@ -29,10 +31,12 @@ export function logDailyVisit(customerId: string, productName: string, metadata:
 
     identify(identifyObj);
 
-    // Log the visit event
     track('Daily Visit', {
         timestamp: new Date().toISOString(),
         ...metadata,
+    }).promise.then((resp) => {
+        console.log("Daily visit event sent successfully:", resp.message);
+    }).catch((err) => {
+        console.error("Error sending daily visit event:", err);
     });
-    console.log("daily visit event sent")
 }

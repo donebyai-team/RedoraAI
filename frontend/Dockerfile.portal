@@ -10,9 +10,11 @@ WORKDIR /usr/src/app
 
 ARG NEXT_PUBLIC_APP_URL
 ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_AMPLITUDE_API_KEY
 
 RUN mkdir -p /usr/src/app/portal && \
     echo "NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}" > /usr/src/app/portal/.env && \
+    echo "NEXT_PUBLIC_AMPLITUDE_API_KEY=${NEXT_PUBLIC_AMPLITUDE_API_KEY}" >> /usr/src/app/portal/.env && \
     echo "NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}" >> /usr/src/app/portal/.env
 
 RUN pnpm install --frozen-lockfile && \

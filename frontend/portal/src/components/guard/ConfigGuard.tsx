@@ -4,6 +4,7 @@ import { ReactNode, ReactElement, useEffect, useState } from 'react'
 import { configProvider } from '../../services/config'
 import { init as initFullStory, isInitialized as isFullStoryInitialized } from '@fullstory/browser'
 import { log } from '../../services/logger'
+import { initAmplitude } from '@doota/ui-core/amplitude'
 
 interface ConfigGuardProps {
   children: ReactNode
@@ -12,32 +13,35 @@ interface ConfigGuardProps {
 
 const ConfigGuard = (props: ConfigGuardProps) => {
   const { children, fallback } = props
-  const [loading, setLoading] = useState(false)
+  // const [loading, setLoading] = useState(false)
 
-  useEffect(() => {
-    setLoading(true)
-    configProvider.bootstrap().finally(() => {
-      setLoading(false)
+  const apiKey = process.env.NEXT_PUBLIC_AMPLITUDE_API_KEY;
+  initAmplitude(apiKey)
 
-      if (configProvider.config.fullStoryOrgId === '') {
-        log.info('skipping fullstory setup')
-        return
-      }
+  // useEffect(() => {
+  //   setLoading(true)
+  //   configProvider.bootstrap().finally(() => {
+  //     setLoading(false)
 
-      if (isFullStoryInitialized()) {
-        log.info('fullstory already initialized')
-        return
-      }
+  //     if (configProvider.config.fullStoryOrgId === '') {
+  //       log.info('skipping fullstory setup')
+  //       return
+  //     }
 
-      initFullStory({ orgId: configProvider.config.fullStoryOrgId, debug: true }, ({ sessionUrl }) =>
-        log.info('fullstory started session %s', sessionUrl)
-      )
-    })
-  }, [])
+  //     if (isFullStoryInitialized()) {
+  //       log.info('fullstory already initialized')
+  //       return
+  //     }
 
-  if (loading) {
-    return fallback
-  }
+  //     initFullStory({ orgId: configProvider.config.fullStoryOrgId, debug: true }, ({ sessionUrl }) =>
+  //       log.info('fullstory started session %s', sessionUrl)
+  //     )
+  //   })
+  // }, [])
+
+  // if (loading) {
+  //   return fallback
+  // }
 
   return <>{children}</>
 }

@@ -80,9 +80,6 @@ export const BaseAuthProvider: FC<Props> = ({
   const { portalClient } = useClientsContext()
 
   useEffect(() => {
-    const apiKey = process.env.NEXT_PUBLIC_AMPLITUDE_API_KEY!
-    initAmplitude(apiKey)
-
     const initAuth = async (): Promise<void> => {
       const jwt = await tokenStore.Get()
       if (jwt === undefined) {
@@ -171,9 +168,8 @@ export const BaseAuthProvider: FC<Props> = ({
           name = name + "-" + user.projects[0].name
         }
         const plan = user.organizations[0].featureFlags?.subscription?.planId
-
         logDailyVisit(orgID, name, {
-          plan: plan,
+          plan: plan?.toString(),
           page: window.location.pathname,
         })
       }
