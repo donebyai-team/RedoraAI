@@ -3,7 +3,7 @@ import React from "react";
 import { Heart, Github, Twitter } from "lucide-react";
 import Link from "next/link";
 
-const support_email = process.env.NEXT_PUBLIC_SUPPORT_EMAIL;
+const support_email = "adarsh@redoraai.com";
 
 export function DashboardFooter() {
   return (
