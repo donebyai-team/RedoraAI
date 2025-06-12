@@ -643,6 +643,39 @@ func (p *Portal) UpdateLeadStatus(ctx context.Context, c *connect.Request[pbport
 	}
 
 	lead.Status = c.Msg.Status.ToModel()
+
+	// Cancel scheduled interactions if lead is no longer relevant or completed
+	if lead.Status == models.LeadStatusNOTRELEVANT || lead.Status == models.LeadStatusCOMPLETED {
+		// Clear scheduled timestamps
+		lead.LeadMetadata.CommentScheduledAt = nil
+		lead.LeadMetadata.DMScheduledAt = nil
+
+		// Fetch all interactions for the lead
+		interactions, err := p.db.GetLeadInteractionByLeadID(ctx, lead.ID)
+		if err != nil {
+			return nil, err
+		}
+
+		// Determine reason based on lead status
+		var reason string
+		switch lead.Status {
+		case models.LeadStatusNOTRELEVANT:
+			reason = "Skipped, as user marked it as not relevant"
+		case models.LeadStatusCOMPLETED:
+			reason = "Skipped, as user has marked it responded manually"
+		}
+
+		// Mark each interaction as failed with appropriate reason
+		for _, interaction := range interactions {
+			interaction.Status = models.LeadInteractionStatusFAILED
+			interaction.Reason = reason
+
+			if err := p.db.UpdateLeadInteraction(ctx, interaction); err != nil {
+				return nil, err
+			}
+		}
+	}
+
 	err = p.db.UpdateLeadStatus(ctx, lead)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to update lead status: %w", err))
