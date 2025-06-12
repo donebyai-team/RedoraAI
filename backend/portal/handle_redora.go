@@ -444,20 +444,19 @@ func (p *Portal) GetRelevantLeads(ctx context.Context, c *connect.Request[pbport
 		c.Msg.PageCount = pageCount
 	}
 
+	if c.Msg.PageNo <= 0 {
+		c.Msg.PageNo = 0
+	} else {
+		c.Msg.PageNo = c.Msg.PageNo - 1
+	}
+
 	if c.Msg.RelevancyScore < minRelevancyScoreFilter {
 		c.Msg.RelevancyScore = minRelevancyScoreFilter
 		p.logger.Info(fmt.Sprintf("received less than 80 score to filter, defaulting to %d", minRelevancyScoreFilter))
 	}
 
 	if status != models.LeadStatusNEW {
-		return p.GetLeadsByStatus(ctx, &connect.Request[pbportal.GetLeadsByStatusRequest]{
-			Msg: &pbportal.GetLeadsByStatusRequest{
-				Status:    c.Msg.Status,
-				PageNo:    c.Msg.PageNo,
-				DateRange: c.Msg.DateRange,
-				PageCount: c.Msg.PageCount,
-			},
-		})
+		return p.getLeadsByStatus(ctx, c)
 	}
 
 	actor, err := p.gethAuthContext(ctx)
@@ -575,7 +574,7 @@ func (p *Portal) UpdateAutomationSettings(ctx context.Context, c *connect.Reques
 
 const pageCount = 200
 
-func (p *Portal) GetLeadsByStatus(ctx context.Context, c *connect.Request[pbportal.GetLeadsByStatusRequest]) (*connect.Response[pbportal.GetLeadsResponse], error) {
+func (p *Portal) getLeadsByStatus(ctx context.Context, c *connect.Request[pbportal.GetRelevantLeadsRequest]) (*connect.Response[pbportal.GetLeadsResponse], error) {
 	actor, err := p.gethAuthContext(ctx)
 	if err != nil {
 		return nil, err
@@ -584,10 +583,6 @@ func (p *Portal) GetLeadsByStatus(ctx context.Context, c *connect.Request[pbport
 	project, err := p.getProject(ctx, c.Header(), actor.OrganizationID)
 	if err != nil {
 		return nil, err
-	}
-
-	if c.Msg.PageCount <= 0 {
-		c.Msg.PageCount = pageCount
 	}
 
 	status, err := models.ParseLeadStatus(c.Msg.Status.String())

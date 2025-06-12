@@ -30,7 +30,6 @@ service PortalService {
   rpc GetSources(.google.protobuf.Empty) returns (GetSourceResponse);
   rpc RemoveSource(RemoveSourceRequest) returns (.google.protobuf.Empty);
   rpc GetRelevantLeads(GetRelevantLeadsRequest) returns (GetLeadsResponse);
-  rpc GetLeadsByStatus(GetLeadsByStatusRequest) returns (GetLeadsResponse);
   rpc UpdateLeadStatus(UpdateLeadStatusRequest) returns (.google.protobuf.Empty);
   rpc CreateOrEditProject(CreateProjectRequest) returns (doota.core.v1.Project);
   rpc SuggestKeywordsAndSources(.google.protobuf.Empty) returns (doota.core.v1.Project);
@@ -72,13 +71,6 @@ message CreateProjectRequest {
 message UpdateLeadStatusRequest {
   doota.core.v1.LeadStatus status = 1;
   string lead_id = 2;
-}
-
-message GetLeadsByStatusRequest {
-  doota.core.v1.LeadStatus status = 1;
-  int32 page_no = 3;
-  DateRangeFilter date_range = 4;
-  int32 page_count = 5;
 }
 
 enum DateRangeFilter {

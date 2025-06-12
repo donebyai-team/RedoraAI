@@ -160,37 +160,6 @@ export declare type UpdateLeadStatusRequest = Message<"doota.portal.v1.UpdateLea
 export declare const UpdateLeadStatusRequestSchema: GenMessage<UpdateLeadStatusRequest>;
 
 /**
- * @generated from message doota.portal.v1.GetLeadsByStatusRequest
- */
-export declare type GetLeadsByStatusRequest = Message<"doota.portal.v1.GetLeadsByStatusRequest"> & {
-  /**
-   * @generated from field: doota.core.v1.LeadStatus status = 1;
-   */
-  status: LeadStatus;
-
-  /**
-   * @generated from field: int32 page_no = 3;
-   */
-  pageNo: number;
-
-  /**
-   * @generated from field: doota.portal.v1.DateRangeFilter date_range = 4;
-   */
-  dateRange: DateRangeFilter;
-
-  /**
-   * @generated from field: int32 page_count = 5;
-   */
-  pageCount: number;
-};
-
-/**
- * Describes the message doota.portal.v1.GetLeadsByStatusRequest.
- * Use `create(GetLeadsByStatusRequestSchema)` to create a new message.
- */
-export declare const GetLeadsByStatusRequestSchema: GenMessage<GetLeadsByStatusRequest>;
-
-/**
  * @generated from message doota.portal.v1.GetRelevantLeadsRequest
  */
 export declare type GetRelevantLeadsRequest = Message<"doota.portal.v1.GetRelevantLeadsRequest"> & {
@@ -1273,14 +1242,6 @@ export declare const PortalService: GenService<{
   getRelevantLeads: {
     methodKind: "unary";
     input: typeof GetRelevantLeadsRequestSchema;
-    output: typeof GetLeadsResponseSchema;
-  },
-  /**
-   * @generated from rpc doota.portal.v1.PortalService.GetLeadsByStatus
-   */
-  getLeadsByStatus: {
-    methodKind: "unary";
-    input: typeof GetLeadsByStatusRequestSchema;
     output: typeof GetLeadsResponseSchema;
   },
   /**
