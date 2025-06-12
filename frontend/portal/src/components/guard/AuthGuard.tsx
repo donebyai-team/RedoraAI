@@ -40,7 +40,7 @@ const AuthGuard = ({ children, fallback }: AuthGuardProps) => {
     return 1
   }
 
-  const hasCheckedInitialLoad = useRef(false);
+  const hasInitialized = useRef(false);
 
   useEffect(() => {
     const checkAuthAndSetup = async () => {
@@ -60,9 +60,9 @@ const AuthGuard = ({ children, fallback }: AuthGuardProps) => {
 
         const nextStep = calculateNextStep(data)
         dispatch(setIsOnboardingDone(isOnboardingDone))
-        if (!hasCheckedInitialLoad.current) {
+        if (!hasInitialized.current) {
           dispatch(setProject(data));
-          hasCheckedInitialLoad.current = true;
+          hasInitialized.current = true;
         }
         if (!isEditProduct) {
           dispatch(goToStep(nextStep))

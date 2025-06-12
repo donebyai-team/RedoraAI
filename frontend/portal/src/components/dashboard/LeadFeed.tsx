@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Brain,
+  Loader2,
   // Mail,
   MessageSquare,
   Save,
@@ -47,7 +48,13 @@ export function getTabName(value: LeadStatus | null | undefined): string {
   return tabNameMap[value];
 }
 
-export function LeadFeed() {
+interface LeadFeedProps {
+  loadMoreLeads: () => void;
+  isFetchingMore: boolean;
+  hasMore: boolean;
+}
+
+export function LeadFeed({ loadMoreLeads, hasMore, isFetchingMore }: LeadFeedProps) {
 
   // const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedLeadId, setSelectedLeadId] = useState<string>("");
@@ -156,7 +163,7 @@ export function LeadFeed() {
         window.open(linkToOpen, '_blank');
       } catch (err: any) {
         const message = err?.message || "Fallback: Copy failed";
-        console.log(message);
+        // console.log(message);
       } finally {
         document.body.removeChild(textArea);
       }
@@ -165,7 +172,7 @@ export function LeadFeed() {
         .then(() => window.open(linkToOpen, '_blank'))
         .catch((err: any) => {
           const message = err?.message || "Clipboard copy failed";
-          console.log(message);
+          // console.log(message);
         });
     }
   };
@@ -357,30 +364,30 @@ export function LeadFeed() {
                               '—'
                             )}
                             {/* <RedditAccountSelector
-                              accounts={redditAccounts}
-                              currentAccountId={post.assignedAccountId || defaultAccountId}
-                              onAccountChange={(accountId) => handleAccountChange(post.id, accountId)}
-                              postId={post.id}
-                            /> */}
+                                accounts={redditAccounts}
+                                currentAccountId={post.assignedAccountId || defaultAccountId}
+                                onAccountChange={(accountId) => handleAccountChange(post.id, accountId)}
+                                postId={post.id}
+                              /> */}
                           </div>
                         </TooltipTrigger>
                         {/* <TooltipContent side="top">
-                          <p className="text-xs max-w-[200px]">
-                            {shouldSuggestAccountRotation(post)
-                              ? "This account was used recently. Consider rotating accounts to avoid rate limits."
-                              : "Using multiple Reddit accounts helps avoid rate limits and boosts reach."}
-                          </p>
-                        </TooltipContent> */}
+                            <p className="text-xs max-w-[200px]">
+                              {shouldSuggestAccountRotation(post)
+                                ? "This account was used recently. Consider rotating accounts to avoid rate limits."
+                                : "Using multiple Reddit accounts helps avoid rate limits and boosts reach."}
+                            </p>
+                          </TooltipContent> */}
                       </Tooltip>
                     </TooltipProvider>
                   </div>
 
                   {/* Show last replied time if available */}
                   {/* {post.lastReplied && (
-                    <span className="text-xs text-muted-foreground">
-                      Last replied: {timeAgo(post.lastReplied)}
-                    </span>
-                  )} */}
+                      <span className="text-xs text-muted-foreground">
+                        Last replied: {timeAgo(post.lastReplied)}
+                      </span>
+                    )} */}
                 </div>
 
                 {/* Action buttons */}
@@ -449,18 +456,31 @@ export function LeadFeed() {
                   </>) : null}
 
                   {/* {post.metadata?.suggestedDm &&
-                    <button
-                      onClick={() => toggleExpand(post.id)}
-                      className="ml-auto text-sm text-primary hover:underline"
-                    >
-                      {expandedId === post.id ? 'Hide DM suggestion' : 'Show DM suggestion'}
-                    </button>
-                  } */}
+                      <button
+                        onClick={() => toggleExpand(post.id)}
+                        className="ml-auto text-sm text-primary hover:underline"
+                      >
+                        {expandedId === post.id ? 'Hide DM suggestion' : 'Show DM suggestion'}
+                      </button>
+                    } */}
                 </div>
               </div>
             </CardContent>
           </Card>
         ))}
+      </div>
+      <div className="flex justify-center mt-4">
+        {(hasMore && !isFetchingMore) && (
+          <button
+            onClick={loadMoreLeads}
+            className="px-4 py-2 rounded-md bg-primary text-white hover:bg-primary/90 transition"
+          >
+            Load More
+          </button>
+        )}
+        {isFetchingMore && (
+          <Loader2 className="animate-spin" size={26} />
+        )}
       </div>
     </ScrollArea>
   );

@@ -35,22 +35,28 @@ import { AnnouncementBanner } from "../dashboard/AnnouncementBanner";
 import { LeadStatus, SubscriptionStatus } from "@doota/pb/doota/core/v1/core_pb";
 import { useAuth } from "@doota/ui-core/hooks/useAuth";
 
-interface FetchFilters {
+export interface FetchFilters {
   status: LeadStatus | null;
   relevancyScore?: number;
   subReddit?: string;
   dateRange?: DateRangeFilter;
   pageCount?: number;
+  pageNo?: number;
 }
+
+export const DEFAULT_DATA_LIMIT = 10;
 
 export default function Dashboard() {
   const { portalClient } = useClientsContext()
   const { currentOrganization } = useAuth()
   const dispatch = useAppDispatch();
   const project = useAppSelector((state) => state.stepper.project);
-  const { dateRange, leadStatusFilter, isLoading } = useAppSelector((state) => state.lead);
+  const { dateRange, leadStatusFilter, isLoading, newTabList } = useAppSelector((state) => state.lead);
   const { relevancyScore, subReddit } = useAppSelector((state) => state.parems);
   const { isConnected, loading: isLoadingRedditIntegrationStatus } = useRedditIntegrationStatus();
+  const [pageNo, setPageNo] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
 
   // Sample Reddit accounts
   const redditAccounts: RedditAccount[] = [
@@ -96,65 +102,106 @@ export default function Dashboard() {
 
   const hasCheckedInitialLeads = useRef(false);
 
-  const tryFetch = async ({ status, relevancyScore, subReddit, dateRange, pageCount = 10, }: FetchFilters) => {
+  const tryFetch = async ({ status, relevancyScore, subReddit, dateRange, pageCount = DEFAULT_DATA_LIMIT, pageNo = 0 }: FetchFilters) => {
     const result = await portalClient.getRelevantLeads({
       ...(relevancyScore && { relevancyScore }),
       ...(subReddit && { subReddit }),
       ...(status && { status }),
       ...(dateRange && { dateRange }),
       pageCount,
+      pageNo
     });
 
     return result;
   };
 
-  useEffect(() => {
-
-    const getInitialLeads = async () => {
-
-      dispatch(setIsLoading(true));
-
-      try {
-        if (!hasCheckedInitialLeads.current) {
-          const leadStatusPriority: LeadStatus[] = [LeadStatus.NEW, LeadStatus.COMPLETED];
-
-          for (const status of leadStatusPriority) {
-            const result = await tryFetch({ status, relevancyScore });
-            const leads = result.leads ?? [];
-
-            if (leads.length > 0) {
-              dispatch(setNewTabList(leads));
-              dispatch(setLeadStatusFilter(status));
-              setCounts(result.analysis);
-              break;
-            }
-
-            if (!leads.length && status === LeadStatus.COMPLETED) {
-              dispatch(setNewTabList([]));
-              dispatch(setLeadStatusFilter(LeadStatus.NEW));
-              setCounts(undefined);
-            }
-          }
-
-          hasCheckedInitialLeads.current = true;
-        } else {
-          const response = await tryFetch({ status: leadStatusFilter, relevancyScore, subReddit, dateRange });
-          dispatch(setNewTabList(response.leads ?? []));
-          setCounts(response.analysis);
-        }
-      } catch (err: any) {
-        const message = err?.response?.data?.message || err.message || "Something went wrong";
-        toast({ title: "Error", description: message });
-        dispatch(setError(message));
-      } finally {
-        dispatch(setIsLoading(false));
+  const fetchLeads = async ({
+    page = 0,
+    append = false,
+    usePriority = false,
+    loadType = "initial", // "initial" | "pagination"
+  }: {
+    page?: number;
+    append?: boolean;
+    usePriority?: boolean;
+    loadType?: "initial" | "pagination";
+  }) => {
+    try {
+      if (loadType === "initial") {
+        dispatch(setIsLoading(true));
+      } else {
+        setIsFetchingMore(true);
       }
-    };
 
-    getInitialLeads();
+      if (usePriority) {
+        // Prioritized initial load
+        const leadStatusPriority: LeadStatus[] = [LeadStatus.NEW, LeadStatus.COMPLETED];
+        for (const status of leadStatusPriority) {
+          const result = await tryFetch({ status, relevancyScore, subReddit, dateRange, pageNo: 1 });
+          const leads = result.leads ?? [];
 
+          if (leads.length > 0) {
+            dispatch(setNewTabList(leads));
+            dispatch(setLeadStatusFilter(status));
+            setCounts(result.analysis);
+            setHasMore(leads.length >= (DEFAULT_DATA_LIMIT - 1));
+            setPageNo(1);
+            break;
+          }
+        }
+
+        hasCheckedInitialLeads.current = true;
+      } else {
+        const result = await tryFetch({
+          status: leadStatusFilter,
+          relevancyScore,
+          subReddit,
+          dateRange,
+          pageNo: page,
+          pageCount: DEFAULT_DATA_LIMIT,
+        });
+
+        const leads = result.leads ?? [];
+
+        if (append) {
+          dispatch(setNewTabList([...newTabList, ...leads]));
+        } else {
+          dispatch(setNewTabList(leads));
+        }
+
+        setCounts(result.analysis);
+        setHasMore(leads.length >= (DEFAULT_DATA_LIMIT - 1));
+        setPageNo(page);
+      }
+    } catch (err: any) {
+      const message = err?.response?.data?.message || err.message || "Something went wrong";
+      toast({ title: "Error", description: message });
+      dispatch(setError(message));
+    } finally {
+      if (loadType === "initial") {
+        dispatch(setIsLoading(false));
+      } else {
+        setIsFetchingMore(false);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (!hasCheckedInitialLeads.current) {
+      fetchLeads({ usePriority: true, loadType: "initial" });
+    } else {
+      fetchLeads({ page: 0, loadType: "initial" });
+    }
+
+    setPageNo(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dateRange, relevancyScore, subReddit, leadStatusFilter]);
+
+  const loadMoreLeads = async () => {
+    if (isFetchingMore || !hasMore) return;
+
+    await fetchLeads({ page: pageNo + 1, append: true, loadType: "pagination" });
+  };
 
   // get all reddit account, used in Leed Feed
   useEffect(() => {
@@ -210,7 +257,9 @@ export default function Dashboard() {
               <SummaryCards counts={counts} />
 
               {isLoadingRedditIntegrationStatus ? (<>
-                Loading
+                <div className="flex-1 flex justify-center space-y-4 mt-6">
+                  <h5 className="text-xl font-semibold">Loading...</h5>
+                </div>
               </>) : (<div className="flex-1 flex flex-col space-y-4 mt-6">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-background/95 py-2">
                   <h2 className="text-xl font-semibold">Latest Tracked Posts</h2>
@@ -240,10 +289,9 @@ export default function Dashboard() {
                 ) : (
                   <div className="flex-1">
                     <LeadFeed
-                    // onAction={handleAction}
-                    // redditAccounts={redditAccounts}
-                    // defaultAccountId={defaultAccountId}
-                    // onAccountChange={handlePostAccountChange}
+                      loadMoreLeads={loadMoreLeads}
+                      hasMore={hasMore}
+                      isFetchingMore={isFetchingMore}
                     />
                   </div>
                 )}

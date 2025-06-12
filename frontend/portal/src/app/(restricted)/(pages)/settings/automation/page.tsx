@@ -149,7 +149,7 @@ export default function Page() {
             const popupCheckInterval = setInterval(() => {
                 if (popup && popup.closed && !streamClosed) {
                     // User closed popup before connection finished
-                    console.log("Popup closed manually, canceling stream...");
+                    // console.log("Popup closed manually, canceling stream...");
                     // Cancel the stream here if possible
                     // Note: Depending on your gRPC lib, this might be a cancel() method or similar
                     // For example: response.cancel();
@@ -201,7 +201,7 @@ export default function Page() {
         portalClient.revokeIntegration({ id: id })
             .then(() => {
                 handleSaveAutomation({ dm: { enabled: false } })
-                console.log("successfully revoked")
+                // console.log("successfully revoked")
             })
             .catch((err) => {
                 console.error("Error disconnecting integrations:", err);
