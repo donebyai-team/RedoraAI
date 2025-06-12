@@ -39,7 +39,7 @@ export function RelevancySettings() {
   const autoDm = form.watch("autoDm");
   const autoSave = form.watch("autoSave");
 
-  const onSubmit = (data: RelevancyFormValues) => {
+  const onSubmit = () => {
     // console.log("Saving relevancy settings:", data);
     toast({
       title: "Settings saved",

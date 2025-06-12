@@ -9,7 +9,6 @@ import { RelevancyScoreSidebar } from "@/components/dashboard/RelevancyScoreSide
 import { FilterControls } from "@/components/dashboard/FilterControls";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { DashboardFooter } from "@/components/dashboard/DashboardFooter";
-import { RedditAccount } from "@/components/reddit-accounts/RedditAccountBadge";
 import { useClientsContext } from "@doota/ui-core/context/ClientContext";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setError, setIsLoading, setLeadStatusFilter, setNewTabList } from "@/store/Lead/leadSlice";
@@ -27,81 +26,6 @@ export default function LeadFeed() {
   const [pageNo, setPageNo] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
-
-  // Sample Reddit accounts
-  const redditAccounts: RedditAccount[] = [
-    {
-      id: "account1",
-      username: "redora_official",
-      karma: 2345,
-      status: { isActive: true },
-      isDefault: true
-    },
-    {
-      id: "account2",
-      username: "saas_helper",
-      karma: 986,
-      status: { isActive: true }
-    },
-    {
-      id: "account3",
-      username: "marketing_pro",
-      karma: 75,
-      status: { isActive: true, hasLowKarma: true }
-    },
-    {
-      id: "account4",
-      username: "startup_advisor",
-      karma: 542,
-      status: { isActive: false, cooldownMinutes: 35 }
-    },
-    {
-      id: "account5",
-      username: "b2b_expert",
-      karma: 1203,
-      status: { isActive: false, isFlagged: true }
-    },
-  ];
-
-  const [defaultAccountId, setDefaultAccountId] = useState<string>("account1");
-
-  const handleDefaultAccountChange = (accountId: string) => {
-    setDefaultAccountId(accountId);
-  };
-
-  // useEffect(() => {
-
-  //   const getAllRelevantLeads = async () => {
-  //     dispatch(setIsLoading(true));
-
-  //     try {
-  //       const result = await portalClient.getRelevantLeads({
-  //         ...(relevancyScore && { relevancyScore }),
-  //         ...(subReddit && { subReddit }),
-  //         ...(leadStatusFilter && { status: leadStatusFilter }),
-  //         dateRange,
-  //         pageCount: 10
-  //       });
-  //       const allLeads = result.leads ?? [];
-  //       dispatch(setNewTabList(allLeads));
-
-  //     } catch (err: any) {
-  //       const message = err?.response?.data?.message || err.message || "Something went wrong";
-  //       toast({
-  //         title: "Error",
-  //         description: message,
-  //       });
-  //       dispatch(setError(message));
-  //     } finally {
-  //       dispatch(setIsLoading(false));
-  //     }
-  //   };
-
-  //   getAllRelevantLeads();
-
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [relevancyScore, subReddit, dateRange, leadStatusFilter]);
-
 
   const tryFetch = async ({ status, relevancyScore, subReddit, dateRange, pageCount = DEFAULT_DATA_LIMIT, pageNo = 0 }: FetchFilters) => {
     const result = await portalClient.getRelevantLeads({
@@ -267,11 +191,7 @@ export default function LeadFeed() {
 
             {/* Sidebar */}
             <div className="lg:w-[300px] space-y-6">
-              <RelevancyScoreSidebar
-                accounts={redditAccounts}
-                defaultAccountId={defaultAccountId}
-                onDefaultAccountChange={handleDefaultAccountChange}
-              />
+              <RelevancyScoreSidebar />
             </div>
           </div>
         </main>

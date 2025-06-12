@@ -24,7 +24,6 @@ import { SidebarSettings } from "@/components/dashboard/SidebarSettings";
 import { RelevancyScoreSidebar } from "@/components/dashboard/RelevancyScoreSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { DashboardFooter } from "@/components/dashboard/DashboardFooter";
-import { RedditAccount } from "@/components/reddit-accounts/RedditAccountBadge";
 import { useClientsContext } from "@doota/ui-core/context/ClientContext";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { setError, setIsLoading, setLeadStatusFilter, setNewTabList } from "../../../store/Lead/leadSlice";
@@ -57,49 +56,7 @@ export default function Dashboard() {
   const [pageNo, setPageNo] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
-
-  // Sample Reddit accounts
-  const redditAccounts: RedditAccount[] = [
-    {
-      id: "account1",
-      username: "redora_official",
-      karma: 2345,
-      status: { isActive: true },
-      isDefault: true
-    },
-    {
-      id: "account2",
-      username: "saas_helper",
-      karma: 986,
-      status: { isActive: true }
-    },
-    {
-      id: "account3",
-      username: "marketing_pro",
-      karma: 75,
-      status: { isActive: true, hasLowKarma: true }
-    },
-    {
-      id: "account4",
-      username: "startup_advisor",
-      karma: 542,
-      status: { isActive: false, cooldownMinutes: 35 }
-    },
-    {
-      id: "account5",
-      username: "b2b_expert",
-      karma: 1203,
-      status: { isActive: false, isFlagged: true }
-    },
-  ];
-
   const [counts, setCounts] = useState<LeadAnalysis | undefined>(undefined);
-  const [defaultAccountId, setDefaultAccountId] = useState<string>("account1");
-
-  const handleDefaultAccountChange = (accountId: string) => {
-    setDefaultAccountId(accountId);
-  };
-
   const hasCheckedInitialLeads = useRef(false);
 
   const tryFetch = async ({ status, relevancyScore, subReddit, dateRange, pageCount = DEFAULT_DATA_LIMIT, pageNo = 0 }: FetchFilters) => {
@@ -301,11 +258,7 @@ export default function Dashboard() {
 
             {/* Sidebar */}
             <div className="lg:w-[300px] space-y-6">
-              <RelevancyScoreSidebar
-                accounts={redditAccounts}
-                defaultAccountId={defaultAccountId}
-                onDefaultAccountChange={handleDefaultAccountChange}
-              />
+              <RelevancyScoreSidebar />
 
               <Card className="border-primary/10 shadow-md">
                 <CardContent className="p-6">
