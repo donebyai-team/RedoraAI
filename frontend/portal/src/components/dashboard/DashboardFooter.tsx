@@ -3,6 +3,8 @@ import React from "react";
 import { Heart, Github, Twitter } from "lucide-react";
 import Link from "next/link";
 
+const support_email = process.env.NEXT_PUBLIC_SUPPORT_EMAIL;
+
 export function DashboardFooter() {
   return (
     <footer className="border-t border-primary/10 bg-background/95 py-4 px-4 md:px-6">
@@ -21,7 +23,7 @@ export function DashboardFooter() {
           <Link href="/privacy" className="hover:text-primary transition-colors">
             Privacy
           </Link>
-          <Link href="/help" className="hover:text-primary transition-colors">
+          <Link href={`mailto:${support_email}`} className="hover:text-primary transition-colors">
             Help
           </Link>
         </div>
