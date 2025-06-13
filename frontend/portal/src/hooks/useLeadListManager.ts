@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { useLeadFetcher, UseLeadFetcherProps } from "./useLeadFetcher";
+import { useLeadFetcher, UseLeadFetcherProps, } from "./useLeadFetcher";
 
 export interface UseLeadListManagerParams extends UseLeadFetcherProps {
     pageNo: number;
@@ -39,10 +39,10 @@ export const useLeadListManager = ({
     // initial prioritized fetch
     useEffect(() => {
         if (!hasRunInitialFetch.current) {
-            fetchLeads({ fetchType: "initial", useStatusPriority: true });
+            fetchLeads({ fetchType: "initial", prioritize: true });
             hasRunInitialFetch.current = true;
         } else {
-            fetchLeads({ fetchType: "initial", useStatusPriority: false });
+            fetchLeads({ fetchType: "initial", prioritize: false });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [leadStatusFilter, relevancyScore, subReddit, dateRange]);

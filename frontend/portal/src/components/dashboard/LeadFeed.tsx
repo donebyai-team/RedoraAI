@@ -365,8 +365,6 @@ export function LeadFeed({ loadMoreLeads, hasMore, isFetchingMore }: LeadFeedPro
       <InlineLoader
         isVisible={isFetchingMore}
         size={30}
-        className="text-blue-500"
-        containerClassName="mt-6"
       />
 
     </ScrollArea>
