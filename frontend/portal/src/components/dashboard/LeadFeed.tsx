@@ -3,24 +3,17 @@ import { useEffect, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Brain,
-  Loader2,
-  // Mail,
   MessageSquare,
   Save,
   Send,
   ThumbsUp,
-  // X,
   User,
   X,
-  // AlertTriangle 
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-// import { RedditAccount } from "@/components/reddit-accounts/RedditAccountBadge";
-// import { RedditAccountSelector } from "@/components/reddit-accounts/RedditAccountSelector";
 import {
   Tooltip,
   TooltipContent,
-  // TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
@@ -31,87 +24,23 @@ import Link from "next/link";
 import { HtmlBodyRenderer, HtmlTitleRenderer, MarkdownRenderer } from "../Html/HtmlRenderer";
 import { LeadStatus } from "@doota/pb/doota/core/v1/core_pb";
 import { portalClient } from "@/services/grpc";
-import { setNewTabList } from "@/store/Lead/leadSlice";
-
-// const tabNameMap: Partial<Record<LeadStatus, string>> = {
-//   [LeadStatus.NEW]: "All",
-//   [LeadStatus.COMPLETED]: "Responded",
-//   [LeadStatus.NOT_RELEVANT]: "Skipped",
-//   [LeadStatus.LEAD]: "Saved",
-// };
-
-// export function getTabName(value: LeadStatus): string {
-//   if (!value) {
-//     return "All";
-//   }
-//   return tabNameMap[value];
-// }
+import { setLeadList } from "@/store/Lead/leadSlice";
+import { loadMoreLeadsProps } from "@/hooks/useLeadListManager";
+import { InlineLoader } from "../ui/InlineLoader";
 
 interface LeadFeedProps {
-  loadMoreLeads: () => void;
+  loadMoreLeads: (props: loadMoreLeadsProps) => Promise<void>;
   isFetchingMore: boolean;
   hasMore: boolean;
 }
 
 export function LeadFeed({ loadMoreLeads, hasMore, isFetchingMore }: LeadFeedProps) {
 
-  // const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedLeadId, setSelectedLeadId] = useState<string>("");
-  // const [recentlyUsedAccounts, setRecentlyUsedAccounts] = useState<Record<string, Date>>({});
-  const { newTabList, leadStatusFilter } = useAppSelector((state) => state.lead);
-  // const { subredditList } = useAppSelector((state: RootState) => state.source);
+  const { leadList, leadStatusFilter } = useAppSelector((state) => state.lead);
   const { accounts: redditAccounts } = useAppSelector((state) => state.reddit);
   const dispatch = useAppDispatch();
   const scrollRef = useRef<HTMLDivElement | null>(null);
-
-  // // Sample data with assigned Reddit accounts and last replied timestamp
-  // const posts: LeadPost[] = [
-  //   {
-  //     id: "post1",
-  //     title: "Recommendations for SaaS email automation tools?",
-  //     snippet: "We're a small B2B business looking to automate our email campaigns better. We've tried Mailchimp but it's not cutting it for more complex sequences...",
-  //     subreddit: "r/SaaS",
-  //     time: "2h ago",
-  //     score: 0.94,
-  //     author: "growthfounder",
-  //     karma: "2.4k",
-  //     tags: ["Recommendation", "Pain Point"],
-  //     aiSuggestion: "I understand the frustration with basic email tools. For more complex B2B sequences, we've had great success with tools that specialize in behavior-triggered automation. Happy to share some specific recommendations that worked for our clients in the B2B space if you'd like.",
-  //     aiDmSuggestion: "Hi there! Saw your post about email automation challenges. We've helped several B2B SaaS companies implement more effective email sequences. Would you be open to a quick chat about what specifically you're trying to achieve? I might be able to point you in the right direction.",
-  //     assignedAccountId: redditAccounts.length > 0 ? redditAccounts[0].id : defaultAccountId,
-  //     lastReplied: new Date(Date.now() - 1000 * 60 * 35) // 35 minutes ago
-  //   },
-  //   {
-  //     id: "post2",
-  //     title: "How do you find your first 100 B2B customers?",
-  //     snippet: "We just launched our analytics platform for e-commerce, but finding early B2B customers is proving harder than expected...",
-  //     subreddit: "r/startups",
-  //     time: "5h ago",
-  //     score: 0.89,
-  //     author: "techfounder23",
-  //     karma: "867",
-  //     tags: ["Looking for Tools"],
-  //     aiSuggestion: "For B2B SaaS, particularly in the analytics space, we've found content-led SEO to be incredibly effective for those first 100 customers. Creating highly targeted content that addresses specific pain points your platform solves can drive qualified leads. Would be happy to share some specific approaches that have worked for similar analytics platforms.",
-  //     aiDmSuggestion: "Hi! I read your post about finding those first 100 B2B customers for your e-commerce analytics platform. This is exactly the challenge we help startups with. Would you be interested in hearing how we helped a similar analytics platform grow from 0 to 200+ clients in about 6 months using content-led SEO?",
-  //     assignedAccountId: redditAccounts.length > 1 ? redditAccounts[1].id : defaultAccountId,
-  //     lastReplied: null
-  //   },
-  //   {
-  //     id: "post3",
-  //     title: "LinkedIn outreach failing miserably - any alternatives?",
-  //     snippet: "I've been trying to generate leads using LinkedIn for our SaaS product, but the response rate is abysmal...",
-  //     subreddit: "r/Entrepreneur",
-  //     time: "12h ago",
-  //     score: 0.78,
-  //     author: "marketingwiz",
-  //     karma: "1.2k",
-  //     tags: ["Pain Point"],
-  //     aiSuggestion: "LinkedIn can be oversaturated these days. We've found Reddit to be an excellent alternative channel for B2B SaaS lead gen, particularly for products with a clearly defined audience. The key is genuine engagement rather than direct pitching. Happy to share some specific strategies that have worked well.",
-  //     aiDmSuggestion: "Hi there! I noticed your post about LinkedIn outreach challenges. We've worked with several B2B SaaS companies to develop alternative channels (including Reddit!) that generated much better response rates. Would you be open to a quick chat about what might work better for your specific product?",
-  //     assignedAccountId: defaultAccountId,
-  //     lastReplied: new Date(Date.now() - 1000 * 60 * 10) // 10 minutes ago
-  //   }
-  // ];
 
   const getScoreColor = (score: number) => {
     if (score >= 90) return "text-green-500 bg-green-50";
@@ -119,37 +48,8 @@ export function LeadFeed({ loadMoreLeads, hasMore, isFetchingMore }: LeadFeedPro
     return "text-red-500 bg-red-50";
   };
 
-  // const toggleExpand = (id: string) => {
-  //   setExpandedId(expandedId === id ? null : id);
-  // };
-
-  // // Function to suggest alternative account if current one was recently used
-  // const shouldSuggestAccountRotation = (post: LeadPost) => {
-  //   const currentAccount = redditAccounts.find(acc => acc.id === post.assignedAccountId);
-  //   if (!currentAccount) return false;
-
-  //   // If the account was used in the last hour
-  //   const lastUsed = recentlyUsedAccounts[post.assignedAccountId];
-  //   if (lastUsed && (new Date().getTime() - lastUsed.getTime()) < 60 * 60 * 1000) {
-  //     // Find an available account that hasn't been used recently
-  //     const availableAccount = redditAccounts.find(acc =>
-  //       acc.id !== post.assignedAccountId &&
-  //       acc.status.isActive &&
-  //       !acc.status.isFlagged &&
-  //       !acc.status.isBanned &&
-  //       (!recentlyUsedAccounts[acc.id] ||
-  //         (new Date().getTime() - recentlyUsedAccounts[acc.id].getTime()) > 60 * 60 * 1000)
-  //     );
-
-  //     return !!availableAccount;
-  //   }
-
-  //   return false;
-  // };
-
   const copyTextAndOpenLink = (textToCopy: string, linkToOpen: string) => {
-    if (!navigator.clipboard) {
-      // Fallback for older browsers that do not support `navigator.clipboard`
+    const fallbackCopy = () => {
       const textArea = document.createElement("textarea");
       textArea.value = textToCopy;
       textArea.style.position = "fixed";
@@ -158,46 +58,30 @@ export function LeadFeed({ loadMoreLeads, hasMore, isFetchingMore }: LeadFeedPro
       textArea.select();
 
       try {
-        const successful = document.execCommand("copy");
-        if (!successful) throw new Error("Fallback: Copy command was unsuccessful");
-        window.open(linkToOpen, '_blank');
-      } catch (err: any) {
-        const message = err?.message || "Fallback: Copy failed";
-        // console.log(message);
+        if (document.execCommand("copy")) {
+          window.open(linkToOpen, '_blank');
+        }
       } finally {
         document.body.removeChild(textArea);
       }
-    } else {
+    };
+
+    if (navigator.clipboard?.writeText) {
       navigator.clipboard.writeText(textToCopy)
         .then(() => window.open(linkToOpen, '_blank'))
-        .catch((err: any) => {
-          const message = err?.message || "Clipboard copy failed";
-          // console.log(message);
-        });
+        .catch(fallbackCopy);
+    } else {
+      fallbackCopy();
     }
   };
-
-  // // Show account rotation toast when post has a recently used account
-  // useEffect(() => {
-  //   posts.forEach(post => {
-  //     if (shouldSuggestAccountRotation(post)) {
-  //       toast({
-  //         title: "Consider rotating accounts",
-  //         description: `The account u/${redditAccounts.find(acc => acc.id === post.assignedAccountId)?.username} was used recently. Consider using a different account for this post.`,
-  //         duration: 5000,
-  //       });
-  //     }
-  //   });
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, []);
 
   const handleLeadStatusUpdate = async (status: LeadStatus, leadId: string) => {
     setSelectedLeadId(leadId);
     try {
       await portalClient.updateLeadStatus({ status, leadId });
 
-      const allLeads = newTabList.filter((lead) => lead.id !== leadId);
-      dispatch(setNewTabList(allLeads));
+      const allLeads = leadList.filter((lead) => lead.id !== leadId);
+      dispatch(setLeadList(allLeads));
       // toast({
       //   title: "Post saved",
       //   description: "This post has been saved for later.",
@@ -223,7 +107,7 @@ export function LeadFeed({ loadMoreLeads, hasMore, isFetchingMore }: LeadFeedPro
     const handleScroll = () => {
       if (scrollEl.scrollHeight - scrollEl.scrollTop <= scrollEl.clientHeight + 10) {
         if (hasMore && !isFetchingMore) {
-          loadMoreLeads();
+          loadMoreLeads({ isFetchingMore, hasMore });
         }
       }
     };
@@ -235,7 +119,7 @@ export function LeadFeed({ loadMoreLeads, hasMore, isFetchingMore }: LeadFeedPro
     };
   }, [hasMore, isFetchingMore, loadMoreLeads]);
 
-  if (newTabList?.length === 0) {
+  if (leadList?.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
         <MessageSquare className="h-10 w-10 text-muted-foreground mb-3" />
@@ -250,7 +134,7 @@ export function LeadFeed({ loadMoreLeads, hasMore, isFetchingMore }: LeadFeedPro
   return (
     <ScrollArea viewportRef={scrollRef} className="h-[calc(100vh-300px)]">
       <div className="space-y-4 pr-4">
-        {newTabList?.map(post => (
+        {leadList?.map(post => (
           <Card key={post.id} className="overflow-hidden">
             <CardContent className="p-6">
               <div className="flex flex-col space-y-4">
@@ -293,9 +177,7 @@ export function LeadFeed({ loadMoreLeads, hasMore, isFetchingMore }: LeadFeedPro
                   </div>
                 </div>
 
-                {/* <ScrollArea className="h-40"> */}
                 <HtmlBodyRenderer htmlString={post.metadata?.descriptionHtml || ""} />
-                {/* </ScrollArea> */}
 
                 {/* Last matched info */}
                 <div className="text-xs text-muted-foreground">
@@ -474,33 +356,17 @@ export function LeadFeed({ loadMoreLeads, hasMore, isFetchingMore }: LeadFeedPro
                     </button>
                   </>) : null}
 
-                  {/* {post.metadata?.suggestedDm &&
-                      <button
-                        onClick={() => toggleExpand(post.id)}
-                        className="ml-auto text-sm text-primary hover:underline"
-                      >
-                        {expandedId === post.id ? 'Hide DM suggestion' : 'Show DM suggestion'}
-                      </button>
-                    } */}
                 </div>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
-      <div className="flex justify-center my-4">
-        {/* {(hasMore && !isFetchingMore) && (
-          <button
-            onClick={loadMoreLeads}
-            className="px-4 py-2 rounded-md bg-primary text-white hover:bg-primary/90 transition"
-          >
-            Load More
-          </button>
-        )} */}
-        {isFetchingMore && (
-          <Loader2 className="animate-spin" size={26} />
-        )}
-      </div>
+      <InlineLoader
+        isVisible={isFetchingMore}
+        size={30}
+      />
+
     </ScrollArea>
   );
 }

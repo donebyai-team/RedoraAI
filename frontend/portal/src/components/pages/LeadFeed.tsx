@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { LeadFeed as LeadFeedComponent } from "@/components/dashboard/LeadFeed";
@@ -12,45 +12,28 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setLeadStatusFilter } from "@/store/Lead/leadSlice";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LeadStatus } from "@doota/pb/doota/core/v1/core_pb";
-import { useLeadFetcher } from "@/hooks/useLeadFetcher";
+import { useLeadListManager } from "@/hooks/useLeadListManager";
 
 export default function LeadFeed() {
 
   const dispatch = useAppDispatch();
-  const { dateRange, leadStatusFilter, isLoading, newTabList } = useAppSelector((state) => state.lead);
+  const { dateRange, leadStatusFilter, isLoading, leadList } = useAppSelector((state) => state.lead);
   const { relevancyScore, subReddit } = useAppSelector((state) => state.parems);
   const [pageNo, setPageNo] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
 
-  const hasRunInitialFetch = useRef(false);
-  const { fetchLeads } = useLeadFetcher({
+  const { loadMoreLeads } = useLeadListManager({
     relevancyScore,
     subReddit,
     dateRange,
     leadStatusFilter,
-    newTabList,
+    leadList,
     setPageNo,
     setHasMore,
-    setIsFetchingMore
+    setIsFetchingMore,
+    pageNo,
   });
-
-  // Run priority logic once
-  useEffect(() => {
-    if (!hasRunInitialFetch.current) {
-      fetchLeads({ loadType: "initial", usePriority: true });
-      hasRunInitialFetch.current = true;
-    } else {
-      fetchLeads({ loadType: "initial", usePriority: false });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [leadStatusFilter, relevancyScore, subReddit, dateRange]);
-
-  const loadMoreLeads = async () => {
-    if (isFetchingMore || !hasMore) return;
-
-    await fetchLeads({ pageNo: pageNo + 1, append: true, loadType: "pagination" });
-  };
 
   const renderTabContent = () => {
     if (isLoading) {
