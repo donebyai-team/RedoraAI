@@ -217,7 +217,7 @@ const NavBar: FC = () => {
 
     const getAllLeadsByStatus = async (status: LeadStatus): Promise<GetLeadsResponse> => {
       try {
-        const result = await portalClient.getLeadsByStatus({ status });
+        const result = await portalClient.getRelevantLeads({ status });
         return result;
       } catch (err: any) {
         const message = err?.response?.data?.message || err.message || "Something went wrong";

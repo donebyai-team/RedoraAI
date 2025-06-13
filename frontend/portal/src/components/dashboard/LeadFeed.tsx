@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Brain,
@@ -26,7 +26,6 @@ import {
 } from "@/components/ui/tooltip";
 import { toast } from "@/components/ui/use-toast";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { RootState } from "@/store/store";
 import { getFormattedDate } from "@/utils/format";
 import Link from "next/link";
 import { HtmlBodyRenderer, HtmlTitleRenderer, MarkdownRenderer } from "../Html/HtmlRenderer";
@@ -34,19 +33,19 @@ import { LeadStatus } from "@doota/pb/doota/core/v1/core_pb";
 import { portalClient } from "@/services/grpc";
 import { setNewTabList } from "@/store/Lead/leadSlice";
 
-const tabNameMap: Record<LeadStatus, string> = {
-  [LeadStatus.NEW]: "All",
-  [LeadStatus.COMPLETED]: "Responded",
-  [LeadStatus.NOT_RELEVANT]: "Skipped",
-  [LeadStatus.LEAD]: "Saved",
-};
+// const tabNameMap: Partial<Record<LeadStatus, string>> = {
+//   [LeadStatus.NEW]: "All",
+//   [LeadStatus.COMPLETED]: "Responded",
+//   [LeadStatus.NOT_RELEVANT]: "Skipped",
+//   [LeadStatus.LEAD]: "Saved",
+// };
 
-export function getTabName(value: LeadStatus | null | undefined): string {
-  if (!value) {
-    return "All";
-  }
-  return tabNameMap[value];
-}
+// export function getTabName(value: LeadStatus): string {
+//   if (!value) {
+//     return "All";
+//   }
+//   return tabNameMap[value];
+// }
 
 interface LeadFeedProps {
   loadMoreLeads: () => void;
@@ -59,10 +58,11 @@ export function LeadFeed({ loadMoreLeads, hasMore, isFetchingMore }: LeadFeedPro
   // const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedLeadId, setSelectedLeadId] = useState<string>("");
   // const [recentlyUsedAccounts, setRecentlyUsedAccounts] = useState<Record<string, Date>>({});
-  const { newTabList, leadStatusFilter } = useAppSelector((state: RootState) => state.lead);
+  const { newTabList, leadStatusFilter } = useAppSelector((state) => state.lead);
   // const { subredditList } = useAppSelector((state: RootState) => state.source);
   const { accounts: redditAccounts } = useAppSelector((state) => state.reddit);
   const dispatch = useAppDispatch();
+  const scrollRef = useRef<HTMLDivElement | null>(null);
 
   // // Sample data with assigned Reddit accounts and last replied timestamp
   // const posts: LeadPost[] = [
@@ -216,6 +216,25 @@ export function LeadFeed({ loadMoreLeads, hasMore, isFetchingMore }: LeadFeedPro
   // show post action button (Save as Lead,Mark as Responded,Skip)
   const isShowActionButton = (leadStatusFilter === null || leadStatusFilter === LeadStatus.NEW);
 
+  useEffect(() => {
+    const scrollEl = scrollRef.current;
+    if (!scrollEl) return;
+
+    const handleScroll = () => {
+      if (scrollEl.scrollHeight - scrollEl.scrollTop <= scrollEl.clientHeight + 10) {
+        if (hasMore && !isFetchingMore) {
+          loadMoreLeads();
+        }
+      }
+    };
+
+    scrollEl.addEventListener("scroll", handleScroll);
+
+    return () => {
+      scrollEl.removeEventListener("scroll", handleScroll);
+    };
+  }, [hasMore, isFetchingMore, loadMoreLeads]);
+
   if (newTabList?.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
@@ -229,7 +248,7 @@ export function LeadFeed({ loadMoreLeads, hasMore, isFetchingMore }: LeadFeedPro
   }
 
   return (
-    <ScrollArea className="h-[calc(100vh-300px)]">
+    <ScrollArea viewportRef={scrollRef} className="h-[calc(100vh-300px)]">
       <div className="space-y-4 pr-4">
         {newTabList?.map(post => (
           <Card key={post.id} className="overflow-hidden">
@@ -469,15 +488,15 @@ export function LeadFeed({ loadMoreLeads, hasMore, isFetchingMore }: LeadFeedPro
           </Card>
         ))}
       </div>
-      <div className="flex justify-center mt-4">
-        {(hasMore && !isFetchingMore) && (
+      <div className="flex justify-center my-4">
+        {/* {(hasMore && !isFetchingMore) && (
           <button
             onClick={loadMoreLeads}
             className="px-4 py-2 rounded-md bg-primary text-white hover:bg-primary/90 transition"
           >
             Load More
           </button>
-        )}
+        )} */}
         {isFetchingMore && (
           <Loader2 className="animate-spin" size={26} />
         )}
