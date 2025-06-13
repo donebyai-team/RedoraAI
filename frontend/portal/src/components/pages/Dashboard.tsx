@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -24,14 +24,14 @@ import { useRedditIntegrationStatus } from "../Leads/Tabs/useRedditIntegrationSt
 import { AnnouncementBanner } from "../dashboard/AnnouncementBanner";
 import { SubscriptionStatus } from "@doota/pb/doota/core/v1/core_pb";
 import { useAuth } from "@doota/ui-core/hooks/useAuth";
-import { useLeadFetcher } from "@/hooks/useLeadFetcher";
+import { useLeadListManager } from "@/hooks/useLeadListManager";
 
 export default function Dashboard() {
   const { portalClient } = useClientsContext()
   const { currentOrganization } = useAuth()
   const dispatch = useAppDispatch();
   const project = useAppSelector((state) => state.stepper.project);
-  const { dateRange, leadStatusFilter, isLoading, newTabList } = useAppSelector((state) => state.lead);
+  const { dateRange, leadStatusFilter, isLoading, leadList } = useAppSelector((state) => state.lead);
   const { relevancyScore, subReddit } = useAppSelector((state) => state.parems);
   const { isConnected, loading: isLoadingRedditIntegrationStatus } = useRedditIntegrationStatus();
   const [pageNo, setPageNo] = useState(1);
@@ -39,36 +39,18 @@ export default function Dashboard() {
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [counts, setCounts] = useState<LeadAnalysis | undefined>(undefined);
 
-  const hasRunInitialFetch = useRef(false);
-  const { fetchLeads } = useLeadFetcher({
+  const { loadMoreLeads } = useLeadListManager({
     relevancyScore,
     subReddit,
     dateRange,
     leadStatusFilter,
-    newTabList,
+    leadList,
     setPageNo,
     setCounts,
     setHasMore,
-    setIsFetchingMore
+    setIsFetchingMore,
+    pageNo,
   });
-
-  // Run priority logic once
-  useEffect(() => {
-    if (!hasRunInitialFetch.current) {
-      fetchLeads({ loadType: "initial", usePriority: true });
-      hasRunInitialFetch.current = true;
-    } else {
-      fetchLeads({ loadType: "initial", usePriority: false });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [leadStatusFilter, relevancyScore, subReddit, dateRange]);
-
-  // load more post when user scroll
-  const loadMoreLeads = async () => {
-    if (isFetchingMore || !hasMore) return;
-
-    await fetchLeads({ pageNo: pageNo + 1, append: true, loadType: "pagination" });
-  };
 
   // get all reddit account, used in Leed Feed
   useEffect(() => {
