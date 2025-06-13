@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-// import { toast } from "@/components/ui/use-toast";
+import { useEffect, useRef, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { LeadFeed as LeadFeedComponent } from "@/components/dashboard/LeadFeed";
@@ -9,17 +8,14 @@ import { RelevancyScoreSidebar } from "@/components/dashboard/RelevancyScoreSide
 import { FilterControls } from "@/components/dashboard/FilterControls";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { DashboardFooter } from "@/components/dashboard/DashboardFooter";
-import { useClientsContext } from "@doota/ui-core/context/ClientContext";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { setError, setIsLoading, setLeadStatusFilter, setNewTabList } from "@/store/Lead/leadSlice";
-import { toast } from "@/components/ui/use-toast";
+import { setLeadStatusFilter } from "@/store/Lead/leadSlice";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LeadStatus } from "@doota/pb/doota/core/v1/core_pb";
-import { DEFAULT_DATA_LIMIT, FetchFilters } from "./Dashboard";
+import { useLeadFetcher } from "@/hooks/useLeadFetcher";
 
 export default function LeadFeed() {
 
-  const { portalClient } = useClientsContext()
   const dispatch = useAppDispatch();
   const { dateRange, leadStatusFilter, isLoading, newTabList } = useAppSelector((state) => state.lead);
   const { relevancyScore, subReddit } = useAppSelector((state) => state.parems);
@@ -27,80 +23,33 @@ export default function LeadFeed() {
   const [hasMore, setHasMore] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
 
-  const tryFetch = async ({ status, relevancyScore, subReddit, dateRange, pageCount = DEFAULT_DATA_LIMIT, pageNo = 0 }: FetchFilters) => {
-    const result = await portalClient.getRelevantLeads({
-      ...(relevancyScore && { relevancyScore }),
-      ...(subReddit && { subReddit }),
-      ...(status && { status }),
-      ...(dateRange && { dateRange }),
-      pageCount,
-      pageNo
-    });
+  const hasRunInitialFetch = useRef(false);
+  const { fetchLeads } = useLeadFetcher({
+    relevancyScore,
+    subReddit,
+    dateRange,
+    leadStatusFilter,
+    newTabList,
+    setPageNo,
+    setHasMore,
+    setIsFetchingMore
+  });
 
-    return result;
-  };
-
-  const fetchLeads = async ({
-    page = 1,
-    append = false,
-    loadType = "initial", // "initial" | "pagination"
-  }: {
-    page?: number;
-    append?: boolean;
-    loadType?: "initial" | "pagination";
-  }) => {
-    try {
-      if (loadType === "initial") {
-        dispatch(setIsLoading(true));
-      } else {
-        setIsFetchingMore(true);
-      }
-
-      const result = await tryFetch({
-        status: leadStatusFilter,
-        relevancyScore,
-        subReddit,
-        dateRange,
-        pageNo: page,
-        pageCount: DEFAULT_DATA_LIMIT,
-      });
-
-      const leads = result.leads ?? [];
-
-      if (append) {
-        dispatch(setNewTabList([...newTabList, ...leads]));
-      } else {
-        dispatch(setNewTabList(leads));
-      }
-
-      setHasMore(leads.length >= (DEFAULT_DATA_LIMIT - 1));
-      setPageNo(page);
-
-    } catch (err: any) {
-      const message = err?.response?.data?.message || err.message || "Something went wrong";
-      toast({ title: "Error", description: message });
-      dispatch(setError(message));
-    } finally {
-      if (loadType === "initial") {
-        dispatch(setIsLoading(false));
-      } else {
-        setIsFetchingMore(false);
-      }
-    }
-  };
-
+  // Run priority logic once
   useEffect(() => {
-
-    fetchLeads({ page: 0, loadType: "initial" });
-
-    setPageNo(0);
+    if (!hasRunInitialFetch.current) {
+      fetchLeads({ loadType: "initial", usePriority: true });
+      hasRunInitialFetch.current = true;
+    } else {
+      fetchLeads({ loadType: "initial", usePriority: false });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dateRange, relevancyScore, subReddit, leadStatusFilter]);
+  }, [leadStatusFilter, relevancyScore, subReddit, dateRange]);
 
   const loadMoreLeads = async () => {
     if (isFetchingMore || !hasMore) return;
 
-    await fetchLeads({ page: pageNo + 1, append: true, loadType: "pagination" });
+    await fetchLeads({ pageNo: pageNo + 1, append: true, loadType: "pagination" });
   };
 
   const renderTabContent = () => {
