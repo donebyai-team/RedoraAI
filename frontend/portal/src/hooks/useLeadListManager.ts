@@ -17,7 +17,6 @@ export const useLeadListManager = ({
     leadStatusFilter,
     leadList,
     setPageNo,
-    setCounts,
     setHasMore,
     setIsFetchingMore,
     pageNo,
@@ -31,7 +30,6 @@ export const useLeadListManager = ({
         leadStatusFilter,
         leadList,
         setPageNo,
-        setCounts,
         setHasMore,
         setIsFetchingMore,
     });
