@@ -1,5 +1,7 @@
-const DEFAULT_DATA_LIMIT = 10;
+const LeadsCountPerPage = 10;
+const defaultPageNumber = 1;
 
 export { 
-    DEFAULT_DATA_LIMIT,
+    LeadsCountPerPage,
+    defaultPageNumber
 };

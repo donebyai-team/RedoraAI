@@ -4,8 +4,8 @@ import { Lead, LeadStatus } from '@doota/pb/doota/core/v1/core_pb'
 import { useAppDispatch } from '@/store/hooks'
 import { portalClient } from '@/services/grpc'
 import { setError, setIsLoading, setLeadList, setLeadStatusFilter } from '@/store/Lead/leadSlice'
-import { DEFAULT_DATA_LIMIT } from '@/utils/constants'
 import { DateRangeFilter } from '@doota/pb/doota/portal/v1/portal_pb'
+import { defaultPageNumber, LeadsCountPerPage } from '@/utils/constants'
 
 export interface LeadFetchParams {
   status: LeadStatus | null
@@ -55,8 +55,8 @@ export const useLeadFetcher = ({
       ...(params.subReddit && { subReddit: params.subReddit }),
       ...(params.status && { status: params.status }),
       ...(params.dateRange && { dateRange: params.dateRange }),
-      pageCount: params.pageCount ?? DEFAULT_DATA_LIMIT,
-      pageNo: params.pageNo ?? 1
+      pageCount: params.pageCount ?? LeadsCountPerPage,
+      pageNo: params.pageNo ?? defaultPageNumber
     })
   }, [])
 
@@ -75,17 +75,19 @@ export const useLeadFetcher = ({
   // Common handler: Success
   const handleSuccess = (response: Awaited<ReturnType<typeof fetchLeadsFromServer>>, pageNo: number) => {
     const newLeads = response?.leads ?? []
-    const hasMore = newLeads.length === DEFAULT_DATA_LIMIT
+    const hasMore = newLeads.length >= LeadsCountPerPage
 
     dispatch(setLeadList([...leadList, ...newLeads]))
     setCounts?.(response.analysis)
     setHasMore(hasMore)
-    setPageNo(pageNo)
+    if (hasMore) {
+      setPageNo(pageNo)
+    }
   }
 
   // Main Fetch Logic
   const fetchLeads = useCallback(
-    async ({ pageNo = 1, shouldFallbackToCompletedLeads = false, fetchType = 'initial' }: FetchOptions) => {
+    async ({ pageNo = defaultPageNumber, shouldFallbackToCompletedLeads = false, fetchType = 'initial' }: FetchOptions) => {
       setLoadingState(fetchType, true)
 
       try {
