@@ -31,11 +31,46 @@ type OrganizationFeatureFlags struct {
 	RelevancyScoreComment float64 `json:"relevancy_score_comment"`
 	MaxCommentsPerDay     int64   `json:"max_comments_per_day"` // specified by user, max can be based on the plan subscribed
 
-	CommentLLMModel   LLMModel      `json:"comment_llm_model"`
-	DMLLMModel        LLMModel      `json:"dm_llm_model"`
-	RelevancyLLMModel LLMModel      `json:"relevancy_llm_model"`
-	Subscription      *Subscription `json:"subscription"` // storing here for faster access
-	Activities        []OrgActivity `json:"activities"`
+	CommentLLMModel      LLMModel             `json:"comment_llm_model"`
+	DMLLMModel           LLMModel             `json:"dm_llm_model"`
+	RelevancyLLMModel    LLMModel             `json:"relevancy_llm_model"`
+	Subscription         *Subscription        `json:"subscription"` // storing here for faster access
+	Activities           []OrgActivity        `json:"activities"`
+	NotificationSettings NotificationSettings `json:"notification_settings"`
+}
+
+type NotificationSettings struct {
+	NotificationFrequencyPosts  NotificationFrequency `json:"notification_frequency_posts"`
+	LastRelevantPostAlertSentAt time.Time             `json:"last_relevant_post_alert_sent_at"`
+}
+
+func (f OrganizationFeatureFlags) ShouldSendRelevantPostAlert() bool {
+	if f.GetNotificationFrequency() == NotificationFrequencyDAILY {
+		return true
+	}
+
+	lastSent := f.NotificationSettings.LastRelevantPostAlertSentAt
+	if lastSent.IsZero() {
+		return false
+	}
+
+	// Normalize both times too midnight to ignore the time component
+	lastSentDate := time.Date(lastSent.Year(), lastSent.Month(), lastSent.Day(), 0, 0, 0, 0, lastSent.Location())
+	todayDate := time.Now()
+	todayDate = time.Date(todayDate.Year(), todayDate.Month(), todayDate.Day(), 0, 0, 0, 0, todayDate.Location())
+
+	oneWeekAgo := todayDate.AddDate(0, 0, -7)
+
+	// Send alert if last sent date is before or exactly 7 days ago
+	return !lastSentDate.After(oneWeekAgo)
+}
+
+func (f OrganizationFeatureFlags) GetNotificationFrequency() NotificationFrequency {
+	if f.NotificationSettings.NotificationFrequencyPosts == "" {
+		return NotificationFrequencyDAILY
+	}
+
+	return f.NotificationSettings.NotificationFrequencyPosts
 }
 
 func (f OrganizationFeatureFlags) GetSubscription() *Subscription {
@@ -109,6 +144,9 @@ type OrgActivity struct {
 }
 
 //go:generate go-enum -f=$GOFILE
+
+// ENUM(DAILY, WEEKLY)
+type NotificationFrequency string
 
 // ENUM(COMMENT_DISABLED_ACCOUNT_AGE_NEW, COMMENT_DISABLED_LOW_KARMA, COMMENT_ENABLED_WARMED_UP)
 type OrgActivityType string
