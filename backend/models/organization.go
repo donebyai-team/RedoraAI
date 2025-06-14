@@ -39,6 +39,16 @@ type OrganizationFeatureFlags struct {
 	NotificationSettings NotificationSettings `json:"notification_settings"`
 }
 
+func (f OrganizationFeatureFlags) ActivityExists(activity OrgActivityType) bool {
+	for _, act := range f.Activities {
+		if activity == act.ActivityType {
+			return true
+		}
+	}
+
+	return false
+}
+
 type NotificationSettings struct {
 	NotificationFrequencyPosts  NotificationFrequency `json:"notification_frequency_posts"`
 	LastRelevantPostAlertSentAt *time.Time            `json:"last_relevant_post_alert_sent_at"`

@@ -560,20 +560,20 @@ func (s *redditKeywordTracker) sendAutomatedComment(ctx context.Context, org *mo
 
 	autoCommentEnabled := org.FeatureFlags.EnableAutoComment
 
-	// Case 1: User is old enough, but auto comment is currently disabled — enable it
-	if isOldEnough && !autoCommentEnabled {
-		org.FeatureFlags.EnableAutoComment = true
-		activity := models.OrgActivityTypeCOMMENTENABLEDWARMEDUP
-		org.FeatureFlags.Activities = append(org.FeatureFlags.Activities, models.OrgActivity{
-			ActivityType: activity,
-			CreatedAt:    time.Now(),
-		})
-		if err := s.db.UpdateOrganization(ctx, org); err != nil {
-			return fmt.Errorf("failed to enable auto comment: %w", err)
-		}
-		s.logger.Info("enabled auto comment", zap.String("org_name", org.Name), zap.String("activity", activity.String()))
-		go s.alertNotifier.SendUserActivity(context.Background(), activity.String(), org.Name, redditConfig.Name)
-	}
+	//// Case 1: User is old enough, but auto comment is currently disabled because of OrgActivityTypeCOMMENTDISABLEDACCOUNTAGENEW
+	//// enable it
+	//if isOldEnough && !autoCommentEnabled && org.FeatureFlags.ActivityExists(models.OrgActivityTypeCOMMENTDISABLEDACCOUNTAGENEW) {
+	//	org.FeatureFlags.EnableAutoComment = true
+	//	activity := models.OrgActivityTypeCOMMENTENABLEDWARMEDUP
+	//	org.FeatureFlags.Activities = append(org.FeatureFlags.Activities, models.OrgActivity{
+	//		ActivityType: activity,
+	//		CreatedAt:    time.Now(),
+	//	})
+	//	if err := s.db.UpdateOrganization(ctx, org); err != nil {
+	//		return fmt.Errorf("failed to enable auto comment: %w", err)
+	//	}
+	//	s.logger.Info("enabled auto comment", zap.String("org_name", org.Name), zap.String("activity", activity.String()))
+	//}
 
 	// Case 2: User is not old enough, but auto comment is currently enabled — disable it
 	if !isOldEnough && autoCommentEnabled {
@@ -587,7 +587,8 @@ func (s *redditKeywordTracker) sendAutomatedComment(ctx context.Context, org *mo
 			return fmt.Errorf("failed to disable auto comment: %w", err)
 		}
 		s.logger.Info("disabled auto comment", zap.String("org_name", org.Name), zap.String("activity", activity.String()))
-		go s.alertNotifier.SendUserActivity(context.Background(), activity.String(), org.Name, redditConfig.Name)
+
+		go s.sendDisableAutomatedCommentAlert(ctx, org, redditConfig.Name)
 	}
 
 	// Only proceed if commenting is enabled and user is old enough
@@ -624,6 +625,30 @@ func (s *redditKeywordTracker) sendAutomatedComment(ctx context.Context, org *mo
 	}
 
 	return nil
+}
+
+func (s *redditKeywordTracker) sendDisableAutomatedCommentAlert(ctx context.Context, org *models.Organization, redditAccountName string) {
+	// acquire lock before sending
+	disableAutomatedCommentAlertKey := fmt.Sprintf("disable_automated_comment:%s", org.ID)
+	// Check if a call is already running across organizations
+	isRunning, err := s.state.IsRunning(ctx, disableAutomatedCommentAlertKey)
+	if err != nil {
+		s.logger.Error("failed to check if daily tracking summary is running", zap.Error(err))
+		return
+	}
+	if isRunning {
+		return
+	}
+
+	// Try to acquire the lock
+	if err := s.state.Acquire(ctx, org.ID, disableAutomatedCommentAlertKey); err != nil {
+		s.logger.Warn("could not acquire lock for disableAutomatedCommentAlertKey, skipped", zap.Error(err))
+		return
+	}
+
+	//s.alertNotifier.SendUserActivity(context.Background(), models.OrgActivityTypeCOMMENTDISABLEDACCOUNTAGENEW.String(), org.Name, redditAccountName)
+	s.alertNotifier.SendAutoCommentDisabledEmail(context.Background(), org.Name, redditAccountName)
+	return
 }
 
 func dailyCounterKey(orgID string) string {

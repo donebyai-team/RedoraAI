@@ -35,6 +35,7 @@ type AlertNotifier interface {
 	SendRedditChatConnectedAlert(ctx context.Context, email string)
 	SendTrialExpiredEmail(ctx context.Context, orgID string, trialDays int) error
 	SendInteractionError(ctx context.Context, interactionID string, err error)
+	SendAutoCommentDisabledEmail(ctx context.Context, orgID string, redditUsername string)
 }
 
 type SlackNotifier struct {
@@ -93,6 +94,51 @@ func (s *SlackNotifier) SendUserActivity(ctx context.Context, activity, orgName,
 	if err := s.send(ctx, msg, redoraChannel); err != nil {
 		s.logger.Error("failed to send user activity to Slack", zap.Error(err))
 	}
+}
+
+func (s *SlackNotifier) SendAutoCommentDisabledEmail(ctx context.Context, orgID string, redditUsername string) {
+	users, err := s.db.GetUsersByOrgID(ctx, orgID)
+	if err != nil {
+		return
+	}
+
+	if len(users) == 0 {
+		return
+	}
+
+	to := make([]string, 0, len(users))
+	for _, user := range users {
+		to = append(to, user.Email)
+	}
+
+	htmlBody := fmt.Sprintf(`
+		<!DOCTYPE html>
+		<html>
+		<body style="font-family: Arial, sans-serif; background-color: #f7f9fc; padding: 20px;">
+		  <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 30px; border-radius: 8px;">
+		    <h2>🚫 Automated Comments Disabled for Your Reddit Account</h2>
+		    <p>We've detected that your connected Reddit account <strong>u/%s</strong> is less than 2 weeks old. To protect your account from potential bans, we've temporarily disabled automated comments.</p>
+		    <p>New Reddit accounts are under higher scrutiny, and premature automation can result in bans or rate-limiting.</p>
+		    <hr>
+		    <footer style="font-size: 12px; color: #888;">
+		      <p><strong>RedoraAI</strong> — AI for Intelligent Lead Generation</p>
+		      <p>Need help or have questions? <a href="mailto:adarsh@redoraai.com">adarsh@redoraai.com</a></p>
+		    </footer>
+		  </div>
+		</body>
+		</html>
+	`, redditUsername)
+
+	params := &resend.SendEmailRequest{
+		From:    "RedoraAI <leads@alerts.redoraai.com>",
+		To:      to,
+		Cc:      []string{"shashank@donebyai.team", "adarsh@redoraai.com"},
+		Subject: "🚫 Auto Commenting Disabled",
+		Html:    htmlBody,
+	}
+
+	_, err = s.ResendClient.Emails.Send(params)
+	return
 }
 
 func (s *SlackNotifier) SendNewProductAddedAlert(ctx context.Context, productName, website string) {
