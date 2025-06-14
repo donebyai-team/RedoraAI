@@ -41,7 +41,7 @@ type OrganizationFeatureFlags struct {
 
 type NotificationSettings struct {
 	NotificationFrequencyPosts  NotificationFrequency `json:"notification_frequency_posts"`
-	LastRelevantPostAlertSentAt time.Time             `json:"last_relevant_post_alert_sent_at"`
+	LastRelevantPostAlertSentAt *time.Time            `json:"last_relevant_post_alert_sent_at"`
 }
 
 func (f OrganizationFeatureFlags) ShouldSendRelevantPostAlert() bool {
@@ -50,7 +50,7 @@ func (f OrganizationFeatureFlags) ShouldSendRelevantPostAlert() bool {
 	}
 
 	lastSent := f.NotificationSettings.LastRelevantPostAlertSentAt
-	if lastSent.IsZero() {
+	if lastSent == nil || lastSent.IsZero() {
 		return false
 	}
 

@@ -248,7 +248,7 @@ func (s *redditKeywordTracker) sendAlert(ctx context.Context, project *models.Pr
 		}
 
 		// update last sent alert
-		organization.FeatureFlags.NotificationSettings.LastRelevantPostAlertSentAt = time.Now()
+		organization.FeatureFlags.NotificationSettings.LastRelevantPostAlertSentAt = utils.Ptr(time.Now())
 		err = s.db.UpdateOrganization(ctx, organization)
 		if err != nil {
 			s.logger.Error("failed to update organization while saving last_relevant_post_alert_sent_at", zap.Error(err))
