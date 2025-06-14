@@ -715,6 +715,11 @@ export declare type OrganizationFeatureFlags = Message<"doota.portal.v1.Organiza
    * @generated from field: doota.portal.v1.AutomationSetting Comment = 3;
    */
   Comment?: AutomationSetting;
+
+  /**
+   * @generated from field: doota.portal.v1.NotificationSettings notification_settings = 4;
+   */
+  notificationSettings?: NotificationSettings;
 };
 
 /**
@@ -722,6 +727,22 @@ export declare type OrganizationFeatureFlags = Message<"doota.portal.v1.Organiza
  * Use `create(OrganizationFeatureFlagsSchema)` to create a new message.
  */
 export declare const OrganizationFeatureFlagsSchema: GenMessage<OrganizationFeatureFlags>;
+
+/**
+ * @generated from message doota.portal.v1.NotificationSettings
+ */
+export declare type NotificationSettings = Message<"doota.portal.v1.NotificationSettings"> & {
+  /**
+   * @generated from field: doota.portal.v1.NotificationFrequency relevant_post_frequency = 1;
+   */
+  relevantPostFrequency: NotificationFrequency;
+};
+
+/**
+ * Describes the message doota.portal.v1.NotificationSettings.
+ * Use `create(NotificationSettingsSchema)` to create a new message.
+ */
+export declare const NotificationSettingsSchema: GenMessage<NotificationSettings>;
 
 /**
  * @generated from message doota.portal.v1.AutomationSetting
@@ -1034,6 +1055,31 @@ export enum UserRole {
  * Describes the enum doota.portal.v1.UserRole.
  */
 export declare const UserRoleSchema: GenEnum<UserRole>;
+
+/**
+ * @generated from enum doota.portal.v1.NotificationFrequency
+ */
+export enum NotificationFrequency {
+  /**
+   * @generated from enum value: NOTIFICATION_FREQUENCY_NONE = 0;
+   */
+  NONE = 0,
+
+  /**
+   * @generated from enum value: NOTIFICATION_FREQUENCY_DAILY = 1;
+   */
+  DAILY = 1,
+
+  /**
+   * @generated from enum value: NOTIFICATION_FREQUENCY_WEEKLY = 2;
+   */
+  WEEKLY = 2,
+}
+
+/**
+ * Describes the enum doota.portal.v1.NotificationFrequency.
+ */
+export declare const NotificationFrequencySchema: GenEnum<NotificationFrequency>;
 
 /**
  * @generated from enum doota.portal.v1.IntegrationType

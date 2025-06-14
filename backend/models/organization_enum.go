@@ -12,6 +12,8 @@ import (
 )
 
 const (
+	// NotificationFrequencyNONE is a NotificationFrequency of type NONE.
+	NotificationFrequencyNONE NotificationFrequency = "NONE"
 	// NotificationFrequencyDAILY is a NotificationFrequency of type DAILY.
 	NotificationFrequencyDAILY NotificationFrequency = "DAILY"
 	// NotificationFrequencyWEEKLY is a NotificationFrequency of type WEEKLY.
@@ -33,6 +35,7 @@ func (x NotificationFrequency) IsValid() bool {
 }
 
 var _NotificationFrequencyValue = map[string]NotificationFrequency{
+	"NONE":   NotificationFrequencyNONE,
 	"DAILY":  NotificationFrequencyDAILY,
 	"WEEKLY": NotificationFrequencyWEEKLY,
 }

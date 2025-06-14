@@ -216,6 +216,17 @@ message OrganizationFeatureFlags {
   core.v1.Subscription subscription = 1;
   AutomationSetting DM = 2;
   AutomationSetting Comment = 3;
+  NotificationSettings notification_settings = 4;
+}
+
+enum NotificationFrequency {
+  NOTIFICATION_FREQUENCY_NONE = 0;
+  NOTIFICATION_FREQUENCY_DAILY = 1;
+  NOTIFICATION_FREQUENCY_WEEKLY = 2;
+}
+
+message NotificationSettings {
+    NotificationFrequency relevant_post_frequency = 1;
 }
 
 message AutomationSetting {

@@ -145,7 +145,7 @@ type OrgActivity struct {
 
 //go:generate go-enum -f=$GOFILE
 
-// ENUM(DAILY, WEEKLY)
+// ENUM(NONE, DAILY, WEEKLY)
 type NotificationFrequency string
 
 // ENUM(COMMENT_DISABLED_ACCOUNT_AGE_NEW, COMMENT_DISABLED_LOW_KARMA, COMMENT_ENABLED_WARMED_UP)
