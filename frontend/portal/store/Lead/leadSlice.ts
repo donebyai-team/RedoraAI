@@ -1,42 +1,27 @@
 import { Lead, LeadStatus } from "@doota/pb/doota/core/v1/core_pb";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { DateRangeFilter } from "@doota/pb/doota/portal/v1/portal_pb";
-
-export type LeadTyeps = Lead;
-
-export enum LeadTabStatus {
-    NEW = "new",
-    COMPLETED = "completed",
-    DISCARDED = "discarded",
-    LEAD = "lead"
-}
+import { DateRangeFilter, LeadAnalysis } from "@doota/pb/doota/portal/v1/portal_pb";
 
 // Define the types
 interface LeadStateTyeps {
-    newTabList: LeadTyeps[];
-    completedTabList: LeadTyeps[];
-    discardedTabList: LeadTyeps[];
-    leadsTabList: LeadTyeps[];
-    selectedleadData: LeadTyeps | null;
+    leadList: Lead[];
+    selectedleadData: Lead | null;
     isLoading: boolean;
-    activeTab: LeadTabStatus;
     error: string | null;
     leadStatusFilter: LeadStatus | null;
     dateRange: DateRangeFilter;
+    dashboardCounts: LeadAnalysis | undefined;
 }
 
 // Initial state
 const initialState: LeadStateTyeps = {
-    newTabList: [],
-    completedTabList: [],
-    discardedTabList: [],
-    leadsTabList: [],
+    leadList: [],
     selectedleadData: null,
-    isLoading: true,
-    activeTab: LeadTabStatus.NEW,
+    isLoading: false,
     error: null,
     leadStatusFilter: null,
-    dateRange: DateRangeFilter.DATE_RANGE_7_DAYS
+    dateRange: DateRangeFilter.DATE_RANGE_7_DAYS,
+    dashboardCounts: undefined
 };
 
 // Slice
@@ -44,23 +29,14 @@ const leadSlice = createSlice({
     name: 'lead',
     initialState,
     reducers: {
-        setNewTabList: (state, action: PayloadAction<LeadTyeps[]>) => {
-            state.newTabList = action.payload;
+        setLeadList: (state, action: PayloadAction<Lead[]>) => {
+            state.leadList = action.payload;
         },
-        setCompletedList: (state, action: PayloadAction<LeadTyeps[]>) => {
-            state.completedTabList = action.payload;
+        setDashboardCounts: (state, action: PayloadAction<LeadAnalysis | undefined>) => {
+            state.dashboardCounts = action.payload;
         },
-        setDiscardedTabList: (state, action: PayloadAction<LeadTyeps[]>) => {
-            state.discardedTabList = action.payload;
-        },
-        setLeadsTabList: (state, action: PayloadAction<LeadTyeps[]>) => {
-            state.leadsTabList = action.payload;
-        },
-        setSelectedLeadData: (state, action: PayloadAction<LeadTyeps | null>) => {
+        setSelectedLeadData: (state, action: PayloadAction<Lead | null>) => {
             state.selectedleadData = action.payload;
-        },
-        setActiveTab: (state, action: PayloadAction<LeadTabStatus>) => {
-            state.activeTab = action.payload;
         },
         setIsLoading: (state, action: PayloadAction<boolean>) => {
             state.isLoading = action.payload;
@@ -80,12 +56,9 @@ const leadSlice = createSlice({
 
 // Export actions
 export const {
-    setNewTabList,
-    setCompletedList,
-    setDiscardedTabList,
-    setLeadsTabList,
+    setLeadList,
+    setDashboardCounts,
     setSelectedLeadData,
-    setActiveTab,
     setError,
     setIsLoading,
     setLeadStatusFilter,

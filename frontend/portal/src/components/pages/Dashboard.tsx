@@ -1,21 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  // ArrowUp,
-  // MessageSquare,
   Search,
-  // Bell,
-  // User,
-  // Filter,
-  // Send,
-  // Save,
-  // X,
   Clock
 } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SummaryCards } from "@/components/dashboard/SummaryCards";
 import { LeadFeed } from "@/components/dashboard/LeadFeed";
@@ -26,139 +17,38 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { DashboardFooter } from "@/components/dashboard/DashboardFooter";
 import { useClientsContext } from "@doota/ui-core/context/ClientContext";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
-import { setError, setIsLoading, setLeadStatusFilter, setNewTabList } from "../../../store/Lead/leadSlice";
-import { DateRangeFilter, LeadAnalysis } from "@doota/pb/doota/portal/v1/portal_pb";
+import { setError } from "../../../store/Lead/leadSlice";
 import { setAccounts, setLoading } from "@/store/Reddit/RedditSlice";
 import { useRedditIntegrationStatus } from "../Leads/Tabs/useRedditIntegrationStatus";
 import { AnnouncementBanner } from "../dashboard/AnnouncementBanner";
-import { LeadStatus, SubscriptionStatus } from "@doota/pb/doota/core/v1/core_pb";
+import { SubscriptionStatus } from "@doota/pb/doota/core/v1/core_pb";
 import { useAuth } from "@doota/ui-core/hooks/useAuth";
-
-export interface FetchFilters {
-  status: LeadStatus | null;
-  relevancyScore?: number;
-  subReddit?: string;
-  dateRange?: DateRangeFilter;
-  pageCount?: number;
-  pageNo?: number;
-}
-
-export const DEFAULT_DATA_LIMIT = 10;
+import { useLeadListManager } from "@/hooks/useLeadListManager";
+import { defaultPageNumber } from "@/utils/constants";
 
 export default function Dashboard() {
   const { portalClient } = useClientsContext()
   const { currentOrganization } = useAuth()
   const dispatch = useAppDispatch();
   const project = useAppSelector((state) => state.stepper.project);
-  const { dateRange, leadStatusFilter, isLoading, newTabList } = useAppSelector((state) => state.lead);
+  const { dateRange, leadStatusFilter, isLoading, leadList, dashboardCounts } = useAppSelector((state) => state.lead);
   const { relevancyScore, subReddit } = useAppSelector((state) => state.parems);
   const { isConnected, loading: isLoadingRedditIntegrationStatus } = useRedditIntegrationStatus();
-  const [pageNo, setPageNo] = useState(0);
+  const [pageNo, setPageNo] = useState(defaultPageNumber);
   const [hasMore, setHasMore] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
-  const [counts, setCounts] = useState<LeadAnalysis | undefined>(undefined);
-  const hasCheckedInitialLeads = useRef(false);
 
-  const tryFetch = async ({ status, relevancyScore, subReddit, dateRange, pageCount = DEFAULT_DATA_LIMIT, pageNo = 0 }: FetchFilters) => {
-    const result = await portalClient.getRelevantLeads({
-      ...(relevancyScore && { relevancyScore }),
-      ...(subReddit && { subReddit }),
-      ...(status && { status }),
-      ...(dateRange && { dateRange }),
-      pageCount,
-      pageNo
-    });
-
-    return result;
-  };
-
-  const fetchLeads = async ({
-    page = 0,
-    append = false,
-    usePriority = false,
-    loadType = "initial", // "initial" | "pagination"
-  }: {
-    page?: number;
-    append?: boolean;
-    usePriority?: boolean;
-    loadType?: "initial" | "pagination";
-  }) => {
-    try {
-      if (loadType === "initial") {
-        dispatch(setIsLoading(true));
-      } else {
-        setIsFetchingMore(true);
-      }
-
-      if (usePriority) {
-        // Prioritized initial load
-        const leadStatusPriority: LeadStatus[] = [LeadStatus.NEW, LeadStatus.COMPLETED];
-        for (const status of leadStatusPriority) {
-          const result = await tryFetch({ status, relevancyScore, subReddit, dateRange, pageNo: 1 });
-          const leads = result.leads ?? [];
-
-          if (leads.length > 0) {
-            dispatch(setNewTabList(leads));
-            dispatch(setLeadStatusFilter(status));
-            setCounts(result.analysis);
-            setHasMore(leads.length >= (DEFAULT_DATA_LIMIT - 1));
-            setPageNo(1);
-            break;
-          }
-        }
-
-        hasCheckedInitialLeads.current = true;
-      } else {
-        const result = await tryFetch({
-          status: leadStatusFilter,
-          relevancyScore,
-          subReddit,
-          dateRange,
-          pageNo: page,
-          pageCount: DEFAULT_DATA_LIMIT,
-        });
-
-        const leads = result.leads ?? [];
-
-        if (append) {
-          dispatch(setNewTabList([...newTabList, ...leads]));
-        } else {
-          dispatch(setNewTabList(leads));
-        }
-
-        setCounts(result.analysis);
-        setHasMore(leads.length >= (DEFAULT_DATA_LIMIT - 1));
-        setPageNo(page);
-      }
-    } catch (err: any) {
-      const message = err?.response?.data?.message || err.message || "Something went wrong";
-      toast({ title: "Error", description: message });
-      dispatch(setError(message));
-    } finally {
-      if (loadType === "initial") {
-        dispatch(setIsLoading(false));
-      } else {
-        setIsFetchingMore(false);
-      }
-    }
-  };
-
-  useEffect(() => {
-    if (!hasCheckedInitialLeads.current) {
-      fetchLeads({ usePriority: true, loadType: "initial" });
-    } else {
-      fetchLeads({ page: 0, loadType: "initial" });
-    }
-
-    setPageNo(1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dateRange, relevancyScore, subReddit, leadStatusFilter]);
-
-  const loadMoreLeads = async () => {
-    if (isFetchingMore || !hasMore) return;
-
-    await fetchLeads({ page: pageNo + 1, append: true, loadType: "pagination" });
-  };
+  const { loadMoreLeads } = useLeadListManager({
+    relevancyScore,
+    subReddit,
+    dateRange,
+    leadStatusFilter,
+    leadList,
+    setPageNo,
+    setHasMore,
+    setIsFetchingMore,
+    pageNo,
+  });
 
   // get all reddit account, used in Leed Feed
   useEffect(() => {
@@ -211,7 +101,7 @@ export default function Dashboard() {
                 </p>
               </div>
 
-              <SummaryCards counts={counts} />
+              <SummaryCards counts={dashboardCounts} />
 
               {isLoadingRedditIntegrationStatus ? (<>
                 <div className="flex-1 flex justify-center space-y-4 mt-6">
