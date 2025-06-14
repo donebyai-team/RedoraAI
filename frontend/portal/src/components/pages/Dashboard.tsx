@@ -24,7 +24,6 @@ import { AnnouncementBanner } from "../dashboard/AnnouncementBanner";
 import { SubscriptionStatus } from "@doota/pb/doota/core/v1/core_pb";
 import { useAuth } from "@doota/ui-core/hooks/useAuth";
 import { useLeadListManager } from "@/hooks/useLeadListManager";
-import { defaultPageNumber } from "@/utils/constants";
 
 export default function Dashboard() {
   const { portalClient } = useClientsContext()
@@ -34,7 +33,6 @@ export default function Dashboard() {
   const { dateRange, leadStatusFilter, isLoading, leadList, dashboardCounts } = useAppSelector((state) => state.lead);
   const { relevancyScore, subReddit } = useAppSelector((state) => state.parems);
   const { isConnected, loading: isLoadingRedditIntegrationStatus } = useRedditIntegrationStatus();
-  const [pageNo, setPageNo] = useState(defaultPageNumber);
   const [hasMore, setHasMore] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
 
@@ -44,11 +42,11 @@ export default function Dashboard() {
     dateRange,
     leadStatusFilter,
     leadList,
-    setPageNo,
     setHasMore,
     setIsFetchingMore,
-    pageNo,
   });
+
+  console.log("####_123");
 
   // get all reddit account, used in Leed Feed
   useEffect(() => {

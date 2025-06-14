@@ -1,9 +1,8 @@
 import { useEffect, useRef } from "react";
 import { useLeadFetcher, UseLeadFetcherProps, } from "./useLeadFetcher";
+import { useAppSelector } from "@/store/hooks";
 
-export interface UseLeadListManagerParams extends UseLeadFetcherProps {
-    pageNo: number;
-}
+export interface UseLeadListManagerParams extends UseLeadFetcherProps { }
 
 export interface loadMoreLeadsProps {
     isFetchingMore: boolean;
@@ -16,20 +15,18 @@ export const useLeadListManager = ({
     dateRange,
     leadStatusFilter,
     leadList,
-    setPageNo,
     setHasMore,
     setIsFetchingMore,
-    pageNo,
 }: UseLeadListManagerParams) => {
     const hasRunInitialFetch = useRef(false);
-
+    const { pageNo } = useAppSelector((state) => state.lead);
+ console.log("####_pageNo ", pageNo)
     const { fetchLeads } = useLeadFetcher({
         relevancyScore,
         subReddit,
         dateRange,
         leadStatusFilter,
         leadList,
-        setPageNo,
         setHasMore,
         setIsFetchingMore,
     });
@@ -37,13 +34,19 @@ export const useLeadListManager = ({
     // initial prioritized fetch
     useEffect(() => {
         if (!hasRunInitialFetch.current) {
-            fetchLeads({ fetchType: "initial", shouldFallbackToCompletedLeads: true });
-            hasRunInitialFetch.current = true;
+            if (!leadList.length) {
+                fetchLeads({ fetchType: "initial", shouldFallbackToCompletedLeads: true });
+                hasRunInitialFetch.current = true;
+            }
         } else {
-            fetchLeads({ fetchType: "initial", shouldFallbackToCompletedLeads: false });
+            if (!leadList.length) {
+                fetchLeads({ fetchType: "initial", shouldFallbackToCompletedLeads: false });
+            }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [leadStatusFilter, relevancyScore, subReddit, dateRange]);
+
+    console.log("####_222")
 
     // function for loading more on scroll
     const loadMoreLeads = async ({ isFetchingMore, hasMore }: loadMoreLeadsProps) => {

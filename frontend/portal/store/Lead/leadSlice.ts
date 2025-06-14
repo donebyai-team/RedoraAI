@@ -1,6 +1,7 @@
 import { Lead, LeadStatus } from "@doota/pb/doota/core/v1/core_pb";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { DateRangeFilter, LeadAnalysis } from "@doota/pb/doota/portal/v1/portal_pb";
+import { defaultPageNumber } from "@/utils/constants";
 
 // Define the types
 interface LeadStateTyeps {
@@ -11,6 +12,7 @@ interface LeadStateTyeps {
     leadStatusFilter: LeadStatus | null;
     dateRange: DateRangeFilter;
     dashboardCounts: LeadAnalysis | undefined;
+    pageNo: number;
 }
 
 // Initial state
@@ -21,7 +23,8 @@ const initialState: LeadStateTyeps = {
     error: null,
     leadStatusFilter: null,
     dateRange: DateRangeFilter.DATE_RANGE_7_DAYS,
-    dashboardCounts: undefined
+    dashboardCounts: undefined,
+    pageNo: defaultPageNumber,
 };
 
 // Slice
@@ -50,6 +53,9 @@ const leadSlice = createSlice({
         setDateRange: (state, action: PayloadAction<DateRangeFilter>) => {
             state.dateRange = action.payload;
         },
+        setPageNo: (state, action: PayloadAction<number>) => {
+            state.pageNo = action.payload;
+        },
     },
 
 });
@@ -63,6 +69,7 @@ export const {
     setIsLoading,
     setLeadStatusFilter,
     setDateRange,
+    setPageNo
 } = leadSlice.actions;
 
 // Export reducer

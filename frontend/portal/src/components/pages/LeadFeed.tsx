@@ -13,16 +13,16 @@ import { setLeadStatusFilter } from "@/store/Lead/leadSlice";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LeadStatus } from "@doota/pb/doota/core/v1/core_pb";
 import { useLeadListManager } from "@/hooks/useLeadListManager";
-import { defaultPageNumber } from "@/utils/constants";
+import { useSetLeadFilters } from "@/hooks/useSetLeadFilters";
 
 export default function LeadFeed() {
 
   const dispatch = useAppDispatch();
   const { dateRange, leadStatusFilter, isLoading, leadList } = useAppSelector((state) => state.lead);
   const { relevancyScore, subReddit } = useAppSelector((state) => state.parems);
-  const [pageNo, setPageNo] = useState(defaultPageNumber);
   const [hasMore, setHasMore] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
+  const { resetData } = useSetLeadFilters();
 
   const { loadMoreLeads } = useLeadListManager({
     relevancyScore,
@@ -30,10 +30,8 @@ export default function LeadFeed() {
     dateRange,
     leadStatusFilter,
     leadList,
-    setPageNo,
     setHasMore,
     setIsFetchingMore,
-    pageNo,
   });
 
   const renderTabContent = () => {
@@ -73,6 +71,7 @@ export default function LeadFeed() {
   ];
 
   const handleLeadStatusFilterChange = (value: string) => {
+    resetData();
     const selected = tabOptions.find((tab) => tab.label === value);
     dispatch(setLeadStatusFilter(selected?.status ?? null));
   };
