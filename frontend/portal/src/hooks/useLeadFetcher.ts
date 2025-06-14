@@ -3,7 +3,7 @@ import { toast } from '@/components/ui/use-toast'
 import { Lead, LeadStatus } from '@doota/pb/doota/core/v1/core_pb'
 import { useAppDispatch } from '@/store/hooks'
 import { portalClient } from '@/services/grpc'
-import { setError, setIsLoading, setLeadList, setLeadStatusFilter } from '@/store/Lead/leadSlice'
+import { setDashboardCounts, setError, setIsLoading, setLeadList, setLeadStatusFilter } from '@/store/Lead/leadSlice'
 import { DateRangeFilter } from '@doota/pb/doota/portal/v1/portal_pb'
 import { defaultPageNumber, LeadsCountPerPage } from '@/utils/constants'
 
@@ -12,7 +12,6 @@ export interface LeadFetchParams {
   relevancyScore?: number
   subReddit?: string
   dateRange?: DateRangeFilter
-  pageCount?: number
   pageNo?: number
 }
 
@@ -29,7 +28,6 @@ export interface UseLeadFetcherProps {
   leadStatusFilter: LeadStatus | null
   leadList: Lead[]
   setPageNo: (pageNo: number) => void
-  setCounts?: (data: any) => void
   setHasMore: (hasMore: boolean) => void
   setIsFetchingMore: (isLoading: boolean) => void
 }
@@ -41,7 +39,6 @@ export const useLeadFetcher = ({
   leadStatusFilter,
   leadList,
   setPageNo,
-  setCounts,
   setHasMore,
   setIsFetchingMore
 }: UseLeadFetcherProps) => {
@@ -55,8 +52,8 @@ export const useLeadFetcher = ({
       ...(params.subReddit && { subReddit: params.subReddit }),
       ...(params.status && { status: params.status }),
       ...(params.dateRange && { dateRange: params.dateRange }),
-      pageCount: params.pageCount ?? LeadsCountPerPage,
-      pageNo: params.pageNo ?? defaultPageNumber
+      pageCount: LeadsCountPerPage,
+      pageNo: params.pageNo
     })
   }, [])
 
@@ -78,7 +75,7 @@ export const useLeadFetcher = ({
     const hasMore = newLeads.length >= LeadsCountPerPage
 
     dispatch(setLeadList([...leadList, ...newLeads]))
-    setCounts?.(response.analysis)
+    dispatch(setDashboardCounts(response.analysis))
     setHasMore(hasMore)
     if (hasMore) {
       setPageNo(pageNo)

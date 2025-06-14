@@ -18,7 +18,6 @@ import { DashboardFooter } from "@/components/dashboard/DashboardFooter";
 import { useClientsContext } from "@doota/ui-core/context/ClientContext";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { setError } from "../../../store/Lead/leadSlice";
-import { LeadAnalysis } from "@doota/pb/doota/portal/v1/portal_pb";
 import { setAccounts, setLoading } from "@/store/Reddit/RedditSlice";
 import { useRedditIntegrationStatus } from "../Leads/Tabs/useRedditIntegrationStatus";
 import { AnnouncementBanner } from "../dashboard/AnnouncementBanner";
@@ -32,13 +31,12 @@ export default function Dashboard() {
   const { currentOrganization } = useAuth()
   const dispatch = useAppDispatch();
   const project = useAppSelector((state) => state.stepper.project);
-  const { dateRange, leadStatusFilter, isLoading, leadList } = useAppSelector((state) => state.lead);
+  const { dateRange, leadStatusFilter, isLoading, leadList, dashboardCounts } = useAppSelector((state) => state.lead);
   const { relevancyScore, subReddit } = useAppSelector((state) => state.parems);
   const { isConnected, loading: isLoadingRedditIntegrationStatus } = useRedditIntegrationStatus();
   const [pageNo, setPageNo] = useState(defaultPageNumber);
   const [hasMore, setHasMore] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
-  const [counts, setCounts] = useState<LeadAnalysis | undefined>(undefined);
 
   const { loadMoreLeads } = useLeadListManager({
     relevancyScore,
@@ -47,7 +45,6 @@ export default function Dashboard() {
     leadStatusFilter,
     leadList,
     setPageNo,
-    setCounts,
     setHasMore,
     setIsFetchingMore,
     pageNo,
@@ -104,7 +101,7 @@ export default function Dashboard() {
                 </p>
               </div>
 
-              <SummaryCards counts={counts} />
+              <SummaryCards counts={dashboardCounts} />
 
               {isLoadingRedditIntegrationStatus ? (<>
                 <div className="flex-1 flex justify-center space-y-4 mt-6">
