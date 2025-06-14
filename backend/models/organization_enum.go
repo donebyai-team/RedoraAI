@@ -12,6 +12,40 @@ import (
 )
 
 const (
+	// NotificationFrequencyDAILY is a NotificationFrequency of type DAILY.
+	NotificationFrequencyDAILY NotificationFrequency = "DAILY"
+	// NotificationFrequencyWEEKLY is a NotificationFrequency of type WEEKLY.
+	NotificationFrequencyWEEKLY NotificationFrequency = "WEEKLY"
+)
+
+var ErrInvalidNotificationFrequency = errors.New("not a valid NotificationFrequency")
+
+// String implements the Stringer interface.
+func (x NotificationFrequency) String() string {
+	return string(x)
+}
+
+// IsValid provides a quick way to determine if the typed value is
+// part of the allowed enumerated values
+func (x NotificationFrequency) IsValid() bool {
+	_, err := ParseNotificationFrequency(string(x))
+	return err == nil
+}
+
+var _NotificationFrequencyValue = map[string]NotificationFrequency{
+	"DAILY":  NotificationFrequencyDAILY,
+	"WEEKLY": NotificationFrequencyWEEKLY,
+}
+
+// ParseNotificationFrequency attempts to convert a string to a NotificationFrequency.
+func ParseNotificationFrequency(name string) (NotificationFrequency, error) {
+	if x, ok := _NotificationFrequencyValue[name]; ok {
+		return x, nil
+	}
+	return NotificationFrequency(""), fmt.Errorf("%s is %w", name, ErrInvalidNotificationFrequency)
+}
+
+const (
 	// OrgActivityTypeCOMMENTDISABLEDACCOUNTAGENEW is a OrgActivityType of type COMMENT_DISABLED_ACCOUNT_AGE_NEW.
 	OrgActivityTypeCOMMENTDISABLEDACCOUNTAGENEW OrgActivityType = "COMMENT_DISABLED_ACCOUNT_AGE_NEW"
 	// OrgActivityTypeCOMMENTDISABLEDLOWKARMA is a OrgActivityType of type COMMENT_DISABLED_LOW_KARMA.

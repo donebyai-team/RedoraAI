@@ -97,7 +97,7 @@ func (s *redditKeywordTracker) TrackKeyword(ctx context.Context, tracker *models
 	}
 
 	// Once done, send the summary
-	go s.sendAlert(context.Background(), tracker.Project)
+	go s.sendAlert(context.Background(), tracker.Project, tracker.Organization)
 
 	return nil
 }
@@ -171,7 +171,12 @@ func (s *redditKeywordTracker) disableProject(ctx context.Context, organization 
 	}
 }
 
-func (s *redditKeywordTracker) sendAlert(ctx context.Context, project *models.Project) {
+func (s *redditKeywordTracker) sendAlert(ctx context.Context, project *models.Project, organization *models.Organization) {
+	if !organization.FeatureFlags.ShouldSendRelevantPostAlert() {
+		s.logger.Info("notification disabled, skipped sending alert")
+		return
+	}
+
 	isTrackingDoneKey := fmt.Sprintf("daily_tracking_summary:%s", project.ID)
 	// Check if a call is already running across organizations
 	isRunning, err := s.state.IsRunning(ctx, isTrackingDoneKey)
@@ -203,8 +208,16 @@ func (s *redditKeywordTracker) sendAlert(ctx context.Context, project *models.Pr
 
 	// Send alert
 	if done {
-		s.logger.Info("daily tracking summary for project", zap.String("project_name", project.Name))
-		analysis, err := NewLeadAnalysis(s.db, s.logger).GenerateLeadAnalysis(ctx, project.ID, pbportal.DateRangeFilter_DATE_RANGE_TODAY)
+		s.logger.Info("daily tracking summary for project",
+			zap.String("frequency", organization.FeatureFlags.GetNotificationFrequency().String()),
+			zap.String("project_name", project.Name))
+
+		defaultDateRange := pbportal.DateRangeFilter_DATE_RANGE_TODAY
+		if organization.FeatureFlags.GetNotificationFrequency() == models.NotificationFrequencyWEEKLY {
+			defaultDateRange = pbportal.DateRangeFilter_DATE_RANGE_7_DAYS
+		}
+
+		analysis, err := NewLeadAnalysis(s.db, s.logger).GenerateLeadAnalysis(ctx, project.ID, defaultDateRange)
 		if err != nil {
 			s.logger.Error("failed to generate lead analysis", zap.Error(err))
 			return
@@ -233,21 +246,16 @@ func (s *redditKeywordTracker) sendAlert(ctx context.Context, project *models.Pr
 		if err != nil {
 			s.logger.Error("failed to send email notification", zap.Error(err))
 		}
+
+		// update last sent alert
+		organization.FeatureFlags.NotificationSettings.LastRelevantPostAlertSentAt = time.Now()
+		err = s.db.UpdateOrganization(ctx, organization)
+		if err != nil {
+			s.logger.Error("failed to update organization while saving last_relevant_post_alert_sent_at", zap.Error(err))
+			return
+		}
 	}
 }
-
-//func (s *redditKeywordTracker) TrackPost(ctx context.Context,
-//	post *models.Lead,
-//	project *models.Project,
-//	subReddit *models.Source,
-//	redditClient *reddit.Client) error {
-//	comments, err := redditClient.GetPostWithAllComments(ctx, post.PostID)
-//	if err != nil {
-//		return fmt.Errorf("failed to get reddit comments: %w", err)
-//	}
-//
-//	return nil
-//}
 
 // Call GetPosts of a subreddit created on and after subReddit LastPostCreatedAt
 // Filter them via a criteria - https://www.notion.so/Criteria-for-filtering-the-relevant-post-1c70029aaf8f80ec8ba6fd4e29342d6a
