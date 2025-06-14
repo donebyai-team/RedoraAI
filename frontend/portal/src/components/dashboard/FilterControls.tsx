@@ -1,4 +1,5 @@
 // import { Filter } from "lucide-react";
+import { useSetLeadFilters } from "@/hooks/useSetLeadFilters";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setDateRange, setLeadStatusFilter } from "@/store/Lead/leadSlice";
 import { LeadStatus } from "@doota/pb/doota/core/v1/core_pb";
@@ -48,6 +49,7 @@ export function FilterControls({ isLeadStatusFilter = true }: { isLeadStatusFilt
 
   const { dateRange, leadStatusFilter } = useAppSelector((state) => state.lead);
   const dispatch = useAppDispatch();
+  const { resetData } = useSetLeadFilters();
 
   return (
     <div className="flex flex-wrap gap-2 items-center">
@@ -55,14 +57,20 @@ export function FilterControls({ isLeadStatusFilter = true }: { isLeadStatusFilt
         <DropdownFilter
           options={leadStatusOptions}
           selectedValue={leadStatusFilter}
-          onChange={(val) => dispatch(setLeadStatusFilter(val))}
+          onChange={(val) => {
+            resetData();
+            dispatch(setLeadStatusFilter(val))
+          }}
         />
       )}
 
       <DropdownFilter
         options={dateRangeOptions}
         selectedValue={dateRange}
-        onChange={(val) => dispatch(setDateRange(val))}
+        onChange={(val) => {
+          resetData();
+          dispatch(setDateRange(val))
+        }}
       />
 
       {/* <div className="relative">
