@@ -78,6 +78,11 @@ export declare type UpdateAutomationSettingRequest = Message<"doota.portal.v1.Up
    * @generated from field: doota.portal.v1.AutomationSetting comment = 2;
    */
   comment?: AutomationSetting;
+
+  /**
+   * @generated from field: doota.portal.v1.NotificationSettings notification_settings = 3;
+   */
+  notificationSettings?: NotificationSettings;
 };
 
 /**

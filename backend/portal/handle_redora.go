@@ -559,6 +559,10 @@ func (p *Portal) UpdateAutomationSettings(ctx context.Context, c *connect.Reques
 		org.FeatureFlags.RelevancyScoreDM = float64(c.Msg.Dm.RelevancyScore)
 	}
 
+	if c.Msg.NotificationSettings != nil {
+		//org.FeatureFlags.NotificationSettings.NotificationFrequencyPosts = c.Msg.NotificationSettings.RelevantPostFrequency.String()
+	}
+
 	err = p.db.UpdateOrganization(ctx, org)
 	if err != nil {
 		return nil, err

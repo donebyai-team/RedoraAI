@@ -21,7 +21,7 @@ func (r *UserRole) FromModel(model models.UserRole) {
 
 func (r *NotificationFrequency) FromModel(model models.NotificationFrequency) {
 	value := "NOTIFICATION_FREQUENCY_" + strings.ToUpper(model.String())
-	enum, found := UserRole_value[value]
+	enum, found := NotificationFrequency_value[value]
 	if !found {
 		panic(fmt.Errorf("unknown notification frequency %q", model))
 	}
