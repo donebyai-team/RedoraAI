@@ -18,7 +18,7 @@ export interface LeadFetchParams {
 
 export interface FetchOptions {
   pageNo?: number
-  prioritize?: boolean
+  shouldFallbackToCompletedLeads?: boolean
   fetchType?: 'initial' | 'pagination'
 }
 
@@ -85,11 +85,11 @@ export const useLeadFetcher = ({
 
   // Main Fetch Logic
   const fetchLeads = useCallback(
-    async ({ pageNo = 1, prioritize = false, fetchType = 'initial' }: FetchOptions) => {
+    async ({ pageNo = 1, shouldFallbackToCompletedLeads = false, fetchType = 'initial' }: FetchOptions) => {
       setLoadingState(fetchType, true)
 
       try {
-        if (prioritize && !hasRunPriorityLoad.current) {
+        if (shouldFallbackToCompletedLeads && !hasRunPriorityLoad.current) {
           const priorityStatuses: LeadStatus[] = [LeadStatus.NEW, LeadStatus.COMPLETED]
 
           for (const status of priorityStatuses) {
@@ -130,19 +130,8 @@ export const useLeadFetcher = ({
         setLoadingState(fetchType, false)
       }
     },
-    [
-      dispatch,
-      relevancyScore,
-      subReddit,
-      dateRange,
-      leadStatusFilter,
-      leadList,
-      setCounts,
-      setHasMore,
-      setPageNo,
-      setIsFetchingMore,
-      fetchLeadsFromServer
-    ]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [setLoadingState, fetchLeadsFromServer, relevancyScore, subReddit, dateRange, dispatch, leadStatusFilter]
   )
 
   return { fetchLeads }

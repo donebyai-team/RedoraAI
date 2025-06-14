@@ -39,10 +39,10 @@ export const useLeadListManager = ({
     // initial prioritized fetch
     useEffect(() => {
         if (!hasRunInitialFetch.current) {
-            fetchLeads({ fetchType: "initial", prioritize: true });
+            fetchLeads({ fetchType: "initial", shouldFallbackToCompletedLeads: true });
             hasRunInitialFetch.current = true;
         } else {
-            fetchLeads({ fetchType: "initial", prioritize: false });
+            fetchLeads({ fetchType: "initial", shouldFallbackToCompletedLeads: false });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [leadStatusFilter, relevancyScore, subReddit, dateRange]);
