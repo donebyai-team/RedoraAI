@@ -29,6 +29,16 @@ func (r *NotificationFrequency) FromModel(model models.NotificationFrequency) {
 	*r = NotificationFrequency(enum)
 }
 
+func (c *NotificationFrequency) ToModel() models.NotificationFrequency {
+	value := strings.TrimPrefix(strings.ToUpper(c.String()), "NOTIFICATION_FREQUENCY_")
+	model := models.NotificationFrequency(value)
+	if !model.IsValid() {
+		panic(fmt.Errorf("unknown notification frequency pb %q", value))
+	}
+
+	return model
+}
+
 func (u *User) FromModel(model *models.User, orgs []*models.Organization) *User {
 	u.Id = model.ID
 	u.Email = model.Email

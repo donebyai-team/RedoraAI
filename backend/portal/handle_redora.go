@@ -560,7 +560,7 @@ func (p *Portal) UpdateAutomationSettings(ctx context.Context, c *connect.Reques
 	}
 
 	if c.Msg.NotificationSettings != nil {
-		//org.FeatureFlags.NotificationSettings.NotificationFrequencyPosts = c.Msg.NotificationSettings.RelevantPostFrequency.String()
+		org.FeatureFlags.NotificationSettings.NotificationFrequencyPosts = c.Msg.NotificationSettings.RelevantPostFrequency.ToModel()
 	}
 
 	err = p.db.UpdateOrganization(ctx, org)
