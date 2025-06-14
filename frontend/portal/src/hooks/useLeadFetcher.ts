@@ -3,7 +3,7 @@ import { toast } from '@/components/ui/use-toast'
 import { Lead, LeadStatus } from '@doota/pb/doota/core/v1/core_pb'
 import { useAppDispatch } from '@/store/hooks'
 import { portalClient } from '@/services/grpc'
-import { setDashboardCounts, setError, setIsLoading, setLeadList, setLeadStatusFilter } from '@/store/Lead/leadSlice'
+import { setDashboardCounts, setError, setIsLoading, setLeadList, setLeadStatusFilter, setPageNo } from '@/store/Lead/leadSlice'
 import { DateRangeFilter } from '@doota/pb/doota/portal/v1/portal_pb'
 import { defaultPageNumber, LeadsCountPerPage } from '@/utils/constants'
 
@@ -27,7 +27,6 @@ export interface UseLeadFetcherProps {
   dateRange?: DateRangeFilter
   leadStatusFilter: LeadStatus | null
   leadList: Lead[]
-  setPageNo: (pageNo: number) => void
   setHasMore: (hasMore: boolean) => void
   setIsFetchingMore: (isLoading: boolean) => void
 }
@@ -38,7 +37,6 @@ export const useLeadFetcher = ({
   dateRange,
   leadStatusFilter,
   leadList,
-  setPageNo,
   setHasMore,
   setIsFetchingMore
 }: UseLeadFetcherProps) => {
@@ -77,8 +75,8 @@ export const useLeadFetcher = ({
     dispatch(setLeadList([...leadList, ...newLeads]))
     dispatch(setDashboardCounts(response.analysis))
     setHasMore(hasMore)
-    if (hasMore) {
-      setPageNo(pageNo)
+    if (newLeads.length > 0) {
+      dispatch(setPageNo(pageNo))
     }
   }
 
