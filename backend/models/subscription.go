@@ -70,8 +70,8 @@ var RedoraPlans = map[SubscriptionPlanType]*SubscriptionPlan{
 			MaxKeywords: 5,
 		},
 	},
-	SubscriptionPlanTypeAGENCY: {
-		PlanType:    SubscriptionPlanTypeAGENCY,
+	SubscriptionPlanTypePRO: {
+		PlanType:    SubscriptionPlanTypePRO,
 		Description: "Best for marketing agencies managing multiple clients",
 		Price:       99.99,
 		Interval:    30,
@@ -84,25 +84,6 @@ var RedoraPlans = map[SubscriptionPlanType]*SubscriptionPlan{
 			},
 			RelevantPosts: UsageLimits{
 				PerDay: 50,
-			},
-			MaxSources:  20,
-			MaxKeywords: 20,
-		},
-	},
-	SubscriptionPlanTypeGROWTH: {
-		PlanType:    SubscriptionPlanTypeGROWTH,
-		Description: "For startups scaling user outreach and engagement",
-		Price:       149.99,
-		Interval:    30,
-		Metadata: SubscriptionPlanMetadata{
-			Comments: UsageLimits{
-				PerDay: 100,
-			},
-			DMs: UsageLimits{
-				PerDay: 100,
-			},
-			RelevantPosts: UsageLimits{
-				PerDay: 100,
 			},
 			MaxSources:  20,
 			MaxKeywords: 20,

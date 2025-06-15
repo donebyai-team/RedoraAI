@@ -109,21 +109,23 @@ func (d dodoSubscriptionService) Create(ctx context.Context, plan models.Subscri
 		return nil, fmt.Errorf("error creating subscription: %w", err)
 	}
 
-	if subscription == nil || subscription.SubscriptionID == "" {
+	if externalSubResponse == nil || externalSubResponse.SubscriptionID == "" {
 		return nil, fmt.Errorf("error creating subscription: invalid subscription")
+	}
+	// update subscription in org
+	err = d.db.UpdateOrganizationFeatureFlags(ctx, organization.ID, map[string]any{
+		psql.FEATURE_FLAG_SUBSCRIPTION_EXTERNAL_ID_PATH: existingSub.ExternalID,
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	subscriptionPlan := psql.CreateFreeSubscription(plan)
 	subscriptionPlan.OrganizationID = orgID
-	subscriptionPlan.ExternalID = &subscription.SubscriptionID
-	subscriptionPlan.PaymentLink = subscription.PaymentLink
+	subscriptionPlan.ExternalID = &externalSubResponse.SubscriptionID
+	subscriptionPlan.PaymentLink = externalSubResponse.PaymentLink
 
-	createSubscription, err := d.db.CreateSubscription(ctx, subscriptionPlan, nil)
-	if err != nil {
-		return nil, fmt.Errorf("error creating subscription: %w", err)
-	}
-
-	return createSubscription, nil
+	return subscriptionPlan, nil
 }
 
 func (d dodoSubscriptionService) Verify(ctx context.Context, subscriptionID, orgID string) (*models.Subscription, error) {
@@ -132,7 +134,7 @@ func (d dodoSubscriptionService) Verify(ctx context.Context, subscriptionID, org
 		return nil, err
 	}
 
-	organization, err := d.db.GetOrganizationById(ctx, orgID)
+	_, err = d.db.GetOrganizationById(ctx, orgID)
 	if err != nil {
 		return nil, err
 	}

@@ -78,6 +78,11 @@ export declare type UpdateAutomationSettingRequest = Message<"doota.portal.v1.Up
    * @generated from field: doota.portal.v1.AutomationSetting comment = 2;
    */
   comment?: AutomationSetting;
+
+  /**
+   * @generated from field: doota.portal.v1.NotificationSettings notification_settings = 3;
+   */
+  notificationSettings?: NotificationSettings;
 };
 
 /**
@@ -158,37 +163,6 @@ export declare type UpdateLeadStatusRequest = Message<"doota.portal.v1.UpdateLea
  * Use `create(UpdateLeadStatusRequestSchema)` to create a new message.
  */
 export declare const UpdateLeadStatusRequestSchema: GenMessage<UpdateLeadStatusRequest>;
-
-/**
- * @generated from message doota.portal.v1.GetLeadsByStatusRequest
- */
-export declare type GetLeadsByStatusRequest = Message<"doota.portal.v1.GetLeadsByStatusRequest"> & {
-  /**
-   * @generated from field: doota.core.v1.LeadStatus status = 1;
-   */
-  status: LeadStatus;
-
-  /**
-   * @generated from field: int32 page_no = 3;
-   */
-  pageNo: number;
-
-  /**
-   * @generated from field: doota.portal.v1.DateRangeFilter date_range = 4;
-   */
-  dateRange: DateRangeFilter;
-
-  /**
-   * @generated from field: int32 page_count = 5;
-   */
-  pageCount: number;
-};
-
-/**
- * Describes the message doota.portal.v1.GetLeadsByStatusRequest.
- * Use `create(GetLeadsByStatusRequestSchema)` to create a new message.
- */
-export declare const GetLeadsByStatusRequestSchema: GenMessage<GetLeadsByStatusRequest>;
 
 /**
  * @generated from message doota.portal.v1.GetRelevantLeadsRequest
@@ -746,6 +720,11 @@ export declare type OrganizationFeatureFlags = Message<"doota.portal.v1.Organiza
    * @generated from field: doota.portal.v1.AutomationSetting Comment = 3;
    */
   Comment?: AutomationSetting;
+
+  /**
+   * @generated from field: doota.portal.v1.NotificationSettings notification_settings = 4;
+   */
+  notificationSettings?: NotificationSettings;
 };
 
 /**
@@ -753,6 +732,22 @@ export declare type OrganizationFeatureFlags = Message<"doota.portal.v1.Organiza
  * Use `create(OrganizationFeatureFlagsSchema)` to create a new message.
  */
 export declare const OrganizationFeatureFlagsSchema: GenMessage<OrganizationFeatureFlags>;
+
+/**
+ * @generated from message doota.portal.v1.NotificationSettings
+ */
+export declare type NotificationSettings = Message<"doota.portal.v1.NotificationSettings"> & {
+  /**
+   * @generated from field: doota.portal.v1.NotificationFrequency relevant_post_frequency = 1;
+   */
+  relevantPostFrequency: NotificationFrequency;
+};
+
+/**
+ * Describes the message doota.portal.v1.NotificationSettings.
+ * Use `create(NotificationSettingsSchema)` to create a new message.
+ */
+export declare const NotificationSettingsSchema: GenMessage<NotificationSettings>;
 
 /**
  * @generated from message doota.portal.v1.AutomationSetting
@@ -1067,6 +1062,31 @@ export enum UserRole {
 export declare const UserRoleSchema: GenEnum<UserRole>;
 
 /**
+ * @generated from enum doota.portal.v1.NotificationFrequency
+ */
+export enum NotificationFrequency {
+  /**
+   * @generated from enum value: NOTIFICATION_FREQUENCY_NONE = 0;
+   */
+  NONE = 0,
+
+  /**
+   * @generated from enum value: NOTIFICATION_FREQUENCY_DAILY = 1;
+   */
+  DAILY = 1,
+
+  /**
+   * @generated from enum value: NOTIFICATION_FREQUENCY_WEEKLY = 2;
+   */
+  WEEKLY = 2,
+}
+
+/**
+ * Describes the enum doota.portal.v1.NotificationFrequency.
+ */
+export declare const NotificationFrequencySchema: GenEnum<NotificationFrequency>;
+
+/**
  * @generated from enum doota.portal.v1.IntegrationType
  */
 export enum IntegrationType {
@@ -1273,14 +1293,6 @@ export declare const PortalService: GenService<{
   getRelevantLeads: {
     methodKind: "unary";
     input: typeof GetRelevantLeadsRequestSchema;
-    output: typeof GetLeadsResponseSchema;
-  },
-  /**
-   * @generated from rpc doota.portal.v1.PortalService.GetLeadsByStatus
-   */
-  getLeadsByStatus: {
-    methodKind: "unary";
-    input: typeof GetLeadsByStatusRequestSchema;
     output: typeof GetLeadsResponseSchema;
   },
   /**

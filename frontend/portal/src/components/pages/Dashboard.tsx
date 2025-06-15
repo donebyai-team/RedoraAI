@@ -1,21 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  // ArrowUp,
-  // MessageSquare,
   Search,
-  // Bell,
-  // User,
-  // Filter,
-  // Send,
-  // Save,
-  // X,
   Clock
 } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SummaryCards } from "@/components/dashboard/SummaryCards";
 import { LeadFeed } from "@/components/dashboard/LeadFeed";
@@ -24,137 +15,38 @@ import { SidebarSettings } from "@/components/dashboard/SidebarSettings";
 import { RelevancyScoreSidebar } from "@/components/dashboard/RelevancyScoreSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { DashboardFooter } from "@/components/dashboard/DashboardFooter";
-import { RedditAccount } from "@/components/reddit-accounts/RedditAccountBadge";
 import { useClientsContext } from "@doota/ui-core/context/ClientContext";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
-import { setError, setIsLoading, setLeadStatusFilter, setNewTabList } from "../../../store/Lead/leadSlice";
-import { DateRangeFilter, LeadAnalysis } from "@doota/pb/doota/portal/v1/portal_pb";
+import { setError } from "../../../store/Lead/leadSlice";
 import { setAccounts, setLoading } from "@/store/Reddit/RedditSlice";
 import { useRedditIntegrationStatus } from "../Leads/Tabs/useRedditIntegrationStatus";
 import { AnnouncementBanner } from "../dashboard/AnnouncementBanner";
-import { LeadStatus, SubscriptionStatus } from "@doota/pb/doota/core/v1/core_pb";
+import { SubscriptionStatus } from "@doota/pb/doota/core/v1/core_pb";
 import { useAuth } from "@doota/ui-core/hooks/useAuth";
-
-interface FetchFilters {
-  status: LeadStatus | null;
-  relevancyScore?: number;
-  subReddit?: string;
-  dateRange?: DateRangeFilter;
-  pageCount?: number;
-}
+import { useLeadListManager } from "@/hooks/useLeadListManager";
 
 export default function Dashboard() {
   const { portalClient } = useClientsContext()
   const { currentOrganization } = useAuth()
   const dispatch = useAppDispatch();
   const project = useAppSelector((state) => state.stepper.project);
-  const { dateRange, leadStatusFilter, isLoading } = useAppSelector((state) => state.lead);
+  const { dateRange, leadStatusFilter, isLoading, leadList, dashboardCounts } = useAppSelector((state) => state.lead);
   const { relevancyScore, subReddit } = useAppSelector((state) => state.parems);
   const { isConnected, loading: isLoadingRedditIntegrationStatus } = useRedditIntegrationStatus();
+  const [hasMore, setHasMore] = useState(true);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
 
-  // Sample Reddit accounts
-  const redditAccounts: RedditAccount[] = [
-    {
-      id: "account1",
-      username: "redora_official",
-      karma: 2345,
-      status: { isActive: true },
-      isDefault: true
-    },
-    {
-      id: "account2",
-      username: "saas_helper",
-      karma: 986,
-      status: { isActive: true }
-    },
-    {
-      id: "account3",
-      username: "marketing_pro",
-      karma: 75,
-      status: { isActive: true, hasLowKarma: true }
-    },
-    {
-      id: "account4",
-      username: "startup_advisor",
-      karma: 542,
-      status: { isActive: false, cooldownMinutes: 35 }
-    },
-    {
-      id: "account5",
-      username: "b2b_expert",
-      karma: 1203,
-      status: { isActive: false, isFlagged: true }
-    },
-  ];
+  const { loadMoreLeads } = useLeadListManager({
+    relevancyScore,
+    subReddit,
+    dateRange,
+    leadStatusFilter,
+    leadList,
+    setHasMore,
+    setIsFetchingMore,
+  });
 
-  const [counts, setCounts] = useState<LeadAnalysis | undefined>(undefined);
-  const [defaultAccountId, setDefaultAccountId] = useState<string>("account1");
-
-  const handleDefaultAccountChange = (accountId: string) => {
-    setDefaultAccountId(accountId);
-  };
-
-  const hasCheckedInitialLeads = useRef(false);
-
-  const tryFetch = async ({ status, relevancyScore, subReddit, dateRange, pageCount = 10, }: FetchFilters) => {
-    const result = await portalClient.getRelevantLeads({
-      ...(relevancyScore && { relevancyScore }),
-      ...(subReddit && { subReddit }),
-      ...(status && { status }),
-      ...(dateRange && { dateRange }),
-      pageCount,
-    });
-
-    return result;
-  };
-
-  useEffect(() => {
-
-    const getInitialLeads = async () => {
-
-      dispatch(setIsLoading(true));
-
-      try {
-        if (!hasCheckedInitialLeads.current) {
-          const leadStatusPriority: LeadStatus[] = [LeadStatus.NEW, LeadStatus.COMPLETED];
-
-          for (const status of leadStatusPriority) {
-            const result = await tryFetch({ status, relevancyScore });
-            const leads = result.leads ?? [];
-
-            if (leads.length > 0) {
-              dispatch(setNewTabList(leads));
-              dispatch(setLeadStatusFilter(status));
-              setCounts(result.analysis);
-              break;
-            }
-
-            if (!leads.length && status === LeadStatus.COMPLETED) {
-              dispatch(setNewTabList([]));
-              dispatch(setLeadStatusFilter(LeadStatus.NEW));
-              setCounts(undefined);
-            }
-          }
-
-          hasCheckedInitialLeads.current = true;
-        } else {
-          const response = await tryFetch({ status: leadStatusFilter, relevancyScore, subReddit, dateRange });
-          dispatch(setNewTabList(response.leads ?? []));
-          setCounts(response.analysis);
-        }
-      } catch (err: any) {
-        const message = err?.response?.data?.message || err.message || "Something went wrong";
-        toast({ title: "Error", description: message });
-        dispatch(setError(message));
-      } finally {
-        dispatch(setIsLoading(false));
-      }
-    };
-
-    getInitialLeads();
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dateRange, relevancyScore, subReddit, leadStatusFilter]);
+  console.log("####_123");
 
   // get all reddit account, used in Leed Feed
   useEffect(() => {
@@ -207,10 +99,12 @@ export default function Dashboard() {
                 </p>
               </div>
 
-              <SummaryCards counts={counts} />
+              <SummaryCards counts={dashboardCounts} />
 
               {isLoadingRedditIntegrationStatus ? (<>
-                Loading
+                <div className="flex-1 flex justify-center space-y-4 mt-6">
+                  <h5 className="text-xl font-semibold">Loading...</h5>
+                </div>
               </>) : (<div className="flex-1 flex flex-col space-y-4 mt-6">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-background/95 py-2">
                   <h2 className="text-xl font-semibold">Latest Tracked Posts</h2>
@@ -240,10 +134,9 @@ export default function Dashboard() {
                 ) : (
                   <div className="flex-1">
                     <LeadFeed
-                    // onAction={handleAction}
-                    // redditAccounts={redditAccounts}
-                    // defaultAccountId={defaultAccountId}
-                    // onAccountChange={handlePostAccountChange}
+                      loadMoreLeads={loadMoreLeads}
+                      hasMore={hasMore}
+                      isFetchingMore={isFetchingMore}
                     />
                   </div>
                 )}
@@ -253,11 +146,7 @@ export default function Dashboard() {
 
             {/* Sidebar */}
             <div className="lg:w-[300px] space-y-6">
-              <RelevancyScoreSidebar
-                accounts={redditAccounts}
-                defaultAccountId={defaultAccountId}
-                onDefaultAccountChange={handleDefaultAccountChange}
-              />
+              <RelevancyScoreSidebar />
 
               <Card className="border-primary/10 shadow-md">
                 <CardContent className="p-6">

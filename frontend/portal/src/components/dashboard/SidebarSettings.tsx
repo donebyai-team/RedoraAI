@@ -12,6 +12,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { RootState } from "@/store/store";
 import { SourceTyeps } from "@/store/Source/sourceSlice";
 import { setSubReddit } from "@/store/Params/ParamsSlice";
+import { useSetLeadFilters } from "@/hooks/useSetLeadFilters";
 
 interface SidebarSettingsProps {
   type: 'keywords' | 'subreddits';
@@ -22,12 +23,12 @@ export function SidebarSettings({ type }: SidebarSettingsProps) {
   const dispatch = useAppDispatch();
   const project = useAppSelector((state: RootState) => state.stepper.project);
   const { subReddit } = useAppSelector((state: RootState) => state.parems);
+  const { resetData } = useSetLeadFilters();
 
-  console.log("###_debug_project_keywords 1 ", project?.keywords)
-  console.log("###_debug_project_sources 1 ", project?.sources)
 
   const handleSubRedditsClick = (data: SourceTyeps): void => {
     const subRedditId = data.id === subReddit ? "" : data.id;
+    resetData();
     dispatch(setSubReddit(subRedditId));
   };
 

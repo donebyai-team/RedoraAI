@@ -444,20 +444,19 @@ func (p *Portal) GetRelevantLeads(ctx context.Context, c *connect.Request[pbport
 		c.Msg.PageCount = pageCount
 	}
 
+	if c.Msg.PageNo <= 0 {
+		c.Msg.PageNo = 0
+	} else {
+		c.Msg.PageNo = c.Msg.PageNo - 1
+	}
+
 	if c.Msg.RelevancyScore < minRelevancyScoreFilter {
 		c.Msg.RelevancyScore = minRelevancyScoreFilter
 		p.logger.Info(fmt.Sprintf("received less than 80 score to filter, defaulting to %d", minRelevancyScoreFilter))
 	}
 
 	if status != models.LeadStatusNEW {
-		return p.GetLeadsByStatus(ctx, &connect.Request[pbportal.GetLeadsByStatusRequest]{
-			Msg: &pbportal.GetLeadsByStatusRequest{
-				Status:    c.Msg.Status,
-				PageNo:    c.Msg.PageNo,
-				DateRange: c.Msg.DateRange,
-				PageCount: c.Msg.PageCount,
-			},
-		})
+		return p.getLeadsByStatus(ctx, c)
 	}
 
 	actor, err := p.gethAuthContext(ctx)
@@ -560,6 +559,10 @@ func (p *Portal) UpdateAutomationSettings(ctx context.Context, c *connect.Reques
 		org.FeatureFlags.RelevancyScoreDM = float64(c.Msg.Dm.RelevancyScore)
 	}
 
+	if c.Msg.NotificationSettings != nil {
+		org.FeatureFlags.NotificationSettings.NotificationFrequencyPosts = c.Msg.NotificationSettings.RelevantPostFrequency.ToModel()
+	}
+
 	err = p.db.UpdateOrganization(ctx, org)
 	if err != nil {
 		return nil, err
@@ -575,7 +578,7 @@ func (p *Portal) UpdateAutomationSettings(ctx context.Context, c *connect.Reques
 
 const pageCount = 200
 
-func (p *Portal) GetLeadsByStatus(ctx context.Context, c *connect.Request[pbportal.GetLeadsByStatusRequest]) (*connect.Response[pbportal.GetLeadsResponse], error) {
+func (p *Portal) getLeadsByStatus(ctx context.Context, c *connect.Request[pbportal.GetRelevantLeadsRequest]) (*connect.Response[pbportal.GetLeadsResponse], error) {
 	actor, err := p.gethAuthContext(ctx)
 	if err != nil {
 		return nil, err
@@ -586,16 +589,17 @@ func (p *Portal) GetLeadsByStatus(ctx context.Context, c *connect.Request[pbport
 		return nil, err
 	}
 
-	if c.Msg.PageCount <= 0 {
-		c.Msg.PageCount = pageCount
-	}
-
 	status, err := models.ParseLeadStatus(c.Msg.Status.String())
 	if err != nil {
 		return nil, err
 	}
+
+	statuses := []string{status.String()}
+	if status == models.LeadStatusCOMPLETED {
+		statuses = append(statuses, models.LeadStatusAIRESPONDED.String())
+	}
 	leads, err := p.db.GetLeadsByStatus(ctx, project.ID, datastore.LeadsFilter{
-		Status:    status,
+		Statuses:  statuses,
 		Limit:     int(c.Msg.PageCount),
 		DateRange: c.Msg.DateRange,
 		Offset:    int(c.Msg.PageNo), // starting with 0
@@ -638,6 +642,39 @@ func (p *Portal) UpdateLeadStatus(ctx context.Context, c *connect.Request[pbport
 	}
 
 	lead.Status = c.Msg.Status.ToModel()
+
+	// Cancel scheduled interactions if lead is no longer relevant or completed
+	if lead.Status == models.LeadStatusNOTRELEVANT || lead.Status == models.LeadStatusCOMPLETED {
+		// Clear scheduled timestamps
+		lead.LeadMetadata.CommentScheduledAt = nil
+		lead.LeadMetadata.DMScheduledAt = nil
+
+		// Fetch all interactions for the lead
+		interactions, err := p.db.GetLeadInteractionByLeadID(ctx, lead.ID)
+		if err != nil {
+			return nil, err
+		}
+
+		// Determine reason based on lead status
+		var reason string
+		switch lead.Status {
+		case models.LeadStatusNOTRELEVANT:
+			reason = "Skipped, as user marked it as not relevant"
+		case models.LeadStatusCOMPLETED:
+			reason = "Skipped, as user has marked it responded manually"
+		}
+
+		// Mark each interaction as failed with appropriate reason
+		for _, interaction := range interactions {
+			interaction.Status = models.LeadInteractionStatusFAILED
+			interaction.Reason = reason
+
+			if err := p.db.UpdateLeadInteraction(ctx, interaction); err != nil {
+				return nil, err
+			}
+		}
+	}
+
 	err = p.db.UpdateLeadStatus(ctx, lead)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to update lead status: %w", err))

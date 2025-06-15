@@ -154,6 +154,7 @@ enum LeadStatus {
   NOT_RELEVANT = 1;
   COMPLETED = 2;
   LEAD = 3;
+  AI_RESPONDED = 4;
 }
 
 enum LeadType {

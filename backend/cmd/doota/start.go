@@ -225,6 +225,21 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 	//	return nil, err
 	//}
 
+	//updates := map[string]any{
+	//	psql.FEATURE_FLAG_DISABLE_AUTOMATED_COMMENT_PATH: false,
+	//	psql.FEATURE_FLAG_ACTIVITIES_PATH: []models.OrgActivity{
+	//		models.OrgActivity{
+	//			ActivityType: models.OrgActivityTypeCOMMENTDISABLEDACCOUNTAGENEW,
+	//			CreatedAt:    time.Now(),
+	//		},
+	//	},
+	//}
+	//
+	//err = deps.DataStore.UpdateOrganizationFeatureFlags(context.Background(), "5b5955de-a4c1-4bb5-9358-c3c2ba34fdf6", updates)
+	//if err != nil {
+	//	return nil, err
+	//}
+
 	alertNotifier := alerts.NewSlackNotifier(sflags.MustGetString(cmd, "common-resend-api-key"), deps.DataStore, logger)
 
 	interactionsSpooler := interactions.NewSpooler(

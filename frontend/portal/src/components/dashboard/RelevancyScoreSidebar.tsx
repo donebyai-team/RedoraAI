@@ -9,10 +9,10 @@ import { Slider } from "@/components/ui/slider";
 //   SelectTrigger,
 //   SelectValue,
 // } from "@/components/ui/select";
-import {
-  RedditAccount,
-  // RedditAccountBadge 
-} from "@/components/reddit-accounts/RedditAccountBadge";
+// import {
+//   RedditAccount,
+//   RedditAccountBadge 
+// } from "@/components/reddit-accounts/RedditAccountBadge";
 // import {
 //   Tooltip,
 //   TooltipContent,
@@ -24,25 +24,20 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { RootState } from "@/store/store";
 import { useDebounce } from "@doota/ui-core/hooks/useDebounce";
 import { setRelevancyScore } from "@/store/Params/ParamsSlice";
+import { useSetLeadFilters } from "@/hooks/useSetLeadFilters";
 
-interface RelevancyScoreSidebarProps {
-  accounts?: RedditAccount[];
-  defaultAccountId?: string;
-  onDefaultAccountChange?: (accountId: string) => void;
-}
-
-export function RelevancyScoreSidebar({ accounts = [], defaultAccountId = "", onDefaultAccountChange }: RelevancyScoreSidebarProps) {
-  const defaultAccount = accounts.find(acc => acc.id === defaultAccountId);
-  console.log(defaultAccount, onDefaultAccountChange)
+export function RelevancyScoreSidebar() {
   const { relevancyScore } = useAppSelector((state: RootState) => state.parems);
   const [relevancy_score, setRelevancy_Score] = useState<number>(relevancyScore);
   const dispatch = useAppDispatch();
+  const { resetData } = useSetLeadFilters();
 
   const onChangeCommitted = useCallback((key: string, value: number | string) => {
     if (key === 'relevancy_score') {
+      resetData();
       dispatch(setRelevancyScore(value as number));
     }
-  }, [dispatch]);
+  }, [dispatch, resetData]);
 
   const debouncedOnChangeCommitted = useDebounce(onChangeCommitted, 700);
 

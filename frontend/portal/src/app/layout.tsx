@@ -13,7 +13,7 @@ import StoreProvider from '../../store/StoreProvider'
 import Script from 'next/script'
 import NotificationProvider from '@/components/layout/notification'
 
-const amplitudeApiKey = process.env.NEXT_PUBLIC_AMPLITUDE_API_KEY || ''
+// const amplitudeApiKey = process.env.NEXT_PUBLIC_AMPLITUDE_API_KEY || '';
 
 export const metadata = {
   title: 'RedoraAI',
@@ -51,7 +51,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
 
         {/* ✅ Amplitude Scripts */}
-        <Script src="https://cdn.amplitude.com/libs/analytics-browser-2.11.1-min.js.gz" />
+        {/* <Script src="https://cdn.amplitude.com/libs/analytics-browser-2.11.1-min.js.gz" />
         <Script src="https://cdn.amplitude.com/libs/plugin-session-replay-browser-1.8.0-min.js.gz" />
         <Script
           id="amplitude-scripts"
@@ -64,7 +64,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               });
             `,
           }}
-        />
+        /> */}
 
         <StoreProvider>
           <NextElementRegistryProvider>

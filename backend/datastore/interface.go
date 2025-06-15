@@ -43,6 +43,7 @@ type OrganizationRepository interface {
 	GetOrganizations(context.Context) ([]*models.Organization, error)
 	GetOrganizationById(context.Context, string) (*models.Organization, error)
 	GetOrganizationByName(context.Context, string) (*models.Organization, error)
+	UpdateOrganizationFeatureFlags(ctx context.Context, orgID string, updates map[string]any) error
 }
 
 type SubscriptionRepository interface {
@@ -100,6 +101,7 @@ type SourceRepository interface {
 type LeadInteractionRepository interface {
 	CreateLeadInteraction(ctx context.Context, reddit *models.LeadInteraction) (*models.LeadInteraction, error)
 	UpdateLeadInteraction(ctx context.Context, reddit *models.LeadInteraction) error
+	GetLeadInteractionByLeadID(ctx context.Context, leadID string) ([]*models.LeadInteraction, error)
 	GetLeadInteractions(ctx context.Context, projectID string, status models.LeadInteractionStatus, dateRange pbportal.DateRangeFilter) ([]*models.LeadInteraction, error)
 	GetLeadInteractionsToExecute(ctx context.Context, statuses []models.LeadInteractionStatus) ([]*models.LeadInteraction, error)
 	SetLeadInteractionStatusProcessing(ctx context.Context, id string) error
@@ -110,7 +112,7 @@ type LeadInteractionRepository interface {
 type LeadsFilter struct {
 	RelevancyScore float32
 	Sources        []string
-	Status         models.LeadStatus
+	Statuses       []string
 	Limit          int
 	Offset         int
 	DateRange      pbportal.DateRangeFilter

@@ -19,6 +19,26 @@ func (r *UserRole) FromModel(model models.UserRole) {
 	*r = UserRole(enum)
 }
 
+func (r *NotificationFrequency) FromModel(model models.NotificationFrequency) {
+	value := "NOTIFICATION_FREQUENCY_" + strings.ToUpper(model.String())
+	enum, found := NotificationFrequency_value[value]
+	if !found {
+		panic(fmt.Errorf("unknown notification frequency %q", model))
+	}
+
+	*r = NotificationFrequency(enum)
+}
+
+func (c *NotificationFrequency) ToModel() models.NotificationFrequency {
+	value := strings.TrimPrefix(strings.ToUpper(c.String()), "NOTIFICATION_FREQUENCY_")
+	model := models.NotificationFrequency(value)
+	if !model.IsValid() {
+		panic(fmt.Errorf("unknown notification frequency pb %q", value))
+	}
+
+	return model
+}
+
 func (u *User) FromModel(model *models.User, orgs []*models.Organization) *User {
 	u.Id = model.ID
 	u.Email = model.Email
@@ -50,6 +70,9 @@ func (o *Organization) FromModel(model *models.Organization) *Organization {
 		RelevancyScore: float32(model.FeatureFlags.GetRelevancyScoreDM()),
 		MaxPerDay:      model.FeatureFlags.GetMaxDMsPerDay(),
 	}
+
+	o.FeatureFlags.NotificationSettings = &NotificationSettings{}
+	o.FeatureFlags.NotificationSettings.RelevantPostFrequency.FromModel(model.FeatureFlags.GetNotificationFrequency())
 
 	o.CreatedAt = timestamppb.New(model.CreatedAt)
 	return o

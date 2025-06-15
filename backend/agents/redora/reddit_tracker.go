@@ -8,6 +8,7 @@ import (
 	"github.com/shank318/doota/agents/state"
 	"github.com/shank318/doota/ai"
 	"github.com/shank318/doota/datastore"
+	"github.com/shank318/doota/datastore/psql"
 	"github.com/shank318/doota/errorx"
 	"github.com/shank318/doota/integrations/reddit"
 	"github.com/shank318/doota/models"
@@ -97,7 +98,7 @@ func (s *redditKeywordTracker) TrackKeyword(ctx context.Context, tracker *models
 	}
 
 	// Once done, send the summary
-	go s.sendAlert(context.Background(), tracker.Project)
+	go s.sendAlert(context.Background(), tracker.Project, tracker.Organization)
 
 	return nil
 }
@@ -171,7 +172,12 @@ func (s *redditKeywordTracker) disableProject(ctx context.Context, organization 
 	}
 }
 
-func (s *redditKeywordTracker) sendAlert(ctx context.Context, project *models.Project) {
+func (s *redditKeywordTracker) sendAlert(ctx context.Context, project *models.Project, organization *models.Organization) {
+	if !organization.FeatureFlags.ShouldSendRelevantPostAlert() {
+		s.logger.Info("notification disabled, skipped sending alert")
+		return
+	}
+
 	isTrackingDoneKey := fmt.Sprintf("daily_tracking_summary:%s", project.ID)
 	// Check if a call is already running across organizations
 	isRunning, err := s.state.IsRunning(ctx, isTrackingDoneKey)
@@ -203,8 +209,16 @@ func (s *redditKeywordTracker) sendAlert(ctx context.Context, project *models.Pr
 
 	// Send alert
 	if done {
-		s.logger.Info("daily tracking summary for project", zap.String("project_name", project.Name))
-		analysis, err := NewLeadAnalysis(s.db, s.logger).GenerateLeadAnalysis(ctx, project.ID, pbportal.DateRangeFilter_DATE_RANGE_TODAY)
+		s.logger.Info("daily tracking summary for project",
+			zap.String("frequency", organization.FeatureFlags.GetNotificationFrequency().String()),
+			zap.String("project_name", project.Name))
+
+		defaultDateRange := pbportal.DateRangeFilter_DATE_RANGE_TODAY
+		if organization.FeatureFlags.GetNotificationFrequency() == models.NotificationFrequencyWEEKLY {
+			defaultDateRange = pbportal.DateRangeFilter_DATE_RANGE_7_DAYS
+		}
+
+		analysis, err := NewLeadAnalysis(s.db, s.logger).GenerateLeadAnalysis(ctx, project.ID, defaultDateRange)
 		if err != nil {
 			s.logger.Error("failed to generate lead analysis", zap.Error(err))
 			return
@@ -233,21 +247,19 @@ func (s *redditKeywordTracker) sendAlert(ctx context.Context, project *models.Pr
 		if err != nil {
 			s.logger.Error("failed to send email notification", zap.Error(err))
 		}
+
+		// update last sent alert
+		updates := map[string]any{
+			psql.FEATURE_FLAG_NITIFICATION_LAST_SENT_AT_PATH: time.Now(),
+		}
+
+		err = s.db.UpdateOrganizationFeatureFlags(ctx, organization.ID, updates)
+		if err != nil {
+			s.logger.Error("failed to update organization while saving last_relevant_post_alert_sent_at", zap.Error(err))
+			return
+		}
 	}
 }
-
-//func (s *redditKeywordTracker) TrackPost(ctx context.Context,
-//	post *models.Lead,
-//	project *models.Project,
-//	subReddit *models.Source,
-//	redditClient *reddit.Client) error {
-//	comments, err := redditClient.GetPostWithAllComments(ctx, post.PostID)
-//	if err != nil {
-//		return fmt.Errorf("failed to get reddit comments: %w", err)
-//	}
-//
-//	return nil
-//}
 
 // Call GetPosts of a subreddit created on and after subReddit LastPostCreatedAt
 // Filter them via a criteria - https://www.notion.so/Criteria-for-filtering-the-relevant-post-1c70029aaf8f80ec8ba6fd4e29342d6a
@@ -552,34 +564,41 @@ func (s *redditKeywordTracker) sendAutomatedComment(ctx context.Context, org *mo
 
 	autoCommentEnabled := org.FeatureFlags.EnableAutoComment
 
-	// Case 1: User is old enough, but auto comment is currently disabled — enable it
-	if isOldEnough && !autoCommentEnabled {
-		org.FeatureFlags.EnableAutoComment = true
-		activity := models.OrgActivityTypeCOMMENTENABLEDWARMEDUP
-		org.FeatureFlags.Activities = append(org.FeatureFlags.Activities, models.OrgActivity{
-			ActivityType: activity,
-			CreatedAt:    time.Now(),
-		})
-		if err := s.db.UpdateOrganization(ctx, org); err != nil {
-			return fmt.Errorf("failed to enable auto comment: %w", err)
-		}
-		s.logger.Info("enabled auto comment", zap.String("org_name", org.Name), zap.String("activity", activity.String()))
-		go s.alertNotifier.SendUserActivity(context.Background(), activity.String(), org.Name, redditConfig.Name)
-	}
+	//// Case 1: User is old enough, but auto comment is currently disabled because of OrgActivityTypeCOMMENTDISABLEDACCOUNTAGENEW
+	//// enable it
+	//if isOldEnough && !autoCommentEnabled && org.FeatureFlags.ActivityExists(models.OrgActivityTypeCOMMENTDISABLEDACCOUNTAGENEW) {
+	//	org.FeatureFlags.EnableAutoComment = true
+	//	activity := models.OrgActivityTypeCOMMENTENABLEDWARMEDUP
+	//	org.FeatureFlags.Activities = append(org.FeatureFlags.Activities, models.OrgActivity{
+	//		ActivityType: activity,
+	//		CreatedAt:    time.Now(),
+	//	})
+	//	if err := s.db.UpdateOrganization(ctx, org); err != nil {
+	//		return fmt.Errorf("failed to enable auto comment: %w", err)
+	//	}
+	//	s.logger.Info("enabled auto comment", zap.String("org_name", org.Name), zap.String("activity", activity.String()))
+	//}
 
 	// Case 2: User is not old enough, but auto comment is currently enabled — disable it
 	if !isOldEnough && autoCommentEnabled {
 		org.FeatureFlags.EnableAutoComment = false
-		activity := models.OrgActivityTypeCOMMENTDISABLEDACCOUNTAGENEW
 		org.FeatureFlags.Activities = append(org.FeatureFlags.Activities, models.OrgActivity{
-			ActivityType: activity,
+			ActivityType: models.OrgActivityTypeCOMMENTDISABLEDACCOUNTAGENEW,
 			CreatedAt:    time.Now(),
 		})
-		if err := s.db.UpdateOrganization(ctx, org); err != nil {
+
+		updates := map[string]any{
+			psql.FEATURE_FLAG_DISABLE_AUTOMATED_COMMENT_PATH: false,
+			psql.FEATURE_FLAG_ACTIVITIES_PATH:                org.FeatureFlags.Activities,
+		}
+
+		if err := s.db.UpdateOrganizationFeatureFlags(ctx, org.ID, updates); err != nil {
 			return fmt.Errorf("failed to disable auto comment: %w", err)
 		}
-		s.logger.Info("disabled auto comment", zap.String("org_name", org.Name), zap.String("activity", activity.String()))
-		go s.alertNotifier.SendUserActivity(context.Background(), activity.String(), org.Name, redditConfig.Name)
+
+		s.logger.Info("disabled auto comment", zap.String("org_name", org.Name), zap.String("activity", models.OrgActivityTypeCOMMENTDISABLEDACCOUNTAGENEW.String()))
+
+		go s.sendDisableAutomatedCommentAlert(ctx, org, redditConfig.Name)
 	}
 
 	// Only proceed if commenting is enabled and user is old enough
@@ -616,6 +635,30 @@ func (s *redditKeywordTracker) sendAutomatedComment(ctx context.Context, org *mo
 	}
 
 	return nil
+}
+
+func (s *redditKeywordTracker) sendDisableAutomatedCommentAlert(ctx context.Context, org *models.Organization, redditAccountName string) {
+	// acquire lock before sending
+	disableAutomatedCommentAlertKey := fmt.Sprintf("disable_automated_comment:%s", org.ID)
+	// Check if a call is already running across organizations
+	isRunning, err := s.state.IsRunning(ctx, disableAutomatedCommentAlertKey)
+	if err != nil {
+		s.logger.Error("failed to check if daily tracking summary is running", zap.Error(err))
+		return
+	}
+	if isRunning {
+		return
+	}
+
+	// Try to acquire the lock
+	if err := s.state.Acquire(ctx, org.ID, disableAutomatedCommentAlertKey); err != nil {
+		s.logger.Warn("could not acquire lock for disableAutomatedCommentAlertKey, skipped", zap.Error(err))
+		return
+	}
+
+	//s.alertNotifier.SendUserActivity(context.Background(), models.OrgActivityTypeCOMMENTDISABLEDACCOUNTAGENEW.String(), org.Name, redditAccountName)
+	s.alertNotifier.SendAutoCommentDisabledEmail(context.Background(), org.Name, redditAccountName)
+	return
 }
 
 func dailyCounterKey(orgID string) string {

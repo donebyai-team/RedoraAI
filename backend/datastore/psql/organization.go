@@ -2,7 +2,9 @@ package psql
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/shank318/doota/models"
@@ -70,6 +72,79 @@ func CreateFreeSubscription(planType models.SubscriptionPlanType) *models.Subscr
 		Metadata:  plan.Metadata,
 		ExpiresAt: expiresAt,
 	}
+}
+
+const (
+	FEATURE_FLAG_DISABLE_AUTOMATED_COMMENT_PATH = "enable_auto_comment"
+	FEATURE_FLAG_ACTIVITIES_PATH                = "activities"
+	FEATURE_FLAG_SUBSCRIPTION_PATH              = "subscription"
+	FEATURE_FLAG_SUBSCRIPTION_EXTERNAL_ID_PATH  = "subscription.external_id"
+	FEATURE_FLAG_DISABLE_AUTOMATED_DM_PATH      = "enable_auto_dm"
+	FEATURE_FLAG_NOTIFICATION_FREQUENCY_PATH    = "notification_settings.notification_frequency_posts"
+	FEATURE_FLAG_NITIFICATION_LAST_SENT_AT_PATH = "notification_settings.last_relevant_post_alert_sent_at"
+)
+
+func (r *Database) UpdateOrganizationFeatureFlags(ctx context.Context, orgID string, updates map[string]any) error {
+	for flatPath, value := range updates {
+		pathParts := strings.Split(flatPath, ".")
+		if len(pathParts) == 0 {
+			continue
+		}
+
+		// Build Postgres-style path strings
+		fullPath := "{" + strings.Join(pathParts, ",") + "}"
+
+		valJSON, err := json.Marshal(value)
+		if err != nil {
+			return fmt.Errorf("marshal value for path %s: %w", flatPath, err)
+		}
+
+		var query string
+		var args []any
+
+		// If it's nested, ensure parent object exists
+		if len(pathParts) > 1 {
+			parentPath := "{" + strings.Join(pathParts[:len(pathParts)-1], ",") + "}"
+
+			query = `
+				UPDATE organizations
+				SET feature_flags = jsonb_set(
+					jsonb_set(
+						feature_flags,
+						$1,
+						coalesce(feature_flags #> $1, '{}'::jsonb),
+						true
+					),
+					$2,
+					$3::jsonb,
+					true
+				),
+				updated_at = now()
+				WHERE id = $4
+			`
+			args = []any{parentPath, fullPath, string(valJSON), orgID}
+		} else {
+			// Flat field update
+			query = `
+				UPDATE organizations
+				SET feature_flags = jsonb_set(
+					feature_flags,
+					$1,
+					$2::jsonb,
+					true
+				),
+				updated_at = now()
+				WHERE id = $3
+			`
+			args = []any{fullPath, string(valJSON), orgID}
+		}
+
+		if _, err := r.ExecContext(ctx, query, args...); err != nil {
+			return fmt.Errorf("failed to update path %s: %w", flatPath, err)
+		}
+	}
+
+	return nil
 }
 
 func (r *Database) UpdateOrganization(ctx context.Context, org *models.Organization) error {

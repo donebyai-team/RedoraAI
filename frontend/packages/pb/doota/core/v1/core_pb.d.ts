@@ -756,6 +756,11 @@ export enum LeadStatus {
    * @generated from enum value: LEAD = 3;
    */
   LEAD = 3,
+
+  /**
+   * @generated from enum value: AI_RESPONDED = 4;
+   */
+  AI_RESPONDED = 4,
 }
 
 /**

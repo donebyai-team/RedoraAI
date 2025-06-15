@@ -50,9 +50,6 @@ export default function KeywordManagement() {
   const project = useAppSelector((state) => state.stepper.project);
   const dispatch = useAppDispatch();
 
-  console.log("###_debug_project_keywords ", project?.keywords)
-  console.log("###_debug_project_sources ", project?.sources)
-
   const [suggestionLoading, setSuggestionLoading] = useState(true);
   const [isKeywordsLoading, setIsKeywordsLoading] = useState(false);
   const [isSubredditLoading, setIsSubredditLoading] = useState(false);

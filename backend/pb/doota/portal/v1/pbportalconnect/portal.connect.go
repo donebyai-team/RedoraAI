@@ -82,9 +82,6 @@ const (
 	// PortalServiceGetRelevantLeadsProcedure is the fully-qualified name of the PortalService's
 	// GetRelevantLeads RPC.
 	PortalServiceGetRelevantLeadsProcedure = "/doota.portal.v1.PortalService/GetRelevantLeads"
-	// PortalServiceGetLeadsByStatusProcedure is the fully-qualified name of the PortalService's
-	// GetLeadsByStatus RPC.
-	PortalServiceGetLeadsByStatusProcedure = "/doota.portal.v1.PortalService/GetLeadsByStatus"
 	// PortalServiceUpdateLeadStatusProcedure is the fully-qualified name of the PortalService's
 	// UpdateLeadStatus RPC.
 	PortalServiceUpdateLeadStatusProcedure = "/doota.portal.v1.PortalService/UpdateLeadStatus"
@@ -125,7 +122,6 @@ var (
 	portalServiceGetSourcesMethodDescriptor                = portalServiceServiceDescriptor.Methods().ByName("GetSources")
 	portalServiceRemoveSourceMethodDescriptor              = portalServiceServiceDescriptor.Methods().ByName("RemoveSource")
 	portalServiceGetRelevantLeadsMethodDescriptor          = portalServiceServiceDescriptor.Methods().ByName("GetRelevantLeads")
-	portalServiceGetLeadsByStatusMethodDescriptor          = portalServiceServiceDescriptor.Methods().ByName("GetLeadsByStatus")
 	portalServiceUpdateLeadStatusMethodDescriptor          = portalServiceServiceDescriptor.Methods().ByName("UpdateLeadStatus")
 	portalServiceCreateOrEditProjectMethodDescriptor       = portalServiceServiceDescriptor.Methods().ByName("CreateOrEditProject")
 	portalServiceSuggestKeywordsAndSourcesMethodDescriptor = portalServiceServiceDescriptor.Methods().ByName("SuggestKeywordsAndSources")
@@ -156,7 +152,6 @@ type PortalServiceClient interface {
 	GetSources(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetSourceResponse], error)
 	RemoveSource(context.Context, *connect.Request[v1.RemoveSourceRequest]) (*connect.Response[emptypb.Empty], error)
 	GetRelevantLeads(context.Context, *connect.Request[v1.GetRelevantLeadsRequest]) (*connect.Response[v1.GetLeadsResponse], error)
-	GetLeadsByStatus(context.Context, *connect.Request[v1.GetLeadsByStatusRequest]) (*connect.Response[v1.GetLeadsResponse], error)
 	UpdateLeadStatus(context.Context, *connect.Request[v1.UpdateLeadStatusRequest]) (*connect.Response[emptypb.Empty], error)
 	CreateOrEditProject(context.Context, *connect.Request[v1.CreateProjectRequest]) (*connect.Response[v11.Project], error)
 	SuggestKeywordsAndSources(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v11.Project], error)
@@ -277,12 +272,6 @@ func NewPortalServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(portalServiceGetRelevantLeadsMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
-		getLeadsByStatus: connect.NewClient[v1.GetLeadsByStatusRequest, v1.GetLeadsResponse](
-			httpClient,
-			baseURL+PortalServiceGetLeadsByStatusProcedure,
-			connect.WithSchema(portalServiceGetLeadsByStatusMethodDescriptor),
-			connect.WithClientOptions(opts...),
-		),
 		updateLeadStatus: connect.NewClient[v1.UpdateLeadStatusRequest, emptypb.Empty](
 			httpClient,
 			baseURL+PortalServiceUpdateLeadStatusProcedure,
@@ -341,7 +330,6 @@ type portalServiceClient struct {
 	getSources                *connect.Client[emptypb.Empty, v1.GetSourceResponse]
 	removeSource              *connect.Client[v1.RemoveSourceRequest, emptypb.Empty]
 	getRelevantLeads          *connect.Client[v1.GetRelevantLeadsRequest, v1.GetLeadsResponse]
-	getLeadsByStatus          *connect.Client[v1.GetLeadsByStatusRequest, v1.GetLeadsResponse]
 	updateLeadStatus          *connect.Client[v1.UpdateLeadStatusRequest, emptypb.Empty]
 	createOrEditProject       *connect.Client[v1.CreateProjectRequest, v11.Project]
 	suggestKeywordsAndSources *connect.Client[emptypb.Empty, v11.Project]
@@ -435,11 +423,6 @@ func (c *portalServiceClient) GetRelevantLeads(ctx context.Context, req *connect
 	return c.getRelevantLeads.CallUnary(ctx, req)
 }
 
-// GetLeadsByStatus calls doota.portal.v1.PortalService.GetLeadsByStatus.
-func (c *portalServiceClient) GetLeadsByStatus(ctx context.Context, req *connect.Request[v1.GetLeadsByStatusRequest]) (*connect.Response[v1.GetLeadsResponse], error) {
-	return c.getLeadsByStatus.CallUnary(ctx, req)
-}
-
 // UpdateLeadStatus calls doota.portal.v1.PortalService.UpdateLeadStatus.
 func (c *portalServiceClient) UpdateLeadStatus(ctx context.Context, req *connect.Request[v1.UpdateLeadStatusRequest]) (*connect.Response[emptypb.Empty], error) {
 	return c.updateLeadStatus.CallUnary(ctx, req)
@@ -492,7 +475,6 @@ type PortalServiceHandler interface {
 	GetSources(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetSourceResponse], error)
 	RemoveSource(context.Context, *connect.Request[v1.RemoveSourceRequest]) (*connect.Response[emptypb.Empty], error)
 	GetRelevantLeads(context.Context, *connect.Request[v1.GetRelevantLeadsRequest]) (*connect.Response[v1.GetLeadsResponse], error)
-	GetLeadsByStatus(context.Context, *connect.Request[v1.GetLeadsByStatusRequest]) (*connect.Response[v1.GetLeadsResponse], error)
 	UpdateLeadStatus(context.Context, *connect.Request[v1.UpdateLeadStatusRequest]) (*connect.Response[emptypb.Empty], error)
 	CreateOrEditProject(context.Context, *connect.Request[v1.CreateProjectRequest]) (*connect.Response[v11.Project], error)
 	SuggestKeywordsAndSources(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v11.Project], error)
@@ -609,12 +591,6 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(portalServiceGetRelevantLeadsMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
-	portalServiceGetLeadsByStatusHandler := connect.NewUnaryHandler(
-		PortalServiceGetLeadsByStatusProcedure,
-		svc.GetLeadsByStatus,
-		connect.WithSchema(portalServiceGetLeadsByStatusMethodDescriptor),
-		connect.WithHandlerOptions(opts...),
-	)
 	portalServiceUpdateLeadStatusHandler := connect.NewUnaryHandler(
 		PortalServiceUpdateLeadStatusProcedure,
 		svc.UpdateLeadStatus,
@@ -687,8 +663,6 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 			portalServiceRemoveSourceHandler.ServeHTTP(w, r)
 		case PortalServiceGetRelevantLeadsProcedure:
 			portalServiceGetRelevantLeadsHandler.ServeHTTP(w, r)
-		case PortalServiceGetLeadsByStatusProcedure:
-			portalServiceGetLeadsByStatusHandler.ServeHTTP(w, r)
 		case PortalServiceUpdateLeadStatusProcedure:
 			portalServiceUpdateLeadStatusHandler.ServeHTTP(w, r)
 		case PortalServiceCreateOrEditProjectProcedure:
@@ -776,10 +750,6 @@ func (UnimplementedPortalServiceHandler) RemoveSource(context.Context, *connect.
 
 func (UnimplementedPortalServiceHandler) GetRelevantLeads(context.Context, *connect.Request[v1.GetRelevantLeadsRequest]) (*connect.Response[v1.GetLeadsResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.GetRelevantLeads is not implemented"))
-}
-
-func (UnimplementedPortalServiceHandler) GetLeadsByStatus(context.Context, *connect.Request[v1.GetLeadsByStatusRequest]) (*connect.Response[v1.GetLeadsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.GetLeadsByStatus is not implemented"))
 }
 
 func (UnimplementedPortalServiceHandler) UpdateLeadStatus(context.Context, *connect.Request[v1.UpdateLeadStatusRequest]) (*connect.Response[emptypb.Empty], error) {
