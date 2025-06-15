@@ -124,7 +124,7 @@ func (s *redditKeywordTracker) isTrackingDone(ctx context.Context, projectID str
 }
 
 func (s *redditKeywordTracker) shouldTrack(tracker *models.AugmentedKeywordTracker) bool {
-	if tracker.Organization.FeatureFlags.IsSubscriptionExpired() {
+	if tracker.Organization.FeatureFlags.IsSubscriptionExpired() || !tracker.Organization.FeatureFlags.IsSubscriptionActive() {
 		return false
 	}
 	return tracker.Project.IsActive
@@ -154,15 +154,14 @@ func (s *redditKeywordTracker) disableProject(ctx context.Context, organization 
 		}
 	}()
 
+	err = s.db.UpdateProjectIsActive(ctx, organization.ID, false)
+	if err != nil {
+		s.logger.Error("failed to update project isActive", zap.Error(err))
+		return
+	}
+
 	// Reason expired
 	if organization.FeatureFlags.IsSubscriptionExpired() {
-		// disable project and notify
-		err := s.db.UpdateProjectIsActive(ctx, organization.ID, false)
-		if err != nil {
-			s.logger.Error("failed to update project isActive", zap.Error(err))
-			return
-		}
-
 		// Notify User
 		err = s.alertNotifier.SendTrialExpiredEmail(ctx, organization.ID, 7)
 		if err != nil {

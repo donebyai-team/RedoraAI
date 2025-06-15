@@ -162,10 +162,17 @@ type NotificationFrequency string
 type OrgActivityType string
 
 func (b OrganizationFeatureFlags) IsSubscriptionExpired() bool {
-	if b.Subscription == nil {
+	if b.GetSubscription() == nil {
 		return false
 	}
 	return b.Subscription.IsExpired()
+}
+
+func (b OrganizationFeatureFlags) IsSubscriptionActive() bool {
+	if b.GetSubscription() == nil {
+		return true
+	}
+	return b.Subscription.Status == SubscriptionStatusACTIVE
 }
 
 func (b OrganizationFeatureFlags) Value() (driver.Value, error) {
