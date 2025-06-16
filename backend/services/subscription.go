@@ -92,8 +92,8 @@ func (d dodoSubscriptionService) UpgradePlan(ctx context.Context, plan models.Su
 		return nil, err
 	}
 	existingSub := organization.FeatureFlags.GetSubscription()
-	if existingSub.ExternalID == nil {
-		return nil, fmt.Errorf("subscription does not exist")
+	if existingSub.ExternalID == nil || *existingSub.ExternalID == "" || !organization.FeatureFlags.IsSubscriptionActive() {
+		return nil, fmt.Errorf("no subscription exits to upgrade")
 	}
 
 	if existingSub.PlanID == plan {
@@ -105,7 +105,13 @@ func (d dodoSubscriptionService) UpgradePlan(ctx context.Context, plan models.Su
 		return nil, fmt.Errorf("invalid plan type: %s", plan)
 	}
 
-	if existingSub.ExternalID == nil || *existingSub.ExternalID == "" {
+	externalSubExternal, err := d.client.Subscriptions.Get(ctx, *existingSub.ExternalID)
+	if err != nil {
+		d.logger.Error("error verifying subscription", zap.Error(err))
+		return nil, fmt.Errorf("error getting existing subscription")
+	}
+
+	if externalSubExternal == nil || externalSubExternal.Status != dodopayments.SubscriptionStatusActive {
 		return nil, fmt.Errorf("no subscription exits to upgrade")
 	}
 
@@ -143,7 +149,7 @@ func (d dodoSubscriptionService) CreatePlan(ctx context.Context, plan models.Sub
 	}
 
 	existingSub := organization.FeatureFlags.GetSubscription()
-	if existingSub.ExternalID != nil {
+	if existingSub.ExternalID != nil && *existingSub.ExternalID != "" {
 		return nil, fmt.Errorf("subscription already exists, please upgrade to change plan")
 	}
 
@@ -230,6 +236,7 @@ func (d dodoSubscriptionService) UpdateSubscriptionByExternalID(ctx context.Cont
 	return d.Verify(ctx, organizationID)
 }
 
+// it should be called only when the plan is changed
 func (d dodoSubscriptionService) Verify(ctx context.Context, orgID string) (*models.Subscription, error) {
 	orgnization, err := d.db.GetOrganizationById(ctx, orgID)
 	if err != nil {
@@ -237,6 +244,9 @@ func (d dodoSubscriptionService) Verify(ctx context.Context, orgID string) (*mod
 	}
 
 	existingSub := orgnization.FeatureFlags.GetSubscription()
+	if existingSub.ExternalID == nil || *existingSub.ExternalID == "" {
+		return existingSub, nil
+	}
 
 	externalSubExternal, err := d.client.Subscriptions.Get(ctx, *existingSub.ExternalID)
 	if err != nil {
@@ -253,6 +263,7 @@ func (d dodoSubscriptionService) Verify(ctx context.Context, orgID string) (*mod
 		return nil, fmt.Errorf("invalid product id to plan mapping: %s", plan)
 	}
 
+	// if the plan is not changed, do nothing
 	if existingSub.PlanID == plan {
 		return existingSub, nil
 	}
@@ -290,29 +301,56 @@ func (d dodoSubscriptionService) Verify(ctx context.Context, orgID string) (*mod
 		d.logger.Info("subscription activated successfully",
 			zap.String("orgID", orgID),
 			zap.Any("subscription", subscriptionPlan))
-	} else if externalSubExternal.Status == dodopayments.SubscriptionStatusPending {
+
+		return subscriptionPlan, nil
+	}
+
+	if externalSubExternal.Status == dodopayments.SubscriptionStatusPending {
 		subscriptionPlan.Status = models.SubscriptionStatusCREATED
 	} else if externalSubExternal.Status == dodopayments.SubscriptionStatusExpired {
 		subscriptionPlan.Status = models.SubscriptionStatusEXPIRED
 	} else if externalSubExternal.Status == dodopayments.SubscriptionStatusCancelled ||
 		externalSubExternal.Status == dodopayments.SubscriptionStatusOnHold ||
 		externalSubExternal.Status == dodopayments.SubscriptionStatusPaused {
-		subscriptionPlan.Status = models.SubscriptionStatusCANCELLED
 
-		subscriptionPlan.Status = models.SubscriptionStatusCANCELLED
-		err = d.db.UpdateOrganizationFeatureFlags(ctx, orgID, map[string]any{
-			psql.FEATURE_FLAG_SUBSCRIPTION_PATH: subscriptionPlan,
-		})
-		if err != nil {
-			d.logger.Error("error verifying subscription", zap.Error(err))
-			return nil, err
+		if existingSub.PlanID != models.SubscriptionPlanTypeFREE {
+			subscriptionPlan.Status = models.SubscriptionStatusCANCELLED
+			err = d.db.UpdateOrganizationFeatureFlags(ctx, orgID, map[string]any{
+				psql.FEATURE_FLAG_SUBSCRIPTION_PATH: subscriptionPlan,
+			})
+			if err != nil {
+				d.logger.Error("error verifying subscription", zap.Error(err))
+				return nil, err
+			}
+			d.logger.Info("subscription cancelled successfully",
+				zap.String("orgID", orgID),
+				zap.Any("subscription", subscriptionPlan))
 		}
-		d.logger.Info("subscription cancelled successfully",
-			zap.String("orgID", orgID),
-			zap.Any("subscription", subscriptionPlan))
-
 	} else {
+		// if failed then if it is free plan then we just remove the external id to retry
+		// else if existing then we update the existing plan status
 		subscriptionPlan.Status = models.SubscriptionStatusFAILED
+		if existingSub.PlanID == models.SubscriptionPlanTypeFREE {
+			// remove external id so it can be tried again
+			err = d.db.UpdateOrganizationFeatureFlags(ctx, orgID, map[string]any{
+				psql.FEATURE_FLAG_SUBSCRIPTION_EXTERNAL_ID_PATH: "",
+			})
+			if err != nil {
+				d.logger.Error("error verifying subscription", zap.Error(err))
+				return nil, err
+			}
+		} else {
+			err = d.db.UpdateOrganizationFeatureFlags(ctx, orgID, map[string]any{
+				psql.FEATURE_FLAG_SUBSCRIPTION_PATH: subscriptionPlan,
+			})
+			if err != nil {
+				d.logger.Error("error verifying subscription", zap.Error(err))
+				return nil, err
+			}
+			d.logger.Info("subscription cancelled successfully",
+				zap.String("orgID", orgID),
+				zap.Any("subscription", subscriptionPlan))
+		}
 	}
 
 	return subscriptionPlan, nil
