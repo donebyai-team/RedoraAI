@@ -266,7 +266,7 @@ export default function Page() {
                         </Typography>
 
                         <Typography sx={{ mt: 2 }} variant="body2" color="primary">
-                            <Link href="https://www.reddit.com/r/help/comments/18aurro/how_do_i_add_a_password_to_my_account/" target="_blank" rel="noopener">
+                            <Link href="https://redoraai.featurebase.app/help/articles/9204295" target="_blank" rel="noopener">
                                 How do I add a password to my account? — Reddit Help
                             </Link>
                         </Typography>

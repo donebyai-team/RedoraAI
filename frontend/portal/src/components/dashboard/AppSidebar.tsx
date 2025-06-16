@@ -12,7 +12,8 @@ import {
   Edit,
   Zap,
   X,
-  PanelLeft
+  PanelLeft,
+  HelpCircle
 } from "lucide-react";
 import {
   Sidebar,
@@ -113,6 +114,12 @@ export function AppSidebar() {
       icon: CreditCard,
       active: isActive(routes.new.billing),
     },
+    {
+      title: "Help Center",
+      path: "https://redoraai.featurebase.app/help",
+      icon: HelpCircle, // Or another appropriate icon
+      external: true,
+    }
   ];
 
   return (
@@ -166,10 +173,22 @@ export function AppSidebar() {
               {workspaceSettingsItems.map((item) => (
                 <SidebarMenuItem key={item.path}>
                   <SidebarMenuButton asChild isActive={item.active}>
-                    <Link href={item.path} className="flex items-center">
-                      <item.icon className="h-4 w-4 mr-2" />
-                      <span>{item.title}</span>
-                    </Link>
+                    {item.external ? (
+                      <a
+                        href={item.path}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center"
+                      >
+                        <item.icon className="h-4 w-4 mr-2" />
+                        <span>{item.title}</span>
+                      </a>
+                    ) : (
+                      <Link href={item.path} className="flex items-center">
+                        <item.icon className="h-4 w-4 mr-2" />
+                        <span>{item.title}</span>
+                      </Link>
+                    )}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
