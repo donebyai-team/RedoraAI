@@ -43,6 +43,7 @@ type Portal struct {
 	cache               state2.ConversationState
 	alertNotifier       alerts.AlertNotifier
 	interactionService  interactions.AutomatedInteractions
+	subscriptionService services.SubscriptionService
 }
 
 func New(
@@ -65,6 +66,7 @@ func New(
 	tracer logging.Tracer,
 	alertNotifier alerts.AlertNotifier,
 	interactionService interactions.AutomatedInteractions,
+	subscriptionService services.SubscriptionService,
 ) *Portal {
 	return &Portal{
 		aiClient:            aiClient,
@@ -87,6 +89,7 @@ func New(
 		tracer:              tracer,
 		alertNotifier:       alertNotifier,
 		interactionService:  interactionService,
+		subscriptionService: subscriptionService,
 	}
 }
 

@@ -12,23 +12,45 @@ import (
 )
 
 type SubscriptionService interface {
-	Create(ctx context.Context, orgID string) (*models.Subscription, error)
+	CreatePlan(ctx context.Context, plan models.SubscriptionPlanType, orgID, redirectURL string) (*models.Subscription, error)
+	Verify(ctx context.Context, orgID string) (*models.Subscription, error)
+	UpgradePlan(ctx context.Context, plan models.SubscriptionPlanType, orgID string) (*models.Subscription, error)
 }
 
 type dodoSubscriptionService struct {
-	db     datastore.Repository
-	client *dodopayments.Client
-	logger *zap.Logger
+	db              datastore.Repository
+	client          *dodopayments.Client
+	logger          *zap.Logger
+	productIDToPlan map[string]models.SubscriptionPlanType
+	planToProductID map[models.SubscriptionPlanType]string
 }
 
 const (
-	proPlanID     = "pdt_h2V8lsZsVRO88Q19pCjU8"
-	founderPlanID = "pdt_1Arsz78Oy4pyi4MJbYeSb"
+	liveProPlanID     = "pdt_h2V8lsZsVRO88Q19pCjU8"
+	liveFounderPlanID = "pdt_1Arsz78Oy4pyi4MJbYeSb"
+
+	testProPlanID     = "pdt_HcHajJOaRun8JfZwdBuNR"
+	testFounderPlanID = "pdt_EEaOOJXUcgej57Jzl4O5w"
 )
 
-var planToProductID = map[models.SubscriptionPlanType]string{
-	models.SubscriptionPlanTypeFOUNDER: founderPlanID,
-	models.SubscriptionPlanTypePRO:     proPlanID,
+var livePlanToProductID = map[models.SubscriptionPlanType]string{
+	models.SubscriptionPlanTypeFOUNDER: liveFounderPlanID,
+	models.SubscriptionPlanTypePRO:     liveProPlanID,
+}
+
+var testPlanToProductID = map[models.SubscriptionPlanType]string{
+	models.SubscriptionPlanTypeFOUNDER: testFounderPlanID,
+	models.SubscriptionPlanTypePRO:     testProPlanID,
+}
+
+var liveProductIDToPlan = map[string]models.SubscriptionPlanType{
+	liveFounderPlanID: models.SubscriptionPlanTypeFOUNDER,
+	liveProPlanID:     models.SubscriptionPlanTypePRO,
+}
+
+var testProductIDToPlan = map[string]models.SubscriptionPlanType{
+	testFounderPlanID: models.SubscriptionPlanTypeFOUNDER,
+	testProPlanID:     models.SubscriptionPlanTypePRO,
 }
 
 var addOnIDMap = map[string]string{
@@ -37,17 +59,71 @@ var addOnIDMap = map[string]string{
 }
 
 func NewDodoSubscriptionService(db datastore.Repository, token string, logger *zap.Logger, isTest bool) *dodoSubscriptionService {
-	client := dodopayments.NewClient(
-		option.WithBearerToken(token),
-	)
+	client := dodopayments.NewClient()
 	if isTest {
-		client.Options = append(client.Options, option.WithEnvironmentTestMode())
+		client.Options = []option.RequestOption{
+			option.WithBearerToken(token),
+			option.WithEnvironmentTestMode(),
+		}
+	} else {
+		client.Options = []option.RequestOption{
+			option.WithBearerToken(token),
+			option.WithEnvironmentLiveMode(),
+		}
 	}
 
-	return &dodoSubscriptionService{db: db, client: client}
+	client.Subscriptions = dodopayments.NewSubscriptionService(client.Options...)
+	service := &dodoSubscriptionService{db: db, client: client, logger: logger}
+
+	if isTest {
+		service.planToProductID = testPlanToProductID
+		service.productIDToPlan = testProductIDToPlan
+	} else {
+		service.planToProductID = livePlanToProductID
+		service.productIDToPlan = liveProductIDToPlan
+	}
+
+	return service
 }
 
-func (d dodoSubscriptionService) Create(ctx context.Context, plan models.SubscriptionPlanType, orgID, returnURL string) (*models.Subscription, error) {
+func (d dodoSubscriptionService) UpgradePlan(ctx context.Context, plan models.SubscriptionPlanType, orgID string) (*models.Subscription, error) {
+	organization, err := d.db.GetOrganizationById(ctx, orgID)
+	if err != nil {
+		return nil, err
+	}
+	existingSub := organization.FeatureFlags.GetSubscription()
+	if existingSub.ExternalID == nil {
+		return nil, fmt.Errorf("subscription does not exist")
+	}
+
+	if existingSub.PlanID == plan {
+		return nil, fmt.Errorf("plan %s already exists", plan)
+	}
+
+	productId, ok := d.planToProductID[plan]
+	if !ok {
+		return nil, fmt.Errorf("invalid plan type: %s", plan)
+	}
+
+	if existingSub.ExternalID == nil || *existingSub.ExternalID == "" {
+		return nil, fmt.Errorf("no subscription exits to upgrade")
+	}
+
+	// upgrade
+	err = d.client.Subscriptions.ChangePlan(ctx, *existingSub.ExternalID, dodopayments.SubscriptionChangePlanParams{
+		ProductID:            dodopayments.F(productId),
+		ProrationBillingMode: dodopayments.F(dodopayments.SubscriptionChangePlanParamsProrationBillingModeProratedImmediately),
+		Quantity:             dodopayments.F(int64(1)),
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to upgrade subscription: %w", err)
+	}
+
+	return d.Verify(ctx, orgID)
+}
+
+func (d dodoSubscriptionService) CreatePlan(ctx context.Context, plan models.SubscriptionPlanType, orgID, returnURL string) (*models.Subscription, error) {
 	// check if externalID exists
 	// if yes, call dodo and verify if the plan is active, if active return error
 	// if yes, call dodo and verify if the plan is cancelled, then create new subbscription
@@ -65,48 +141,55 @@ func (d dodoSubscriptionService) Create(ctx context.Context, plan models.Subscri
 	if err != nil {
 		return nil, err
 	}
+
 	existingSub := organization.FeatureFlags.GetSubscription()
+	if existingSub.ExternalID != nil {
+		return nil, fmt.Errorf("subscription already exists, please upgrade to change plan")
+	}
+
+	users, err := d.db.GetUsersByOrgID(ctx, orgID)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(users) == 0 {
+		return nil, fmt.Errorf("no users found")
+	}
 
 	if existingSub.PlanID == plan {
 		return nil, fmt.Errorf("plan %s already exists", plan)
 	}
 
-	productId, ok := planToProductID[plan]
+	productId, ok := d.planToProductID[plan]
 	if !ok {
 		return nil, fmt.Errorf("invalid plan type: %s", plan)
 	}
 
-	var externalSubResponse *dodopayments.SubscriptionNewResponse
-
-	if existingSub == nil || existingSub.ExternalID == nil {
-		// create fresh
-		externalSubResponse, err = d.client.Subscriptions.New(context.TODO(), dodopayments.SubscriptionNewParams{
-			Billing: dodopayments.F(dodopayments.BillingAddressParam{
-				City:    dodopayments.F("Bangalore"),
-				Country: dodopayments.F(dodopayments.CountryCodeIn),
-				State:   dodopayments.F("Karnataka"),
-				Street:  dodopayments.F("Bannergetta"),
-				Zipcode: dodopayments.F("560068"),
-			}),
-			ReturnURL: dodopayments.F(returnURL),
-			Customer: dodopayments.F[dodopayments.CustomerRequestUnionParam](dodopayments.CustomerRequestParam{
-				CustomerID: dodopayments.F(orgID),
-			}),
-			ProductID: dodopayments.F(productId),
-			Quantity:  dodopayments.F(int64(1)),
-		})
-	} else {
-		// upgrade
-		err = d.client.Subscriptions.ChangePlan(ctx, *existingSub.ExternalID, dodopayments.SubscriptionChangePlanParams{
-			ProductID:            dodopayments.F(productId),
-			ProrationBillingMode: dodopayments.F(dodopayments.SubscriptionChangePlanParamsProrationBillingModeProratedImmediately),
-			Quantity:             dodopayments.F(int64(1)),
-		})
-	}
+	externalSubResponse, err := d.client.Subscriptions.New(ctx, dodopayments.SubscriptionNewParams{
+		Billing: dodopayments.F(dodopayments.BillingAddressParam{
+			City:    dodopayments.F("Bangalore"),
+			Country: dodopayments.F(dodopayments.CountryCodeIn),
+			State:   dodopayments.F("Karnataka"),
+			Street:  dodopayments.F("Bannergetta"),
+			Zipcode: dodopayments.F("560068"),
+		}),
+		ReturnURL: dodopayments.F(returnURL),
+		Customer: dodopayments.F(dodopayments.CustomerRequestUnionParam(dodopayments.CustomerRequestParam{
+			CreateNewCustomer: dodopayments.F(true),
+			Email:             dodopayments.F(users[0].Email),
+			Name:              dodopayments.F(organization.Name),
+		})),
+		Metadata: dodopayments.F(map[string]string{
+			"organization_id": orgID,
+		}),
+		PaymentLink: dodopayments.F(true),
+		ProductID:   dodopayments.F(productId),
+		Quantity:    dodopayments.F(int64(1)),
+	})
 
 	if err != nil {
 		d.logger.Error("error creating subscription", zap.Error(err))
-		return nil, fmt.Errorf("error creating subscription: %w", err)
+		return nil, fmt.Errorf("error creating subscription")
 	}
 
 	if externalSubResponse == nil || externalSubResponse.SubscriptionID == "" {
@@ -114,13 +197,13 @@ func (d dodoSubscriptionService) Create(ctx context.Context, plan models.Subscri
 	}
 	// update subscription in org
 	err = d.db.UpdateOrganizationFeatureFlags(ctx, organization.ID, map[string]any{
-		psql.FEATURE_FLAG_SUBSCRIPTION_EXTERNAL_ID_PATH: existingSub.ExternalID,
+		psql.FEATURE_FLAG_SUBSCRIPTION_EXTERNAL_ID_PATH: externalSubResponse.SubscriptionID,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	subscriptionPlan := psql.CreateFreeSubscription(plan)
+	subscriptionPlan := psql.CreateSubscriptionObject(plan)
 	subscriptionPlan.OrganizationID = orgID
 	subscriptionPlan.ExternalID = &externalSubResponse.SubscriptionID
 	subscriptionPlan.PaymentLink = externalSubResponse.PaymentLink
@@ -128,29 +211,109 @@ func (d dodoSubscriptionService) Create(ctx context.Context, plan models.Subscri
 	return subscriptionPlan, nil
 }
 
-func (d dodoSubscriptionService) Verify(ctx context.Context, subscriptionID, orgID string) (*models.Subscription, error) {
-	subscription, err := d.db.GetSubscriptionByIDAndOrg(ctx, subscriptionID, orgID)
+func (d dodoSubscriptionService) UpdateSubscriptionByExternalID(ctx context.Context, externalID string) (*models.Subscription, error) {
+	externalSubExternal, err := d.client.Subscriptions.Get(ctx, externalID)
 	if err != nil {
-		return nil, err
+		d.logger.Error("error verifying subscription", zap.Error(err))
+		return nil, fmt.Errorf("error verifying subscription")
 	}
 
-	_, err = d.db.GetOrganizationById(ctx, orgID)
-	if err != nil {
-		return nil, err
-	}
-
-	externalSub, err := d.client.Subscriptions.Get(ctx, *subscription.ExternalID)
-	if err != nil {
-		return nil, fmt.Errorf("error verifying subscription: %w", err)
-	}
-
-	if externalSub == nil {
+	if externalSubExternal == nil {
 		return nil, fmt.Errorf("error verifying subscription: invalid subscription")
 	}
 
-	if externalSub.Status == dodopayments.SubscriptionStatusActive {
-		// update org and subscription
+	organizationID := externalSubExternal.Metadata["organization_id"]
+	if organizationID == "" {
+		return nil, fmt.Errorf("error verifying subscription: invalid subscription")
 	}
 
-	return subscription, nil
+	return d.Verify(ctx, organizationID)
+}
+
+func (d dodoSubscriptionService) Verify(ctx context.Context, orgID string) (*models.Subscription, error) {
+	orgnization, err := d.db.GetOrganizationById(ctx, orgID)
+	if err != nil {
+		return nil, err
+	}
+
+	existingSub := orgnization.FeatureFlags.GetSubscription()
+
+	externalSubExternal, err := d.client.Subscriptions.Get(ctx, *existingSub.ExternalID)
+	if err != nil {
+		d.logger.Error("error verifying subscription", zap.Error(err))
+		return nil, fmt.Errorf("error verifying subscription")
+	}
+
+	if externalSubExternal == nil {
+		return nil, fmt.Errorf("error verifying subscription: invalid subscription")
+	}
+
+	plan, ok := d.productIDToPlan[externalSubExternal.ProductID]
+	if !ok {
+		return nil, fmt.Errorf("invalid product id to plan mapping: %s", plan)
+	}
+
+	if existingSub.PlanID == plan {
+		return existingSub, nil
+	}
+
+	d.logger.Info("subscription status received",
+		zap.String("orgID", orgID),
+		zap.String("external_id", externalSubExternal.SubscriptionID),
+		zap.Any("subscription_status", externalSubExternal.Status))
+
+	subscriptionPlan := psql.CreateSubscriptionObject(plan)
+	subscriptionPlan.OrganizationID = orgID
+	subscriptionPlan.ExternalID = &externalSubExternal.SubscriptionID
+	if externalSubExternal.Status == dodopayments.SubscriptionStatusActive {
+		for _, addOnID := range externalSubExternal.Addons {
+			addOnType, ok := addOnIDMap[addOnID.AddonID]
+			if !ok {
+				return nil, fmt.Errorf("invalid addOn id: %s", plan)
+			}
+			if addOnType == "source" {
+				subscriptionPlan.Metadata.MaxSources = subscriptionPlan.Metadata.MaxSources * int(addOnID.Quantity)
+			} else if addOnType == "keyword" {
+				subscriptionPlan.Metadata.MaxKeywords = subscriptionPlan.Metadata.MaxKeywords * int(addOnID.Quantity)
+			}
+		}
+
+		subscriptionPlan.ExpiresAt = externalSubExternal.NextBillingDate
+		subscriptionPlan.Status = models.SubscriptionStatusACTIVE
+		err = d.db.UpdateOrganizationFeatureFlags(ctx, orgID, map[string]any{
+			psql.FEATURE_FLAG_SUBSCRIPTION_PATH: subscriptionPlan,
+		})
+		if err != nil {
+			d.logger.Error("error verifying subscription", zap.Error(err))
+			return nil, err
+		}
+		d.logger.Info("subscription activated successfully",
+			zap.String("orgID", orgID),
+			zap.Any("subscription", subscriptionPlan))
+	} else if externalSubExternal.Status == dodopayments.SubscriptionStatusPending {
+		subscriptionPlan.Status = models.SubscriptionStatusCREATED
+	} else if externalSubExternal.Status == dodopayments.SubscriptionStatusExpired {
+		subscriptionPlan.Status = models.SubscriptionStatusEXPIRED
+	} else if externalSubExternal.Status == dodopayments.SubscriptionStatusCancelled ||
+		externalSubExternal.Status == dodopayments.SubscriptionStatusOnHold ||
+		externalSubExternal.Status == dodopayments.SubscriptionStatusPaused {
+		subscriptionPlan.Status = models.SubscriptionStatusCANCELLED
+
+		subscriptionPlan.Status = models.SubscriptionStatusCANCELLED
+		err = d.db.UpdateOrganizationFeatureFlags(ctx, orgID, map[string]any{
+			psql.FEATURE_FLAG_SUBSCRIPTION_PATH: subscriptionPlan,
+		})
+		if err != nil {
+			d.logger.Error("error verifying subscription", zap.Error(err))
+			return nil, err
+		}
+		d.logger.Info("subscription cancelled successfully",
+			zap.String("orgID", orgID),
+			zap.Any("subscription", subscriptionPlan))
+
+	} else {
+		subscriptionPlan.Status = models.SubscriptionStatusFAILED
+	}
+
+	return subscriptionPlan, nil
 }

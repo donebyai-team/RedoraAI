@@ -91,7 +91,7 @@ var RedoraPlans = map[SubscriptionPlanType]*SubscriptionPlan{
 	},
 }
 
-// ENUM(CREATED, FAILED, EXPIRED, ACTIVE)
+// ENUM(CREATED, CANCELLED, EXPIRED, ACTIVE, FAILED)
 type SubscriptionStatus string
 
 type Subscription struct {

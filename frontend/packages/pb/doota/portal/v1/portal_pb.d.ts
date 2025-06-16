@@ -4,13 +4,78 @@
 
 import type { GenEnum, GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv1";
 import type { Message } from "@bufbuild/protobuf";
-import type { Keyword, Lead, LeadInteraction, LeadInteractionStatus, LeadStatus, Project, ProjectSchema, Source, SourceSchema, Subscription } from "../../core/v1/core_pb";
+import type { Keyword, Lead, LeadInteraction, LeadInteractionStatus, LeadStatus, Project, ProjectSchema, Source, SourceSchema, Subscription, SubscriptionPlanID, SubscriptionSchema } from "../../core/v1/core_pb";
 import type { EmptySchema, Timestamp } from "@bufbuild/protobuf/wkt";
 
 /**
  * Describes the file doota/portal/v1/portal.proto.
  */
 export declare const file_doota_portal_v1_portal: GenFile;
+
+/**
+ * @generated from message doota.portal.v1.UpgradeSubscriptionRequest
+ */
+export declare type UpgradeSubscriptionRequest = Message<"doota.portal.v1.UpgradeSubscriptionRequest"> & {
+  /**
+   * @generated from field: doota.core.v1.SubscriptionPlanID plan = 1;
+   */
+  plan: SubscriptionPlanID;
+};
+
+/**
+ * Describes the message doota.portal.v1.UpgradeSubscriptionRequest.
+ * Use `create(UpgradeSubscriptionRequestSchema)` to create a new message.
+ */
+export declare const UpgradeSubscriptionRequestSchema: GenMessage<UpgradeSubscriptionRequest>;
+
+/**
+ * @generated from message doota.portal.v1.InitiateSubscriptionRequest
+ */
+export declare type InitiateSubscriptionRequest = Message<"doota.portal.v1.InitiateSubscriptionRequest"> & {
+  /**
+   * @generated from field: doota.core.v1.SubscriptionPlanID plan = 1;
+   */
+  plan: SubscriptionPlanID;
+
+  /**
+   * @generated from field: string redirect_url = 2;
+   */
+  redirectUrl: string;
+};
+
+/**
+ * Describes the message doota.portal.v1.InitiateSubscriptionRequest.
+ * Use `create(InitiateSubscriptionRequestSchema)` to create a new message.
+ */
+export declare const InitiateSubscriptionRequestSchema: GenMessage<InitiateSubscriptionRequest>;
+
+/**
+ * @generated from message doota.portal.v1.InitiateSubscriptionResponse
+ */
+export declare type InitiateSubscriptionResponse = Message<"doota.portal.v1.InitiateSubscriptionResponse"> & {
+  /**
+   * @generated from field: string payment_link = 1;
+   */
+  paymentLink: string;
+};
+
+/**
+ * Describes the message doota.portal.v1.InitiateSubscriptionResponse.
+ * Use `create(InitiateSubscriptionResponseSchema)` to create a new message.
+ */
+export declare const InitiateSubscriptionResponseSchema: GenMessage<InitiateSubscriptionResponse>;
+
+/**
+ * @generated from message doota.portal.v1.VerifySubscriptionRequest
+ */
+export declare type VerifySubscriptionRequest = Message<"doota.portal.v1.VerifySubscriptionRequest"> & {
+};
+
+/**
+ * Describes the message doota.portal.v1.VerifySubscriptionRequest.
+ * Use `create(VerifySubscriptionRequestSchema)` to create a new message.
+ */
+export declare const VerifySubscriptionRequestSchema: GenMessage<VerifySubscriptionRequest>;
 
 /**
  * @generated from message doota.portal.v1.GetLeadInteractionsRequest
@@ -1342,6 +1407,32 @@ export declare const PortalService: GenService<{
     methodKind: "unary";
     input: typeof GetLeadInteractionsRequestSchema;
     output: typeof GetLeadInteractionsResponseSchema;
+  },
+  /**
+   * Payment
+   *
+   * @generated from rpc doota.portal.v1.PortalService.InitiateSubscription
+   */
+  initiateSubscription: {
+    methodKind: "unary";
+    input: typeof InitiateSubscriptionRequestSchema;
+    output: typeof InitiateSubscriptionResponseSchema;
+  },
+  /**
+   * @generated from rpc doota.portal.v1.PortalService.VerifySubscription
+   */
+  verifySubscription: {
+    methodKind: "unary";
+    input: typeof VerifySubscriptionRequestSchema;
+    output: typeof SubscriptionSchema;
+  },
+  /**
+   * @generated from rpc doota.portal.v1.PortalService.UpgradeSubscription
+   */
+  upgradeSubscription: {
+    methodKind: "unary";
+    input: typeof UpgradeSubscriptionRequestSchema;
+    output: typeof SubscriptionSchema;
   },
 }>;
 

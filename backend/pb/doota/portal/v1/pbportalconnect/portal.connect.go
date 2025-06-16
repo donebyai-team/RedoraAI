@@ -100,6 +100,15 @@ const (
 	// PortalServiceGetLeadInteractionsProcedure is the fully-qualified name of the PortalService's
 	// GetLeadInteractions RPC.
 	PortalServiceGetLeadInteractionsProcedure = "/doota.portal.v1.PortalService/GetLeadInteractions"
+	// PortalServiceInitiateSubscriptionProcedure is the fully-qualified name of the PortalService's
+	// InitiateSubscription RPC.
+	PortalServiceInitiateSubscriptionProcedure = "/doota.portal.v1.PortalService/InitiateSubscription"
+	// PortalServiceVerifySubscriptionProcedure is the fully-qualified name of the PortalService's
+	// VerifySubscription RPC.
+	PortalServiceVerifySubscriptionProcedure = "/doota.portal.v1.PortalService/VerifySubscription"
+	// PortalServiceUpgradeSubscriptionProcedure is the fully-qualified name of the PortalService's
+	// UpgradeSubscription RPC.
+	PortalServiceUpgradeSubscriptionProcedure = "/doota.portal.v1.PortalService/UpgradeSubscription"
 )
 
 // These variables are the protoreflect.Descriptor objects for the RPCs defined in this package.
@@ -128,6 +137,9 @@ var (
 	portalServiceUpdateAutomationSettingsMethodDescriptor  = portalServiceServiceDescriptor.Methods().ByName("UpdateAutomationSettings")
 	portalServiceConnectRedditMethodDescriptor             = portalServiceServiceDescriptor.Methods().ByName("ConnectReddit")
 	portalServiceGetLeadInteractionsMethodDescriptor       = portalServiceServiceDescriptor.Methods().ByName("GetLeadInteractions")
+	portalServiceInitiateSubscriptionMethodDescriptor      = portalServiceServiceDescriptor.Methods().ByName("InitiateSubscription")
+	portalServiceVerifySubscriptionMethodDescriptor        = portalServiceServiceDescriptor.Methods().ByName("VerifySubscription")
+	portalServiceUpgradeSubscriptionMethodDescriptor       = portalServiceServiceDescriptor.Methods().ByName("UpgradeSubscription")
 )
 
 // PortalServiceClient is a client for the doota.portal.v1.PortalService service.
@@ -158,6 +170,10 @@ type PortalServiceClient interface {
 	UpdateAutomationSettings(context.Context, *connect.Request[v1.UpdateAutomationSettingRequest]) (*connect.Response[v1.Organization], error)
 	ConnectReddit(context.Context, *connect.Request[emptypb.Empty]) (*connect.ServerStreamForClient[v1.ConnectRedditResponse], error)
 	GetLeadInteractions(context.Context, *connect.Request[v1.GetLeadInteractionsRequest]) (*connect.Response[v1.GetLeadInteractionsResponse], error)
+	// Payment
+	InitiateSubscription(context.Context, *connect.Request[v1.InitiateSubscriptionRequest]) (*connect.Response[v1.InitiateSubscriptionResponse], error)
+	VerifySubscription(context.Context, *connect.Request[v1.VerifySubscriptionRequest]) (*connect.Response[v11.Subscription], error)
+	UpgradeSubscription(context.Context, *connect.Request[v1.UpgradeSubscriptionRequest]) (*connect.Response[v11.Subscription], error)
 }
 
 // NewPortalServiceClient constructs a client for the doota.portal.v1.PortalService service. By
@@ -308,6 +324,24 @@ func NewPortalServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(portalServiceGetLeadInteractionsMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
+		initiateSubscription: connect.NewClient[v1.InitiateSubscriptionRequest, v1.InitiateSubscriptionResponse](
+			httpClient,
+			baseURL+PortalServiceInitiateSubscriptionProcedure,
+			connect.WithSchema(portalServiceInitiateSubscriptionMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
+		verifySubscription: connect.NewClient[v1.VerifySubscriptionRequest, v11.Subscription](
+			httpClient,
+			baseURL+PortalServiceVerifySubscriptionProcedure,
+			connect.WithSchema(portalServiceVerifySubscriptionMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
+		upgradeSubscription: connect.NewClient[v1.UpgradeSubscriptionRequest, v11.Subscription](
+			httpClient,
+			baseURL+PortalServiceUpgradeSubscriptionProcedure,
+			connect.WithSchema(portalServiceUpgradeSubscriptionMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -336,6 +370,9 @@ type portalServiceClient struct {
 	updateAutomationSettings  *connect.Client[v1.UpdateAutomationSettingRequest, v1.Organization]
 	connectReddit             *connect.Client[emptypb.Empty, v1.ConnectRedditResponse]
 	getLeadInteractions       *connect.Client[v1.GetLeadInteractionsRequest, v1.GetLeadInteractionsResponse]
+	initiateSubscription      *connect.Client[v1.InitiateSubscriptionRequest, v1.InitiateSubscriptionResponse]
+	verifySubscription        *connect.Client[v1.VerifySubscriptionRequest, v11.Subscription]
+	upgradeSubscription       *connect.Client[v1.UpgradeSubscriptionRequest, v11.Subscription]
 }
 
 // GetConfig calls doota.portal.v1.PortalService.GetConfig.
@@ -453,6 +490,21 @@ func (c *portalServiceClient) GetLeadInteractions(ctx context.Context, req *conn
 	return c.getLeadInteractions.CallUnary(ctx, req)
 }
 
+// InitiateSubscription calls doota.portal.v1.PortalService.InitiateSubscription.
+func (c *portalServiceClient) InitiateSubscription(ctx context.Context, req *connect.Request[v1.InitiateSubscriptionRequest]) (*connect.Response[v1.InitiateSubscriptionResponse], error) {
+	return c.initiateSubscription.CallUnary(ctx, req)
+}
+
+// VerifySubscription calls doota.portal.v1.PortalService.VerifySubscription.
+func (c *portalServiceClient) VerifySubscription(ctx context.Context, req *connect.Request[v1.VerifySubscriptionRequest]) (*connect.Response[v11.Subscription], error) {
+	return c.verifySubscription.CallUnary(ctx, req)
+}
+
+// UpgradeSubscription calls doota.portal.v1.PortalService.UpgradeSubscription.
+func (c *portalServiceClient) UpgradeSubscription(ctx context.Context, req *connect.Request[v1.UpgradeSubscriptionRequest]) (*connect.Response[v11.Subscription], error) {
+	return c.upgradeSubscription.CallUnary(ctx, req)
+}
+
 // PortalServiceHandler is an implementation of the doota.portal.v1.PortalService service.
 type PortalServiceHandler interface {
 	GetConfig(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.Config], error)
@@ -481,6 +533,10 @@ type PortalServiceHandler interface {
 	UpdateAutomationSettings(context.Context, *connect.Request[v1.UpdateAutomationSettingRequest]) (*connect.Response[v1.Organization], error)
 	ConnectReddit(context.Context, *connect.Request[emptypb.Empty], *connect.ServerStream[v1.ConnectRedditResponse]) error
 	GetLeadInteractions(context.Context, *connect.Request[v1.GetLeadInteractionsRequest]) (*connect.Response[v1.GetLeadInteractionsResponse], error)
+	// Payment
+	InitiateSubscription(context.Context, *connect.Request[v1.InitiateSubscriptionRequest]) (*connect.Response[v1.InitiateSubscriptionResponse], error)
+	VerifySubscription(context.Context, *connect.Request[v1.VerifySubscriptionRequest]) (*connect.Response[v11.Subscription], error)
+	UpgradeSubscription(context.Context, *connect.Request[v1.UpgradeSubscriptionRequest]) (*connect.Response[v11.Subscription], error)
 }
 
 // NewPortalServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -627,6 +683,24 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(portalServiceGetLeadInteractionsMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
+	portalServiceInitiateSubscriptionHandler := connect.NewUnaryHandler(
+		PortalServiceInitiateSubscriptionProcedure,
+		svc.InitiateSubscription,
+		connect.WithSchema(portalServiceInitiateSubscriptionMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	portalServiceVerifySubscriptionHandler := connect.NewUnaryHandler(
+		PortalServiceVerifySubscriptionProcedure,
+		svc.VerifySubscription,
+		connect.WithSchema(portalServiceVerifySubscriptionMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	portalServiceUpgradeSubscriptionHandler := connect.NewUnaryHandler(
+		PortalServiceUpgradeSubscriptionProcedure,
+		svc.UpgradeSubscription,
+		connect.WithSchema(portalServiceUpgradeSubscriptionMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/doota.portal.v1.PortalService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case PortalServiceGetConfigProcedure:
@@ -675,6 +749,12 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 			portalServiceConnectRedditHandler.ServeHTTP(w, r)
 		case PortalServiceGetLeadInteractionsProcedure:
 			portalServiceGetLeadInteractionsHandler.ServeHTTP(w, r)
+		case PortalServiceInitiateSubscriptionProcedure:
+			portalServiceInitiateSubscriptionHandler.ServeHTTP(w, r)
+		case PortalServiceVerifySubscriptionProcedure:
+			portalServiceVerifySubscriptionHandler.ServeHTTP(w, r)
+		case PortalServiceUpgradeSubscriptionProcedure:
+			portalServiceUpgradeSubscriptionHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -774,4 +854,16 @@ func (UnimplementedPortalServiceHandler) ConnectReddit(context.Context, *connect
 
 func (UnimplementedPortalServiceHandler) GetLeadInteractions(context.Context, *connect.Request[v1.GetLeadInteractionsRequest]) (*connect.Response[v1.GetLeadInteractionsResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.GetLeadInteractions is not implemented"))
+}
+
+func (UnimplementedPortalServiceHandler) InitiateSubscription(context.Context, *connect.Request[v1.InitiateSubscriptionRequest]) (*connect.Response[v1.InitiateSubscriptionResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.InitiateSubscription is not implemented"))
+}
+
+func (UnimplementedPortalServiceHandler) VerifySubscription(context.Context, *connect.Request[v1.VerifySubscriptionRequest]) (*connect.Response[v11.Subscription], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.VerifySubscription is not implemented"))
+}
+
+func (UnimplementedPortalServiceHandler) UpgradeSubscription(context.Context, *connect.Request[v1.UpgradeSubscriptionRequest]) (*connect.Response[v11.Subscription], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.UpgradeSubscription is not implemented"))
 }

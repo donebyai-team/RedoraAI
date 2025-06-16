@@ -811,6 +811,11 @@ export enum SubscriptionStatus {
    * @generated from enum value: SUBSCRIPTION_STATUS_CREATED = 3;
    */
   CREATED = 3,
+
+  /**
+   * @generated from enum value: SUBSCRIPTION_STATUS_CANCELLED = 4;
+   */
+  CANCELLED = 4,
 }
 
 /**
@@ -838,14 +843,9 @@ export enum SubscriptionPlanID {
   SUBSCRIPTION_PLAN_FOUNDER = 2,
 
   /**
-   * @generated from enum value: SUBSCRIPTION_PLAN_AGENCY = 3;
+   * @generated from enum value: SUBSCRIPTION_PLAN_PRO = 3;
    */
-  SUBSCRIPTION_PLAN_AGENCY = 3,
-
-  /**
-   * @generated from enum value: SUBSCRIPTION_PLAN_GROWTH = 4;
-   */
-  SUBSCRIPTION_PLAN_GROWTH = 4,
+  SUBSCRIPTION_PLAN_PRO = 3,
 }
 
 /**

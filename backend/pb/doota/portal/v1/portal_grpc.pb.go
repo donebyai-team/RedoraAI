@@ -44,6 +44,9 @@ const (
 	PortalService_UpdateAutomationSettings_FullMethodName  = "/doota.portal.v1.PortalService/UpdateAutomationSettings"
 	PortalService_ConnectReddit_FullMethodName             = "/doota.portal.v1.PortalService/ConnectReddit"
 	PortalService_GetLeadInteractions_FullMethodName       = "/doota.portal.v1.PortalService/GetLeadInteractions"
+	PortalService_InitiateSubscription_FullMethodName      = "/doota.portal.v1.PortalService/InitiateSubscription"
+	PortalService_VerifySubscription_FullMethodName        = "/doota.portal.v1.PortalService/VerifySubscription"
+	PortalService_UpgradeSubscription_FullMethodName       = "/doota.portal.v1.PortalService/UpgradeSubscription"
 )
 
 // PortalServiceClient is the client API for PortalService service.
@@ -76,6 +79,10 @@ type PortalServiceClient interface {
 	UpdateAutomationSettings(ctx context.Context, in *UpdateAutomationSettingRequest, opts ...grpc.CallOption) (*Organization, error)
 	ConnectReddit(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (PortalService_ConnectRedditClient, error)
 	GetLeadInteractions(ctx context.Context, in *GetLeadInteractionsRequest, opts ...grpc.CallOption) (*GetLeadInteractionsResponse, error)
+	// Payment
+	InitiateSubscription(ctx context.Context, in *InitiateSubscriptionRequest, opts ...grpc.CallOption) (*InitiateSubscriptionResponse, error)
+	VerifySubscription(ctx context.Context, in *VerifySubscriptionRequest, opts ...grpc.CallOption) (*v1.Subscription, error)
+	UpgradeSubscription(ctx context.Context, in *UpgradeSubscriptionRequest, opts ...grpc.CallOption) (*v1.Subscription, error)
 }
 
 type portalServiceClient struct {
@@ -316,6 +323,33 @@ func (c *portalServiceClient) GetLeadInteractions(ctx context.Context, in *GetLe
 	return out, nil
 }
 
+func (c *portalServiceClient) InitiateSubscription(ctx context.Context, in *InitiateSubscriptionRequest, opts ...grpc.CallOption) (*InitiateSubscriptionResponse, error) {
+	out := new(InitiateSubscriptionResponse)
+	err := c.cc.Invoke(ctx, PortalService_InitiateSubscription_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *portalServiceClient) VerifySubscription(ctx context.Context, in *VerifySubscriptionRequest, opts ...grpc.CallOption) (*v1.Subscription, error) {
+	out := new(v1.Subscription)
+	err := c.cc.Invoke(ctx, PortalService_VerifySubscription_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *portalServiceClient) UpgradeSubscription(ctx context.Context, in *UpgradeSubscriptionRequest, opts ...grpc.CallOption) (*v1.Subscription, error) {
+	out := new(v1.Subscription)
+	err := c.cc.Invoke(ctx, PortalService_UpgradeSubscription_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PortalServiceServer is the server API for PortalService service.
 // All implementations must embed UnimplementedPortalServiceServer
 // for forward compatibility
@@ -346,6 +380,10 @@ type PortalServiceServer interface {
 	UpdateAutomationSettings(context.Context, *UpdateAutomationSettingRequest) (*Organization, error)
 	ConnectReddit(*emptypb.Empty, PortalService_ConnectRedditServer) error
 	GetLeadInteractions(context.Context, *GetLeadInteractionsRequest) (*GetLeadInteractionsResponse, error)
+	// Payment
+	InitiateSubscription(context.Context, *InitiateSubscriptionRequest) (*InitiateSubscriptionResponse, error)
+	VerifySubscription(context.Context, *VerifySubscriptionRequest) (*v1.Subscription, error)
+	UpgradeSubscription(context.Context, *UpgradeSubscriptionRequest) (*v1.Subscription, error)
 	mustEmbedUnimplementedPortalServiceServer()
 }
 
@@ -421,6 +459,15 @@ func (UnimplementedPortalServiceServer) ConnectReddit(*emptypb.Empty, PortalServ
 }
 func (UnimplementedPortalServiceServer) GetLeadInteractions(context.Context, *GetLeadInteractionsRequest) (*GetLeadInteractionsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetLeadInteractions not implemented")
+}
+func (UnimplementedPortalServiceServer) InitiateSubscription(context.Context, *InitiateSubscriptionRequest) (*InitiateSubscriptionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method InitiateSubscription not implemented")
+}
+func (UnimplementedPortalServiceServer) VerifySubscription(context.Context, *VerifySubscriptionRequest) (*v1.Subscription, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VerifySubscription not implemented")
+}
+func (UnimplementedPortalServiceServer) UpgradeSubscription(context.Context, *UpgradeSubscriptionRequest) (*v1.Subscription, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpgradeSubscription not implemented")
 }
 func (UnimplementedPortalServiceServer) mustEmbedUnimplementedPortalServiceServer() {}
 
@@ -852,6 +899,60 @@ func _PortalService_GetLeadInteractions_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PortalService_InitiateSubscription_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(InitiateSubscriptionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortalServiceServer).InitiateSubscription(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortalService_InitiateSubscription_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortalServiceServer).InitiateSubscription(ctx, req.(*InitiateSubscriptionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PortalService_VerifySubscription_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(VerifySubscriptionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortalServiceServer).VerifySubscription(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortalService_VerifySubscription_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortalServiceServer).VerifySubscription(ctx, req.(*VerifySubscriptionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PortalService_UpgradeSubscription_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpgradeSubscriptionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortalServiceServer).UpgradeSubscription(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortalService_UpgradeSubscription_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortalServiceServer).UpgradeSubscription(ctx, req.(*UpgradeSubscriptionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // PortalService_ServiceDesc is the grpc.ServiceDesc for PortalService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -946,6 +1047,18 @@ var PortalService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetLeadInteractions",
 			Handler:    _PortalService_GetLeadInteractions_Handler,
+		},
+		{
+			MethodName: "InitiateSubscription",
+			Handler:    _PortalService_InitiateSubscription_Handler,
+		},
+		{
+			MethodName: "VerifySubscription",
+			Handler:    _PortalService_VerifySubscription_Handler,
+		},
+		{
+			MethodName: "UpgradeSubscription",
+			Handler:    _PortalService_UpgradeSubscription_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

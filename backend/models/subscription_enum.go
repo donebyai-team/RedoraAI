@@ -51,12 +51,14 @@ func ParseSubscriptionPlanType(name string) (SubscriptionPlanType, error) {
 const (
 	// SubscriptionStatusCREATED is a SubscriptionStatus of type CREATED.
 	SubscriptionStatusCREATED SubscriptionStatus = "CREATED"
-	// SubscriptionStatusFAILED is a SubscriptionStatus of type FAILED.
-	SubscriptionStatusFAILED SubscriptionStatus = "FAILED"
+	// SubscriptionStatusCANCELLED is a SubscriptionStatus of type CANCELLED.
+	SubscriptionStatusCANCELLED SubscriptionStatus = "CANCELLED"
 	// SubscriptionStatusEXPIRED is a SubscriptionStatus of type EXPIRED.
 	SubscriptionStatusEXPIRED SubscriptionStatus = "EXPIRED"
 	// SubscriptionStatusACTIVE is a SubscriptionStatus of type ACTIVE.
 	SubscriptionStatusACTIVE SubscriptionStatus = "ACTIVE"
+	// SubscriptionStatusFAILED is a SubscriptionStatus of type FAILED.
+	SubscriptionStatusFAILED SubscriptionStatus = "FAILED"
 )
 
 var ErrInvalidSubscriptionStatus = errors.New("not a valid SubscriptionStatus")
@@ -74,10 +76,11 @@ func (x SubscriptionStatus) IsValid() bool {
 }
 
 var _SubscriptionStatusValue = map[string]SubscriptionStatus{
-	"CREATED": SubscriptionStatusCREATED,
-	"FAILED":  SubscriptionStatusFAILED,
-	"EXPIRED": SubscriptionStatusEXPIRED,
-	"ACTIVE":  SubscriptionStatusACTIVE,
+	"CREATED":   SubscriptionStatusCREATED,
+	"CANCELLED": SubscriptionStatusCANCELLED,
+	"EXPIRED":   SubscriptionStatusEXPIRED,
+	"ACTIVE":    SubscriptionStatusACTIVE,
+	"FAILED":    SubscriptionStatusFAILED,
 }
 
 // ParseSubscriptionStatus attempts to convert a string to a SubscriptionStatus.

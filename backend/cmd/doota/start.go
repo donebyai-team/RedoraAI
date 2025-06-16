@@ -39,6 +39,7 @@ var StartCmd = cli.Command(startCmdE,
 		flags.String("common-gpt-model", "redora-dev-gpt-4.1-mini-2025-04-14", "GPT Model to use for message creator and categorization")
 		flags.String("common-gpt-advance-model", "redora-dev-gpt-4.1-2025-04-14", "GPT Model to use for message creator and categorization")
 		flags.String("common-resend-api-key", "", "Resend email api key")
+		flags.String("common-dodopayment-api-key", "", "DodoPayment api key")
 		flags.String("common-browserless-api-key", "", "Browserless api key")
 		flags.String("common-openai-api-key", "", "OpenAI API key")
 		flags.String("common-openai-debug-store", "data/debugstore", "OpenAI debug store")
@@ -308,6 +309,14 @@ func vanaSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 }
 
 func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
+	redisAddr := sflags.MustGetString(cmd, "redis-addr")
+
+	var isDev bool
+	// TODO: Hack to know the env
+	if strings.Contains(redisAddr, "localhost") {
+		isDev = true
+	}
+
 	openaiApiKey, _, openaiDebugStore, langsmithApiKey, langsmithProject := openAILangsmithLegacyHandling(cmd, "common")
 	deps, err := app.NewDependenciesBuilder().
 		WithDataStore(sflags.MustGetString(cmd, "pg-dsn")).
@@ -315,7 +324,7 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		WithCORSURLRegexAllow(sflags.MustGetString(cmd, "portal-cors-url-regex-allow")).
 		WithConversationState(
 			sflags.MustGetDuration(cmd, "common-phone-call-ttl"),
-			sflags.MustGetString(cmd, "redis-addr"),
+			redisAddr,
 			"redora",
 			"tracker",
 		).
@@ -392,12 +401,15 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 	browserLessClient := interactions.NewBrowserlessClient(sflags.MustGetString(cmd, "common-browserless-api-key"), debugStore, logger)
 	interactionService := interactions.NewRedditInteractions(deps.DataStore, browserLessClient, redditOauthClient, logger)
 
+	dodoPaymentToken := sflags.MustGetString(cmd, "common-dodopayment-api-key")
+	dodoSubscriptionService := services.NewDodoSubscriptionService(deps.DataStore, dodoPaymentToken, logger, isDev)
+
 	p := portal.New(
 		deps.AIClient,
 		redditOauthClient,
 		deps.GoogleClient,
 		authenticator,
-		state.NewRedisStore(sflags.MustGetString(cmd, "redis-addr"), zlog),
+		state.NewRedisStore(redisAddr, zlog),
 		services.NewCustomerCaseServiceImpl(deps.DataStore),
 		authUsecase,
 		vanaWebhookHandler,
@@ -412,6 +424,7 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		tracer,
 		alertNotifier,
 		interactionService,
+		dodoSubscriptionService,
 	)
 	return p, nil
 }
