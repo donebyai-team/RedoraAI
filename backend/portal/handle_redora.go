@@ -621,6 +621,55 @@ func (p *Portal) getLeadsByStatus(ctx context.Context, c *connect.Request[pbport
 	return connect.NewResponse(&pbportal.GetLeadsResponse{Leads: leadsProto, Analysis: analysis}), nil
 }
 
+func (p *Portal) UpdateLeadInteractionStatus(ctx context.Context, c *connect.Request[pbportal.UpdateLeadInteractionStatusRequest]) (*connect.Response[emptypb.Empty], error) {
+	actor, err := p.gethAuthContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// for now , we can update only removed
+	if c.Msg.Status != pbcore.LeadInteractionStatus_LEAD_INTERACTION_STATUS_REMOVED {
+		return connect.NewResponse(&emptypb.Empty{}), nil
+	}
+
+	interaction, err := p.db.GetLeadInteractionByID(ctx, c.Msg.InteractionId)
+	if err != nil {
+		return nil, err
+	}
+
+	project, err := p.getProject(ctx, c.Header(), actor.OrganizationID)
+	if err != nil {
+		return nil, err
+	}
+
+	lead, err := p.db.GetLeadByID(ctx, project.ID, interaction.LeadID)
+	if err != nil && !errors.Is(err, datastore.NotFound) {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to fetch lead: %w", err))
+	}
+
+	if lead == nil {
+		return connect.NewResponse(&emptypb.Empty{}), nil
+	}
+
+	interaction.Status = c.Msg.Status.ToModel()
+
+	// Clear scheduled timestamps
+	lead.LeadMetadata.CommentScheduledAt = nil
+	lead.LeadMetadata.DMScheduledAt = nil
+	interaction.Reason = "Skipped, as user marked it as not relevant"
+
+	if err := p.db.UpdateLeadInteraction(ctx, interaction); err != nil {
+		return nil, err
+	}
+
+	err = p.db.UpdateLeadStatus(ctx, lead)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to update lead status: %w", err))
+	}
+
+	return connect.NewResponse(&emptypb.Empty{}), nil
+}
+
 func (p *Portal) UpdateLeadStatus(ctx context.Context, c *connect.Request[pbportal.UpdateLeadStatusRequest]) (*connect.Response[emptypb.Empty], error) {
 	actor, err := p.gethAuthContext(ctx)
 	if err != nil {

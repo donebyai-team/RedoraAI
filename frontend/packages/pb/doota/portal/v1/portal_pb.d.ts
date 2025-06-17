@@ -209,6 +209,27 @@ export declare type CreateProjectRequest = Message<"doota.portal.v1.CreateProjec
 export declare const CreateProjectRequestSchema: GenMessage<CreateProjectRequest>;
 
 /**
+ * @generated from message doota.portal.v1.UpdateLeadInteractionStatusRequest
+ */
+export declare type UpdateLeadInteractionStatusRequest = Message<"doota.portal.v1.UpdateLeadInteractionStatusRequest"> & {
+  /**
+   * @generated from field: doota.core.v1.LeadInteractionStatus status = 1;
+   */
+  status: LeadInteractionStatus;
+
+  /**
+   * @generated from field: string interaction_id = 2;
+   */
+  interactionId: string;
+};
+
+/**
+ * Describes the message doota.portal.v1.UpdateLeadInteractionStatusRequest.
+ * Use `create(UpdateLeadInteractionStatusRequestSchema)` to create a new message.
+ */
+export declare const UpdateLeadInteractionStatusRequestSchema: GenMessage<UpdateLeadInteractionStatusRequest>;
+
+/**
  * @generated from message doota.portal.v1.UpdateLeadStatusRequest
  */
 export declare type UpdateLeadStatusRequest = Message<"doota.portal.v1.UpdateLeadStatusRequest"> & {
@@ -1366,6 +1387,14 @@ export declare const PortalService: GenService<{
   updateLeadStatus: {
     methodKind: "unary";
     input: typeof UpdateLeadStatusRequestSchema;
+    output: typeof EmptySchema;
+  },
+  /**
+   * @generated from rpc doota.portal.v1.PortalService.UpdateLeadInteractionStatus
+   */
+  updateLeadInteractionStatus: {
+    methodKind: "unary";
+    input: typeof UpdateLeadInteractionStatusRequestSchema;
     output: typeof EmptySchema;
   },
   /**

@@ -79,6 +79,16 @@ func (u *LeadInteraction) FromModel(lead *models.AugmentedLeadInteraction) *Lead
 	return u
 }
 
+func (u LeadInteractionStatus) ToModel() models.LeadInteractionStatus {
+	value := strings.TrimPrefix(strings.ToUpper(u.String()), "LEAD_INTERACTION_STATUS_")
+	model := models.LeadInteractionStatus(value)
+	if !model.IsValid() {
+		panic(fmt.Errorf("unknown lead interaction status type pb %q", u.String()))
+	}
+
+	return model
+}
+
 func (u *Keyword) FromModel(lead *models.Keyword) *Keyword {
 	u.Id = lead.ID
 	u.Name = lead.Keyword

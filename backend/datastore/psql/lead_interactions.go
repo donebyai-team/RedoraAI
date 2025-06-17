@@ -21,6 +21,7 @@ func init() {
 		"lead_interactions/query_interaction_by_to_from.sql",
 		"lead_interactions/query_interactions.sql",
 		"lead_interactions/query_interaction_by_lead_id.sql",
+		"lead_interactions/query_interaction_by_id.sql",
 	})
 }
 
@@ -117,6 +118,12 @@ func (r *Database) GetLeadInteractionsToExecute(ctx context.Context, statuses []
 	}
 
 	return interactions, nil
+}
+
+func (r *Database) GetLeadInteractionByID(ctx context.Context, id string) (*models.LeadInteraction, error) {
+	return getOne[models.LeadInteraction](ctx, r, "lead_interactions/query_interaction_by_id.sql", map[string]any{
+		"id": id,
+	})
 }
 
 func (r *Database) SetLeadInteractionStatusProcessing(ctx context.Context, id string) error {
