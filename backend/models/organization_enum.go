@@ -55,6 +55,8 @@ const (
 	OrgActivityTypeCOMMENTDISABLEDLOWKARMA OrgActivityType = "COMMENT_DISABLED_LOW_KARMA"
 	// OrgActivityTypeCOMMENTENABLEDWARMEDUP is a OrgActivityType of type COMMENT_ENABLED_WARMED_UP.
 	OrgActivityTypeCOMMENTENABLEDWARMEDUP OrgActivityType = "COMMENT_ENABLED_WARMED_UP"
+	// OrgActivityTypeCOMMENTDISABLEDBYSYSTEM is a OrgActivityType of type COMMENT_DISABLED_BY_SYSTEM.
+	OrgActivityTypeCOMMENTDISABLEDBYSYSTEM OrgActivityType = "COMMENT_DISABLED_BY_SYSTEM"
 )
 
 var ErrInvalidOrgActivityType = errors.New("not a valid OrgActivityType")
@@ -75,6 +77,7 @@ var _OrgActivityTypeValue = map[string]OrgActivityType{
 	"COMMENT_DISABLED_ACCOUNT_AGE_NEW": OrgActivityTypeCOMMENTDISABLEDACCOUNTAGENEW,
 	"COMMENT_DISABLED_LOW_KARMA":       OrgActivityTypeCOMMENTDISABLEDLOWKARMA,
 	"COMMENT_ENABLED_WARMED_UP":        OrgActivityTypeCOMMENTENABLEDWARMEDUP,
+	"COMMENT_DISABLED_BY_SYSTEM":       OrgActivityTypeCOMMENTDISABLEDBYSYSTEM,
 }
 
 // ParseOrgActivityType attempts to convert a string to a OrgActivityType.

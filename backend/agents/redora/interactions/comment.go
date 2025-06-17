@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/shank318/doota/datastore"
+	"github.com/shank318/doota/datastore/psql"
 	"github.com/shank318/doota/integrations/reddit"
 	"github.com/shank318/doota/models"
 	pbportal "github.com/shank318/doota/pb/doota/portal/v1"
@@ -101,6 +102,20 @@ func (r redditInteractions) SendComment(ctx context.Context, interaction *models
 		if errors.Is(err, datastore.IntegrationNotFoundOrActive) {
 			interaction.Status = models.LeadInteractionStatusFAILED
 			interaction.Reason = "integration not found or inactive"
+			// disable automated comments
+			interaction.Organization.FeatureFlags.EnableAutoComment = false
+			interaction.Organization.FeatureFlags.Activities = append(interaction.Organization.FeatureFlags.Activities, models.OrgActivity{
+				ActivityType: models.OrgActivityTypeCOMMENTDISABLEDBYSYSTEM,
+				CreatedAt:    time.Now(),
+			})
+
+			updates := map[string]any{
+				psql.FEATURE_FLAG_DISABLE_AUTOMATED_COMMENT_PATH: false,
+				psql.FEATURE_FLAG_ACTIVITIES_PATH:                interaction.Organization.FeatureFlags.Activities,
+			}
+			if err := r.db.UpdateOrganizationFeatureFlags(ctx, interaction.Organization.ID, updates); err != nil {
+				r.logger.Error("failed to update organization feature flags", zap.Error(err))
+			}
 		} else {
 			interaction.Status = models.LeadInteractionStatusFAILED
 			interaction.Reason = err.Error()

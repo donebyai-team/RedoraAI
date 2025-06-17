@@ -158,7 +158,7 @@ type OrgActivity struct {
 // ENUM(NONE, DAILY, WEEKLY)
 type NotificationFrequency string
 
-// ENUM(COMMENT_DISABLED_ACCOUNT_AGE_NEW, COMMENT_DISABLED_LOW_KARMA, COMMENT_ENABLED_WARMED_UP)
+// ENUM(COMMENT_DISABLED_ACCOUNT_AGE_NEW, COMMENT_DISABLED_LOW_KARMA, COMMENT_ENABLED_WARMED_UP, COMMENT_DISABLED_BY_SYSTEM)
 type OrgActivityType string
 
 func (b OrganizationFeatureFlags) IsSubscriptionExpired() bool {
