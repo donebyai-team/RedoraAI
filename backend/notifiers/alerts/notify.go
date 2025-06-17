@@ -21,13 +21,13 @@ type LeadSummary struct {
 	TotalPostsAnalysed     uint32
 	TotalCommentsScheduled uint32
 	TotalDMScheduled       uint32
-	DailyCount             uint32
+	RelevantPostsCount     uint32
 }
 
 type AlertNotifier interface {
 	SendLeadsSummary(ctx context.Context, summary LeadSummary) error
 	SendTrackingError(ctx context.Context, trackingID, project string, err error)
-	SendLeadsSummaryEmail(ctx context.Context, summary LeadSummary) error
+	SendLeadsSummaryEmail(ctx context.Context, summary LeadSummary, frequency models.NotificationFrequency) error
 	SendNewUserAlert(ctx context.Context, orgName string)
 	SendUserActivity(ctx context.Context, activity, orgName, redditUsername string)
 	SendNewProductAddedAlert(ctx context.Context, productName, website string)
@@ -178,7 +178,8 @@ func (s *SlackNotifier) SendNewUserAlert(ctx context.Context, email string) {
 	}
 }
 
-func (s *SlackNotifier) SendLeadsSummaryEmail(ctx context.Context, summary LeadSummary) error {
+// SendLeadsSummaryEmail sends a leads summary email based on the specified frequency.
+func (s *SlackNotifier) SendLeadsSummaryEmail(ctx context.Context, summary LeadSummary, frequency models.NotificationFrequency) error {
 	users, err := s.db.GetUsersByOrgID(ctx, summary.OrgID)
 	if err != nil {
 		return err
@@ -194,58 +195,74 @@ func (s *SlackNotifier) SendLeadsSummaryEmail(ctx context.Context, summary LeadS
 	}
 
 	var cc []string
-
+	var subject string
 	var htmlBody string
-	if summary.DailyCount < 2 {
-		cc = []string{"shashank@donebyai.team", "adarsh@redoraai.com"}
-		htmlBody = fmt.Sprintf(`
-			<!DOCTYPE html>
-			<html>
-			<body style="font-family: Arial, sans-serif; background-color: #f7f9fc; padding: 20px;">
-			  <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 30px; border-radius: 8px;">
-			    <h2>We Didn't Find Many Relevant Posts Today</h2>
-			    <p><strong>Product:</strong> %s</p>
-			    <p><strong>Posts Analyzed:</strong> %d</p>
-			    <p><strong>Relevant Posts Found:</strong> <strong>%d</strong></p>
-			    <p>It looks like your current subreddits or keywords may not be returning enough relevant posts.</p>
-			    <p>👉 Consider updating them in your <a href="https://app.redoraai.com/dashboard">RedoraAI Dashboard</a> to improve your lead discovery.</p>
-			    <hr>
-			    <footer style="font-size: 12px; color: #888;">
-			      <p><strong>RedoraAI</strong> — AI for Intelligent Lead Generation</p>
-			      <p>Need help? <a href="mailto:adarsh@redoraai.com">adarsh@redoraai.com</a></p>
-			    </footer>
-			  </div>
-			</body>
-			</html>
-		`, summary.ProjectName, summary.TotalPostsAnalysed, summary.DailyCount)
-	} else {
-		htmlBody = fmt.Sprintf(`
-			<!DOCTYPE html>
-			<html>
-			<body style="font-family: Arial, sans-serif; background-color: #f7f9fc; padding: 20px;">
-			  <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 30px; border-radius: 8px;">
-			    <h2>Daily Reddit Posts Summary</h2>
-			    <p><strong>Product:</strong> %s</p>
-			    <p><strong>Posts Analyzed:</strong> %d</p>
-			    <p><strong>Automated Comments Scheduled:</strong> %d</p>
-				<p><strong>Automated DM Scheduled:</strong> %d</p>
-			    <p><strong>Relevant Posts Found:</strong> <strong>%d</strong></p>
-			    <p>🔗 <a href="%s">View all leads in your dashboard</a></p>
-			    <hr>
-			    <footer style="font-size: 12px; color: #888;">
-			      <p><strong>RedoraAI</strong> — AI for Intelligent Lead Generation</p>
-			      <p>Need help? <a href="mailto:adarsh@redoraai.com">adarsh@redoraai.com</a></p>
-			    </footer>
-			  </div>
-			</body>
-			</html>
-		`, summary.ProjectName, summary.TotalPostsAnalysed, summary.TotalCommentsScheduled, summary.TotalDMScheduled, summary.DailyCount, "https://app.redoraai.com/dashboard")
+	var timePeriod string
+
+	switch frequency {
+	case models.NotificationFrequencyDAILY:
+		timePeriod = "Today"
+		subject = "📊 Daily Lead Summary"
+	case models.NotificationFrequencyWEEKLY:
+		timePeriod = "This Week"
+		subject = "📈 Weekly Lead Summary"
+	default:
+		// Default to daily if an invalid frequency is provided
+		timePeriod = "Today"
+		subject = "📊 Daily Lead Summary"
 	}
 
-	params := &resend.SendEmailRequest{
+	// Determine CC recipients and HTML body based on relevant posts count
+	if summary.RelevantPostsCount < 2 {
+		cc = []string{"shashank@donebyai.team", "adarsh@redoraai.com"}
+		htmlBody = fmt.Sprintf(`
+           <!DOCTYPE html>
+           <html>
+           <body style="font-family: Arial, sans-serif; background-color: #f7f9fc; padding: 20px;">
+             <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 30px; border-radius: 8px;">
+               <h2>We Didn't Find Many Relevant Posts %s</h2>
+               <p><strong>Product:</strong> %s</p>
+               <p><strong>Posts Analyzed:</strong> %d</p>
+               <p><strong>Relevant Posts Found:</strong> <strong>%d</strong></p>
+               <p>It looks like your current subreddits or keywords may not be returning enough relevant posts.</p>
+               <p>👉 Consider updating them in your <a href="https://app.redoraai.com/dashboard">RedoraAI Dashboard</a> to improve your lead discovery.</p>
+               <hr>
+               <footer style="font-size: 12px; color: #888;">
+                 <p><strong>RedoraAI</strong> — AI for Intelligent Lead Generation</p>
+                 <p>Need help? <a href="mailto:adarsh@redoraai.com">adarsh@redoraai.com</a></p>
+               </footer>
+             </div>
+           </body>
+           </html>
+        `, timePeriod, summary.ProjectName, summary.TotalPostsAnalysed, summary.RelevantPostsCount)
+	} else {
+		htmlBody = fmt.Sprintf(`
+           <!DOCTYPE html>
+           <html>
+           <body style="font-family: Arial, sans-serif; background-color: #f7f9fc; padding: 20px;">
+             <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 30px; border-radius: 8px;">
+               <h2>%s Reddit Posts Summary</h2>
+               <p><strong>Product:</strong> %s</p>
+               <p><strong>Posts Analyzed:</strong> %d</p>
+               <p><strong>Automated Comments Scheduled:</strong> %d</p>
+              <p><strong>Automated DM Scheduled:</strong> %d</p>
+               <p><strong>Relevant Posts Found:</strong> <strong>%d</strong></p>
+               <p>🔗 <a href="%s">View all leads in your dashboard</a></p>
+               <hr>
+               <footer style="font-size: 12px; color: #888;">
+                 <p><strong>RedoraAI</strong> — AI for Intelligent Lead Generation</p>
+                 <p>Need help? <a href="mailto:adarsh@redoraai.com">adarsh@redoraai.com</a></p>
+               </footer>
+             </div>
+           </body>
+           </html>
+        `, timePeriod, summary.ProjectName, summary.TotalPostsAnalysed, summary.TotalCommentsScheduled, summary.TotalDMScheduled, summary.RelevantPostsCount, "https://app.redoraai.com/dashboard")
+	}
+
+	params := &resend.SendEmailRequest{ // Changed to SendEmailRequest from resend.SendEmailRequest for mock
 		From:    "RedoraAI <leads@alerts.redoraai.com>",
 		To:      to,
-		Subject: "📊 Daily Lead Summary",
+		Subject: subject,
 		Html:    htmlBody,
 	}
 
@@ -381,7 +398,7 @@ func (s *SlackNotifier) SendLeadsSummary(ctx context.Context, summary LeadSummar
 		summary.TotalPostsAnalysed,
 		summary.TotalCommentsScheduled,
 		summary.TotalDMScheduled,
-		summary.DailyCount,
+		summary.RelevantPostsCount,
 		leadsURL,
 	)
 

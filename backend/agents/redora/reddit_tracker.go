@@ -229,7 +229,7 @@ func (s *redditKeywordTracker) sendAlert(ctx context.Context, project *models.Pr
 			TotalPostsAnalysed:     analysis.PostsTracked,
 			TotalCommentsScheduled: analysis.CommentScheduled,
 			TotalDMScheduled:       analysis.DmScheduled,
-			DailyCount:             analysis.RelevantPostsFound,
+			RelevantPostsCount:     analysis.RelevantPostsFound,
 		})
 		if err != nil {
 			s.logger.Error("failed to send slack notification", zap.Error(err))
@@ -241,8 +241,8 @@ func (s *redditKeywordTracker) sendAlert(ctx context.Context, project *models.Pr
 			TotalPostsAnalysed:     analysis.PostsTracked,
 			TotalCommentsScheduled: analysis.CommentScheduled,
 			TotalDMScheduled:       analysis.DmScheduled,
-			DailyCount:             analysis.RelevantPostsFound,
-		})
+			RelevantPostsCount:     analysis.RelevantPostsFound,
+		}, organization.FeatureFlags.GetNotificationFrequency())
 		if err != nil {
 			s.logger.Error("failed to send email notification", zap.Error(err))
 		}
