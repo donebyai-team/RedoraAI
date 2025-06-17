@@ -5,8 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog } from "@/components/ui/dialog";
-import { MessageSquare, MessageCircle, Calendar, AlertCircle, CheckCircle, Clock, ExternalLink, Eye, Loader2 } from "lucide-react";
+import toast from 'react-hot-toast'
+import { MessageSquare, MessageCircle, Calendar, AlertCircle, CheckCircle, Clock, ExternalLink, Eye, Loader2, X, Trash } from "lucide-react";
 import { useClientsContext } from "@doota/ui-core/context/ClientContext";
 import { LeadInteraction, LeadInteractionStatus, LeadInteractionType } from "@doota/pb/doota/core/v1/core_pb";
 import { getFormattedDate } from "@/utils/format";
@@ -119,6 +119,23 @@ export default function Interaction() {
     //     console.log('Canceling scheduled interaction:', id);
     //     // TODO: Implement cancel logic
     // };
+
+    // New function to handle removing an interaction
+    const handleRemoveInteraction = async (id: string) => {
+        try {
+            await portalClient.updateLeadInteractionStatus({ interactionId: id, status: LeadInteractionStatus.REMOVED });
+            setInteractions(prevInteractions =>
+                prevInteractions.map(interaction =>
+                    interaction.id === id ? { ...interaction, status: LeadInteractionStatus.REMOVED, reason: "Manually removed" } : interaction
+                )
+            );
+            console.log(`Interaction ${id} status updated to REMOVED.`);
+        } catch (err: any) {
+            console.error("Error updating interaction status to REMOVED:", err);
+            const message = err?.response?.data?.message || err.message || "Something went wrong";
+            toast.error(message);
+        }
+    };
 
     const getViewUrl = (interaction: LeadInteraction) => {
         if (interaction.interactionType === LeadInteractionType.LEAD_INTERACTION_COMMENT) {
@@ -278,67 +295,29 @@ export default function Interaction() {
                                         {/* Action buttons */}
                                         <div className="flex flex-col gap-2">
                                             {interaction.status === LeadInteractionStatus.SENT && (
-                                                <Dialog>
-                                                    <a
-                                                        href={getViewUrl(interaction) ?? "#"}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                    >
-                                                        <Button variant="outline" size="sm" className="flex items-center gap-1">
-                                                            <Eye className="h-3 w-3" />
-                                                            View {getInteractionLabel(interaction.interactionType)}
-                                                        </Button>
-                                                    </a>
-                                                    {/* <DialogContent className="max-w-2xl">
-                                                        <DialogHeader>
-                                                            <DialogTitle>
-                                                                {interaction.interactionType} to {interaction.to}
-                                                            </DialogTitle>
-                                                        </DialogHeader>
-                                                        <div className="space-y-4">
-                                                            <div>
-                                                                <label className="text-sm font-medium text-muted-foreground">Message:</label>
-                                                                <div className="mt-1 p-3 bg-gray-50 rounded-md">
-                                                                    <p className="text-sm">{interaction.leadMetadata?.suggestedComment}</p>
-                                                                </div>
-                                                            </div>
-                                                            <div>
-                                                                <label className="text-sm font-medium text-muted-foreground">Related Post:</label>
-                                                                <div className="mt-1">
-                                                                    {interaction.leadMetadata?.postUrl ? (
-                                                                        <a
-                                                                            href={interaction.leadMetadata?.postUrl}
-                                                                            target="_blank"
-                                                                            rel="noopener noreferrer"
-                                                                            className="inline-flex items-center gap-1"
-                                                                        >
-                                                                            {interaction.postTitle}
-                                                                            <ExternalLink className="h-3 w-3" />
-                                                                        </a>
-                                                                    ) : (
-                                                                        <span className="text-gray-500 italic">No post URL</span>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                            <div className="text-xs text-muted-foreground">
-                                                                Sent at {getFormattedDate(interaction.scheduledAt)}
-                                                            </div>
-                                                        </div>
-                                                    </DialogContent> */}
-                                                </Dialog>
+                                                <a
+                                                    href={getViewUrl(interaction) ?? "#"}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                >
+                                                    <Button variant="outline" size="sm" className="flex items-center gap-1">
+                                                        <Eye className="h-3 w-3" />
+                                                        View {getInteractionLabel(interaction.interactionType)}
+                                                    </Button>
+                                                </a>
                                             )}
 
-                                            {/* {interaction.status === LeadInteractionStatus.CREATED && (
+                                            {/* New "Remove Comment/DM" button */}
+                                            {interaction.status === LeadInteractionStatus.CREATED && (
                                                 <Button
                                                     variant="destructive"
-                                                    size="sm"
-                                                    className="flex items-center gap-1"
-                                                    onClick={() => handleCancelScheduled(interaction.id)}
+                                                    size="icon" // Changed size to icon
+                                                    className="h-8 w-8" // Added specific height and width for consistent sizing
+                                                    onClick={() => handleRemoveInteraction(interaction.id)}
                                                 >
-                                                    <X className="h-3 w-3" />
-                                                    Cancel
+                                                    <Trash className="h-4 w-4" /> {/* Trash2 icon */}
                                                 </Button>
-                                            )} */}
+                                            )}
                                         </div>
                                     </div>
                                 </Card>
