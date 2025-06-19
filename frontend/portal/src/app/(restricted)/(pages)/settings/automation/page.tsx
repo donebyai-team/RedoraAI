@@ -94,10 +94,18 @@ export default function Page() {
     const defaultRelevancyScore = org?.featureFlags?.Comment?.relevancyScore ?? defaultRelevancyScoreForComment;
     const defaultAutoComment = org?.featureFlags?.Comment?.enabled ?? defaultStatusForComment;
     const maxDMPerDay = org?.featureFlags?.DM?.maxPerDay || 0;
+    const maxCommentPerDayLimit = org?.featureFlags?.subscription?.comments?.perDay || 0;
     const maxCommentPerDay = org?.featureFlags?.Comment?.maxPerDay || 0;
+    const [maxCommentsInput, setMaxCommentsInput] = useState(maxCommentPerDay.toString());
+
 
     const [relevancyScore, setRelevancyScore] = useState(defaultRelevancyScore)
     const [autoComment, setAutoComment] = useState(defaultAutoComment)
+
+    const handleMaxCommentsInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setMaxCommentsInput(e.target.value.replace(/\D/g, '')); // allows only digits
+    };
+
 
     useEffect(() => {
         portalClient.getIntegrations({})
@@ -300,62 +308,129 @@ export default function Page() {
                     </CardContent>
                 </Card>
 
-                {/* Comment automation settings */}
-                <Card sx={{ p: 4, mt: 5, mb: 10 }} component={Paper}>
+                <Card sx={{ p: 4, mt: 5, mb: 10 }} component={Paper} elevation={3}>
                     <CardContent>
-                        <Box display="flex" alignItems="center" gap={1} mb={2}>
+                        {/* Title */}
+                        <Box display="flex" alignItems="center" gap={1} mb={3}>
                             <Typography variant="h4" component="div" fontWeight="bold">
                                 Automated Comments Settings
                             </Typography>
                         </Box>
 
+                        {/* Description */}
                         <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-                            {`Set your comment automation preferences. Redora will automatically post up to ${maxCommentPerDay} comments per day on relevant posts to engage qualified leads.`}
+                            Redora will automatically post up to <strong>{maxCommentPerDay}</strong> comments per day on relevant posts to engage qualified leads. Adjust the settings below to fine-tune this automation.
                         </Typography>
 
-                        <Box mb={5}>
-                            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                                <Typography variant="body1" fontWeight="medium">
-                                    Minimum Relevancy Score: {relevancyScore}%
-                                </Typography>
+                        {/* Relevancy Score */}
+                        <Box mb={4}>
+                            <Typography variant="subtitle1" fontWeight="medium" mb={1}>
+                                Minimum Relevancy Score: {relevancyScore}%
+                            </Typography>
+
+                            <Box px={2}>
+                                <StyledSlider
+                                    value={relevancyScore}
+                                    onChange={handleScoreChange}
+                                    min={80}
+                                    max={100}
+                                    step={5}
+                                    aria-label="Relevancy Score"
+                                />
                             </Box>
 
-                            <StyledSlider
-                                value={relevancyScore}
-                                onChange={handleScoreChange}
-                                min={80}
-                                max={100}
-                                step={5}
-                                aria-label="Relevancy Score"
-                            />
-
-                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
-                                Only comments on posts ≥ Min Relevancy Score
+                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                                Only comment on posts with a relevancy score ≥ selected threshold.
                             </Typography>
                         </Box>
 
+                        {/* Max Comments Per Day Input */}
+                        <Box mb={4}>
+                            <Typography variant="subtitle1" fontWeight="medium" mb={1}>
+                                Daily Comment Limit
+                            </Typography>
+
+                            <Box
+                                display="flex"
+                                alignItems="center"
+                                gap={2}
+                                sx={{
+                                    border: '1px solid #d1d5db',
+                                    borderRadius: '8px',
+                                    padding: '10px 16px',
+                                    maxWidth: '260px',
+                                    backgroundColor: '#f9fafb',
+                                }}
+                            >
+                                <input
+                                    type="number"
+                                    min={1}
+                                    max={Number(maxCommentPerDay)}
+                                    value={maxCommentsInput}
+                                    onChange={handleMaxCommentsInputChange}
+                                    style={{
+                                        flex: 1,
+                                        padding: '8px 10px',
+                                        border: 'none',
+                                        outline: 'none',
+                                        fontSize: '1rem',
+                                        backgroundColor: 'transparent',
+                                        color: '#111827',
+                                    }}
+                                />
+                                <Typography variant="body2" color="text.secondary">
+                                    {`/ ${maxCommentPerDayLimit}`}
+                                </Typography>
+                            </Box>
+
+                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1, ml: 0.5 }}>
+                                {`Enter a number between 1 and ${maxCommentPerDayLimit}`}.
+                            </Typography>
+                        </Box>
+
+                        {/* Toggle Switch */}
                         <Box display="flex" alignItems="center" py={2} mb={4}>
                             <CustomSwitch
                                 checked={autoComment}
                                 onChange={(e) => setAutoComment(e.target.checked)}
                             />
-                            <Typography variant="body1" fontWeight="medium" ml={2.5} display={"flex"}>
-                                {'Automated Comments'}
-                                <Typography variant="body1" fontWeight="medium" ml={1} sx={{ color: autoComment ? "green" : "red" }} >
-                                    {`${autoComment ? "On" : "Off"}`}
+                            <Typography variant="body1" fontWeight="medium" ml={2.5} display="flex">
+                                Automated Comments
+                                <Typography
+                                    variant="body1"
+                                    fontWeight="medium"
+                                    ml={1}
+                                    sx={{ color: autoComment ? 'green' : 'red' }}
+                                >
+                                    {autoComment ? 'On' : 'Off'}
                                 </Typography>
                             </Typography>
                         </Box>
 
+                        {/* Save Button */}
                         <SaveButton
                             onClick={() => {
-                                handleSaveAutomation({ comment: { enabled: autoComment, relevancyScore } })
+                                const maxPerDay = parseInt(maxCommentsInput, 10);
+                                if (maxPerDay > 0 && maxPerDay <= maxCommentPerDay) {
+                                    handleSaveAutomation({
+                                        comment: {
+                                            enabled: autoComment,
+                                            relevancyScore,
+                                            maxPerDay: BigInt(maxPerDay),
+                                        },
+                                    });
+                                } else {
+                                    toast.error(`Max comments per day must be between 1 and ${maxCommentPerDayLimit}`);
+                                }
                             }}
-                            variant="contained" size="large">
+                            variant="contained"
+                            size="large"
+                        >
                             Save Automation Settings
                         </SaveButton>
                     </CardContent>
                 </Card>
+
             </Box>
         </Box>
     </>);
