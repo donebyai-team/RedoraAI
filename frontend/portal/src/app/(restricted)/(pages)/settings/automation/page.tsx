@@ -220,6 +220,24 @@ export default function Page() {
         setRelevancyScore(newValue as number);
     };
 
+    const handleSave = (newAutoComment?: boolean) => {
+        const maxPerDay = parseInt(maxCommentsInput, 10);
+        const enabled = typeof newAutoComment === 'boolean' ? newAutoComment : autoComment;
+
+        if (maxPerDay > 0 && maxPerDay <= maxCommentPerDay) {
+            handleSaveAutomation({
+                comment: {
+                    enabled,
+                    relevancyScore,
+                    maxPerDay: BigInt(maxPerDay),
+                },
+            });
+        } else {
+            toast.error(`Max comments per day must be between 1 and ${maxCommentPerDay}`);
+        }
+    };
+
+
     const handleSaveAutomation = async (req: any) => {
         try {
             const result = await portalClient.updateAutomationSettings(req);
@@ -392,7 +410,11 @@ export default function Page() {
                         <Box display="flex" alignItems="center" py={2} mb={4}>
                             <CustomSwitch
                                 checked={autoComment}
-                                onChange={(e) => setAutoComment(e.target.checked)}
+                                onChange={(e) => {
+                                    const newValue = e.target.checked;
+                                    setAutoComment(newValue);
+                                    handleSave(newValue); // auto-save when toggled
+                                }}
                             />
                             <Typography variant="body1" fontWeight="medium" ml={2.5} display="flex">
                                 Automated Comments
@@ -409,20 +431,7 @@ export default function Page() {
 
                         {/* Save Button */}
                         <SaveButton
-                            onClick={() => {
-                                const maxPerDay = parseInt(maxCommentsInput, 10);
-                                if (maxPerDay > 0 && maxPerDay <= maxCommentPerDay) {
-                                    handleSaveAutomation({
-                                        comment: {
-                                            enabled: autoComment,
-                                            relevancyScore,
-                                            maxPerDay: BigInt(maxPerDay),
-                                        },
-                                    });
-                                } else {
-                                    toast.error(`Max comments per day must be between 1 and ${maxCommentPerDayLimit}`);
-                                }
-                            }}
+                            onClick={() => handleSave()}
                             variant="contained"
                             size="large"
                         >
