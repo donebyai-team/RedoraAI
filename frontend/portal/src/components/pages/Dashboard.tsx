@@ -78,7 +78,11 @@ export default function Dashboard() {
           buttonHref="/settings/billing"
         />
       ) : project && !project.isActive ? (
-        <AnnouncementBanner message="⚠️ Your account has been paused due to inactivity. Please contact support to enable it." />
+        <AnnouncementBanner
+          message="⚠️ Your account has been paused due to inactivity."
+          buttonText="Reactivate now →"
+          buttonHref="/settings/automation"
+        />
       ) : (!isConnected && !isLoadingRedditIntegrationStatus) ? (
         <AnnouncementBanner
           message="⚠️ Connect your Reddit account to get real-time alerts and auto-reply to trending posts."
