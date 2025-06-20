@@ -564,6 +564,9 @@ func (p *Portal) UpdateAutomationSettings(ctx context.Context, c *connect.Reques
 	}
 
 	if c.Msg.ProjectActive != nil {
+		if org.FeatureFlags.IsSubscriptionExpired() {
+			return nil, status.New(codes.InvalidArgument, "Subscription expired, please upgrade to reactivate").Err()
+		}
 		err = p.db.UpdateProjectIsActive(ctx, actor.OrganizationID, *c.Msg.ProjectActive)
 		if err != nil {
 			return nil, err
