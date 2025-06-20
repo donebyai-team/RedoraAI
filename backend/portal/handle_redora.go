@@ -563,6 +563,15 @@ func (p *Portal) UpdateAutomationSettings(ctx context.Context, c *connect.Reques
 		org.FeatureFlags.NotificationSettings.NotificationFrequencyPosts = c.Msg.NotificationSettings.RelevantPostFrequency.ToModel()
 	}
 
+	if c.Msg.ProjectActive != nil {
+		err = p.db.UpdateProjectIsActive(ctx, actor.OrganizationID, *c.Msg.ProjectActive)
+		if err != nil {
+			return nil, err
+		}
+
+		p.logger.Info("updated project active status", zap.Bool("project_active", *c.Msg.ProjectActive))
+	}
+
 	err = p.db.UpdateOrganization(ctx, org)
 	if err != nil {
 		return nil, err

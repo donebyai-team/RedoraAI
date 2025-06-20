@@ -77,6 +77,7 @@ message UpdateAutomationSettingRequest {
   AutomationSetting dm = 1;
   AutomationSetting comment = 2;
   NotificationSettings notification_settings = 3;
+  optional bool project_active = 4;
 }
 
 message CreateKeywordsRes {

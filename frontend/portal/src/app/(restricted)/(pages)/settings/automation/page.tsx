@@ -1,17 +1,18 @@
-'use client'
+'use client';
 
-import { useEffect, useState } from 'react'
-import Paper from '@mui/material/Paper'
-import { useAuth, useAuthUser } from '@doota/ui-core/hooks/useAuth'
-import { IntegrationType, Integration, IntegrationState } from '@doota/pb/doota/portal/v1/portal_pb'
-import { FallbackSpinner } from '../../../../../atoms/FallbackSpinner'
-import { Button } from '../../../../../atoms/Button'
-import { portalClient } from '../../../../../services/grpc'
-import { isPlatformAdmin } from '@doota/ui-core/helper/role'
-import { Box } from '@mui/system'
-import { Typography, Card, CardContent, Slider, Switch, styled } from '@mui/material'
-import toast from 'react-hot-toast'
-import Link from 'next/link'
+import { useEffect, useState } from 'react';
+import Paper from '@mui/material/Paper';
+import { useAuth, useAuthUser } from '@doota/ui-core/hooks/useAuth';
+import { IntegrationType, Integration, IntegrationState, NotificationFrequency } from '@doota/pb/doota/portal/v1/portal_pb';
+import { FallbackSpinner } from '../../../../../atoms/FallbackSpinner';
+import { Button } from '../../../../../atoms/Button';
+import { portalClient } from '../../../../../services/grpc';
+import { isPlatformAdmin } from '@doota/ui-core/helper/role';
+import { Box } from '@mui/system';
+import { Typography, Card, CardContent, Slider, Switch, styled, Tabs, Tab, FormControlLabel, RadioGroup, Radio, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import toast from 'react-hot-toast';
+import Link from 'next/link';
+import { useAppSelector } from '@/store/hooks';
 
 const StyledSlider = styled(Slider)(() => ({
     color: '#111827', // Dark color for the track
@@ -82,32 +83,46 @@ const defaultRelevancyScoreForComment = 90;
 const defaultStatusForComment = false;
 
 export default function Page() {
-    const user = useAuthUser()
-    const { setUser, setOrganization, getOrganization } = useAuth()
+    const user = useAuthUser();
+    const { setUser, setOrganization, getOrganization } = useAuth();
 
-    const [loading, setLoading] = useState(true)
-    const [integrations, setIntegrations] = useState<Integration[]>([])
-    const [isConnecting, setIsConnecting] = useState(false)
+    const [loading, setLoading] = useState(true);
+    const [integrations, setIntegrations] = useState<Integration[]>([]);
+    const [isConnecting, setIsConnecting] = useState(false);
+    const [currentTab, setCurrentTab] = useState(0); // 0 for Automation, 1 for Notification
+    const project = useAppSelector((state) => state.stepper.project);
 
     const org = getOrganization();
 
     const defaultRelevancyScore = org?.featureFlags?.Comment?.relevancyScore ?? defaultRelevancyScoreForComment;
     const defaultAutoComment = org?.featureFlags?.Comment?.enabled ?? defaultStatusForComment;
+    const defaultPostFrequency = org?.featureFlags?.notificationSettings?.relevantPostFrequency ?? NotificationFrequency.DAILY;
     const maxDMPerDay = org?.featureFlags?.DM?.maxPerDay || 0;
     const maxCommentPerDayLimit = org?.featureFlags?.subscription?.comments?.perDay || 0;
     const maxCommentPerDay = org?.featureFlags?.Comment?.maxPerDay || 0;
     const [maxCommentsInput, setMaxCommentsInput] = useState(maxCommentPerDay.toString());
 
+    const [relevancyScore, setRelevancyScore] = useState(defaultRelevancyScore);
+    const [autoComment, setAutoComment] = useState(defaultAutoComment);
 
-    const [relevancyScore, setRelevancyScore] = useState(defaultRelevancyScore)
-    const [autoComment, setAutoComment] = useState(defaultAutoComment)
+    // Notification settings states
+    // Initialize with a default or fetched value for the actual project's setting
+    const [emailFrequency, setEmailFrequency] = useState<NotificationFrequency>(defaultPostFrequency); // Default to DAILY
+    const [projectActive, setIsProjectActive] = useState(project?.isActive);
+    const [deactivationConfirmOpen, setDeactivationConfirmOpen] = useState(false);
 
     const handleMaxCommentsInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setMaxCommentsInput(e.target.value.replace(/\D/g, '')); // allows only digits
     };
 
-
     useEffect(() => {
+        // In a real application, you would fetch these settings from your backend
+        // For example:
+        // portalClient.getNotificationSettings().then(res => {
+        //   setEmailFrequency(res.frequency || 'DAILY');
+        //   setIsProjectDeactivated(res.isDeactivated || false);
+        // });
+
         portalClient.getIntegrations({})
             .then((res) => {
                 setIntegrations(res.integrations);
@@ -129,7 +144,7 @@ export default function Page() {
 
     const handleConnectReddit = async () => {
         try {
-            setIsConnecting(true)
+            setIsConnecting(true);
             let popup: Window | null = null;
             popup = window.open('', '_blank', "width=600,height=800");
             if (!popup) {
@@ -156,12 +171,6 @@ export default function Page() {
             // Set interval to check if popup closed manually
             const popupCheckInterval = setInterval(() => {
                 if (popup && popup.closed && !streamClosed) {
-                    // User closed popup before connection finished
-                    // console.log("Popup closed manually, canceling stream...");
-                    // Cancel the stream here if possible
-                    // Note: Depending on your gRPC lib, this might be a cancel() method or similar
-                    // For example: response.cancel();
-
                     setIsConnecting(false);
                     clearInterval(popupCheckInterval);
                     streamClosed = true;
@@ -184,19 +193,18 @@ export default function Page() {
                 popup.close();
             }
 
-            await handleSaveAutomation({ dm: { enabled: true } })
+            await handleSaveAutomation({ dm: { enabled: true } });
 
             // Refresh integrations to reflect the newly connected status
-            const res = await portalClient.getIntegrations({})
-            setIntegrations(res.integrations)
+            const res = await portalClient.getIntegrations({});
+            setIntegrations(res.integrations);
 
-            // Optionally show a success message or refetch integration status
             toast.success("Reddit connected successfully");
         } catch (err: any) {
             const message = err?.response?.data?.message || err.message || "Something went wrong";
             toast.error(message);
         } finally {
-            setIsConnecting(false)
+            setIsConnecting(false);
         }
     };
 
@@ -204,39 +212,20 @@ export default function Page() {
         // immediately remove
         setIntegrations((prev) =>
             prev.filter((i) => i.id !== id)
-        )
+        );
         // send api call async
         portalClient.revokeIntegration({ id: id })
             .then(() => {
-                handleSaveAutomation({ dm: { enabled: false } })
-                // console.log("successfully revoked")
+                handleSaveAutomation({ dm: { enabled: false } });
             })
             .catch((err) => {
                 console.error("Error disconnecting integrations:", err);
-            })
-    }
+            });
+    };
 
     const handleScoreChange = (_event: Event, newValue: number | number[]) => {
         setRelevancyScore(newValue as number);
     };
-
-    const handleSave = (newAutoComment?: boolean) => {
-        const maxPerDay = parseInt(maxCommentsInput, 10);
-        const enabled = typeof newAutoComment === 'boolean' ? newAutoComment : autoComment;
-
-        if (maxPerDay > 0 && maxPerDay <= maxCommentPerDay) {
-            handleSaveAutomation({
-                comment: {
-                    enabled,
-                    relevancyScore,
-                    maxPerDay: BigInt(maxPerDay),
-                },
-            });
-        } else {
-            toast.error(`Max comments per day must be between 1 and ${maxCommentPerDay}`);
-        }
-    };
-
 
     const handleSaveAutomation = async (req: any) => {
         try {
@@ -247,200 +236,388 @@ export default function Page() {
             }
 
             setUser(prev => {
-                if (!prev) return prev
+                if (!prev) return prev;
                 const updatedOrganizations = prev.organizations.map(org =>
                     org.id === result.id ? result : org
-                )
-                return { ...prev, organizations: updatedOrganizations }
-            })
+                );
+                return { ...prev, organizations: updatedOrganizations };
+            });
 
-            toast.success("Automation settings updated successfully!")
+            toast.success("Automation settings updated successfully!");
         } catch (err) {
             if (err instanceof Error) {
                 const message = err.message || "Failed to update automation settings";
                 toast.error(message);
             } else {
-                console.error("Unexpected error:", err)
+                console.error("Unexpected error:", err);
+            }
+        }
+    };
+
+    const handleSaveAutomatedComments = (newAutoComment?: boolean) => {
+        const maxPerDay = parseInt(maxCommentsInput, 10);
+        const enabled = typeof newAutoComment === 'boolean' ? newAutoComment : autoComment;
+
+        if (maxPerDay > 0 && maxPerDay <= maxCommentPerDayLimit) {
+            handleSaveAutomation({
+                comment: {
+                    enabled,
+                    relevancyScore,
+                    maxPerDay: BigInt(maxPerDay),
+                },
+            });
+        } else {
+            toast.error(`Max comments per day must be between 1 and ${maxCommentPerDayLimit}`);
+        }
+    };
+
+    // New function to handle notification frequency change and auto-save
+    const handleEmailFrequencyChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const stringValue = event.target.value; // This will be "DAILY" or "WEEKLY" (string)
+        let newFrequencyEnumValue: NotificationFrequency;
+
+        // Explicitly map the string value to the correct Protobuf enum value
+        switch (stringValue) {
+            case 'DAILY':
+                newFrequencyEnumValue = NotificationFrequency.DAILY;
+                break;
+            case 'WEEKLY':
+                newFrequencyEnumValue = NotificationFrequency.WEEKLY;
+                break;
+            // Add other cases if you have more frequencies in your enum
+            default:
+                console.warn(`Unknown email frequency string received: ${stringValue}`);
+                toast.error("Invalid frequency selected.");
+                return; // Stop execution if value is unexpected
+        }
+
+        setEmailFrequency(newFrequencyEnumValue);
+
+        try {
+            await portalClient.updateAutomationSettings({
+                notificationSettings: {
+                    relevantPostFrequency: newFrequencyEnumValue
+                }
+            });
+            toast.success("Notification frequency updated!");
+        } catch (err) {
+            if (err instanceof Error) {
+                toast.error(err.message || "Failed to update notification settings");
+            } else {
+                console.error("Unexpected error:", err);
+            }
+            // Revert to previous frequency on error, or handle as per UX needs
+            setEmailFrequency(emailFrequency); // Revert on error
+        }
+    };
+
+
+    const handleProjectStatusUpdate = async (isActive: boolean) => {
+        setIsProjectActive(isActive);
+        if (!isActive) {
+            setDeactivationConfirmOpen(false);
+        }
+        try {
+            await portalClient.updateAutomationSettings({
+                projectActive: isActive
+            });
+            if (isActive) {
+                toast.success("Project Activated Successfully");
+            } else {
+                toast.success("Project Deactivated Successfully");
             }
 
+        } catch (err) {
+            if (err instanceof Error) {
+                toast.error(err.message || "Failed to update notification settings");
+            } else {
+                console.error("Unexpected error:", err);
+            }
         }
-    }
+    };
 
     if (loading) {
-        return <FallbackSpinner />
+        return <FallbackSpinner />;
     }
 
-    return (<>
-        <Box component="main" sx={{ flexGrow: 1, p: 0, display: "flex", flexDirection: "column" }}>
+    return (
+        // Added padding to the main Box
+        <Box component="main" sx={{ flexGrow: 1, p: 3, display: "flex", flexDirection: "column" }}>
+            <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                <Tabs value={currentTab} onChange={(_event, newValue) => setCurrentTab(newValue)} aria-label="settings tabs">
+                    <Tab label="Automation Settings" />
+                    <Tab label="Notification Settings" />
+                </Tabs>
+            </Box>
 
-            <Box sx={{ p: 3, flexGrow: 1 }}>
-                {/* DM automation settings */}
-                <Card sx={{ p: 4, mt: 5 }} component={Paper}>
-                    <CardContent>
-                        <Box display="flex" alignItems="center" gap={1} mb={2}>
-                            <Typography variant="h4" fontWeight="bold">
-                                DM Automation Settings
-                            </Typography>
-                        </Box>
-
-                        <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-                            {`Redora will auto-send up to ${maxDMPerDay} DMs daily to qualified leads. Your credentials are never stored — we use browser cookies to simulate real user behavior when sending DMs.`}
-                        </Typography>
-
-                        <Typography variant="body2" color="text.secondary">
-                            You should log in using your Reddit email (or username) and password. If your account doesn’t have a password set, follow the guide below to set one:
-                        </Typography>
-
-                        <Typography sx={{ mt: 2 }} variant="body2" color="primary">
-                            <Link href="https://redoraai.featurebase.app/help/articles/9204295" target="_blank" rel="noopener">
-                                How do I add a password to my account? — Reddit Help
-                            </Link>
-                        </Typography>
-
-                        <Box sx={{ mt: 5 }} display="flex" alignItems="center" gap={2}>
-                            {getIntegrationByType(integrations, IntegrationType.REDDIT_DM_LOGIN) ? (
-                                <>
-                                    <Typography variant="body2" color="green" fontWeight="bold">
-                                        Connected
+            {/* Added padding to the content area below tabs */}
+            <Box sx={{ p: { xs: 1, sm: 3 }, flexGrow: 1 }}>
+                {currentTab === 0 && (
+                    <>
+                        {/* DM automation settings */}
+                        <Card sx={{ p: 2, mt: 5 }} component={Paper}>
+                            <CardContent>
+                                <Box display="flex" alignItems="center" gap={1} mb={2}>
+                                    <Typography variant="h5" fontWeight="bold">
+                                        DM Automation Settings
                                     </Typography>
-                                    <Button
-                                        variant="outlined"
-                                        color="error"
-                                        size="small"
-                                        onClick={() => handleDisconnectReddit(getIntegrationByType(integrations, IntegrationType.REDDIT_DM_LOGIN)?.id!)}
+                                </Box>
+
+                                <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+                                    {`Redora will auto-send up to ${maxDMPerDay} DMs daily to qualified leads. Your credentials are never stored — we use browser cookies to simulate real user behavior when sending DMs.`}
+                                </Typography>
+
+                                <Typography variant="body2" color="text.secondary">
+                                    You should log in using your Reddit email (or username) and password. If your account doesn’t have a password set, follow the guide below to set one:
+                                </Typography>
+
+                                <Typography sx={{ mt: 2 }} variant="body2" color="primary">
+                                    <Link href="https://redoraai.featurebase.app/help/articles/9204295" target="_blank" rel="noopener">
+                                        How do I add a password to my account? — Reddit Help
+                                    </Link>
+                                </Typography>
+
+                                <Box sx={{ mt: 5 }} display="flex" alignItems="center" gap={2}>
+                                    {getIntegrationByType(integrations, IntegrationType.REDDIT_DM_LOGIN) ? (
+                                        <>
+                                            <Typography variant="body2" color="green" fontWeight="bold">
+                                                Connected
+                                            </Typography>
+                                            <Button
+                                                variant="outlined"
+                                                color="error"
+                                                size="small"
+                                                onClick={() => handleDisconnectReddit(getIntegrationByType(integrations, IntegrationType.REDDIT_DM_LOGIN)?.id!)}
+                                            >
+                                                Disconnect
+                                            </Button>
+                                        </>
+                                    ) : (
+                                        <SaveButton
+                                            onClick={handleConnectReddit}
+                                            variant="contained"
+                                            size="large"
+                                            disabled={isConnecting}
+                                        >
+                                            {isConnecting ? 'Connecting...' : 'Connect Reddit DM'}
+                                        </SaveButton>
+                                    )}
+                                </Box>
+                            </CardContent>
+                        </Card>
+
+                        <Card sx={{ p: 2, mt: 5, mb: 10 }} component={Paper} elevation={3}>
+                            <CardContent>
+                                {/* Title */}
+                                <Box display="flex" alignItems="center" gap={1} mb={3}>
+                                    <Typography variant="h5" component="div" fontWeight="bold">
+                                        Automated Comments Settings
+                                    </Typography>
+                                </Box>
+
+                                {/* Description */}
+                                <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+                                    Redora will automatically post up to <strong>{maxCommentPerDay}</strong> comments per day on relevant posts to engage qualified leads. Adjust the settings below to fine-tune this automation.
+                                </Typography>
+
+                                {/* Relevancy Score */}
+                                <Box mb={4}>
+                                    <Typography variant="subtitle1" fontWeight="medium" mb={1}>
+                                        Minimum Relevancy Score: {relevancyScore}%
+                                    </Typography>
+
+                                    <Box px={2}>
+                                        <StyledSlider
+                                            value={relevancyScore}
+                                            onChange={handleScoreChange}
+                                            min={80}
+                                            max={100}
+                                            step={5}
+                                            aria-label="Relevancy Score"
+                                        />
+                                    </Box>
+
+                                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                                        Only comment on posts with a relevancy score ≥ selected threshold.
+                                    </Typography>
+                                </Box>
+
+                                {/* Max Comments Per Day Input */}
+                                <Box mb={4}>
+                                    <Typography variant="subtitle1" fontWeight="medium" mb={1}>
+                                        Daily Comment Limit
+                                    </Typography>
+
+                                    <Box
+                                        display="flex"
+                                        alignItems="center"
+                                        gap={2}
+                                        sx={{
+                                            border: '1px solid #d1d5db',
+                                            borderRadius: '8px',
+                                            padding: '10px 16px',
+                                            maxWidth: '260px',
+                                            backgroundColor: '#f9fafb',
+                                        }}
                                     >
-                                        Disconnect
-                                    </Button>
-                                </>
-                            ) : (
+                                        <input
+                                            type="number"
+                                            min={1}
+                                            max={Number(maxCommentPerDayLimit)}
+                                            value={maxCommentsInput}
+                                            onChange={handleMaxCommentsInputChange}
+                                            style={{
+                                                flex: 1,
+                                                padding: '8px 10px',
+                                                border: 'none',
+                                                outline: 'none',
+                                                fontSize: '1rem',
+                                                backgroundColor: 'transparent',
+                                                color: '#111827',
+                                            }}
+                                        />
+                                        <Typography variant="body2" color="text.secondary">
+                                            {`/ ${maxCommentPerDayLimit}`}
+                                        </Typography>
+                                    </Box>
+
+                                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1, ml: 0.5 }}>
+                                        {`Enter a number between 1 and ${maxCommentPerDayLimit}`}.
+                                    </Typography>
+                                </Box>
+
+                                {/* Toggle Switch */}
+                                <Box display="flex" alignItems="center" py={2} mb={4}>
+                                    <CustomSwitch
+                                        checked={autoComment}
+                                        onChange={(e) => {
+                                            const newValue = e.target.checked;
+                                            setAutoComment(newValue);
+                                            handleSaveAutomatedComments(newValue); // auto-save when toggled
+                                        }}
+                                    />
+                                    <Typography variant="body1" fontWeight="medium" ml={2.5} display="flex">
+                                        Automated Comments
+                                        <Typography
+                                            variant="body1"
+                                            fontWeight="medium"
+                                            ml={1}
+                                            sx={{ color: autoComment ? 'green' : 'red' }}
+                                        >
+                                            {autoComment ? 'On' : 'Off'}
+                                        </Typography>
+                                    </Typography>
+                                </Box>
+
+                                {/* Save Button */}
                                 <SaveButton
-                                    onClick={handleConnectReddit}
+                                    onClick={() => handleSaveAutomatedComments()}
                                     variant="contained"
                                     size="large"
-                                    disabled={isConnecting}
                                 >
-                                    {isConnecting ? 'Connecting...' : 'Connect Reddit DM'}
+                                    Save Automation Settings
                                 </SaveButton>
-                            )}
-                        </Box>
-                    </CardContent>
-                </Card>
+                            </CardContent>
+                        </Card>
+                    </>
+                )}
 
-                <Card sx={{ p: 4, mt: 5, mb: 10 }} component={Paper} elevation={3}>
-                    <CardContent>
-                        {/* Title */}
-                        <Box display="flex" alignItems="center" gap={1} mb={3}>
-                            <Typography variant="h4" component="div" fontWeight="bold">
-                                Automated Comments Settings
-                            </Typography>
-                        </Box>
+                {currentTab === 1 && (
+                    <>
+                        {/* Notification Settings */}
+                        <Card sx={{ p: 4, mt: 5 }} component={Paper}>
+                            <CardContent>
+                                <Box display="flex" alignItems="center" gap={1} mb={2}>
+                                    <Typography variant="h4" fontWeight="bold">
+                                        Notification Settings
+                                    </Typography>
+                                </Box>
 
-                        {/* Description */}
-                        <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-                            Redora will automatically post up to <strong>{maxCommentPerDay}</strong> comments per day on relevant posts to engage qualified leads. Adjust the settings below to fine-tune this automation.
-                        </Typography>
-
-                        {/* Relevancy Score */}
-                        <Box mb={4}>
-                            <Typography variant="subtitle1" fontWeight="medium" mb={1}>
-                                Minimum Relevancy Score: {relevancyScore}%
-                            </Typography>
-
-                            <Box px={2}>
-                                <StyledSlider
-                                    value={relevancyScore}
-                                    onChange={handleScoreChange}
-                                    min={80}
-                                    max={100}
-                                    step={5}
-                                    aria-label="Relevancy Score"
-                                />
-                            </Box>
-
-                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                                Only comment on posts with a relevancy score ≥ selected threshold.
-                            </Typography>
-                        </Box>
-
-                        {/* Max Comments Per Day Input */}
-                        <Box mb={4}>
-                            <Typography variant="subtitle1" fontWeight="medium" mb={1}>
-                                Daily Comment Limit
-                            </Typography>
-
-                            <Box
-                                display="flex"
-                                alignItems="center"
-                                gap={2}
-                                sx={{
-                                    border: '1px solid #d1d5db',
-                                    borderRadius: '8px',
-                                    padding: '10px 16px',
-                                    maxWidth: '260px',
-                                    backgroundColor: '#f9fafb',
-                                }}
-                            >
-                                <input
-                                    type="number"
-                                    min={1}
-                                    max={Number(maxCommentPerDay)}
-                                    value={maxCommentsInput}
-                                    onChange={handleMaxCommentsInputChange}
-                                    style={{
-                                        flex: 1,
-                                        padding: '8px 10px',
-                                        border: 'none',
-                                        outline: 'none',
-                                        fontSize: '1rem',
-                                        backgroundColor: 'transparent',
-                                        color: '#111827',
-                                    }}
-                                />
-                                <Typography variant="body2" color="text.secondary">
-                                    {`/ ${maxCommentPerDayLimit}`}
+                                <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+                                    Manage how often you receive email alerts for relevant posts.
                                 </Typography>
-                            </Box>
 
-                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1, ml: 0.5 }}>
-                                {`Enter a number between 1 and ${maxCommentPerDayLimit}`}.
-                            </Typography>
-                        </Box>
+                                <Box mb={4}>
+                                    <Typography variant="subtitle1" fontWeight="medium" mb={1}>
+                                        Relevant Posts Email Alerts Frequency:
+                                    </Typography>
+                                    <RadioGroup
+                                        row
+                                        aria-label="email-frequency"
+                                        name="email-frequency-group"
+                                        value={NotificationFrequency[emailFrequency]}
+                                        onChange={handleEmailFrequencyChange}
+                                    >
+                                        <FormControlLabel value="DAILY" control={<Radio />} label="Daily" />
+                                        <FormControlLabel value="WEEKLY" control={<Radio />} label="Weekly" />
+                                    </RadioGroup>
+                                </Box>
 
-                        {/* Toggle Switch */}
-                        <Box display="flex" alignItems="center" py={2} mb={4}>
-                            <CustomSwitch
-                                checked={autoComment}
-                                onChange={(e) => {
-                                    const newValue = e.target.checked;
-                                    setAutoComment(newValue);
-                                    handleSave(newValue); // auto-save when toggled
-                                }}
-                            />
-                            <Typography variant="body1" fontWeight="medium" ml={2.5} display="flex">
-                                Automated Comments
-                                <Typography
-                                    variant="body1"
-                                    fontWeight="medium"
-                                    ml={1}
-                                    sx={{ color: autoComment ? 'green' : 'red' }}
-                                >
-                                    {autoComment ? 'On' : 'Off'}
+                                {/* Removed the "Save Notification Settings" button */}
+
+                            </CardContent>
+                        </Card>
+
+                        {/* Deactivate Project */}
+                        <Card sx={{ p: 4, mt: 5, mb: 10 }} component={Paper} elevation={3}>
+                            <CardContent>
+                                <Box display="flex" alignItems="center" gap={1} mb={3}>
+                                    <Typography variant="h4" component="div" fontWeight="bold">
+                                        Project Status
+                                    </Typography>
+                                </Box>
+
+                                <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+                                    {!projectActive
+                                        ? "This project is currently deactivated. Automated activities and email notifications are paused. You can reactivate it at any time."
+                                        : "Deactivating your project will stop all automated activities and email notifications. This action can be reversed by reactivating the project."
+                                    }
                                 </Typography>
-                            </Typography>
-                        </Box>
 
-                        {/* Save Button */}
-                        <SaveButton
-                            onClick={() => handleSave()}
-                            variant="contained"
-                            size="large"
-                        >
-                            Save Automation Settings
-                        </SaveButton>
-                    </CardContent>
-                </Card>
-
+                                {!projectActive ? (
+                                    <SaveButton
+                                        variant="contained"
+                                        size="large"
+                                        onClick={() => handleProjectStatusUpdate(true)} // Calls new reactivation function
+                                    >
+                                        Reactivate Project
+                                    </SaveButton>
+                                ) : (
+                                    <Button
+                                        variant="contained"
+                                        color="error"
+                                        size="large"
+                                        onClick={() => setDeactivationConfirmOpen(true)}
+                                    >
+                                        Deactivate Project
+                                    </Button>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </>
+                )}
             </Box>
+
+            {/* Deactivation Confirmation Dialog */}
+            <Dialog
+                open={deactivationConfirmOpen}
+                onClose={() => setDeactivationConfirmOpen(false)}
+                aria-labelledby="deactivation-dialog-title"
+                aria-describedby="deactivation-dialog-description"
+            >
+                <DialogTitle id="deactivation-dialog-title">{"Confirm Project Deactivation"}</DialogTitle>
+                <DialogContent>
+                    <Typography id="deactivation-dialog-description">
+                        Are you sure you want to deactivate this project? All automated activities will stop. You can reactivate it later.
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setDeactivationConfirmOpen(false)}>Cancel</Button>
+                    <Button onClick={() => handleProjectStatusUpdate(false)} color="error" autoFocus>
+                        Deactivate
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
-    </>);
+    );
 }

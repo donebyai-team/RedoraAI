@@ -87,13 +87,13 @@ export function AppSidebar() {
     {
       title: "Integrations",
       path: routes.new.integrations,
-      icon: Settings,
+      icon: Workflow,
       active: isActive(routes.new.integrations),
     },
     {
-      title: "DM Automation",
+      title: "Automation Settings",
       path: routes.new.automation,
-      icon: Workflow,
+      icon: Settings,
       active: isActive(routes.new.automation),
     },
     // {
