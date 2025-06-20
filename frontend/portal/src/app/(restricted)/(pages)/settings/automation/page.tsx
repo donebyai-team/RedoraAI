@@ -13,6 +13,7 @@ import { Typography, Card, CardContent, Slider, Switch, styled, Tabs, Tab, FormC
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import { useAppSelector } from '@/store/hooks';
+import { SubscriptionStatus } from '@doota/pb/doota/core/v1/core_pb';
 
 const StyledSlider = styled(Slider)(() => ({
     color: '#111827', // Dark color for the track
@@ -94,6 +95,7 @@ export default function Page() {
 
     const org = getOrganization();
 
+    const hasPlanExpired = (org && org?.featureFlags?.subscription?.status === SubscriptionStatus.EXPIRED) ?? false;
     const defaultRelevancyScore = org?.featureFlags?.Comment?.relevancyScore ?? defaultRelevancyScoreForComment;
     const defaultAutoComment = org?.featureFlags?.Comment?.enabled ?? defaultStatusForComment;
     const defaultPostFrequency = org?.featureFlags?.notificationSettings?.relevantPostFrequency ?? NotificationFrequency.DAILY;
@@ -328,6 +330,7 @@ export default function Page() {
             }
 
         } catch (err) {
+            setIsProjectActive(!isActive);
             if (err instanceof Error) {
                 toast.error(err.message || "Failed to update notification settings");
             } else {
@@ -577,6 +580,7 @@ export default function Page() {
                                 {!projectActive ? (
                                     <SaveButton
                                         variant="contained"
+                                        disabled={hasPlanExpired}
                                         size="large"
                                         onClick={() => handleProjectStatusUpdate(true)} // Calls new reactivation function
                                     >
@@ -585,6 +589,7 @@ export default function Page() {
                                 ) : (
                                     <Button
                                         variant="contained"
+                                        disabled={hasPlanExpired}
                                         color="error"
                                         size="large"
                                         onClick={() => setDeactivationConfirmOpen(true)}
