@@ -36,6 +36,7 @@ import { Badge } from "@/components/ui/badge";
 import { Image } from "@doota/ui-core/atoms/Image";
 import { getFreePlanDateStatus } from "@/utils/format";
 import { Button } from "../ui/button";
+import { SubscriptionPlan } from "@doota/ui-core/context/AuthContext";
 
 export function AppSidebar() {
 
@@ -202,13 +203,18 @@ export function AppSidebar() {
           <div className="flex justify-between items-center">
             <div className="text-xs flex items-center text-muted-foreground gap-2.5">
               <p>Current Plan:</p>
-              <Badge variant={"default"} className="px-1.5 py-0.5 flex items-center">
-                <span className="text-xs">{planName} {getFreePlanDateStatus(currentOrganization?.featureFlags?.subscription?.expiresAt)}</span>
+              <Badge variant="default" className="px-2 py-1 flex items-center rounded-md">
+                <span className="text-xs">
+                  {planName}
+                  {planName === SubscriptionPlan.FREE &&
+                    ` ${getFreePlanDateStatus(currentOrganization?.featureFlags?.subscription?.expiresAt)}`}
+                </span>
               </Badge>
             </div>
           </div>
         </div>
       </SidebarFooter>
+
     </Sidebar>
   );
 }
