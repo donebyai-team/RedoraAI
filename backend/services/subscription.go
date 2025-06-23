@@ -154,7 +154,7 @@ func (d dodoSubscriptionService) CreatePlan(ctx context.Context, plan models.Sub
 	}
 
 	existingSub := organization.FeatureFlags.GetSubscription()
-	if existingSub.ExternalID != nil && *existingSub.ExternalID != "" {
+	if existingSub.ExternalID != nil && *existingSub.ExternalID != "" && existingSub.PlanID != models.SubscriptionPlanTypeFREE {
 		return nil, fmt.Errorf("subscription already exists, please upgrade to change plan")
 	}
 
