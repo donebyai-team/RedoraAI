@@ -12,7 +12,7 @@ import { Timestamp } from '@bufbuild/protobuf/wkt'
 import { SubscriptionPlan } from '@doota/ui-core/context/AuthContext'
 import { formatTimestampToDate, formatTimestampToReadableDate } from '@/utils/format'
 import { Button } from '../ui/button'
-import { toast } from '@/hooks/use-toast'
+import toast from 'react-hot-toast'
 import { getNextPublicAppUrl, useClientsContext } from '@doota/ui-core/context/ClientContext'
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
@@ -131,69 +131,70 @@ export default function Billing() {
             }
             setAnnouncementBar({
                 isVisible: true,
-                message: 'Please wait, upgrading your plan…',
+                message: 'Upgrading your plan…',
                 isLoading: true
             });
-            let planId: SubscriptionPlanID
+
+            let planToUpgrade: SubscriptionPlanID
             switch (name) {
                 case 'Founder':
-                    planId = SubscriptionPlanID.SUBSCRIPTION_PLAN_FOUNDER
+                    planToUpgrade = SubscriptionPlanID.SUBSCRIPTION_PLAN_FOUNDER
                     break
                 case 'Pro':
-                    planId = SubscriptionPlanID.SUBSCRIPTION_PLAN_PRO
+                    planToUpgrade = SubscriptionPlanID.SUBSCRIPTION_PLAN_PRO
                     break
                 default:
+                    toast.error("Invalid Plan selected")
                     return
             }
 
+            console.log("current plan", subscription.plan, "initiating subscription");
             const redirectUrl = getNextPublicAppUrl() + '/settings/billing'
             if (subscription.plan === SubscriptionPlan.FREE) {
-                const result = await portalClient.initiateSubscription({ plan: planId, redirectUrl })
+                console.log("plan to upgrade", planToUpgrade, "initiating subscription");
+                const result = await portalClient.initiateSubscription({ plan: planToUpgrade, redirectUrl })
                 window.location.href = result.paymentLink
                 return
             }
 
-            if (subscription.plan === SubscriptionPlan.FOUNDER || name === SubscriptionPlan.PRO) {
-                const result = await portalClient.upgradeSubscription({ plan: planId })
+            if (subscription.plan === SubscriptionPlan.FOUNDER || subscription.plan === SubscriptionPlan.PRO) {
+                console.log("plan to upgrade", planToUpgrade, "upgrading subscription");
+                const result = await portalClient.upgradeSubscription({ plan: planToUpgrade })
                 setAnnouncementBar({
                     isVisible: false,
                     message: 'Please wait, verifying the subscription…',
                     isLoading: false
                 })
 
-               setUser(prev => {
-                  if (prev) {
-                    return {
-                      ...prev,
-                      organizations: prev.organizations.map(org => {
-                        if (org.id === currentOrg?.id) {
-                          // Ensure featureFlags is updated as an instance of OrganizationFeatureFlags
-                          if (org.featureFlags) {
-                            const updatedFeatureFlags = org.featureFlags;
-                            updatedFeatureFlags.subscription = result;
-                            return {
-                              ...org,
-                              featureFlags: updatedFeatureFlags
-                            }
-                          }
-                          return org;
+                setUser(prev => {
+                    if (prev) {
+                        return {
+                            ...prev,
+                            organizations: prev.organizations.map(org => {
+                                if (org.id === currentOrg?.id) {
+                                    // Ensure featureFlags is updated as an instance of OrganizationFeatureFlags
+                                    if (org.featureFlags) {
+                                        const updatedFeatureFlags = org.featureFlags;
+                                        updatedFeatureFlags.subscription = result;
+                                        return {
+                                            ...org,
+                                            featureFlags: updatedFeatureFlags
+                                        }
+                                    }
+                                    return org;
+                                }
+                                return org;
+                            })
                         }
-                        return org;
-                      })
                     }
-                  }
-                  return null;
+                    return null;
                 });
 
                 return
             }
-        } catch (error) {
-            toast({
-                title: 'Error',
-                description: 'Failed to upgrade your plan. Please try again later.',
-                variant: 'destructive',
-                duration: 5000
-            })
+        } catch (err: any) {
+            const message = err?.response?.data?.message || err.message || "Something went wrong";
+            toast.error(message);
         }
     }
 
@@ -215,26 +216,26 @@ export default function Billing() {
                 })
 
                 setUser(prev => {
-                  if (prev) {
-                    return {
-                      ...prev,
-                      organizations: prev.organizations.map(org => {
-                        if (org.id === currentOrg?.id) {
-                          if (org.featureFlags) {
-                            const updatedFeatureFlags = org.featureFlags;
-                            updatedFeatureFlags.subscription = result;
-                            return {
-                              ...org,
-                              featureFlags: updatedFeatureFlags
-                            }
-                          }
-                          return org;
+                    if (prev) {
+                        return {
+                            ...prev,
+                            organizations: prev.organizations.map(org => {
+                                if (org.id === currentOrg?.id) {
+                                    if (org.featureFlags) {
+                                        const updatedFeatureFlags = org.featureFlags;
+                                        updatedFeatureFlags.subscription = result;
+                                        return {
+                                            ...org,
+                                            featureFlags: updatedFeatureFlags
+                                        }
+                                    }
+                                    return org;
+                                }
+                                return org;
+                            })
                         }
-                        return org;
-                      })
                     }
-                  }
-                  return null;
+                    return null;
                 });
 
             } else if (result.status == SubscriptionStatus.CANCELLED || result.status == SubscriptionStatus.FAILED) {
