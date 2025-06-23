@@ -10,13 +10,15 @@ import { useAuth } from '@doota/ui-core/hooks/useAuth'
 import { SubscriptionPlanID, SubscriptionStatus } from '@doota/pb/doota/core/v1/core_pb'
 import { Timestamp } from '@bufbuild/protobuf/wkt'
 import { SubscriptionPlan } from '@doota/ui-core/context/AuthContext'
-import { formatTimestampToDate, formatTimestampToReadableDate, getFormattedDate } from '@/utils/format'
+import { formatTimestampToDate, formatTimestampToReadableDate } from '@/utils/format'
 import { Button } from '../ui/button'
 import { toast } from '@/hooks/use-toast'
 import { getNextPublicAppUrl, useClientsContext } from '@doota/ui-core/context/ClientContext'
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { AnnouncementBanner } from '../dashboard/AnnouncementBanner'
+import { Organization } from '@doota/pb/doota/portal/v1/portal_pb'
+import { useOrganization } from "@doota/ui-core/hooks/useOrganization";
 
 interface UserSubscription {
     plan: SubscriptionPlan
@@ -100,12 +102,14 @@ const plans: PlanInfo[] = [
 ]
 
 export default function Billing() {
-    const { planDetails, refreshSession } = useAuth()
+    const { planDetails, setUser } = useAuth()
     const { portalClient } = useClientsContext()
     const searchParams = useSearchParams()
     const subscriptionId = searchParams.get('subscription_id')
     const status = searchParams.get('status')
     const interval = useRef<NodeJS.Timeout | null>(null)
+    const [currentOrg] = useOrganization();
+
     const [announcementBar, setAnnouncementBar] = useState<AnnouncementBannerInterface>({
         isVisible: false,
         message: '',
@@ -120,10 +124,16 @@ export default function Billing() {
 
     const handleUpgradePlan = async (name: string) => {
         try {
+
+
             if (subscription.plan === name) {
                 return
             }
-
+            setAnnouncementBar({
+                isVisible: true,
+                message: 'Please wait, upgrading your plan…',
+                isLoading: true
+            });
             let planId: SubscriptionPlanID
             switch (name) {
                 case 'Founder':
@@ -133,10 +143,10 @@ export default function Billing() {
                     planId = SubscriptionPlanID.SUBSCRIPTION_PLAN_PRO
                     break
                 default:
-                    throw new Error('Invalid plan selected')
+                    return
             }
 
-            const redirectUrl = getNextPublicAppUrl() + '/settings/billing';
+            const redirectUrl = getNextPublicAppUrl() + '/settings/billing'
             if (subscription.plan === SubscriptionPlan.FREE) {
                 const result = await portalClient.initiateSubscription({ plan: planId, redirectUrl })
                 window.location.href = result.paymentLink
@@ -144,12 +154,39 @@ export default function Billing() {
             }
 
             if (subscription.plan === SubscriptionPlan.FOUNDER || name === SubscriptionPlan.PRO) {
-                await portalClient.upgradeSubscription({ plan: planId })
-                await refreshSession();
+                const result = await portalClient.upgradeSubscription({ plan: planId })
+                setAnnouncementBar({
+                    isVisible: false,
+                    message: 'Please wait, verifying the subscription…',
+                    isLoading: false
+                })
+
+               setUser(prev => {
+                  if (prev) {
+                    return {
+                      ...prev,
+                      organizations: prev.organizations.map(org => {
+                        if (org.id === currentOrg?.id) {
+                          // Ensure featureFlags is updated as an instance of OrganizationFeatureFlags
+                          if (org.featureFlags) {
+                            const updatedFeatureFlags = org.featureFlags;
+                            updatedFeatureFlags.subscription = result;
+                            return {
+                              ...org,
+                              featureFlags: updatedFeatureFlags
+                            }
+                          }
+                          return org;
+                        }
+                        return org;
+                      })
+                    }
+                  }
+                  return null;
+                });
+
                 return
             }
-
-
         } catch (error) {
             toast({
                 title: 'Error',
@@ -161,11 +198,10 @@ export default function Billing() {
     }
 
     const handleApinterval = async () => {
-
         if (!subscriptionId || !status) {
             return
         }
-     
+
         try {
             const result = await portalClient.verifySubscription({})
             if (result.status == SubscriptionStatus.ACTIVE) {
@@ -177,11 +213,35 @@ export default function Billing() {
                     message: 'Thanks, the subscription has been verified',
                     isLoading: false
                 })
-                await refreshSession();
+
+                setUser(prev => {
+                  if (prev) {
+                    return {
+                      ...prev,
+                      organizations: prev.organizations.map(org => {
+                        if (org.id === currentOrg?.id) {
+                          if (org.featureFlags) {
+                            const updatedFeatureFlags = org.featureFlags;
+                            updatedFeatureFlags.subscription = result;
+                            return {
+                              ...org,
+                              featureFlags: updatedFeatureFlags
+                            }
+                          }
+                          return org;
+                        }
+                        return org;
+                      })
+                    }
+                  }
+                  return null;
+                });
+
             } else if (result.status == SubscriptionStatus.CANCELLED || result.status == SubscriptionStatus.FAILED) {
                 setAnnouncementBar({
                     isVisible: true,
-                    message: '⚠️ We cannot verify your payment, Please try again. If money is deducted, wait for sometime to get your subscription activated.',
+                    message:
+                        '⚠️ We cannot verify your payment, Please try again. If money is deducted, wait for sometime to get your subscription activated.',
                     isLoading: false
                 })
             }
@@ -197,12 +257,12 @@ export default function Billing() {
 
     useEffect(() => {
         if (subscriptionId && status) {
-               setAnnouncementBar({
-            isVisible: true,
-            message: 'Please wait, verifying the subscription…',
-            isLoading: true
-        })
-            interval.current = setInterval(handleApinterval, 2 * 1000); // 10 seconds
+            setAnnouncementBar({
+                isVisible: true,
+                message: 'Please wait, verifying the subscription…',
+                isLoading: true
+            })
+            interval.current = setInterval(handleApinterval, 2 * 1000) // 10 seconds
         }
         return () => {
             if (interval.current) {
@@ -212,20 +272,14 @@ export default function Billing() {
     }, [subscriptionId, status])
 
     const convertToUpperCase = (plan: string): string => {
-        return plan.toUpperCase() as SubscriptionPlan;
+        return plan.toUpperCase() as SubscriptionPlan
     }
-
-
-
 
     return (
         <div className='min-h-screen bg-gradient-to-b from-background to-secondary/20'>
             <DashboardHeader />
             {announcementBar.isVisible && (
-                <AnnouncementBanner
-                    message={announcementBar.message}
-                    isLoading={announcementBar.isLoading}
-                />
+                <AnnouncementBanner message={announcementBar.message} isLoading={announcementBar.isLoading} />
             )}
             <main className='container mx-auto px-4 py-6 md:px-6'>
                 <div className='space-y-6'>
@@ -250,15 +304,13 @@ export default function Billing() {
                             </div>
                             <CardDescription className='mt-1'>You are currently on the {subscription.plan} plan</CardDescription>
                         </CardHeader>
-                        <CardContent className="pt-0">
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <Calendar className="h-4 w-4" />
+                        <CardContent className='pt-0'>
+                            <div className='flex items-center gap-2 text-sm text-muted-foreground'>
+                                <Calendar className='h-4 w-4' />
                                 <span>
-                                    {
-                                        formatTimestampToDate(subscription.expiryDate).getTime() < Date.now()
-                                            ? `Expired at: ${formatTimestampToReadableDate(subscription.expiryDate)}`
-                                            : `Next billing: ${formatTimestampToReadableDate(subscription.expiryDate)}`
-                                    }
+                                    {formatTimestampToDate(subscription.expiryDate).getTime() < Date.now()
+                                        ? `Expired at: ${formatTimestampToReadableDate(subscription.expiryDate)}`
+                                        : `Next billing: ${formatTimestampToReadableDate(subscription.expiryDate)}`}
                                 </span>
                             </div>
                         </CardContent>
@@ -278,7 +330,9 @@ export default function Billing() {
                             {plans.map(plan => (
                                 <Card
                                     key={plan.name}
-                                    className={`relative border-primary/10 shadow-md ${plan.popular ? 'ring-2 ring-primary/20' : ''} ${subscription.plan === convertToUpperCase(plan.name) ? 'bg-primary/5 border-primary/30 ring-2 ring-primary/40' : ''
+                                    className={`relative border-primary/10 shadow-md ${plan.popular ? 'ring-2 ring-primary/20' : ''} ${subscription.plan === convertToUpperCase(plan.name)
+                                        ? 'bg-primary/5 border-primary/30 ring-2 ring-primary/40'
+                                        : ''
                                         }`}
                                 >
                                     {plan.popular && subscription.plan !== convertToUpperCase(plan.name) && (
@@ -320,17 +374,16 @@ export default function Billing() {
                                                     ? 'bg-gradient-to-r from-primary to-purple-500 hover:from-primary/90 hover:to-purple-500/90'
                                                     : ''
                                                 }`}
-                                            variant={plan.popular && subscription.plan !== convertToUpperCase(plan.name) ? 'default' : 'outline'}
+                                            variant={
+                                                plan.popular && subscription.plan !== convertToUpperCase(plan.name) ? 'default' : 'outline'
+                                            }
                                             disabled={subscription.plan === convertToUpperCase(plan.name)}
                                         >
-                                            {subscription.plan === convertToUpperCase(plan.name)
-                                                ? 'Current Plan'
-                                                : `Upgrade to ${plan.name}`}
+                                            {subscription.plan === convertToUpperCase(plan.name) ? 'Current Plan' : `Upgrade to ${plan.name}`}
                                         </Button>
                                     </CardContent>
                                 </Card>
-                            )
-                            )}
+                            ))}
                         </div>
                     </div>
                 </div>
