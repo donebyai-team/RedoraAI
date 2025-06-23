@@ -18,6 +18,7 @@ type SubscriptionService interface {
 	CreatePlan(ctx context.Context, plan models.SubscriptionPlanType, orgID, redirectURL string) (*models.Subscription, error)
 	Verify(ctx context.Context, orgID string) (*models.Subscription, error)
 	UpgradePlan(ctx context.Context, plan models.SubscriptionPlanType, orgID string) (*models.Subscription, error)
+	CancelPlan(ctx context.Context, orgID string) (*models.Subscription, error)
 	UpdateSubscriptionByExternalID(ctx context.Context, data []byte) (*models.Subscription, error)
 }
 
@@ -89,6 +90,27 @@ func NewDodoSubscriptionService(db datastore.Repository, notifier alerts.AlertNo
 	}
 
 	return service
+}
+
+func (d dodoSubscriptionService) CancelPlan(ctx context.Context, orgID string) (*models.Subscription, error) {
+	organization, err := d.db.GetOrganizationById(ctx, orgID)
+	if err != nil {
+		return nil, err
+	}
+	existingSub := organization.FeatureFlags.GetSubscription()
+	if existingSub.ExternalID == nil || *existingSub.ExternalID == "" || !organization.FeatureFlags.IsSubscriptionActive() {
+		return nil, fmt.Errorf("no subscription exits to cancel")
+	}
+
+	_, err = d.client.Subscriptions.Update(ctx, *existingSub.ExternalID, dodopayments.SubscriptionUpdateParams{
+		Status: dodopayments.F(dodopayments.SubscriptionStatusCancelled),
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to cancel subscription: %w", err)
+	}
+
+	return d.Verify(ctx, orgID)
 }
 
 func (d dodoSubscriptionService) UpgradePlan(ctx context.Context, plan models.SubscriptionPlanType, orgID string) (*models.Subscription, error) {
@@ -333,8 +355,13 @@ func (d dodoSubscriptionService) Verify(ctx context.Context, orgID string) (*mod
 	} else if externalSubExternal.Status == dodopayments.SubscriptionStatusExpired {
 		existingSub.Status = models.SubscriptionStatusEXPIRED
 	} else {
+
+		if externalSubExternal.Status == dodopayments.SubscriptionStatusCancelled {
+			existingSub.Status = models.SubscriptionStatusCANCELLED
+		} else {
+			existingSub.Status = models.SubscriptionStatusFAILED
+		}
 		// move back to free plan to retry subscription
-		existingSub.Status = models.SubscriptionStatusFAILED
 		existingSub.PlanID = models.SubscriptionPlanTypeFREE
 		existingSub.ExternalID = nil
 		err = d.db.UpdateOrganizationFeatureFlags(ctx, orgID, map[string]any{

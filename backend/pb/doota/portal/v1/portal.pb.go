@@ -3427,7 +3427,7 @@ var file_doota_portal_v1_portal_proto_rawDesc = []byte{
 	0x54, 0x45, 0x5f, 0x41, 0x43, 0x54, 0x49, 0x56, 0x45, 0x10, 0x01, 0x12, 0x22, 0x0a, 0x1e, 0x49,
 	0x4e, 0x54, 0x45, 0x47, 0x52, 0x41, 0x54, 0x49, 0x4f, 0x4e, 0x5f, 0x53, 0x54, 0x41, 0x54, 0x45,
 	0x5f, 0x41, 0x55, 0x54, 0x48, 0x5f, 0x52, 0x45, 0x56, 0x4f, 0x4b, 0x45, 0x44, 0x10, 0x02, 0x32,
-	0xbd, 0x12, 0x0a, 0x0d, 0x50, 0x6f, 0x72, 0x74, 0x61, 0x6c, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63,
+	0x88, 0x13, 0x0a, 0x0d, 0x50, 0x6f, 0x72, 0x74, 0x61, 0x6c, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63,
 	0x65, 0x12, 0x3c, 0x0a, 0x09, 0x47, 0x65, 0x74, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x12, 0x16,
 	0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66,
 	0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x17, 0x2e, 0x64, 0x6f, 0x6f, 0x74, 0x61, 0x2e, 0x70,
@@ -3574,11 +3574,16 @@ var file_doota_portal_v1_portal_proto_rawDesc = []byte{
 	0x72, 0x74, 0x61, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x55, 0x70, 0x67, 0x72, 0x61, 0x64, 0x65, 0x53,
 	0x75, 0x62, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65,
 	0x73, 0x74, 0x1a, 0x1b, 0x2e, 0x64, 0x6f, 0x6f, 0x74, 0x61, 0x2e, 0x63, 0x6f, 0x72, 0x65, 0x2e,
-	0x76, 0x31, 0x2e, 0x53, 0x75, 0x62, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x42,
-	0x37, 0x5a, 0x35, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x73, 0x68,
-	0x61, 0x6e, 0x6b, 0x33, 0x31, 0x38, 0x2f, 0x64, 0x6f, 0x6f, 0x74, 0x61, 0x2f, 0x70, 0x62, 0x2f,
-	0x64, 0x6f, 0x6f, 0x74, 0x61, 0x2f, 0x70, 0x6f, 0x72, 0x74, 0x61, 0x6c, 0x2f, 0x76, 0x31, 0x3b,
-	0x70, 0x62, 0x70, 0x6f, 0x72, 0x74, 0x61, 0x6c, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x76, 0x31, 0x2e, 0x53, 0x75, 0x62, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x12,
+	0x49, 0x0a, 0x12, 0x43, 0x61, 0x6e, 0x63, 0x65, 0x6c, 0x53, 0x75, 0x62, 0x73, 0x63, 0x72, 0x69,
+	0x70, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x1b, 0x2e,
+	0x64, 0x6f, 0x6f, 0x74, 0x61, 0x2e, 0x63, 0x6f, 0x72, 0x65, 0x2e, 0x76, 0x31, 0x2e, 0x53, 0x75,
+	0x62, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0x37, 0x5a, 0x35, 0x67, 0x69,
+	0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x73, 0x68, 0x61, 0x6e, 0x6b, 0x33, 0x31,
+	0x38, 0x2f, 0x64, 0x6f, 0x6f, 0x74, 0x61, 0x2f, 0x70, 0x62, 0x2f, 0x64, 0x6f, 0x6f, 0x74, 0x61,
+	0x2f, 0x70, 0x6f, 0x72, 0x74, 0x61, 0x6c, 0x2f, 0x76, 0x31, 0x3b, 0x70, 0x62, 0x70, 0x6f, 0x72,
+	0x74, 0x61, 0x6c, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -3723,35 +3728,37 @@ var file_doota_portal_v1_portal_proto_depIdxs = []int32{
 	7,  // 59: doota.portal.v1.PortalService.InitiateSubscription:input_type -> doota.portal.v1.InitiateSubscriptionRequest
 	9,  // 60: doota.portal.v1.PortalService.VerifySubscription:input_type -> doota.portal.v1.VerifySubscriptionRequest
 	6,  // 61: doota.portal.v1.PortalService.UpgradeSubscription:input_type -> doota.portal.v1.UpgradeSubscriptionRequest
-	28, // 62: doota.portal.v1.PortalService.GetConfig:output_type -> doota.portal.v1.Config
-	33, // 63: doota.portal.v1.PortalService.Self:output_type -> doota.portal.v1.User
-	42, // 64: doota.portal.v1.PortalService.GetIntegration:output_type -> doota.portal.v1.Integration
-	62, // 65: doota.portal.v1.PortalService.RevokeIntegration:output_type -> google.protobuf.Empty
-	27, // 66: doota.portal.v1.PortalService.Batch:output_type -> doota.portal.v1.BatchResp
-	62, // 67: doota.portal.v1.PortalService.CreateCustomerCase:output_type -> google.protobuf.Empty
-	62, // 68: doota.portal.v1.PortalService.PasswordlessStart:output_type -> google.protobuf.Empty
-	37, // 69: doota.portal.v1.PortalService.PasswordlessVerify:output_type -> doota.portal.v1.JWT
-	35, // 70: doota.portal.v1.PortalService.OauthAuthorize:output_type -> doota.portal.v1.OauthAuthorizeResponse
-	51, // 71: doota.portal.v1.PortalService.OauthCallback:output_type -> doota.portal.v1.OauthCallbackResponse
-	37, // 72: doota.portal.v1.PortalService.SocialLoginCallback:output_type -> doota.portal.v1.JWT
-	44, // 73: doota.portal.v1.PortalService.GetIntegrations:output_type -> doota.portal.v1.Integrations
-	14, // 74: doota.portal.v1.PortalService.CreateKeywords:output_type -> doota.portal.v1.CreateKeywordsRes
-	58, // 75: doota.portal.v1.PortalService.AddSource:output_type -> doota.core.v1.Source
-	22, // 76: doota.portal.v1.PortalService.GetSources:output_type -> doota.portal.v1.GetSourceResponse
-	62, // 77: doota.portal.v1.PortalService.RemoveSource:output_type -> google.protobuf.Empty
-	19, // 78: doota.portal.v1.PortalService.GetRelevantLeads:output_type -> doota.portal.v1.GetLeadsResponse
-	62, // 79: doota.portal.v1.PortalService.UpdateLeadStatus:output_type -> google.protobuf.Empty
-	62, // 80: doota.portal.v1.PortalService.UpdateLeadInteractionStatus:output_type -> google.protobuf.Empty
-	60, // 81: doota.portal.v1.PortalService.CreateOrEditProject:output_type -> doota.core.v1.Project
-	60, // 82: doota.portal.v1.PortalService.SuggestKeywordsAndSources:output_type -> doota.core.v1.Project
-	38, // 83: doota.portal.v1.PortalService.UpdateAutomationSettings:output_type -> doota.portal.v1.Organization
-	12, // 84: doota.portal.v1.PortalService.ConnectReddit:output_type -> doota.portal.v1.ConnectRedditResponse
-	11, // 85: doota.portal.v1.PortalService.GetLeadInteractions:output_type -> doota.portal.v1.GetLeadInteractionsResponse
-	8,  // 86: doota.portal.v1.PortalService.InitiateSubscription:output_type -> doota.portal.v1.InitiateSubscriptionResponse
-	61, // 87: doota.portal.v1.PortalService.VerifySubscription:output_type -> doota.core.v1.Subscription
-	61, // 88: doota.portal.v1.PortalService.UpgradeSubscription:output_type -> doota.core.v1.Subscription
-	62, // [62:89] is the sub-list for method output_type
-	35, // [35:62] is the sub-list for method input_type
+	62, // 62: doota.portal.v1.PortalService.CancelSubscription:input_type -> google.protobuf.Empty
+	28, // 63: doota.portal.v1.PortalService.GetConfig:output_type -> doota.portal.v1.Config
+	33, // 64: doota.portal.v1.PortalService.Self:output_type -> doota.portal.v1.User
+	42, // 65: doota.portal.v1.PortalService.GetIntegration:output_type -> doota.portal.v1.Integration
+	62, // 66: doota.portal.v1.PortalService.RevokeIntegration:output_type -> google.protobuf.Empty
+	27, // 67: doota.portal.v1.PortalService.Batch:output_type -> doota.portal.v1.BatchResp
+	62, // 68: doota.portal.v1.PortalService.CreateCustomerCase:output_type -> google.protobuf.Empty
+	62, // 69: doota.portal.v1.PortalService.PasswordlessStart:output_type -> google.protobuf.Empty
+	37, // 70: doota.portal.v1.PortalService.PasswordlessVerify:output_type -> doota.portal.v1.JWT
+	35, // 71: doota.portal.v1.PortalService.OauthAuthorize:output_type -> doota.portal.v1.OauthAuthorizeResponse
+	51, // 72: doota.portal.v1.PortalService.OauthCallback:output_type -> doota.portal.v1.OauthCallbackResponse
+	37, // 73: doota.portal.v1.PortalService.SocialLoginCallback:output_type -> doota.portal.v1.JWT
+	44, // 74: doota.portal.v1.PortalService.GetIntegrations:output_type -> doota.portal.v1.Integrations
+	14, // 75: doota.portal.v1.PortalService.CreateKeywords:output_type -> doota.portal.v1.CreateKeywordsRes
+	58, // 76: doota.portal.v1.PortalService.AddSource:output_type -> doota.core.v1.Source
+	22, // 77: doota.portal.v1.PortalService.GetSources:output_type -> doota.portal.v1.GetSourceResponse
+	62, // 78: doota.portal.v1.PortalService.RemoveSource:output_type -> google.protobuf.Empty
+	19, // 79: doota.portal.v1.PortalService.GetRelevantLeads:output_type -> doota.portal.v1.GetLeadsResponse
+	62, // 80: doota.portal.v1.PortalService.UpdateLeadStatus:output_type -> google.protobuf.Empty
+	62, // 81: doota.portal.v1.PortalService.UpdateLeadInteractionStatus:output_type -> google.protobuf.Empty
+	60, // 82: doota.portal.v1.PortalService.CreateOrEditProject:output_type -> doota.core.v1.Project
+	60, // 83: doota.portal.v1.PortalService.SuggestKeywordsAndSources:output_type -> doota.core.v1.Project
+	38, // 84: doota.portal.v1.PortalService.UpdateAutomationSettings:output_type -> doota.portal.v1.Organization
+	12, // 85: doota.portal.v1.PortalService.ConnectReddit:output_type -> doota.portal.v1.ConnectRedditResponse
+	11, // 86: doota.portal.v1.PortalService.GetLeadInteractions:output_type -> doota.portal.v1.GetLeadInteractionsResponse
+	8,  // 87: doota.portal.v1.PortalService.InitiateSubscription:output_type -> doota.portal.v1.InitiateSubscriptionResponse
+	61, // 88: doota.portal.v1.PortalService.VerifySubscription:output_type -> doota.core.v1.Subscription
+	61, // 89: doota.portal.v1.PortalService.UpgradeSubscription:output_type -> doota.core.v1.Subscription
+	61, // 90: doota.portal.v1.PortalService.CancelSubscription:output_type -> doota.core.v1.Subscription
+	63, // [63:91] is the sub-list for method output_type
+	35, // [35:63] is the sub-list for method input_type
 	35, // [35:35] is the sub-list for extension type_name
 	35, // [35:35] is the sub-list for extension extendee
 	0,  // [0:35] is the sub-list for field type_name

@@ -42,6 +42,7 @@ service PortalService {
   rpc InitiateSubscription(InitiateSubscriptionRequest) returns (InitiateSubscriptionResponse);
   rpc VerifySubscription(VerifySubscriptionRequest) returns (doota.core.v1.Subscription);
   rpc UpgradeSubscription(UpgradeSubscriptionRequest) returns (doota.core.v1.Subscription);
+  rpc CancelSubscription(.google.protobuf.Empty) returns (doota.core.v1.Subscription);
 }
 
 message UpgradeSubscriptionRequest {

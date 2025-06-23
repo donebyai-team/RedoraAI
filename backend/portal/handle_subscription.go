@@ -7,7 +7,22 @@ import (
 	pbportal "github.com/shank318/doota/pb/doota/portal/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
+
+func (p *Portal) CancelSubscription(ctx context.Context, c *connect.Request[emptypb.Empty]) (*connect.Response[pbcore.Subscription], error) {
+	actor, err := p.gethAuthContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	subscription, err := p.subscriptionService.CancelPlan(ctx, actor.OrganizationID)
+	if err != nil {
+		return nil, status.New(codes.InvalidArgument, err.Error()).Err()
+	}
+
+	return connect.NewResponse(new(pbcore.Subscription).FromModel(subscription)), nil
+}
 
 func (p *Portal) UpgradeSubscription(ctx context.Context, c *connect.Request[pbportal.UpgradeSubscriptionRequest]) (*connect.Response[pbcore.Subscription], error) {
 	actor, err := p.gethAuthContext(ctx)

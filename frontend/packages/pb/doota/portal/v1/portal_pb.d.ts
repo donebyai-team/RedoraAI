@@ -1468,5 +1468,13 @@ export declare const PortalService: GenService<{
     input: typeof UpgradeSubscriptionRequestSchema;
     output: typeof SubscriptionSchema;
   },
+  /**
+   * @generated from rpc doota.portal.v1.PortalService.CancelSubscription
+   */
+  cancelSubscription: {
+    methodKind: "unary";
+    input: typeof EmptySchema;
+    output: typeof SubscriptionSchema;
+  },
 }>;
 
