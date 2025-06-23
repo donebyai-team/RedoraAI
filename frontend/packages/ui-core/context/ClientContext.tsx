@@ -33,6 +33,11 @@ function getNextPublicApiUrl(): string | undefined {
   return process.env.NEXT_PUBLIC_API_URL
 }
 
+export function getNextPublicAppUrl(): string | undefined {
+  // @ts-ignore Replaced by Vite, didn't adjusted tsconfig to reflect this, will fix later
+  return process.env.NEXT_PUBLIC_APP_URL
+}
+
 type Props = {
   children: ReactNode
   clientStore: ClientStore

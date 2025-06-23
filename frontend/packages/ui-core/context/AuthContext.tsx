@@ -7,7 +7,7 @@ import { FullStory, isInitialized as isFullStoryInitialized } from '@fullstory/b
 import { useClientsContext } from './ClientContext'
 import { TokenStore, OrganizationStore } from '@doota/store'
 import { Subscription, SubscriptionPlanID } from '@doota/pb/doota/core/v1/core_pb'
-import { initAmplitude, logDailyVisit } from '../amplitude'
+import { logDailyVisit } from '../amplitude'
 import { isPlatformAdmin } from '../helper/role'
 
 export enum SubscriptionPlan {
@@ -192,7 +192,6 @@ export const BaseAuthProvider: FC<Props> = ({
   const getPlanDetails = (): SubscriptionDetails => {
     const currentOrganization = getOrganization();
     const subscription = currentOrganization?.featureFlags?.subscription ?? { planId: null };
-
     const planId = subscription?.planId;
     if (!planId) {
       return {
@@ -200,28 +199,15 @@ export const BaseAuthProvider: FC<Props> = ({
         subscription: undefined
       };
     }
-
+    
     const planKey = Object.entries(SubscriptionPlanID).find(([, value]) => value === planId)?.[0];
-    const normalizedPlanKey = planKey?.replace("SUBSCRIPTION_PLAN_", "");
-
-    let planName: SubscriptionPlan;
-
-    switch (normalizedPlanKey) {
-      case "FREE":
-        planName = SubscriptionPlan.FREE;
-        break;
-      case "FOUNDER":
-        planName = SubscriptionPlan.FOUNDER;
-        break;
-      case "AGENCY":
-        planName = SubscriptionPlan.PRO;
-        break;
-      default:
-        planName = SubscriptionPlan.FREE;
-    }
-
-    return {
-      planName,
+    const normalizedPlanKey = planKey?.replace("SUBSCRIPTION_PLAN_", "");    
+    const upperPlanKey = normalizedPlanKey?.toUpperCase();
+    const planName = (upperPlanKey && upperPlanKey in SubscriptionPlan) 
+      ? upperPlanKey as SubscriptionPlan 
+      : SubscriptionPlan.FREE;
+        return {
+      planName : planName,
       subscription
     };
   };
