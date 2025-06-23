@@ -19,13 +19,7 @@ func (s *SlackNotifier) SendSubscriptionCreatedEmail(ctx context.Context, orgID 
 	      <li>📊 Access lead analytics and campaign insights</li>
 	    </ul>
 
-	    <p>🔗 <a href="https://app.redoraai.com/dashboard" style="color: #3366cc;">Go to Dashboard</a></p>
-
- 		<hr>
-	    <footer style="font-size: 12px; color: #888;">
-			<p><strong>RedoraAI</strong> — AI for Intelligent Lead Generation</p>
-			<p>Need help? <a href="mailto:adarsh@redoraai.com">adarsh@redoraai.com</a></p>
-		</footer>
+	    <p>🔗 <a href="https://app.redoraai.com/dashboard" style="color: #3366cc;">Go to Dashboard</a></p> 		
 	`)
 }
 
@@ -37,12 +31,6 @@ func (s *SlackNotifier) SendSubscriptionRenewedEmail(ctx context.Context, orgID 
 	    <p>No action is needed. If you have any questions or feedback, just reply to this email.</p>
 
 	    <p>🔗 <a href="https://app.redoraai.com/billing" style="color: #3366cc;">Manage Subscription</a></p>
-
- 		<hr>
-	    <footer style="font-size: 12px; color: #888;">
-			<p><strong>RedoraAI</strong> — AI for Intelligent Lead Generation</p>
-			<p>Need help? <a href="mailto:adarsh@redoraai.com">adarsh@redoraai.com</a></p>
-		</footer>
 	`)
 }
 
