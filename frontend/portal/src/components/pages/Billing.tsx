@@ -246,13 +246,9 @@ export default function Billing() {
                     isLoading: false
                 })
             }
-        } catch (error) {
-            toast({
-                title: 'Error',
-                description: 'Failed to process the subscription update. Please try again later.',
-                variant: 'destructive',
-                duration: 5000
-            })
+        } catch (err: any) {
+            const message = err?.response?.data?.message || err.message || "Something went wrong";
+            toast.error(message);
         }
     }
 
