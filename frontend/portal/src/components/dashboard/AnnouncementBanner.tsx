@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import Link from "next/link";
@@ -8,12 +8,14 @@ interface AnnouncementBannerProps {
     message: string;
     buttonText?: string;
     buttonHref?: string;
+    isLoading?: boolean;
 }
 
 export function AnnouncementBanner({
     message,
     buttonText,
     buttonHref,
+    isLoading = false,
 }: AnnouncementBannerProps) {
     const [isVisible, setIsVisible] = useState(true);
 
@@ -33,13 +35,14 @@ export function AnnouncementBanner({
                             <Button
                                 variant="secondary"
                                 size="sm"
-                                className="text-xs text-blue-700 bg-white hover:bg-gray-100 h-6 px-2 py-0"
+                                disabled={isLoading}
+                                className="text-xs text-blue-700 bg-white hover:bg-gray-100 h-6 px-2 py-0 flex items-center gap-1"
                             >
                                 {buttonText}
                             </Button>
-
                         </Link>
                     )}
+                    {isLoading && <Loader2 className="h-5 w-5 animate-spin " />}
                 </div>
 
                 {/* Close button */}

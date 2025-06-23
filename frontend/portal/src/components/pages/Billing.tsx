@@ -24,6 +24,14 @@ interface UserSubscription {
     isActive: boolean
 }
 
+interface AnnouncementBannerInterface {
+    isVisible: boolean
+    message: string
+    buttonText?: string
+    buttonHref?: string
+    isLoading?: boolean
+}
+
 interface PlanInfo {
     name: 'FREE' | 'Founder' | 'Pro'
     price: string
@@ -98,7 +106,11 @@ export default function Billing() {
     const subscriptionId = searchParams.get('subscription_id')
     const status = searchParams.get('status')
     const interval = useRef<NodeJS.Timeout | null>(null)
-    const [showAnnouncementBar, setShowAnnouncementBar] = useState<boolean>(false)
+    const [announcementBar, setAnnouncementBar] = useState<AnnouncementBannerInterface>({
+        isVisible: false,
+        message: '',
+        isLoading: false
+    })
 
     const subscription: UserSubscription = {
         plan: planDetails.planName,
@@ -149,25 +161,29 @@ export default function Billing() {
     }
 
     const handleApinterval = async () => {
+
         if (!subscriptionId || !status) {
             return
         }
-
+     
         try {
             const result = await portalClient.verifySubscription({})
             if (result.status == SubscriptionStatus.ACTIVE) {
                 if (interval.current) {
                     clearInterval(interval.current)
                 }
-                toast({
-                    title: 'Success',
-                    description: 'Your subscription has been updated successfully.',
-                    variant: 'default',
-                    duration: 5000
+                setAnnouncementBar({
+                    isVisible: true,
+                    message: 'Thanks, the subscription has been verified',
+                    isLoading: false
                 })
                 await refreshSession();
             } else if (result.status == SubscriptionStatus.CANCELLED || result.status == SubscriptionStatus.FAILED) {
-                setShowAnnouncementBar(true)
+                setAnnouncementBar({
+                    isVisible: true,
+                    message: '⚠️ We cannot verify your payment, Please try again. If money is deducted, wait for sometime to get your subscription activated.',
+                    isLoading: false
+                })
             }
         } catch (error) {
             toast({
@@ -181,6 +197,11 @@ export default function Billing() {
 
     useEffect(() => {
         if (subscriptionId && status) {
+               setAnnouncementBar({
+            isVisible: true,
+            message: 'Please wait, verifying the subscription…',
+            isLoading: true
+        })
             interval.current = setInterval(handleApinterval, 2 * 1000); // 10 seconds
         }
         return () => {
@@ -200,9 +221,10 @@ export default function Billing() {
     return (
         <div className='min-h-screen bg-gradient-to-b from-background to-secondary/20'>
             <DashboardHeader />
-            {showAnnouncementBar && (
+            {announcementBar.isVisible && (
                 <AnnouncementBanner
-                    message="⚠️ We cannot verify your payment, Please try again. if money is deducted, wait for sometime to get your subscription activated."
+                    message={announcementBar.message}
+                    isLoading={announcementBar.isLoading}
                 />
             )}
             <main className='container mx-auto px-4 py-6 md:px-6'>
@@ -290,21 +312,21 @@ export default function Billing() {
                                                 </div>
                                             ))}
                                         </div>
-                                            <Button
-                                                onClick={() => handleUpgradePlan(plan.name)}
-                                                className={`w-full ${subscription.plan === convertToUpperCase(plan.name)
-                                                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                                                    : plan.popular
-                                                        ? 'bg-gradient-to-r from-primary to-purple-500 hover:from-primary/90 hover:to-purple-500/90'
-                                                        : ''
-                                                    }`}
-                                                variant={plan.popular && subscription.plan !== convertToUpperCase(plan.name) ? 'default' : 'outline'}
-                                                disabled={subscription.plan === convertToUpperCase(plan.name)}
-                                            >
-                                                {subscription.plan === convertToUpperCase(plan.name)
-                                                    ? 'Current Plan'
-                                                    : `Upgrade to ${plan.name}`}
-                                            </Button>
+                                        <Button
+                                            onClick={() => handleUpgradePlan(plan.name)}
+                                            className={`w-full ${subscription.plan === convertToUpperCase(plan.name)
+                                                ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                                                : plan.popular
+                                                    ? 'bg-gradient-to-r from-primary to-purple-500 hover:from-primary/90 hover:to-purple-500/90'
+                                                    : ''
+                                                }`}
+                                            variant={plan.popular && subscription.plan !== convertToUpperCase(plan.name) ? 'default' : 'outline'}
+                                            disabled={subscription.plan === convertToUpperCase(plan.name)}
+                                        >
+                                            {subscription.plan === convertToUpperCase(plan.name)
+                                                ? 'Current Plan'
+                                                : `Upgrade to ${plan.name}`}
+                                        </Button>
                                     </CardContent>
                                 </Card>
                             )
