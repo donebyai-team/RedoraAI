@@ -36,6 +36,8 @@ type AlertNotifier interface {
 	SendTrialExpiredEmail(ctx context.Context, orgID string, trialDays int) error
 	SendInteractionError(ctx context.Context, interactionID string, err error)
 	SendAutoCommentDisabledEmail(ctx context.Context, orgID string, redditUsername string)
+	SendSubscriptionCreatedEmail(ctx context.Context, orgID string)
+	SendSubscriptionRenewedEmail(ctx context.Context, orgID string)
 }
 
 type SlackNotifier struct {
