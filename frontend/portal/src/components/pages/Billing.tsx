@@ -374,7 +374,7 @@ export default function Billing() {
                                             variant={
                                                 plan.popular && subscription.plan !== convertToUpperCase(plan.name) ? 'default' : 'outline'
                                             }
-                                            disabled={subscription.plan === convertToUpperCase(plan.name)}
+                                            disabled={subscription.plan === convertToUpperCase(plan.name) || convertToUpperCase(plan.name) == 'FREE'}
                                         >
                                             {subscription.plan === convertToUpperCase(plan.name) ? 'Current Plan' : `Upgrade to ${plan.name}`}
                                         </Button>
