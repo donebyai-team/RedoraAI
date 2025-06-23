@@ -314,11 +314,11 @@ export default function Billing() {
                     </Card>
 
                     {/* Upgrade your plan via chat card */}
-                    <Card>
+                    {/* <Card>
                         <CardContent className='!pt-6'>
                             <h5 className='text-lg'>{`Connect via chat to Upgrade.`}</h5>
                         </CardContent>
-                    </Card>
+                    </Card> */}
 
                     {/* Choose Your Plan */}
                     <div className='space-y-4'>
