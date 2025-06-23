@@ -56,6 +56,7 @@ type AgentHandler func(agent agents.AIAgent) http.HandlerFunc
 // this is a blocking call
 func (s *Server) Run(
 	portalHandler pbportalconnect.PortalServiceHandler,
+	subscriptionWebhookHandler AgentHandler,
 	callStatusUpdateHandler AgentHandler,
 	endConversationHandler AgentHandler,
 	adminBatchUpload AgentHandler,
@@ -97,6 +98,9 @@ func (s *Server) Run(
 
 	options = append(options,
 		dgrpcserver.WithConnectWebHTTPHandlers([]dgrpcserver.HTTPHandlerGetter{
+			func() (string, http.Handler) {
+				return "/webhook/subscription/dodo", subscriptionWebhookHandler(agents.AIAgentVANA)
+			},
 			func() (string, http.Handler) {
 				return "/webhook/vana/call_status/{id}", callStatusUpdateHandler(agents.AIAgentVANA)
 			},

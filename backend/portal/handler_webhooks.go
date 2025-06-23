@@ -76,3 +76,24 @@ func (p *Portal) EndConversationHandler(agent agents.AIAgent) http.HandlerFunc {
 		}
 	}
 }
+
+func (p *Portal) DodoPaymentsSubscriptionWebhook(agent agents.AIAgent) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		logger := logging.Logger(ctx, p.logger)
+
+		logger.Debug("received DodoPaymentsSubscriptionWebhook", zap.String("path", r.URL.Path))
+
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			dhttp.WriteError(r.Context(), w, derr.UnexpectedError(r.Context(), err))
+			return
+		}
+		defer r.Body.Close() // Close the body after reading
+
+		_, err = p.subscriptionService.UpdateSubscriptionByExternalID(r.Context(), body)
+		if err != nil {
+			dhttp.WriteError(r.Context(), w, derr.UnexpectedError(r.Context(), err))
+		}
+	}
+}

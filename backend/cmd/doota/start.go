@@ -402,7 +402,7 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 	interactionService := interactions.NewRedditInteractions(deps.DataStore, browserLessClient, redditOauthClient, logger)
 
 	dodoPaymentToken := sflags.MustGetString(cmd, "common-dodopayment-api-key")
-	dodoSubscriptionService := services.NewDodoSubscriptionService(deps.DataStore, dodoPaymentToken, logger, isDev)
+	dodoSubscriptionService := services.NewDodoSubscriptionService(deps.DataStore, alertNotifier, dodoPaymentToken, logger, isDev)
 
 	p := portal.New(
 		deps.AIClient,

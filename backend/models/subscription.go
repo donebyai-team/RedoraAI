@@ -128,7 +128,8 @@ func (s *Subscription) MarshalJSON() ([]byte, error) {
 }
 
 func (s *Subscription) IsExpired() bool {
-	return time.Now().After(s.ExpiresAt)
+	margin := 24 * time.Hour
+	return time.Now().After(s.ExpiresAt.Add(margin))
 }
 
 func (s *Subscription) GetStatus() SubscriptionStatus {
