@@ -177,6 +177,11 @@ export default function Billing() {
         } catch (err: any) {
             const message = err?.response?.data?.message || err.message || "Something went wrong";
             toast.error(message);
+            setAnnouncementBar({
+                isVisible: false,
+                message: 'Upgrading your plan…',
+                isLoading: false
+            });
         }
     }
 
@@ -221,6 +226,9 @@ export default function Billing() {
                 });
 
             } else if (result.status == SubscriptionStatus.CANCELLED || result.status == SubscriptionStatus.FAILED) {
+                if (interval.current) {
+                    clearInterval(interval.current)
+                }
                 setAnnouncementBar({
                     isVisible: true,
                     message:
@@ -229,8 +237,16 @@ export default function Billing() {
                 })
             }
         } catch (err: any) {
+            if (interval.current) {
+                clearInterval(interval.current)
+            }
             const message = err?.response?.data?.message || err.message || "Something went wrong";
             toast.error(message);
+            setAnnouncementBar({
+                isVisible: false,
+                message: '',
+                isLoading: false
+            })
         }
     }
 
