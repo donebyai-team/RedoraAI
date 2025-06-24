@@ -109,6 +109,22 @@ export default function Interaction() {
                 : interaction.status === filter
         );
 
+    const interactionsForActiveTab = interactions.filter((interaction) =>
+        activeTab === LeadInteractionType.LEAD_INTERACTION_DM
+            ? interaction.interactionType === LeadInteractionType.LEAD_INTERACTION_DM
+            : interaction.interactionType === LeadInteractionType.LEAD_INTERACTION_COMMENT
+    );
+
+    const statusCounts = {
+        [LeadInteractionStatus.SENT]: interactionsForActiveTab.filter(i => i.status === LeadInteractionStatus.SENT).length,
+        [LeadInteractionStatus.CREATED]: interactionsForActiveTab.filter(i => i.status === LeadInteractionStatus.CREATED).length,
+        [LeadInteractionStatus.PROCESSING]: interactionsForActiveTab.filter(i => i.status === LeadInteractionStatus.PROCESSING).length,
+        [LeadInteractionStatus.FAILED]: interactionsForActiveTab.filter(i => i.status === LeadInteractionStatus.FAILED).length,
+        [LeadInteractionStatus.REMOVED]: interactionsForActiveTab.filter(i => i.status === LeadInteractionStatus.REMOVED).length,
+        total: interactionsForActiveTab.length,
+    };
+
+
     const getStatusIcon = (status: LeadInteractionStatus) => {
         switch (status) {
             case LeadInteractionStatus.SENT:
@@ -239,51 +255,25 @@ export default function Interaction() {
                                         <SelectItem
                                             value={LeadInteractionStatus.UNSPECIFIED.toString()}
                                         >
-                                            All ({filteredInteractions.length})
+                                            All ({statusCounts.total})
                                         </SelectItem>
                                         <SelectItem value={LeadInteractionStatus.SENT.toString()}>
-                                            Sent (
-                                            {
-                                                filteredInteractions.filter(
-                                                    (i) => i.status === LeadInteractionStatus.SENT
-                                                ).length
-                                            }
-                                            )
+                                            Sent ({statusCounts[LeadInteractionStatus.SENT]})
                                         </SelectItem>
                                         <SelectItem
                                             value={LeadInteractionStatus.CREATED.toString()}
                                         >
-                                            Scheduled (
-                                            {
-                                                filteredInteractions.filter(
-                                                    (i) =>
-                                                        i.status === LeadInteractionStatus.CREATED ||
-                                                        i.status === LeadInteractionStatus.PROCESSING
-                                                ).length
-                                            }
-                                            )
+                                            Scheduled ({statusCounts[LeadInteractionStatus.CREATED] + statusCounts[LeadInteractionStatus.PROCESSING]})
                                         </SelectItem>
                                         <SelectItem
                                             value={LeadInteractionStatus.FAILED.toString()}
                                         >
-                                            Failed (
-                                            {
-                                                filteredInteractions.filter(
-                                                    (i) => i.status === LeadInteractionStatus.FAILED
-                                                ).length
-                                            }
-                                            )
+                                            Failed ({statusCounts[LeadInteractionStatus.FAILED]})
                                         </SelectItem>
                                         <SelectItem
                                             value={LeadInteractionStatus.REMOVED.toString()}
                                         >
-                                            Removed (
-                                            {
-                                                filteredInteractions.filter(
-                                                    (i) => i.status === LeadInteractionStatus.REMOVED
-                                                ).length
-                                            }
-                                            )
+                                            Failed ({statusCounts[LeadInteractionStatus.REMOVED]})
                                         </SelectItem>
                                     </SelectContent>
                                 </Select>
