@@ -31,7 +31,7 @@ export default function SubredditsStep() {
   const [isLoading, setIsLoading] = useState(false);
   const [pendingSources, setPendingSources] = useState<string[]>([]);
   const dispatch = useAppDispatch();
-  const MAX_SUBREDDITS = planDetails.subscription?.maxSources as number;
+  const MAX_SUBREDDITS = planDetails?.maxSources as number;
 
   const {
     handleSubmit,

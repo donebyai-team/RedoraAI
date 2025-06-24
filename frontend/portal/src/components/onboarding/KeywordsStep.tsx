@@ -21,7 +21,7 @@ export interface TrackKeywordFormValues {
 export default function KeywordsStep() {
 
   const { planDetails } = useAuth();
-  const MAX_KEYWORDS = planDetails.subscription?.maxKeywords as number;
+  const MAX_KEYWORDS = planDetails?.maxKeywords as number;
   const project = useAppSelector((state) => state.stepper.project);
   const [suggestionLoading, setSuggestionLoading] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState(false);

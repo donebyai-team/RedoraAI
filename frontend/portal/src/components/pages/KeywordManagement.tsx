@@ -55,8 +55,8 @@ export default function KeywordManagement() {
   const [isSubredditLoading, setIsSubredditLoading] = useState(false);
 
   // Plan limits
-  const keywordLimit = currentPlan.subscription?.maxKeywords ?? defaultKeywordLimit;
-  const subredditLimit = currentPlan.subscription?.maxSources ?? defaultSubredditLimit;
+  const keywordLimit = currentPlan?.maxKeywords ?? defaultKeywordLimit;
+  const subredditLimit = currentPlan?.maxSources ?? defaultSubredditLimit;
 
   const keywordForm = useForm<z.infer<typeof keywordSchema>>({
     resolver: zodResolver(keywordSchema),
