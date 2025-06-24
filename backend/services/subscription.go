@@ -337,6 +337,14 @@ func (d dodoSubscriptionService) Verify(ctx context.Context, orgID string) (*mod
 			d.logger.Error("error verifying subscription", zap.Error(err))
 			return nil, err
 		}
+
+		// activate a project if not active
+		err = d.db.UpdateProjectIsActive(ctx, orgID, true)
+		if err != nil {
+			d.logger.Error("error activating projects", zap.Error(err))
+			return nil, err
+		}
+
 		d.logger.Info("subscription activated successfully",
 			zap.String("orgID", orgID),
 			zap.Any("subscription", subscriptionPlan))
