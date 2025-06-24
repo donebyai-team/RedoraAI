@@ -36,7 +36,7 @@ import { Badge } from "@/components/ui/badge";
 import { Image } from "@doota/ui-core/atoms/Image";
 import { getFreePlanDateStatus } from "@/utils/format";
 import { Button } from "../ui/button";
-import { SubscriptionPlan } from "@doota/ui-core/context/AuthContext";
+import { SubscriptionPlanID } from "@doota/pb/doota/core/v1/core_pb";
 
 export function AppSidebar() {
 
@@ -44,7 +44,7 @@ export function AppSidebar() {
 
   const location = usePathname();
   const { getPlanDetails, currentOrganization } = useAuth();
-  const { planName } = getPlanDetails();
+  const { planId } = getPlanDetails();
   // const [open, setOpen] = useState(true);
 
   const isActive = (path: string) => {
@@ -122,6 +122,11 @@ export function AppSidebar() {
       external: true,
     }
   ];
+
+  function getPlanSuffix(planId: SubscriptionPlanID): string {
+    const key = SubscriptionPlanID[planId]; // e.g. "SUBSCRIPTION_PLAN_FREE"
+    return key.replace('SUBSCRIPTION_PLAN_', ''); // → "FREE"
+  }
 
   return (
     <Sidebar>
@@ -205,8 +210,8 @@ export function AppSidebar() {
               <p>Current Plan:</p>
               <Badge variant="default" className="px-2 py-1 flex items-center rounded-md">
                 <span className="text-xs">
-                  {planName}
-                  {planName === SubscriptionPlan.FREE &&
+                  {getPlanSuffix(planId)}
+                  {planId === SubscriptionPlanID.SUBSCRIPTION_PLAN_FREE &&
                     ` ${getFreePlanDateStatus(currentOrganization?.featureFlags?.subscription?.expiresAt)}`}
                 </span>
               </Badge>

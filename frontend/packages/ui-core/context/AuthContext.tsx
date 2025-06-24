@@ -6,22 +6,22 @@ import { errorToMessage } from '@doota/pb/utils/errors'
 import { FullStory, isInitialized as isFullStoryInitialized } from '@fullstory/browser'
 import { useClientsContext } from './ClientContext'
 import { TokenStore, OrganizationStore } from '@doota/store'
-import { Subscription, SubscriptionPlanID } from '@doota/pb/doota/core/v1/core_pb'
+import { Subscription, SubscriptionPlanID, SubscriptionStatus } from '@doota/pb/doota/core/v1/core_pb'
 import { logDailyVisit } from '../amplitude'
 import { isPlatformAdmin } from '../helper/role'
 
-export enum SubscriptionPlan {
-  FREE = "FREE",
-  FOUNDER = "Founder",
-  PRO = "Pro",
-}
 
-type SubscriptionDetails = {
-  planName: SubscriptionPlan;
-  subscription: Subscription | undefined;
+const DEFAULT_PLAN: Subscription = {
+  $typeName: "doota.core.v1.Subscription",
+  planId: SubscriptionPlanID.SUBSCRIPTION_PLAN_FREE,
+  status: SubscriptionStatus.ACTIVE,
+  maxKeywords: 0,
+  maxSources: 0,
+  comments: undefined,
+  dm: undefined,
+  createdAt: undefined,
+  expiresAt: undefined,
 };
-
-const DEFAULT_PLAN = { planName: SubscriptionPlan.FREE, subscription: undefined };
 
 export type AuthValuesType = {
   user: User | null
@@ -35,8 +35,8 @@ export type AuthValuesType = {
   setOrganization: (org: Organization) => Promise<void>
   setUser: React.Dispatch<React.SetStateAction<User | null>>
   getOrganization: () => Organization | null
-  getPlanDetails: () => SubscriptionDetails,
-  planDetails: SubscriptionDetails,
+  getPlanDetails: () => Subscription,
+  planDetails: Subscription,
   currentOrganization: Organization | null,
 }
 
@@ -189,27 +189,12 @@ export const BaseAuthProvider: FC<Props> = ({
     return user?.organizations?.[0] ?? null;
   }
 
-  const getPlanDetails = (): SubscriptionDetails => {
+  const getPlanDetails = (): Subscription => {
     const currentOrganization = getOrganization();
-    const subscription = currentOrganization?.featureFlags?.subscription ?? { planId: null };
-    const planId = subscription?.planId;
-    if (!planId) {
-      return {
-        planName: SubscriptionPlan.FREE,
-        subscription: undefined
-      };
+    if (currentOrganization?.featureFlags?.subscription) {
+      return currentOrganization?.featureFlags?.subscription
     }
-    
-    const planKey = Object.entries(SubscriptionPlanID).find(([, value]) => value === planId)?.[0];
-    const normalizedPlanKey = planKey?.replace("SUBSCRIPTION_PLAN_", "");    
-    const upperPlanKey = normalizedPlanKey?.toUpperCase();
-    const planName = (upperPlanKey && upperPlanKey in SubscriptionPlan) 
-      ? upperPlanKey as SubscriptionPlan 
-      : SubscriptionPlan.FREE;
-        return {
-      planName : planName,
-      subscription
-    };
+    return DEFAULT_PLAN;
   };
 
   const planDetails = getPlanDetails();

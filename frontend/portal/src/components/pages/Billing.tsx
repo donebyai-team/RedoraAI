@@ -4,12 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { CreditCard, Calendar, Star, Crown, Zap, Check } from 'lucide-react'
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader'
-// import { Button } from "@/components/ui/button";
-// import { toast } from "@/hooks/use-toast";
 import { useAuth } from '@doota/ui-core/hooks/useAuth'
 import { SubscriptionPlanID, SubscriptionStatus } from '@doota/pb/doota/core/v1/core_pb'
 import { Timestamp } from '@bufbuild/protobuf/wkt'
-import { SubscriptionPlan } from '@doota/ui-core/context/AuthContext'
 import { formatTimestampToDate, formatTimestampToReadableDate } from '@/utils/format'
 import { Button } from '../ui/button'
 import toast from 'react-hot-toast'
@@ -17,11 +14,10 @@ import { getNextPublicAppUrl, useClientsContext } from '@doota/ui-core/context/C
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { AnnouncementBanner } from '../dashboard/AnnouncementBanner'
-import { Organization } from '@doota/pb/doota/portal/v1/portal_pb'
 import { useOrganization } from "@doota/ui-core/hooks/useOrganization";
 
 interface UserSubscription {
-    plan: SubscriptionPlan
+    plan: SubscriptionPlanID
     expiryDate: Timestamp | undefined
     isActive: boolean
 }
@@ -35,7 +31,8 @@ interface AnnouncementBannerInterface {
 }
 
 interface PlanInfo {
-    name: 'FREE' | 'Founder' | 'Pro'
+    id: SubscriptionPlanID
+    name: string
     price: string
     interval: string
     icon: React.ReactNode
@@ -46,6 +43,7 @@ interface PlanInfo {
 
 const plans: PlanInfo[] = [
     {
+        id: SubscriptionPlanID.SUBSCRIPTION_PLAN_FREE,
         name: 'FREE',
         price: '$0',
         interval: '7-day trial',
@@ -63,6 +61,7 @@ const plans: PlanInfo[] = [
         ]
     },
     {
+        id: SubscriptionPlanID.SUBSCRIPTION_PLAN_FOUNDER,
         name: 'Founder',
         price: '$39',
         interval: 'per month',
@@ -81,7 +80,8 @@ const plans: PlanInfo[] = [
         popular: true
     },
     {
-        name: 'Pro',
+        id: SubscriptionPlanID.SUBSCRIPTION_PLAN_PRO,
+        name: "Pro",
         price: '$99',
         interval: 'per month',
         description: 'For sales & growth teams',
@@ -117,47 +117,29 @@ export default function Billing() {
     })
 
     const subscription: UserSubscription = {
-        plan: planDetails.planName,
-        expiryDate: planDetails.subscription?.expiresAt,
-        isActive: planDetails.subscription?.status === SubscriptionStatus.ACTIVE
+        plan: planDetails.planId,
+        expiryDate: planDetails?.expiresAt,
+        isActive: planDetails?.status === SubscriptionStatus.ACTIVE
     }
 
-    const handleUpgradePlan = async (name: string) => {
+    const handleUpgradePlan = async (planToUpgrade: SubscriptionPlanID) => {
         try {
-
-
-            if (subscription.plan === name) {
-                return
-            }
             setAnnouncementBar({
                 isVisible: true,
                 message: 'Upgrading your plan…',
                 isLoading: true
             });
 
-            let planToUpgrade: SubscriptionPlanID
-            switch (name) {
-                case 'Founder':
-                    planToUpgrade = SubscriptionPlanID.SUBSCRIPTION_PLAN_FOUNDER
-                    break
-                case 'Pro':
-                    planToUpgrade = SubscriptionPlanID.SUBSCRIPTION_PLAN_PRO
-                    break
-                default:
-                    toast.error("Invalid Plan selected")
-                    return
-            }
-
-            console.log("current plan", subscription.plan, "initiating subscription");
             const redirectUrl = getNextPublicAppUrl() + '/settings/billing'
-            if (subscription.plan === SubscriptionPlan.FREE) {
+            console.log("current plan", subscription.plan, "initiating subscription");
+            if (subscription.plan === SubscriptionPlanID.SUBSCRIPTION_PLAN_FREE) {
                 console.log("plan to upgrade", planToUpgrade, "initiating subscription");
                 const result = await portalClient.initiateSubscription({ plan: planToUpgrade, redirectUrl })
                 window.location.href = result.paymentLink
                 return
             }
 
-            if (subscription.plan === SubscriptionPlan.FOUNDER || subscription.plan === SubscriptionPlan.PRO) {
+            if (subscription.plan === SubscriptionPlanID.SUBSCRIPTION_PLAN_FOUNDER || SubscriptionPlanID.SUBSCRIPTION_PLAN_PRO) {
                 console.log("plan to upgrade", planToUpgrade, "upgrading subscription");
                 const result = await portalClient.upgradeSubscription({ plan: planToUpgrade })
                 setAnnouncementBar({
@@ -268,16 +250,15 @@ export default function Billing() {
         }
     }, [subscriptionId, status])
 
-    const convertToUpperCase = (plan: string): string => {
-        return plan.toUpperCase() as SubscriptionPlan
-    }
-
     return (
         <div className='min-h-screen bg-gradient-to-b from-background to-secondary/20'>
             <DashboardHeader />
             {announcementBar.isVisible && (
-                <AnnouncementBanner message={announcementBar.message} isLoading={announcementBar.isLoading} />
+                <div className="sticky top-0 z-50">
+                    <AnnouncementBanner message={announcementBar.message} isLoading={announcementBar.isLoading} />
+                </div>
             )}
+
             <main className='container mx-auto px-4 py-6 md:px-6'>
                 <div className='space-y-6'>
                     <div>
@@ -327,18 +308,18 @@ export default function Billing() {
                             {plans.map(plan => (
                                 <Card
                                     key={plan.name}
-                                    className={`relative border-primary/10 shadow-md ${plan.popular ? 'ring-2 ring-primary/20' : ''} ${subscription.plan === convertToUpperCase(plan.name)
+                                    className={`relative border-primary/10 shadow-md ${plan.popular ? 'ring-2 ring-primary/20' : ''} ${subscription.plan === plan.id
                                         ? 'bg-primary/5 border-primary/30 ring-2 ring-primary/40'
                                         : ''
                                         }`}
                                 >
-                                    {plan.popular && subscription.plan !== convertToUpperCase(plan.name) && (
+                                    {plan.popular && subscription.plan != plan.id && (
                                         <div className='absolute -top-3 left-1/2 transform -translate-x-1/2'>
                                             <Badge className='bg-primary text-primary-foreground px-3 py-1'>Most Popular</Badge>
                                         </div>
                                     )}
 
-                                    {subscription.plan === convertToUpperCase(plan.name) && (
+                                    {subscription.plan === plan.id && (
                                         <div className='absolute -top-3 left-1/2 transform -translate-x-1/2'>
                                             <Badge className='bg-green-500 text-white px-3 py-1'>Current Plan</Badge>
                                         </div>
@@ -364,19 +345,19 @@ export default function Billing() {
                                             ))}
                                         </div>
                                         <Button
-                                            onClick={() => handleUpgradePlan(plan.name)}
-                                            className={`w-full ${subscription.plan === convertToUpperCase(plan.name)
+                                            onClick={() => handleUpgradePlan(plan.id)}
+                                            className={`w-full ${subscription.plan === plan.id
                                                 ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                                                 : plan.popular
                                                     ? 'bg-gradient-to-r from-primary to-purple-500 hover:from-primary/90 hover:to-purple-500/90'
                                                     : ''
                                                 }`}
                                             variant={
-                                                plan.popular && subscription.plan !== convertToUpperCase(plan.name) ? 'default' : 'outline'
+                                                plan.popular && subscription.plan !== plan.id ? 'default' : 'outline'
                                             }
-                                            disabled={subscription.plan === convertToUpperCase(plan.name) || convertToUpperCase(plan.name) == 'FREE'}
+                                            disabled={subscription.plan === plan.id || plan.id == SubscriptionPlanID.SUBSCRIPTION_PLAN_FREE}
                                         >
-                                            {subscription.plan === convertToUpperCase(plan.name) ? 'Current Plan' : `Upgrade to ${plan.name}`}
+                                            {subscription.plan === plan.id ? 'Current Plan' : `Upgrade to ${plan.name}`}
                                         </Button>
                                     </CardContent>
                                 </Card>
