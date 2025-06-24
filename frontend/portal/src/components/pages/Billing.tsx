@@ -234,6 +234,11 @@ export default function Billing() {
         }
     }
 
+    function getPlanSuffix(planId: SubscriptionPlanID): string {
+        const key = SubscriptionPlanID[planId]; // e.g. "SUBSCRIPTION_PLAN_FREE"
+        return key.replace('SUBSCRIPTION_PLAN_', ''); // → "FREE"
+    }
+
     useEffect(() => {
         if (subscriptionId && status) {
             setAnnouncementBar({
@@ -280,7 +285,9 @@ export default function Billing() {
                                     {subscription.isActive ? 'Active' : 'Inactive'}
                                 </Badge>
                             </div>
-                            <CardDescription className='mt-1'>You are currently on the {subscription.plan} plan</CardDescription>
+                            <CardDescription className='mt-1'>
+                                You are currently on the {getPlanSuffix(subscription.plan)} plan
+                            </CardDescription>
                         </CardHeader>
                         <CardContent className='pt-0'>
                             <div className='flex items-center gap-2 text-sm text-muted-foreground'>
