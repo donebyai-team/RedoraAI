@@ -28,6 +28,11 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 		zap.String("interaction_id", interaction.ID),
 		zap.String("from", interaction.From))
 
+	project, err := r.db.GetProject(ctx, interaction.ProjectID)
+	if err != nil {
+		return err
+	}
+
 	redditLead, err := r.db.GetLeadByID(ctx, interaction.ProjectID, interaction.LeadID)
 	if err != nil {
 		return err
@@ -50,6 +55,18 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 			r.logger.Warn("failed to update lead status for automated DM", zap.Error(err), zap.String("lead_id", redditLead.ID))
 		}
 	}()
+
+	if !interaction.Organization.FeatureFlags.IsSubscriptionActive() {
+		interaction.Status = models.LeadInteractionStatusFAILED
+		interaction.Reason = "subscription has expired or not active"
+		return nil
+	}
+
+	if !project.IsActive {
+		interaction.Status = models.LeadInteractionStatusFAILED
+		interaction.Reason = "project is not active"
+		return nil
+	}
 
 	if redditLead.Status == models.LeadStatusNOTRELEVANT {
 		interaction.Status = models.LeadInteractionStatusFAILED
