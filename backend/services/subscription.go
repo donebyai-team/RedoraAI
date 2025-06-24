@@ -198,6 +198,7 @@ func (d dodoSubscriptionService) CreatePlan(ctx context.Context, plan models.Sub
 		return nil, fmt.Errorf("invalid plan type: %s", plan)
 	}
 
+	d.logger.Info("creating subscription", zap.String("orgID", orgID), zap.String("productID", productId))
 	externalSubResponse, err := d.client.Subscriptions.New(ctx, dodopayments.SubscriptionNewParams{
 		Billing: dodopayments.F(dodopayments.BillingAddressParam{
 			City:    dodopayments.F("Bangalore"),
@@ -240,6 +241,7 @@ func (d dodoSubscriptionService) CreatePlan(ctx context.Context, plan models.Sub
 	subscriptionPlan.OrganizationID = orgID
 	subscriptionPlan.ExternalID = &externalSubResponse.SubscriptionID
 	subscriptionPlan.PaymentLink = externalSubResponse.PaymentLink
+	d.logger.Info("subscription created successfully", zap.String("orgID", orgID), zap.Any("subscription", subscriptionPlan))
 
 	return subscriptionPlan, nil
 }
@@ -263,12 +265,12 @@ func (d dodoSubscriptionService) UpdateSubscriptionByExternalID(ctx context.Cont
 	}
 
 	if externalSubExternal == nil {
-		return nil, fmt.Errorf("error verifying subscription: invalid subscription")
+		return nil, fmt.Errorf("error verifying subscription: invalid subscription received")
 	}
 
 	organizationID := externalSubExternal.Metadata["organization_id"]
 	if organizationID == "" {
-		return nil, fmt.Errorf("error verifying subscription: invalid subscription")
+		return nil, fmt.Errorf("error verifying subscription: no organization_id")
 	}
 
 	return d.Verify(ctx, organizationID)
@@ -280,6 +282,8 @@ func (d dodoSubscriptionService) Verify(ctx context.Context, orgID string) (*mod
 	if err != nil {
 		return nil, err
 	}
+
+	d.logger.Info("verifying subscription", zap.String("orgID", orgID))
 
 	existingSub := orgnization.FeatureFlags.GetSubscription()
 	if existingSub.ExternalID == nil || *existingSub.ExternalID == "" {
@@ -363,12 +367,16 @@ func (d dodoSubscriptionService) Verify(ctx context.Context, orgID string) (*mod
 	} else if externalSubExternal.Status == dodopayments.SubscriptionStatusExpired {
 		existingSub.Status = models.SubscriptionStatusEXPIRED
 	} else {
-
 		if externalSubExternal.Status == dodopayments.SubscriptionStatusCancelled {
 			existingSub.Status = models.SubscriptionStatusCANCELLED
 		} else {
 			existingSub.Status = models.SubscriptionStatusFAILED
+			// i.e we are already on a plan, change plan usecase
+			if existingSub.PlanID != models.SubscriptionPlanTypeFREE {
+				return existingSub, nil
+			}
 		}
+
 		// move back to free plan to retry subscription
 		existingSub.PlanID = models.SubscriptionPlanTypeFREE
 		existingSub.ExternalID = nil
@@ -379,8 +387,9 @@ func (d dodoSubscriptionService) Verify(ctx context.Context, orgID string) (*mod
 			d.logger.Error("error verifying subscription", zap.Error(err))
 			return nil, err
 		}
-		d.logger.Info("subscription cancelled successfully",
+		d.logger.Info("subscription updated successfully",
 			zap.String("orgID", orgID),
+			zap.String("status", existingSub.Status.String()),
 			zap.Any("existing subscription", existingSub))
 	}
 
