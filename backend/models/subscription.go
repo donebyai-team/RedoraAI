@@ -10,12 +10,16 @@ type UsageLimits struct {
 	PerDay int64 `json:"per_day"`
 }
 
+// ENUM(KEYWORD, SOURCE)
+type AddOnType string
+
 type SubscriptionPlanMetadata struct {
-	Comments      UsageLimits `json:"comments"`
-	DMs           UsageLimits `json:"dms"`
-	RelevantPosts UsageLimits `json:"relevant_posts"`
-	MaxKeywords   int         `json:"max_keywords"`
-	MaxSources    int         `json:"max_sources"`
+	Comments      UsageLimits       `json:"comments"`
+	DMs           UsageLimits       `json:"dms"`
+	RelevantPosts UsageLimits       `json:"relevant_posts"`
+	MaxKeywords   int               `json:"max_keywords"`
+	MaxSources    int               `json:"max_sources"`
+	AddOns        map[AddOnType]int `json:"add_ons"`
 }
 
 //go:generate go-enum -f=$GOFILE

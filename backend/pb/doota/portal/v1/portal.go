@@ -58,6 +58,8 @@ func (o *Organization) FromModel(model *models.Organization) *Organization {
 	o.FeatureFlags = &OrganizationFeatureFlags{}
 	if model.FeatureFlags.Subscription != nil {
 		o.FeatureFlags.Subscription = new(pbcore.Subscription).FromModel(model.FeatureFlags.Subscription)
+		o.FeatureFlags.Subscription.MaxSources = int32(model.FeatureFlags.GetMaxSourcesAllowed())
+		o.FeatureFlags.Subscription.MaxKeywords = int32(model.FeatureFlags.GetMaxKeywordAllowed())
 	}
 	o.FeatureFlags.Comment = &AutomationSetting{
 		Enabled:        model.FeatureFlags.EnableAutoComment,

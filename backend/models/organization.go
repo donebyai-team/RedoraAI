@@ -95,11 +95,11 @@ func (f OrganizationFeatureFlags) GetSubscriptionPlanMetadata() SubscriptionPlan
 }
 
 func (f OrganizationFeatureFlags) GetMaxKeywordAllowed() int {
-	return f.GetSubscriptionPlanMetadata().MaxKeywords
+	return f.GetSubscriptionPlanMetadata().MaxKeywords + f.GetSubscriptionPlanMetadata().AddOns[AddOnTypeKEYWORD]
 }
 
 func (f OrganizationFeatureFlags) GetMaxSourcesAllowed() int {
-	return f.GetSubscriptionPlanMetadata().MaxSources
+	return f.GetSubscriptionPlanMetadata().MaxSources + f.GetSubscriptionPlanMetadata().AddOns[AddOnTypeSOURCE]
 }
 
 func (f OrganizationFeatureFlags) GetSubscriptionPlan() SubscriptionPlanType {

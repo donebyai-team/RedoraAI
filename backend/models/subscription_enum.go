@@ -12,6 +12,40 @@ import (
 )
 
 const (
+	// AddOnTypeKEYWORD is a AddOnType of type KEYWORD.
+	AddOnTypeKEYWORD AddOnType = "KEYWORD"
+	// AddOnTypeSOURCE is a AddOnType of type SOURCE.
+	AddOnTypeSOURCE AddOnType = "SOURCE"
+)
+
+var ErrInvalidAddOnType = errors.New("not a valid AddOnType")
+
+// String implements the Stringer interface.
+func (x AddOnType) String() string {
+	return string(x)
+}
+
+// IsValid provides a quick way to determine if the typed value is
+// part of the allowed enumerated values
+func (x AddOnType) IsValid() bool {
+	_, err := ParseAddOnType(string(x))
+	return err == nil
+}
+
+var _AddOnTypeValue = map[string]AddOnType{
+	"KEYWORD": AddOnTypeKEYWORD,
+	"SOURCE":  AddOnTypeSOURCE,
+}
+
+// ParseAddOnType attempts to convert a string to a AddOnType.
+func ParseAddOnType(name string) (AddOnType, error) {
+	if x, ok := _AddOnTypeValue[name]; ok {
+		return x, nil
+	}
+	return AddOnType(""), fmt.Errorf("%s is %w", name, ErrInvalidAddOnType)
+}
+
+const (
 	// SubscriptionPlanTypeFREE is a SubscriptionPlanType of type FREE.
 	SubscriptionPlanTypeFREE SubscriptionPlanType = "FREE"
 	// SubscriptionPlanTypeFOUNDER is a SubscriptionPlanType of type FOUNDER.

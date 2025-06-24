@@ -59,9 +59,9 @@ var testProductIDToPlan = map[string]models.SubscriptionPlanType{
 	testProPlanID:     models.SubscriptionPlanTypePRO,
 }
 
-var addOnIDMap = map[string]string{
-	"adn_yIJQyUyFuX5tn2GYqqns5": "source",
-	"adn_GQZ66G74wNJUH9yEuNxMG": "keyword",
+var addOnIDMap = map[string]models.AddOnType{
+	"adn_yIJQyUyFuX5tn2GYqqns5": models.AddOnTypeSOURCE,
+	"adn_GQZ66G74wNJUH9yEuNxMG": models.AddOnTypeKEYWORD,
 }
 
 func NewDodoSubscriptionService(db datastore.Repository, notifier alerts.AlertNotifier, token string, logger *zap.Logger, isTest bool) *dodoSubscriptionService {
@@ -276,122 +276,119 @@ func (d dodoSubscriptionService) UpdateSubscriptionByExternalID(ctx context.Cont
 	return d.Verify(ctx, organizationID)
 }
 
-// it should be called only when the plan is changed
 func (d dodoSubscriptionService) Verify(ctx context.Context, orgID string) (*models.Subscription, error) {
-	orgnization, err := d.db.GetOrganizationById(ctx, orgID)
+	org, err := d.db.GetOrganizationById(ctx, orgID)
 	if err != nil {
 		return nil, err
 	}
 
 	d.logger.Info("verifying subscription", zap.String("orgID", orgID))
 
-	existingSub := orgnization.FeatureFlags.GetSubscription()
-	if existingSub.ExternalID == nil || *existingSub.ExternalID == "" {
-		return existingSub, nil
+	sub := org.FeatureFlags.GetSubscription()
+	if sub.ExternalID == nil || *sub.ExternalID == "" {
+		return sub, nil
 	}
 
-	externalSubExternal, err := d.client.Subscriptions.Get(ctx, *existingSub.ExternalID)
-	if err != nil {
-		d.logger.Error("error verifying subscription", zap.Error(err))
+	externalSub, err := d.client.Subscriptions.Get(ctx, *sub.ExternalID)
+	if err != nil || externalSub == nil {
+		d.logger.Error("failed to fetch external subscription", zap.Error(err))
 		return nil, fmt.Errorf("error verifying subscription")
 	}
 
-	if externalSubExternal == nil {
-		return nil, fmt.Errorf("error verifying subscription: invalid subscription")
-	}
-
-	plan, ok := d.productIDToPlan[externalSubExternal.ProductID]
+	plan, ok := d.productIDToPlan[externalSub.ProductID]
 	if !ok {
-		return nil, fmt.Errorf("invalid product id to plan mapping: %s", plan)
+		return nil, fmt.Errorf("invalid product id to plan mapping: %s", externalSub.ProductID)
 	}
 
-	//// if the plan is not changed, do nothing
-	//if existingSub.PlanID == plan {
-	//	return existingSub, nil
-	//}
+	d.logger.Info("subscription status received", zap.String("orgID", orgID), zap.Any("external_subscription", externalSub))
 
-	d.logger.Info("subscription status received",
-		zap.String("orgID", orgID),
-		zap.String("external_id", externalSubExternal.SubscriptionID),
-		zap.Any("subscription_status", externalSubExternal.Status))
-
-	if externalSubExternal.Status == dodopayments.SubscriptionStatusActive {
-		subscriptionPlan := psql.CreateSubscriptionObject(plan)
-		subscriptionPlan.OrganizationID = orgID
-		subscriptionPlan.ExternalID = &externalSubExternal.SubscriptionID
-
-		for _, addOnID := range externalSubExternal.Addons {
-			addOnType, ok := addOnIDMap[addOnID.AddonID]
-			if !ok {
-				return nil, fmt.Errorf("invalid addOn id: %s", plan)
-			}
-			if addOnType == "source" {
-				subscriptionPlan.Metadata.MaxSources = subscriptionPlan.Metadata.MaxSources * int(addOnID.Quantity)
-			} else if addOnType == "keyword" {
-				subscriptionPlan.Metadata.MaxKeywords = subscriptionPlan.Metadata.MaxKeywords * int(addOnID.Quantity)
-			}
+	switch externalSub.Status {
+	case dodopayments.SubscriptionStatusActive:
+		return d.handleActiveSubscription(ctx, orgID, sub, externalSub, plan)
+	case dodopayments.SubscriptionStatusPending:
+		sub.Status = models.SubscriptionStatusCREATED
+	case dodopayments.SubscriptionStatusExpired:
+		sub.Status = models.SubscriptionStatusEXPIRED
+	case dodopayments.SubscriptionStatusCancelled:
+		return d.downgradeToFreePlan(ctx, orgID, sub, models.SubscriptionStatusCANCELLED)
+	default:
+		if sub.PlanID != models.SubscriptionPlanTypeFREE {
+			return sub, nil
 		}
-
-		subscriptionPlan.ExpiresAt = externalSubExternal.NextBillingDate
-		subscriptionPlan.Status = models.SubscriptionStatusACTIVE
-		err = d.db.UpdateOrganizationFeatureFlags(ctx, orgID, map[string]any{
-			psql.FEATURE_FLAG_SUBSCRIPTION_PATH: subscriptionPlan,
-		})
-		if err != nil {
-			d.logger.Error("error verifying subscription", zap.Error(err))
-			return nil, err
-		}
-
-		// activate a project if not active
-		err = d.db.UpdateProjectIsActive(ctx, orgID, true)
-		if err != nil {
-			d.logger.Error("error activating projects", zap.Error(err))
-			return nil, err
-		}
-
-		d.logger.Info("subscription activated successfully",
-			zap.String("orgID", orgID),
-			zap.Any("subscription", subscriptionPlan))
-
-		if existingSub.PlanID == models.SubscriptionPlanTypeFREE {
-			go d.notifier.SendSubscriptionCreatedEmail(context.Background(), orgID)
-		} else if !existingSub.ExpiresAt.Equal(subscriptionPlan.ExpiresAt) {
-			go d.notifier.SendSubscriptionRenewedEmail(context.Background(), orgID)
-		}
-
-		return subscriptionPlan, nil
+		return d.downgradeToFreePlan(ctx, orgID, sub, models.SubscriptionStatusFAILED)
 	}
 
-	if externalSubExternal.Status == dodopayments.SubscriptionStatusPending {
-		existingSub.Status = models.SubscriptionStatusCREATED
-	} else if externalSubExternal.Status == dodopayments.SubscriptionStatusExpired {
-		existingSub.Status = models.SubscriptionStatusEXPIRED
-	} else {
-		if externalSubExternal.Status == dodopayments.SubscriptionStatusCancelled {
-			existingSub.Status = models.SubscriptionStatusCANCELLED
-		} else {
-			existingSub.Status = models.SubscriptionStatusFAILED
-			// i.e we are already on a plan, change plan usecase
-			if existingSub.PlanID != models.SubscriptionPlanTypeFREE {
-				return existingSub, nil
-			}
-		}
+	d.logger.Info("subscription updated", zap.String("orgID", orgID), zap.String("status", sub.Status.String()))
+	return sub, nil
+}
 
-		// move back to free plan to retry subscription
-		existingSub.PlanID = models.SubscriptionPlanTypeFREE
-		existingSub.ExternalID = nil
-		err = d.db.UpdateOrganizationFeatureFlags(ctx, orgID, map[string]any{
-			psql.FEATURE_FLAG_SUBSCRIPTION_PATH: existingSub,
-		})
-		if err != nil {
-			d.logger.Error("error verifying subscription", zap.Error(err))
-			return nil, err
+func (d dodoSubscriptionService) handleActiveSubscription(
+	ctx context.Context,
+	orgID string,
+	oldSub *models.Subscription,
+	externalSub *dodopayments.Subscription,
+	plan models.SubscriptionPlanType,
+) (*models.Subscription, error) {
+	newSub := psql.CreateSubscriptionObject(plan)
+	newSub.OrganizationID = orgID
+	newSub.ExternalID = &externalSub.SubscriptionID
+	newSub.ExpiresAt = externalSub.NextBillingDate
+	newSub.Status = models.SubscriptionStatusACTIVE
+
+	for _, addOn := range externalSub.Addons {
+		switch addOnType := addOnIDMap[addOn.AddonID]; addOnType {
+		case models.AddOnTypeSOURCE:
+			newSub.Metadata.AddOns[models.AddOnTypeSOURCE] = int(addOn.Quantity)
+		case models.AddOnTypeKEYWORD:
+			newSub.Metadata.AddOns[models.AddOnTypeKEYWORD] = int(addOn.Quantity)
+		default:
+			return nil, fmt.Errorf("invalid addOn id: %s", addOn.AddonID)
 		}
-		d.logger.Info("subscription updated successfully",
-			zap.String("orgID", orgID),
-			zap.String("status", existingSub.Status.String()),
-			zap.Any("existing subscription", existingSub))
 	}
 
-	return existingSub, nil
+	if err := d.db.UpdateOrganizationFeatureFlags(ctx, orgID, map[string]any{
+		psql.FEATURE_FLAG_SUBSCRIPTION_PATH: newSub,
+	}); err != nil {
+		d.logger.Error("error updating feature flags", zap.Error(err))
+		return nil, err
+	}
+
+	if err := d.db.UpdateProjectIsActive(ctx, orgID, true); err != nil {
+		d.logger.Error("error activating project", zap.Error(err))
+		return nil, err
+	}
+
+	d.logger.Info("subscription activated", zap.String("orgID", orgID), zap.Any("subscription", newSub))
+
+	// Send email notifications
+	if oldSub.PlanID == models.SubscriptionPlanTypeFREE {
+		go d.notifier.SendSubscriptionCreatedEmail(context.Background(), orgID)
+	} else if !oldSub.ExpiresAt.Equal(newSub.ExpiresAt) {
+		go d.notifier.SendSubscriptionRenewedEmail(context.Background(), orgID)
+	}
+
+	return newSub, nil
+}
+
+func (d dodoSubscriptionService) downgradeToFreePlan(
+	ctx context.Context,
+	orgID string,
+	sub *models.Subscription,
+	status models.SubscriptionStatus,
+) (*models.Subscription, error) {
+	sub.PlanID = models.SubscriptionPlanTypeFREE
+	sub.ExternalID = nil
+
+	if err := d.db.UpdateOrganizationFeatureFlags(ctx, orgID, map[string]any{
+		psql.FEATURE_FLAG_SUBSCRIPTION_PATH: sub,
+	}); err != nil {
+		d.logger.Error("error downgrading to free plan", zap.Error(err))
+		return nil, err
+	}
+
+	// make sure we do it after updating feature flags
+	sub.Status = status
+
+	d.logger.Info("downgraded to free plan", zap.String("orgID", orgID), zap.String("status", status.String()))
+	return sub, nil
 }

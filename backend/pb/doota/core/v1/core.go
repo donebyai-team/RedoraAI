@@ -35,8 +35,6 @@ func (u *Subscription) FromModel(model *models.Subscription) *Subscription {
 	u.PlanId.FromModel(model.PlanID)
 	u.CreatedAt = timestamppb.New(model.CreatedAt)
 	u.ExpiresAt = timestamppb.New(model.ExpiresAt)
-	u.MaxSources = int32(model.Metadata.MaxSources)
-	u.MaxKeywords = int32(model.Metadata.MaxKeywords)
 	u.Comments = new(UsageLimit).FromModel(&model.Metadata.Comments)
 	u.Dm = new(UsageLimit).FromModel(&model.Metadata.DMs)
 	return u
