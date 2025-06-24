@@ -206,13 +206,19 @@ export default function Interaction() {
                             <div className="flex space-x-2 mt-6 mb-4">
                                 <Button
                                     variant={activeTab === LeadInteractionType.LEAD_INTERACTION_COMMENT ? "default" : "outline"}
-                                    onClick={() => setActiveTab(LeadInteractionType.LEAD_INTERACTION_COMMENT)}
+                                    onClick={() => {
+                                        setActiveTab(LeadInteractionType.LEAD_INTERACTION_COMMENT);
+                                        setFilter(LeadInteractionStatus.UNSPECIFIED);
+                                    }}
                                 >
                                     Comments
                                 </Button>
                                 <Button
                                     variant={activeTab === LeadInteractionType.LEAD_INTERACTION_DM ? "default" : "outline"}
-                                    onClick={() => setActiveTab(LeadInteractionType.LEAD_INTERACTION_DM)}
+                                    onClick={() => {
+                                        setActiveTab(LeadInteractionType.LEAD_INTERACTION_DM);
+                                        setFilter(LeadInteractionStatus.UNSPECIFIED);
+                                    }}
                                 >
                                     DMs
                                 </Button>
