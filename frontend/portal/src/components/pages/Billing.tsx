@@ -133,7 +133,7 @@ export default function Billing() {
             });
 
             const redirectUrl = getNextPublicAppUrl() + '/settings/billing'
-            console.log("current plan", subscription.plan, "plan to upgrade", planToUpgrade);
+            console.log("current plan", subscription.plan, "plan to upgrade", planToUpgrade, "sub_id", subscription.id);
             if (!subscription.id) {
                 console.log("plan to upgrade", planToUpgrade, "initiating subscription");
                 const result = await portalClient.initiateSubscription({ plan: planToUpgrade, redirectUrl })
@@ -193,7 +193,7 @@ export default function Billing() {
         }
 
         try {
-            const result = await portalClient.verifySubscription({})
+            const result = await portalClient.verifySubscription({ externalId: subscriptionId })
             if (result.status == SubscriptionStatus.ACTIVE) {
                 if (interval.current) {
                     clearInterval(interval.current)

@@ -69,6 +69,10 @@ export declare const InitiateSubscriptionResponseSchema: GenMessage<InitiateSubs
  * @generated from message doota.portal.v1.VerifySubscriptionRequest
  */
 export declare type VerifySubscriptionRequest = Message<"doota.portal.v1.VerifySubscriptionRequest"> & {
+  /**
+   * @generated from field: string external_id = 1;
+   */
+  externalId: string;
 };
 
 /**

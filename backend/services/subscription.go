@@ -16,7 +16,7 @@ import (
 
 type SubscriptionService interface {
 	CreatePlan(ctx context.Context, plan models.SubscriptionPlanType, orgID, redirectURL string) (*models.Subscription, error)
-	Verify(ctx context.Context, orgID string) (*models.Subscription, error)
+	Verify(ctx context.Context, orgID, externalID string) (*models.Subscription, error)
 	UpgradePlan(ctx context.Context, plan models.SubscriptionPlanType, orgID string) (*models.Subscription, error)
 	CancelPlan(ctx context.Context, orgID string) (*models.Subscription, error)
 	UpdateSubscriptionByExternalID(ctx context.Context, data []byte) (*models.Subscription, error)
@@ -110,7 +110,7 @@ func (d dodoSubscriptionService) CancelPlan(ctx context.Context, orgID string) (
 		return nil, fmt.Errorf("failed to cancel subscription: %w", err)
 	}
 
-	return d.Verify(ctx, orgID)
+	return d.Verify(ctx, orgID, *existingSub.ExternalID)
 }
 
 func (d dodoSubscriptionService) UpgradePlan(ctx context.Context, plan models.SubscriptionPlanType, orgID string) (*models.Subscription, error) {
@@ -153,7 +153,7 @@ func (d dodoSubscriptionService) UpgradePlan(ctx context.Context, plan models.Su
 		return nil, fmt.Errorf("failed to upgrade subscription: %w", err)
 	}
 
-	return d.Verify(ctx, orgID)
+	return d.Verify(ctx, orgID, *existingSub.ExternalID)
 }
 
 func (d dodoSubscriptionService) CreatePlan(ctx context.Context, plan models.SubscriptionPlanType, orgID, returnURL string) (*models.Subscription, error) {
@@ -273,10 +273,10 @@ func (d dodoSubscriptionService) UpdateSubscriptionByExternalID(ctx context.Cont
 		return nil, fmt.Errorf("error verifying subscription: no organization_id")
 	}
 
-	return d.Verify(ctx, organizationID)
+	return d.Verify(ctx, organizationID, subscriptionId)
 }
 
-func (d dodoSubscriptionService) Verify(ctx context.Context, orgID string) (*models.Subscription, error) {
+func (d dodoSubscriptionService) Verify(ctx context.Context, orgID, externalID string) (*models.Subscription, error) {
 	org, err := d.db.GetOrganizationById(ctx, orgID)
 	if err != nil {
 		return nil, err
@@ -284,15 +284,15 @@ func (d dodoSubscriptionService) Verify(ctx context.Context, orgID string) (*mod
 
 	d.logger.Info("verifying subscription", zap.String("orgID", orgID))
 
-	sub := org.FeatureFlags.GetSubscription()
-	if sub.ExternalID == nil || *sub.ExternalID == "" {
-		return sub, nil
-	}
-
-	externalSub, err := d.client.Subscriptions.Get(ctx, *sub.ExternalID)
+	externalSub, err := d.client.Subscriptions.Get(ctx, externalID)
 	if err != nil || externalSub == nil {
 		d.logger.Error("failed to fetch external subscription", zap.Error(err))
 		return nil, fmt.Errorf("error verifying subscription")
+	}
+
+	organizationIdFromSub := externalSub.Metadata["organization_id"]
+	if organizationIdFromSub != orgID {
+		return nil, fmt.Errorf("error verifying subscription: invalid organization_id")
 	}
 
 	plan, ok := d.productIDToPlan[externalSub.ProductID]
@@ -300,6 +300,7 @@ func (d dodoSubscriptionService) Verify(ctx context.Context, orgID string) (*mod
 		return nil, fmt.Errorf("invalid product id to plan mapping: %s", externalSub.ProductID)
 	}
 
+	sub := org.FeatureFlags.GetSubscription()
 	d.logger.Info("subscription status received", zap.String("orgID", orgID), zap.Any("external_subscription", externalSub))
 
 	switch externalSub.Status {

@@ -59,6 +59,7 @@ message InitiateSubscriptionResponse {
 }
 
 message VerifySubscriptionRequest {
+  string external_id= 1;
 }
 
 message GetLeadInteractionsRequest {

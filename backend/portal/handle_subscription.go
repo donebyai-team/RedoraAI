@@ -44,7 +44,7 @@ func (p *Portal) VerifySubscription(ctx context.Context, c *connect.Request[pbpo
 		return nil, err
 	}
 
-	subscription, err := p.subscriptionService.Verify(ctx, actor.OrganizationID)
+	subscription, err := p.subscriptionService.Verify(ctx, actor.OrganizationID, c.Msg.ExternalId)
 	if err != nil {
 		return nil, status.New(codes.InvalidArgument, err.Error()).Err()
 	}
