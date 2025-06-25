@@ -119,7 +119,7 @@ func (d dodoSubscriptionService) UpgradePlan(ctx context.Context, plan models.Su
 		return nil, err
 	}
 	existingSub := organization.FeatureFlags.GetSubscription()
-	if existingSub.ExternalID == nil || *existingSub.ExternalID == "" || !organization.FeatureFlags.IsSubscriptionActive() {
+	if existingSub.ID == "" || !organization.FeatureFlags.IsSubscriptionActive() {
 		return nil, fmt.Errorf("no subscription exits to upgrade")
 	}
 
@@ -132,7 +132,7 @@ func (d dodoSubscriptionService) UpgradePlan(ctx context.Context, plan models.Su
 		return nil, fmt.Errorf("invalid plan type: %s", plan)
 	}
 
-	externalSubExternal, err := d.client.Subscriptions.Get(ctx, *existingSub.ExternalID)
+	externalSubExternal, err := d.client.Subscriptions.Get(ctx, existingSub.ID)
 	if err != nil {
 		d.logger.Error("error verifying subscription", zap.Error(err))
 		return nil, fmt.Errorf("error getting existing subscription")
@@ -143,7 +143,7 @@ func (d dodoSubscriptionService) UpgradePlan(ctx context.Context, plan models.Su
 	}
 
 	// upgrade
-	err = d.client.Subscriptions.ChangePlan(ctx, *existingSub.ExternalID, dodopayments.SubscriptionChangePlanParams{
+	err = d.client.Subscriptions.ChangePlan(ctx, existingSub.ID, dodopayments.SubscriptionChangePlanParams{
 		ProductID:            dodopayments.F(productId),
 		ProrationBillingMode: dodopayments.F(dodopayments.SubscriptionChangePlanParamsProrationBillingModeProratedImmediately),
 		Quantity:             dodopayments.F(int64(1)),
@@ -153,7 +153,7 @@ func (d dodoSubscriptionService) UpgradePlan(ctx context.Context, plan models.Su
 		return nil, fmt.Errorf("failed to upgrade subscription: %w", err)
 	}
 
-	return d.Verify(ctx, orgID, *existingSub.ExternalID)
+	return d.Verify(ctx, orgID, existingSub.ID)
 }
 
 func (d dodoSubscriptionService) CreatePlan(ctx context.Context, plan models.SubscriptionPlanType, orgID, returnURL string) (*models.Subscription, error) {
@@ -176,7 +176,7 @@ func (d dodoSubscriptionService) CreatePlan(ctx context.Context, plan models.Sub
 	}
 
 	existingSub := organization.FeatureFlags.GetSubscription()
-	if existingSub.ExternalID != nil && *existingSub.ExternalID != "" && existingSub.PlanID != models.SubscriptionPlanTypeFREE {
+	if existingSub.ID != "" {
 		return nil, fmt.Errorf("subscription already exists, please upgrade to change plan")
 	}
 
@@ -329,7 +329,8 @@ func (d dodoSubscriptionService) handleActiveSubscription(
 ) (*models.Subscription, error) {
 	newSub := psql.CreateSubscriptionObject(plan)
 	newSub.OrganizationID = orgID
-	newSub.ExternalID = &externalSub.SubscriptionID
+	newSub.ExternalID = nil
+	newSub.ID = externalSub.SubscriptionID
 	newSub.ExpiresAt = externalSub.NextBillingDate
 	newSub.Status = models.SubscriptionStatusACTIVE
 
@@ -377,6 +378,7 @@ func (d dodoSubscriptionService) changeOrDowngradePlan(
 ) (*models.Subscription, error) {
 	sub.PlanID = planToChange
 	sub.ExternalID = nil
+	sub.ID = ""
 
 	if err := d.db.UpdateOrganizationFeatureFlags(ctx, orgID, map[string]any{
 		psql.FEATURE_FLAG_SUBSCRIPTION_PATH: sub,

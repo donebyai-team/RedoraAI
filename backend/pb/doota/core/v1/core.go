@@ -3,6 +3,7 @@ package pbcore
 import (
 	"fmt"
 	"github.com/shank318/doota/models"
+	"github.com/shank318/doota/utils"
 	"strings"
 	"time"
 
@@ -40,7 +41,7 @@ func (u *Subscription) FromModel(model *models.Subscription) *Subscription {
 	if model.PlanID == models.SubscriptionPlanTypeFREE {
 		u.Id = nil
 	} else {
-		u.Id = model.ExternalID
+		u.Id = utils.Ptr(model.ID)
 	}
 	return u
 }
