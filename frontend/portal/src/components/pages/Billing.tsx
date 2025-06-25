@@ -15,6 +15,7 @@ import { useSearchParams } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { AnnouncementBanner } from '../dashboard/AnnouncementBanner'
 import { useOrganization } from "@doota/ui-core/hooks/useOrganization";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../ui/alert-dialog'
 
 interface UserSubscription {
     id: string | undefined
@@ -187,6 +188,23 @@ export default function Billing() {
         }
     }
 
+    useEffect(() => {
+        if (subscriptionId && status) {
+            setAnnouncementBar({
+                isVisible: true,
+                message: 'Please wait, verifying the subscription…',
+                isLoading: true
+            })
+            interval.current = setInterval(handleApinterval, 2 * 1000) // 10 seconds
+        }
+        return () => {
+            if (interval.current) {
+                clearInterval(interval.current);
+                removeSubscriptionQueryParams();
+            }
+        }
+    }, [subscriptionId, status])
+
     const handleApinterval = async () => {
         if (!subscriptionId || !status) {
             return
@@ -196,11 +214,12 @@ export default function Billing() {
             const result = await portalClient.verifySubscription({ externalId: subscriptionId })
             if (result.status == SubscriptionStatus.ACTIVE) {
                 if (interval.current) {
-                    clearInterval(interval.current)
+                    clearInterval(interval.current);
+                    removeSubscriptionQueryParams();
                 }
                 setAnnouncementBar({
                     isVisible: true,
-                    message: 'Thanks, the subscription has been verified',
+                    message: '🥳 Thanks! Your subscription is now active and ready to use.',
                     isLoading: false
                 })
 
@@ -226,29 +245,22 @@ export default function Billing() {
                     }
                     return null;
                 });
-
-                // Remove subscription-related query params from the URL
-                const params = new URLSearchParams(window.location.search);
-                params.delete("subscription_id");
-                params.delete("status");
-
-                const newUrl = window.location.pathname + (params.toString() ? `?${params.toString()}` : "");
-                window.history.replaceState({}, "", newUrl);
-
             } else if (result.status == SubscriptionStatus.CANCELLED || result.status == SubscriptionStatus.FAILED) {
                 if (interval.current) {
-                    clearInterval(interval.current)
+                    clearInterval(interval.current);
+                    removeSubscriptionQueryParams();
                 }
                 setAnnouncementBar({
                     isVisible: true,
                     message:
-                        '⚠️ We cannot verify your payment, Please try again. If money is deducted, wait for sometime to get your subscription activated.',
+                        '⚠️ We couldn’t confirm your payment. If you were charged, give it a few minutes. Still not working? Try again or contact support.',
                     isLoading: false
                 })
             }
         } catch (err: any) {
             if (interval.current) {
-                clearInterval(interval.current)
+                clearInterval(interval.current);
+                removeSubscriptionQueryParams();
             }
             const message = err?.response?.data?.message || err.message || "Something went wrong";
             toast.error(message);
@@ -258,6 +270,15 @@ export default function Billing() {
                 isLoading: false
             })
         }
+    }
+
+    const removeSubscriptionQueryParams = () => {
+        const params = new URLSearchParams(window.location.search)
+        params.delete("subscription_id")
+        params.delete("status")
+
+        const newUrl = window.location.pathname + (params.toString() ? `?${params.toString()}` : "")
+        window.history.replaceState({}, "", newUrl)
     }
 
     const handleCancelSubscription = async () => {
@@ -321,22 +342,6 @@ export default function Billing() {
         return key.replace('SUBSCRIPTION_PLAN_', ''); // → "FREE"
     }
 
-    useEffect(() => {
-        if (subscriptionId && status) {
-            setAnnouncementBar({
-                isVisible: true,
-                message: 'Please wait, verifying the subscription…',
-                isLoading: true
-            })
-            interval.current = setInterval(handleApinterval, 2 * 1000) // 10 seconds
-        }
-        return () => {
-            if (interval.current) {
-                clearInterval(interval.current)
-            }
-        }
-    }, [subscriptionId, status])
-
     return (
         <div className='min-h-screen bg-gradient-to-b from-background to-secondary/20'>
             <DashboardHeader />
@@ -383,17 +388,34 @@ export default function Billing() {
 
                             {subscription.plan !== SubscriptionPlanID.SUBSCRIPTION_PLAN_FREE && subscription.isActive && (
                                 <div className='mt-4 flex justify-end'>
-                                    <Button
-                                        variant="destructive"
-                                        size="sm"
-                                        onClick={handleCancelSubscription}
-                                        className="w-fit"
-                                    >
-                                        Cancel Subscription
-                                    </Button>
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <Button variant="destructive" size="sm" className="w-fit">
+                                                Cancel Subscription
+                                            </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Cancel Subscription?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    This will stop future billing, but your access will remain until the current billing cycle ends.
+                                                    Are you sure you want to continue?
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Go Back</AlertDialogCancel>
+                                                <AlertDialogAction
+                                                    onClick={handleCancelSubscription}
+                                                    className="bg-destructive text-white hover:bg-destructive/90"
+                                                >
+                                                    Confirm Cancel
+                                                </AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
                                 </div>
-
                             )}
+
                         </CardContent>
                     </Card>
 
@@ -440,21 +462,57 @@ export default function Billing() {
                                                 </div>
                                             ))}
                                         </div>
-                                        <Button
-                                            onClick={() => handleUpgradePlan(plan.id)}
-                                            className={`w-full ${subscription.plan === plan.id
-                                                ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                                                : plan.popular
-                                                    ? 'bg-gradient-to-r from-primary to-purple-500 hover:from-primary/90 hover:to-purple-500/90'
-                                                    : ''
-                                                }`}
-                                            variant={
-                                                plan.popular && subscription.plan !== plan.id ? 'default' : 'outline'
-                                            }
-                                            disabled={subscription.plan === plan.id || plan.id == SubscriptionPlanID.SUBSCRIPTION_PLAN_FREE}
-                                        >
-                                            {subscription.plan === plan.id ? 'Current Plan' : `Upgrade to ${plan.name}`}
-                                        </Button>
+                                        {subscription.plan !== plan.id && subscription.id ? (
+                                            <AlertDialog>
+                                                <AlertDialogTrigger asChild>
+                                                    <Button
+                                                        className={`w-full ${plan.popular
+                                                            ? 'bg-gradient-to-r from-primary to-purple-500 hover:from-primary/90 hover:to-purple-500/90'
+                                                            : ''}`}
+                                                        disabled={subscription.plan === plan.id || plan.id === SubscriptionPlanID.SUBSCRIPTION_PLAN_FREE}
+                                                        variant={plan.popular ? 'default' : 'outline'}
+                                                    >
+                                                        Upgrade to {plan.name}
+                                                    </Button>
+                                                </AlertDialogTrigger>
+                                                <AlertDialogContent>
+                                                    <AlertDialogHeader>
+                                                        <AlertDialogTitle>Upgrade Subscription</AlertDialogTitle>
+                                                        <AlertDialogDescription>
+                                                            Upgrading will charge you a <strong>pro-rated amount</strong> based on your current billing cycle and the new plan ({plan.name}).
+                                                            <br /><br />
+                                                            Are you sure you want to proceed?
+                                                        </AlertDialogDescription>
+                                                    </AlertDialogHeader>
+                                                    <AlertDialogFooter>
+                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                        <AlertDialogAction
+                                                            onClick={() => handleUpgradePlan(plan.id)}
+                                                            className="bg-primary text-white hover:bg-primary/90"
+                                                        >
+                                                            Confirm Upgrade
+                                                        </AlertDialogAction>
+                                                    </AlertDialogFooter>
+                                                </AlertDialogContent>
+                                            </AlertDialog>
+                                        ) : (
+                                            <Button
+                                                onClick={() => handleUpgradePlan(plan.id)}
+                                                className={`w-full ${subscription.plan === plan.id
+                                                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                                                    : plan.popular
+                                                        ? 'bg-gradient-to-r from-primary to-purple-500 hover:from-primary/90 hover:to-purple-500/90'
+                                                        : ''
+                                                    }`}
+                                                variant={
+                                                    plan.popular && subscription.plan !== plan.id ? 'default' : 'outline'
+                                                }
+                                                disabled={subscription.plan === plan.id || plan.id === SubscriptionPlanID.SUBSCRIPTION_PLAN_FREE}
+                                            >
+                                                {subscription.plan === plan.id ? 'Current Plan' : `Upgrade to ${plan.name}`}
+                                            </Button>
+                                        )}
+
                                     </CardContent>
                                 </Card>
                             ))}

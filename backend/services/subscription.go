@@ -98,11 +98,11 @@ func (d dodoSubscriptionService) CancelPlan(ctx context.Context, orgID string) (
 		return nil, err
 	}
 	existingSub := organization.FeatureFlags.GetSubscription()
-	if existingSub.ExternalID == nil || *existingSub.ExternalID == "" || !organization.FeatureFlags.IsSubscriptionActive() {
-		return nil, fmt.Errorf("no subscription exits to cancel")
+	if existingSub.ID == "" || !organization.FeatureFlags.IsSubscriptionActive() {
+		return nil, fmt.Errorf("no active subscription exits to cancel")
 	}
 
-	_, err = d.client.Subscriptions.Update(ctx, *existingSub.ExternalID, dodopayments.SubscriptionUpdateParams{
+	_, err = d.client.Subscriptions.Update(ctx, existingSub.ID, dodopayments.SubscriptionUpdateParams{
 		Status: dodopayments.F(dodopayments.SubscriptionStatusCancelled),
 	})
 
@@ -110,7 +110,7 @@ func (d dodoSubscriptionService) CancelPlan(ctx context.Context, orgID string) (
 		return nil, fmt.Errorf("failed to cancel subscription: %w", err)
 	}
 
-	return d.Verify(ctx, orgID, *existingSub.ExternalID)
+	return d.Verify(ctx, orgID, existingSub.ID)
 }
 
 func (d dodoSubscriptionService) UpgradePlan(ctx context.Context, plan models.SubscriptionPlanType, orgID string) (*models.Subscription, error) {
