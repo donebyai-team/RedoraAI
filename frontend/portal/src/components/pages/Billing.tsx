@@ -227,6 +227,14 @@ export default function Billing() {
                     return null;
                 });
 
+                // Remove subscription-related query params from the URL
+                const params = new URLSearchParams(window.location.search);
+                params.delete("subscription_id");
+                params.delete("status");
+
+                const newUrl = window.location.pathname + (params.toString() ? `?${params.toString()}` : "");
+                window.history.replaceState({}, "", newUrl);
+
             } else if (result.status == SubscriptionStatus.CANCELLED || result.status == SubscriptionStatus.FAILED) {
                 if (interval.current) {
                     clearInterval(interval.current)
@@ -251,6 +259,62 @@ export default function Billing() {
             })
         }
     }
+
+    const handleCancelSubscription = async () => {
+        if (!subscription.id) {
+            toast.error("No active subscription to cancel.");
+            return;
+        }
+
+        try {
+            setAnnouncementBar({
+                isVisible: true,
+                message: 'Cancelling your subscription…',
+                isLoading: true
+            })
+
+            const result = await portalClient.cancelSubscription({})
+
+            setAnnouncementBar({
+                isVisible: true,
+                message: 'Your subscription has been cancelled.',
+                isLoading: false
+            })
+
+            setUser(prev => {
+                if (prev) {
+                    return {
+                        ...prev,
+                        organizations: prev.organizations.map(org => {
+                            if (org.id === currentOrg?.id) {
+                                if (org.featureFlags) {
+                                    const updatedFeatureFlags = org.featureFlags;
+                                    updatedFeatureFlags.subscription = result;
+                                    return {
+                                        ...org,
+                                        featureFlags: updatedFeatureFlags
+                                    }
+                                }
+                                return org;
+                            }
+                            return org;
+                        })
+                    }
+                }
+                return null;
+            });
+
+        } catch (err: any) {
+            const message = err?.response?.data?.message || err.message || "Something went wrong";
+            toast.error(message)
+            setAnnouncementBar({
+                isVisible: false,
+                message: '',
+                isLoading: false
+            })
+        }
+    }
+
 
     function getPlanSuffix(planId: SubscriptionPlanID): string {
         const key = SubscriptionPlanID[planId]; // e.g. "SUBSCRIPTION_PLAN_FREE"
@@ -316,15 +380,22 @@ export default function Billing() {
                                         : `Next billing: ${formatTimestampToReadableDate(subscription.expiryDate)}`}
                                 </span>
                             </div>
+
+                            {subscription.plan !== SubscriptionPlanID.SUBSCRIPTION_PLAN_FREE && subscription.isActive && (
+                                <div className='mt-4 flex justify-end'>
+                                    <Button
+                                        variant="destructive"
+                                        size="sm"
+                                        onClick={handleCancelSubscription}
+                                        className="w-fit"
+                                    >
+                                        Cancel Subscription
+                                    </Button>
+                                </div>
+
+                            )}
                         </CardContent>
                     </Card>
-
-                    {/* Upgrade your plan via chat card */}
-                    {/* <Card>
-                        <CardContent className='!pt-6'>
-                            <h5 className='text-lg'>{`Connect via chat to Upgrade.`}</h5>
-                        </CardContent>
-                    </Card> */}
 
                     {/* Choose Your Plan */}
                     <div className='space-y-4'>

@@ -38,6 +38,7 @@ type AlertNotifier interface {
 	SendAutoCommentDisabledEmail(ctx context.Context, orgID string, redditUsername string)
 	SendSubscriptionCreatedEmail(ctx context.Context, orgID string)
 	SendSubscriptionRenewedEmail(ctx context.Context, orgID string)
+	SendSubscriptionCancelledEmail(ctx context.Context, orgID string)
 }
 
 type SlackNotifier struct {

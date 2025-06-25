@@ -34,6 +34,20 @@ func (s *SlackNotifier) SendSubscriptionRenewedEmail(ctx context.Context, orgID 
 	`)
 }
 
+func (s *SlackNotifier) SendSubscriptionCancelledEmail(ctx context.Context, orgID string) {
+	s.sendSubscriptionEmail(ctx, orgID, "❌ Your RedoraAI subscription has been cancelled", `
+	    <h2>Your <strong>RedoraAI</strong> subscription is now cancelled</h2>
+	    <p>Your access to premium features will remain active until the end of your current billing cycle.</p>
+
+	    <p>If you changed your mind, you can re-subscribe at any time from the billing page.</p>
+
+	    <p>🔗 <a href="https://app.redoraai.com/billing" style="color: #3366cc;">Manage Subscription</a></p>
+
+	    <p>Thanks for trying RedoraAI — we’d love to hear your feedback or help with anything.</p>
+	    <p>Just reply to this email or reach us at <a href="mailto:support@redoraai.com">support@redoraai.com</a>.</p>
+	`)
+}
+
 func (s *SlackNotifier) sendSubscriptionEmail(ctx context.Context, orgID, subject, bodyHTML string) {
 	users, err := s.db.GetUsersByOrgID(ctx, orgID)
 	if err != nil {

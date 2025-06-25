@@ -388,6 +388,10 @@ func (d dodoSubscriptionService) changeOrDowngradePlan(
 	// make sure we do it after updating feature flags
 	sub.Status = status
 
+	if sub.Status == models.SubscriptionStatusCANCELLED {
+		go d.notifier.SendSubscriptionCancelledEmail(context.Background(), orgID)
+	}
+
 	d.logger.Info(fmt.Sprintf("downgraded to %s plan", planToChange.String()), zap.String("orgID", orgID), zap.String("status", status.String()))
 	return sub, nil
 }
