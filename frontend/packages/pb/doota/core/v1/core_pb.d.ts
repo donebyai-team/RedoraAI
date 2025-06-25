@@ -575,6 +575,11 @@ export declare type Subscription = Message<"doota.core.v1.Subscription"> & {
    * @generated from field: doota.core.v1.SubscriptionPlanID plan_id = 8;
    */
   planId: SubscriptionPlanID;
+
+  /**
+   * @generated from field: optional string id = 9;
+   */
+  id?: string;
 };
 
 /**

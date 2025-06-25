@@ -37,6 +37,11 @@ func (u *Subscription) FromModel(model *models.Subscription) *Subscription {
 	u.ExpiresAt = timestamppb.New(model.ExpiresAt)
 	u.Comments = new(UsageLimit).FromModel(&model.Metadata.Comments)
 	u.Dm = new(UsageLimit).FromModel(&model.Metadata.DMs)
+	if model.PlanID == models.SubscriptionPlanTypeFREE {
+		u.Id = nil
+	} else {
+		u.Id = model.ExternalID
+	}
 	return u
 }
 

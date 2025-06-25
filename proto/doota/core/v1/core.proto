@@ -209,4 +209,5 @@ message Subscription {
   google.protobuf.Timestamp created_at = 6;
   google.protobuf.Timestamp expires_at = 7;
   SubscriptionPlanID plan_id = 8;
+  optional string id = 9;
 }

@@ -17,6 +17,7 @@ import { AnnouncementBanner } from '../dashboard/AnnouncementBanner'
 import { useOrganization } from "@doota/ui-core/hooks/useOrganization";
 
 interface UserSubscription {
+    id: string | undefined
     plan: SubscriptionPlanID
     expiryDate: Timestamp | undefined
     isActive: boolean
@@ -117,6 +118,7 @@ export default function Billing() {
     })
 
     const subscription: UserSubscription = {
+        id: planDetails.id,
         plan: planDetails.planId,
         expiryDate: planDetails?.expiresAt,
         isActive: planDetails?.status === SubscriptionStatus.ACTIVE
@@ -131,49 +133,49 @@ export default function Billing() {
             });
 
             const redirectUrl = getNextPublicAppUrl() + '/settings/billing'
-            console.log("current plan", subscription.plan, "initiating subscription");
-            if (subscription.plan === SubscriptionPlanID.SUBSCRIPTION_PLAN_FREE) {
+            console.log("current plan", subscription.plan, "plan to upgrade", planToUpgrade);
+            if (!subscription.id) {
                 console.log("plan to upgrade", planToUpgrade, "initiating subscription");
                 const result = await portalClient.initiateSubscription({ plan: planToUpgrade, redirectUrl })
                 window.location.href = result.paymentLink
                 return
             }
 
-            if (subscription.plan === SubscriptionPlanID.SUBSCRIPTION_PLAN_FOUNDER || SubscriptionPlanID.SUBSCRIPTION_PLAN_PRO) {
-                console.log("plan to upgrade", planToUpgrade, "upgrading subscription");
-                const result = await portalClient.upgradeSubscription({ plan: planToUpgrade })
-                setAnnouncementBar({
-                    isVisible: false,
-                    message: 'Please wait, verifying the subscription…',
-                    isLoading: false
-                })
 
-                setUser(prev => {
-                    if (prev) {
-                        return {
-                            ...prev,
-                            organizations: prev.organizations.map(org => {
-                                if (org.id === currentOrg?.id) {
-                                    // Ensure featureFlags is updated as an instance of OrganizationFeatureFlags
-                                    if (org.featureFlags) {
-                                        const updatedFeatureFlags = org.featureFlags;
-                                        updatedFeatureFlags.subscription = result;
-                                        return {
-                                            ...org,
-                                            featureFlags: updatedFeatureFlags
-                                        }
+            console.log("plan to upgrade", planToUpgrade, "change plan subscription");
+            const result = await portalClient.upgradeSubscription({ plan: planToUpgrade })
+            setAnnouncementBar({
+                isVisible: false,
+                message: 'Please wait, verifying the subscription…',
+                isLoading: false
+            })
+
+            setUser(prev => {
+                if (prev) {
+                    return {
+                        ...prev,
+                        organizations: prev.organizations.map(org => {
+                            if (org.id === currentOrg?.id) {
+                                // Ensure featureFlags is updated as an instance of OrganizationFeatureFlags
+                                if (org.featureFlags) {
+                                    const updatedFeatureFlags = org.featureFlags;
+                                    updatedFeatureFlags.subscription = result;
+                                    return {
+                                        ...org,
+                                        featureFlags: updatedFeatureFlags
                                     }
-                                    return org;
                                 }
                                 return org;
-                            })
-                        }
+                            }
+                            return org;
+                        })
                     }
-                    return null;
-                });
+                }
+                return null;
+            });
 
-                return
-            }
+            return
+
         } catch (err: any) {
             const message = err?.response?.data?.message || err.message || "Something went wrong";
             toast.error(message);

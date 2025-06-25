@@ -310,12 +310,9 @@ func (d dodoSubscriptionService) Verify(ctx context.Context, orgID string) (*mod
 	case dodopayments.SubscriptionStatusExpired:
 		sub.Status = models.SubscriptionStatusEXPIRED
 	case dodopayments.SubscriptionStatusCancelled:
-		return d.downgradeToFreePlan(ctx, orgID, sub, models.SubscriptionStatusCANCELLED)
+		return d.changeOrDowngradePlan(ctx, orgID, sub, models.SubscriptionPlanTypeFREE, models.SubscriptionStatusCANCELLED)
 	default:
-		if sub.PlanID != models.SubscriptionPlanTypeFREE {
-			return sub, nil
-		}
-		return d.downgradeToFreePlan(ctx, orgID, sub, models.SubscriptionStatusFAILED)
+		return d.changeOrDowngradePlan(ctx, orgID, sub, sub.PlanID, models.SubscriptionStatusFAILED)
 	}
 
 	d.logger.Info("subscription updated", zap.String("orgID", orgID), zap.String("status", sub.Status.String()))
@@ -370,13 +367,14 @@ func (d dodoSubscriptionService) handleActiveSubscription(
 	return newSub, nil
 }
 
-func (d dodoSubscriptionService) downgradeToFreePlan(
+func (d dodoSubscriptionService) changeOrDowngradePlan(
 	ctx context.Context,
 	orgID string,
 	sub *models.Subscription,
+	planToChange models.SubscriptionPlanType,
 	status models.SubscriptionStatus,
 ) (*models.Subscription, error) {
-	sub.PlanID = models.SubscriptionPlanTypeFREE
+	sub.PlanID = planToChange
 	sub.ExternalID = nil
 
 	if err := d.db.UpdateOrganizationFeatureFlags(ctx, orgID, map[string]any{
@@ -389,6 +387,6 @@ func (d dodoSubscriptionService) downgradeToFreePlan(
 	// make sure we do it after updating feature flags
 	sub.Status = status
 
-	d.logger.Info("downgraded to free plan", zap.String("orgID", orgID), zap.String("status", status.String()))
+	d.logger.Info(fmt.Sprintf("downgraded to %s plan", planToChange.String()), zap.String("orgID", orgID), zap.String("status", status.String()))
 	return sub, nil
 }
