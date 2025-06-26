@@ -467,7 +467,7 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 			if len(strings.TrimSpace(redditLead.LeadMetadata.SuggestedDM)) > 0 {
 				err := s.sendAutomatedDM(ctx, tracker.Organization, redditClient.GetConfig(), redditLead)
 				if err != nil {
-					s.logger.Error("failed to send automated comment", zap.Error(err), zap.String("post_id", post.ID))
+					s.logger.Error("failed to send automated DM", zap.Error(err), zap.String("post_id", post.ID))
 				}
 			}
 		}
@@ -534,11 +534,11 @@ func (s *redditKeywordTracker) sendAutomatedDM(ctx context.Context, org *models.
 			To:        redditLead.Author,
 		})
 		if err != nil {
-			err := s.state.RollbackCounter(ctx, redisKey, keyDMScheduledPerDay)
-			if err != nil {
-				s.logger.Error("failed to rollback counter", zap.Error(err))
+			rollbackErr := s.state.RollbackCounter(ctx, redisKey, keyDMScheduledPerDay)
+			if rollbackErr != nil {
+				s.logger.Error("failed to rollback counter", zap.Error(rollbackErr))
 			}
-			return fmt.Errorf("failed to schedule DM: %w", err)
+			return err
 		}
 
 		if interaction != nil {
@@ -620,11 +620,11 @@ func (s *redditKeywordTracker) sendAutomatedComment(ctx context.Context, org *mo
 			To:        redditLead.PostID,
 		})
 		if err != nil {
-			err := s.state.RollbackCounter(ctx, redisKey, keyCommentScheduledPerDay)
-			if err != nil {
-				s.logger.Error("failed to rollback counter", zap.Error(err))
+			rollbackErr := s.state.RollbackCounter(ctx, redisKey, keyCommentScheduledPerDay)
+			if rollbackErr != nil {
+				s.logger.Error("failed to rollback counter", zap.Error(rollbackErr))
 			}
-			return fmt.Errorf("failed to schedule comment: %w", err)
+			return err
 		}
 
 		if interaction != nil {
