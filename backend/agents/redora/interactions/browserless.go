@@ -602,10 +602,14 @@ func (r browserless) getCDPUrl(ctx context.Context, startURL string, includeLive
 	var queryBuilder strings.Builder
 
 	queryBuilder.WriteString(`mutation {
-		goto(url: "` + startURL + `", waitUntil: firstContentfulPaint) {
+		goto(
+			url: "` + startURL + `", 
+			waitUntil: firstContentfulPaint,
+			proxy: {type: [document, xhr], country: US, sticky: true}
+		) {
 			status
 		}`)
-
+	
 	if includeLiveURL {
 		queryBuilder.WriteString(`
 		live: liveURL(timeout: 600000) {
