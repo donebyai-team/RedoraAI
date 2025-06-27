@@ -72,7 +72,7 @@ func (p *Portal) ConnectReddit(ctx context.Context, c *connect.Request[emptypb.E
 		return err
 	}
 
-	go p.alertNotifier.SendRedditChatConnectedAlert(ctx, actor.Email)
+	go p.alertNotifier.SendRedditChatConnectedAlert(context.Background(), actor.Email)
 
 	return nil
 }
