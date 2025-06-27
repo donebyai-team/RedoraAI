@@ -4,12 +4,14 @@ import (
 	"bytes"
 	goCtx "context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/playwright-community/playwright-go"
 	"github.com/shank318/doota/datastore"
 	"github.com/streamingfast/dstore"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -238,7 +240,7 @@ func (r browserless) SendDM(ctx context.Context, params DMParams) (cookies []byt
 	}
 	defer pw.Stop()
 
-	info, err := r.getCDPUrl(ctx, chatURL, false)
+	info, err := r.getCDPUrl(ctx, chatURL, false, true)
 	if err != nil {
 		return nil, fmt.Errorf("CDP url fetch failed: %w", err)
 	}
@@ -581,7 +583,7 @@ func (r browserless) WaitAndGetCookies(ctx context.Context, browserURL string) (
 }
 
 func (r browserless) StartLogin(ctx context.Context) (*CDPInfo, error) {
-	cdp, err := r.getCDPUrl(ctx, chatURL, true)
+	cdp, err := r.getCDPUrl(ctx, chatURL, true, false)
 	if err != nil {
 		return nil, err
 	}
@@ -598,30 +600,40 @@ const loginURL = "https://www.reddit.com/login"
 const chatURL = "https://chat.reddit.com"
 
 // proxy(type: [document, xhr], country: US, sticky: true) { time }
-func (r browserless) getCDPUrl(ctx context.Context, startURL string, includeLiveURL bool) (*CDPInfo, error) {
+func (r browserless) getCDPUrl(ctx context.Context, startURL string, includeLiveURL, useProxy bool) (*CDPInfo, error) {
 	var queryBuilder strings.Builder
 
 	queryBuilder.WriteString(`mutation {
-		goto(
-			url: "` + startURL + `", 
-			waitUntil: firstContentfulPaint,
-			proxy: {type: [document, xhr], country: US, sticky: true}
-		) {
-			status
-		}`)
-	
+  goto(
+    url: "` + startURL + `",
+    waitUntil: firstContentfulPaint
+  ) {
+    status
+  }`)
+
+	if useProxy {
+		queryBuilder.WriteString(`
+  proxy(
+    type: [document, xhr],
+    country: US,
+    sticky: true
+  ) {
+    time
+  }`)
+	}
+
 	if includeLiveURL {
 		queryBuilder.WriteString(`
-		live: liveURL(timeout: 600000) {
-			liveURL
-		}`)
+  live: liveURL(timeout: 600000) {
+    liveURL
+  }`)
 	}
 
 	queryBuilder.WriteString(`
-		reconnect(timeout: 30000) {
-			browserWSEndpoint
-		}
-	}`)
+  reconnect(timeout: 30000) {
+    browserWSEndpoint
+  }
+}`)
 
 	reqBody := map[string]string{"query": queryBuilder.String()}
 	reqBytes, _ := json.Marshal(reqBody)
@@ -636,9 +648,16 @@ func (r browserless) getCDPUrl(ctx context.Context, startURL string, includeLive
 	}
 	defer resp.Body.Close()
 
+	bodyBytes, _ := io.ReadAll(resp.Body)
+	r.logger.Info("browserless raw response", zap.ByteString("body", bodyBytes))
+
 	var result ReconnectResponse
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+	if err := json.Unmarshal(bodyBytes, &result); err != nil {
 		return nil, err
+	}
+
+	if result.Data.Reconnect.BrowserWSEndpoint == "" {
+		return nil, errors.New("empty browserWSEndpoint - CDP connection failed")
 	}
 
 	info := &CDPInfo{
