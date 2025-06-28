@@ -382,8 +382,11 @@ export default function Billing() {
                                 <span>
                                     {formatTimestampToDate(subscription.expiryDate).getTime() < Date.now()
                                         ? `Expired at: ${formatTimestampToReadableDate(subscription.expiryDate)}`
-                                        : `Next billing: ${formatTimestampToReadableDate(subscription.expiryDate)}`}
+                                        : subscription.plan === SubscriptionPlanID.SUBSCRIPTION_PLAN_FREE
+                                            ? `Expires at: ${formatTimestampToReadableDate(subscription.expiryDate)}`
+                                            : `Next billing: ${formatTimestampToReadableDate(subscription.expiryDate)}`}
                                 </span>
+
                             </div>
 
                             {subscription.plan !== SubscriptionPlanID.SUBSCRIPTION_PLAN_FREE && subscription.isActive && (
