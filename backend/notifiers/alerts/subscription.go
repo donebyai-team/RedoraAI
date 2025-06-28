@@ -55,8 +55,13 @@ func (s *SlackNotifier) sendSubscriptionEmail(ctx context.Context, orgID, subjec
 		return
 	}
 
-	if len(users) == 0 || len(users) > 1 {
+	if len(users) == 0 {
 		return
+	}
+
+	to := make([]string, 0, len(users))
+	for _, user := range users {
+		to = append(to, user.Email)
 	}
 
 	htmlBody := fmt.Sprintf(`
@@ -77,7 +82,7 @@ func (s *SlackNotifier) sendSubscriptionEmail(ctx context.Context, orgID, subjec
 
 	params := &resend.SendEmailRequest{
 		From:    "RedoraAI <welcome@alerts.redoraai.com>",
-		To:      []string{users[0].Email},
+		To:      to,
 		Cc:      []string{"shashank@donebyai.team", "adarsh@redoraai.com"},
 		Subject: subject,
 		Html:    htmlBody,
