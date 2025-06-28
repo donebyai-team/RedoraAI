@@ -57,7 +57,30 @@ type LangsmithConfig struct {
 //	}, nil
 //}
 
-func NewOpenAI(apiKey string, defaultLLMModel, advanceLLMModel models.LLMModel, config LangsmithConfig, debugFileStore dstore.Store, log *zap.Logger) (*Client, error) {
+func NewOpenAIClient(apiKey, organization string, defaultLLMModel, advanceLLMModel models.LLMModel, config LangsmithConfig, debugFileStore dstore.Store, log *zap.Logger) (*Client, error) {
+	if apiKey == "" {
+		return nil, fmt.Errorf("openai api key is required, cannot be blank")
+	}
+
+	if len(strings.TrimSpace(string(defaultLLMModel))) == 0 {
+		return nil, fmt.Errorf("default llm model, cannot be blank")
+	}
+
+	llmClient := openai.NewClient(
+		option.WithAPIKey(apiKey),
+		option.WithOrganization(organization),
+	)
+
+	return &Client{
+		model:           llmClient,
+		defaultLLMModel: defaultLLMModel,
+		advanceLLMModel: advanceLLMModel,
+		debugFileStore:  debugFileStore,
+		log:             log,
+	}, nil
+}
+
+func NewLLMClient(apiKey string, defaultLLMModel, advanceLLMModel models.LLMModel, config LangsmithConfig, debugFileStore dstore.Store, log *zap.Logger) (*Client, error) {
 	if apiKey == "" {
 		return nil, fmt.Errorf("openai api key is required, cannot be blank")
 	}
