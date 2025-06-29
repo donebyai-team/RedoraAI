@@ -323,6 +323,8 @@ func (d dodoSubscriptionService) handleActiveSubscription(
 	externalSub *dodopayments.Subscription,
 	plan models.SubscriptionPlanType,
 ) (*models.Subscription, error) {
+	newPlan := psql.CreateSubscriptionObject(plan)
+	oldSub.Metadata = newPlan.Metadata
 	oldSubExpiresAt := oldSub.ExpiresAt
 	oldSub.PlanID = plan
 	oldSub.OrganizationID = orgID
