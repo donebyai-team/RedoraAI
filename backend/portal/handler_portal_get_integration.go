@@ -74,12 +74,21 @@ func (p *Portal) protoIntegration(integration *models.Integration) *pbportal.Int
 		}
 		return resp
 	case models.IntegrationTypeREDDITDMLOGIN:
-		return &pbportal.Integration{
+		resp := &pbportal.Integration{
 			Id:             integration.ID,
 			OrganizationId: integration.OrganizationID,
 			Type:           pbportal.IntegrationType_INTEGRATION_TYPE_REDDIT_DM_LOGIN,
 			Status:         mapIntegrationState(integration.State),
 		}
+		if integration.State == models.IntegrationStateACTIVE {
+			redditConfig := integration.GetRedditDMLoginConfig()
+			resp.Details = &pbportal.Integration_Reddit{
+				Reddit: &pbportal.RedditIntegration{
+					UserName: redditConfig.Username,
+				},
+			}
+		}
+		return resp
 	//case models.IntegrationTypeGOOGLE:
 	//	return p.resolveGoogleIntegration(ctx, integration)
 	default:

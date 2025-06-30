@@ -343,6 +343,9 @@ export default function Page() {
         return <FallbackSpinner />;
     }
 
+    const redditIntegration = getIntegrationByType(integrations, IntegrationType.REDDIT_DM_LOGIN);
+    const redditUsername = redditIntegration?.details?.value?.userName;
+
     return (
         // Added padding to the main Box
         <Box component="main" sx={{ flexGrow: 1, p: 3, display: "flex", flexDirection: "column" }}>
@@ -381,10 +384,24 @@ export default function Page() {
                                 </Typography>
 
                                 <Box sx={{ mt: 5 }} display="flex" alignItems="center" gap={2}>
-                                    {getIntegrationByType(integrations, IntegrationType.REDDIT_DM_LOGIN) ? (
+                                    {redditIntegration ? (
                                         <>
                                             <Typography variant="body2" color="green" fontWeight="bold">
                                                 Connected
+                                                {redditUsername && (
+                                                    <>
+                                                        {' ('}
+                                                        <Link
+                                                            href={`https://reddit.com/user/${redditUsername}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            color="inherit"
+                                                        >
+                                                            {redditUsername}
+                                                        </Link>
+                                                        {')'}
+                                                    </>
+                                                )}
                                             </Typography>
                                             <Button
                                                 variant="outlined"
