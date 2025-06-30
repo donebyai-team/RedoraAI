@@ -1,0 +1,70 @@
+{
+  "type": "json_schema",
+  "json_schema": {
+    "name": "post_insight_response_schema",
+    "strict": true,
+    "schema": {
+      "type": "object",
+      "properties": {
+        "chain_of_thought": {
+          "type": "string",
+          "description": "Step-by-step reasoning about why the post is relevant to the product or customer persona. Should include analysis of the thread and conclude with a short 2-3 line summary."
+        },
+        "insights": {
+          "type": "array",
+          "description": "List of relevant discussion topics from the post with reasoning and supporting data.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "topic": {
+                "type": "string",
+                "description": "A concise label or phrase summarizing the main discussion theme/topic."
+              },
+              "relevant_confidence_score": {
+                "type": "number",
+                "description": "Score from 0 to 100 indicating how relevant this post is to the product and persona. Only if score > 80, topics should be listed."
+              },
+              "chain_of_thought": {
+                "type": "string",
+                "description": "Explanation of why this topic was selected. Should include context and logical reasoning based on the product, persona, and conversation."
+              },
+              "highlighted_comments": {
+                "type": "array",
+                "description": "List of comment IDs that support or reference this topic.",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "sentiment": {
+                "type": "string",
+                "enum": [
+                  "positive",
+                  "negative",
+                  "neutral"
+                ],
+                "description": "Overall sentiment of the discussion related to this topic."
+              },
+              "highlights": {
+                "type": "string",
+                "description": "Summary of the discussion, with key quotes or paraphrased ideas that help illustrate the topic’s importance."
+              }
+            },
+            "required": [
+              "topic",
+              "chain_of_thought",
+              "highlighted_comments",
+              "sentiment",
+              "highlights"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "chain_of_thought",
+        "insights"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

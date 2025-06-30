@@ -75,3 +75,17 @@ func (b CaseDecisionResponse) IsEmpty() bool {
 		b.ChainOfThoughtNextCallScheduledAt == "" &&
 		b.NextCallScheduledAtConfidenceScore == 0
 }
+
+type PostInsightResponse struct {
+	ChainOfThoughtIsRelevant  string            `json:"chain_of_thought"`
+	IsRelevantConfidenceScore float64           `json:"relevant_confidence_score"`
+	Insights                  []PostInsightItem `json:"insights"`
+}
+
+type PostInsightItem struct {
+	Topic               string   `json:"topic"`                // suggested topic discussed
+	ChainOfThought      string   `json:"chain_of_thought"`     // why the topic is suggested
+	HighLightedComments []string `json:"highlighted_comments"` // comment ids from as a source
+	Sentiment           string   `json:"sentiment"`            // sentiment positive, negative, neutral
+	Highlights          string   `json:"highlights"`           // summary and details about the suggested topic
+}

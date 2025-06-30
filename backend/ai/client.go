@@ -299,6 +299,57 @@ func (c *Client) GetSourceCommunityRulesEvaluation(ctx context.Context, model mo
 	return &data, &models.LLMModelUsage{Model: llmModelToUse}, nil
 }
 
+type PostInsightInput struct {
+	Project *models.Project `json:"project"`
+	Post    *models.Lead    `json:"post"`
+	Source  *models.Source  `json:"source"`
+}
+
+func (c *Client) ExtractPostInsight(ctx context.Context, model models.LLMModel, input PostInsightInput, logger *zap.Logger) (*models.PostInsightResponse, *models.LLMModelUsage, error) {
+	runID := fmt.Sprintf("insight-%s-%s-%s", input.Project.ID, input.Post.PostID, uuid.New().String())
+	out := make(Variable)
+	out["ProductName"] = input.Project.Name
+	out["ProductDescription"] = input.Project.ProductDescription
+	out["TargetCustomerPersona"] = input.Project.CustomerPersona
+
+	if input.Post.Title != nil {
+		out["Title"] = input.Post.Title
+	} else {
+		out["Title"] = "Comment"
+	}
+	out["Description"] = input.Post.Description
+
+	llmModelToUse := c.defaultLLMModel
+	if string(model) != "" {
+		llmModelToUse = model
+	}
+
+	messages, responseFormat, err := c.buildChatMessages(ctx, runID, postInsightTemplates, logger, out)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	output, err := c.runChatCompletion(
+		ctx,
+		runID,
+		llmModelToUse,
+		input.Project.OrganizationID,
+		messages,
+		responseFormat,
+		logger,
+		"reddit_post_relevancy.output",
+	)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var data models.PostInsightResponse
+	if err := json.Unmarshal(output, &data); err != nil {
+		return nil, nil, fmt.Errorf("unable to unmarshal response: %w", err)
+	}
+	return &data, &models.LLMModelUsage{Model: llmModelToUse}, nil
+}
+
 type IsPostRelevantInput struct {
 	Project *models.Project `json:"project"`
 	Post    *models.Lead    `json:"post"`

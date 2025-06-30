@@ -1,0 +1,16 @@
+Product Information
+ProductName: {{ .ProductName }}
+ProductDescription: {{ .ProductDescription }}
+
+Target Customer Persona:
+TargetCustomerPersona: {{ .TargetCustomerPersona }}
+
+Post Details:
+Title: {{ .Title }}
+Source: Reddit
+Description: {{ .Description }}
+
+Comments Thread:
+{{ range .Comments }}
+[Depth {{ .Depth }}] Comment ID: {{ .ID }} - {{ .Text }}
+{{ end }}

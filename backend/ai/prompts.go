@@ -18,6 +18,12 @@ var redditPostRelevancyTemplates = []Template{
 	{path: "reddit_post.human.gotmpl", promptType: PromptTypeHUMAN, promptFeature: PromptFeatureBOTH},
 }
 
+var postInsightTemplates = []Template{
+	{path: "post_insight.prompt.gotmpl", promptType: PromptTypeSYSTEM, promptFeature: PromptFeatureTEXTONLY},
+	{path: "post_insight.schema.gotmpl", promptType: PromptTypeRESPONSESCHEMA, promptFeature: PromptFeatureBOTH},
+	{path: "post_insight.human.gotmpl", promptType: PromptTypeHUMAN, promptFeature: PromptFeatureBOTH},
+}
+
 var subredditRulesEvalTemplates = []Template{
 	{path: "subreddit_rules.prompt.gotmpl", promptType: PromptTypeSYSTEM, promptFeature: PromptFeatureTEXTONLY},
 	{path: "subreddit_rules.schema.gotmpl", promptType: PromptTypeRESPONSESCHEMA, promptFeature: PromptFeatureBOTH},

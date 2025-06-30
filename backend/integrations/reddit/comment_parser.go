@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 )
 
-func (r *Client) parsePostWithComments(ctx context.Context, rawResp []json.RawMessage) (*Post, error) {
+func (r *Client) parsePostWithComments(ctx context.Context, rawResp []json.RawMessage, maxComments int, includeMore bool) (*Post, error) {
 	// Parse post metadata
 	var postListing struct {
 		Data struct {
@@ -35,62 +35,84 @@ func (r *Client) parsePostWithComments(ctx context.Context, rawResp []json.RawMe
 	}
 
 	var comments []*Comment
+	count := 0
 	for _, raw := range commentListing.Data.Children {
-		comment, err := r.parseCommentTree(ctx, raw)
+		if count >= maxComments {
+			break
+		}
+		comment, cCount, err := r.parseCommentTree(ctx, raw, maxComments-count, includeMore)
 		if err == nil && comment != nil {
 			comments = append(comments, comment)
+			count += cCount
 		}
 	}
 	post.Comments = comments
 	return &post, nil
 }
 
-func (r *Client) parseCommentTree(ctx context.Context, raw json.RawMessage) (*Comment, error) {
+func (r *Client) parseCommentTree(ctx context.Context, raw json.RawMessage, remaining int, includeMore bool) (*Comment, int, error) {
+	if remaining <= 0 {
+		return nil, 0, nil
+	}
+
 	var kindWrapper struct {
 		Kind string          `json:"kind"`
 		Data json.RawMessage `json:"data"`
 	}
 	if err := json.Unmarshal(raw, &kindWrapper); err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	switch kindWrapper.Kind {
 	case "t1": // comment
 		var c Comment
 		if err := json.Unmarshal(kindWrapper.Data, &c); err != nil {
-			return nil, err
+			return nil, 0, err
 		}
-		// Handle replies recursively
-		var repliesWrapper struct {
-			Data struct {
-				Children []json.RawMessage `json:"children"`
-			} `json:"data"`
-		}
-		if rawReplies, ok := extractReplies(kindWrapper.Data); ok {
+		total := 1
+
+		// Recurse into replies
+		if rawReplies, ok := extractReplies(kindWrapper.Data); ok && remaining > 1 {
+			var repliesWrapper struct {
+				Data struct {
+					Children []json.RawMessage `json:"children"`
+				} `json:"data"`
+			}
 			if err := json.Unmarshal(rawReplies, &repliesWrapper); err == nil {
 				for _, child := range repliesWrapper.Data.Children {
-					childComment, err := r.parseCommentTree(ctx, child)
+					if total >= remaining {
+						break
+					}
+					childComment, used, err := r.parseCommentTree(ctx, child, remaining-total, includeMore)
 					if err == nil && childComment != nil {
 						c.Comments = append(c.Comments, childComment)
+						total += used
 					}
 				}
 			}
 		}
-		return &c, nil
+		return &c, total, nil
 
 	case "more":
-		// Handle "more" children
+		if !includeMore {
+			return nil, 0, nil
+		}
 		var more struct {
 			Children []string `json:"children"`
 			ParentID string   `json:"parent_id"`
 			ID       string   `json:"id"`
 		}
 		if err := json.Unmarshal(kindWrapper.Data, &more); err != nil {
-			return nil, err
+			return nil, 0, err
 		}
-		return r.fetchMoreComments(ctx, more.Children, more.ParentID)
+		moreComment, err := r.fetchMoreComments(ctx, more.Children, more.ParentID, remaining)
+		if err != nil || moreComment == nil {
+			return nil, 0, err
+		}
+		return moreComment, len(moreComment.Comments), nil
+
 	default:
-		return nil, nil
+		return nil, 0, nil
 	}
 }
 
@@ -105,13 +127,15 @@ func extractReplies(data json.RawMessage) (json.RawMessage, bool) {
 	return nil, false
 }
 
-func (r *Client) fetchMoreComments(ctx context.Context, children []string, parentID string) (*Comment, error) {
-	if len(children) == 0 {
+func (r *Client) fetchMoreComments(ctx context.Context, children []string, parentID string, remaining int) (*Comment, error) {
+	if len(children) == 0 || remaining <= 0 {
 		return nil, nil
 	}
 
-	reqURL := fmt.Sprintf("%s/api/morechildren.json?api_type=json&raw_json=1&children=%s&link_id=%s",
-		r.baseURL, strings.Join(children, ","), parentID)
+	reqURL := fmt.Sprintf(
+		"%s/api/morechildren.json?api_type=json&raw_json=1&children=%s&link_id=%s",
+		r.baseURL, strings.Join(children, ","), parentID,
+	)
 
 	req, err := retryablehttp.NewRequestWithContext(ctx, http.MethodGet, reqURL, nil)
 	if err != nil {
@@ -124,12 +148,11 @@ func (r *Client) fetchMoreComments(ctx context.Context, children []string, paren
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
-
-	defer resp.Body.Close()
 
 	var response struct {
 		Json struct {
@@ -143,11 +166,23 @@ func (r *Client) fetchMoreComments(ctx context.Context, children []string, paren
 	}
 
 	moreParent := &Comment{}
+	totalParsed := 0
+
 	for _, thing := range response.Json.Data.Things {
-		comment, err := r.parseCommentTree(ctx, thing)
+		if totalParsed >= remaining {
+			break
+		}
+		comment, used, err := r.parseCommentTree(ctx, thing, remaining-totalParsed, true)
 		if err == nil && comment != nil {
 			moreParent.Comments = append(moreParent.Comments, comment)
+			totalParsed += used
 		}
 	}
+
+	// If no comments were added, return nil instead of empty node
+	if totalParsed == 0 {
+		return nil, nil
+	}
+
 	return moreParent, nil
 }

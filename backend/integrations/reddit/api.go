@@ -264,7 +264,7 @@ func (r *Client) GetPostByID(ctx context.Context, postID string) (*Post, error) 
 	return nil, ErrNotFound // Post not found in the response
 }
 
-func (r *Client) GetPostWithAllComments(ctx context.Context, postID string) (*Post, error) {
+func (r *Client) GetPostWithAllComments(ctx context.Context, postID string, maxComments int, includeMore bool) (*Post, error) {
 	reqURL := fmt.Sprintf("%s/comments/%s.json?raw_json=1&sort=new", r.baseURL, postID)
 	resp, err := r.doRequest(ctx, http.MethodGet, reqURL, nil)
 	if err != nil {
@@ -276,7 +276,7 @@ func (r *Client) GetPostWithAllComments(ctx context.Context, postID string) (*Po
 	if err := decodeJSON(resp.Body, &rawResp); err != nil {
 		return nil, err
 	}
-	return r.parsePostWithComments(ctx, rawResp)
+	return r.parsePostWithComments(ctx, rawResp, maxComments, includeMore)
 }
 
 func (r *Client) isTokenExpired() bool {
