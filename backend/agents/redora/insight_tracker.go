@@ -95,11 +95,15 @@ func (s *redditKeywordTracker) TrackInSights(ctx context.Context, tracker *model
 			{
 				ProjectID:      project.ID,
 				PostID:         post.ID,
-				Source:         models.SourceTypeSUBREDDIT,
+				SourceID:       source.ID,
+				KeywordID:      keyword.ID,
 				RelevancyScore: 0,
 				Metadata: models.PostInsightMetadata{
 					Title:         post.Title,
 					PostCreatedAt: time.Unix(int64(post.CreatedAt), 0),
+					NoOfComments:  post.NumComments,
+					Upvotes:       post.Ups,
+					Score:         post.Score,
 				},
 			},
 		}
@@ -107,9 +111,7 @@ func (s *redditKeywordTracker) TrackInSights(ctx context.Context, tracker *model
 		isValid, reason := s.isValidPostForInsight(post)
 		if isValid {
 			redditQueryComments := reddit.QueryFilters{
-				SortBy:      utils.Ptr(reddit.SortByTOP),
-				TimeRage:    utils.Ptr(reddit.TimeRangeWEEK),
-				Limit:       100,
+				SortBy:      utils.Ptr(reddit.SortByCONFIDENCE),
 				MaxComments: 20,
 				IncludeMore: false,
 			}
@@ -145,7 +147,8 @@ func (s *redditKeywordTracker) TrackInSights(ctx context.Context, tracker *model
 						RelevancyScore: item.RelevancyScore,
 						ProjectID:      project.ID,
 						PostID:         post.ID,
-						Source:         models.SourceTypeSUBREDDIT,
+						SourceID:       source.ID,
+						KeywordID:      keyword.ID,
 						Topic:          item.Topic,
 						Sentiment:      item.Sentiment,
 						Highlights:     item.Highlights,
@@ -154,6 +157,9 @@ func (s *redditKeywordTracker) TrackInSights(ctx context.Context, tracker *model
 							HighlightedComments: item.HighLightedComments,
 							Title:               post.Title,
 							PostCreatedAt:       time.Unix(int64(post.CreatedAt), 0),
+							NoOfComments:        post.NumComments,
+							Upvotes:             post.Ups,
+							Score:               post.Score,
 						},
 					})
 				}
@@ -200,12 +206,12 @@ func (s *redditKeywordTracker) TrackInSights(ctx context.Context, tracker *model
 }
 
 func (s *redditKeywordTracker) isValidPostForInsight(post *reddit.Post) (bool, string) {
-	if post.NumComments < 3 {
-		return false, "less than 3 comments"
+	if post.NumComments < 10 {
+		return false, "less than 10 comments"
 	}
 
-	if post.Ups < 5 {
-		return false, "less than 5 upvotes"
+	if post.Ups < 10 {
+		return false, "less than 10 upvotes"
 	}
 
 	if post.Score == 0 {
@@ -228,6 +234,22 @@ func (s *redditKeywordTracker) isMaxPostInsightsReached(ctx context.Context, pro
 
 	if len(insights) >= 10 {
 		s.logger.Info("reached max insights per week",
+			zap.Int("count", len(insights)))
+		return true, nil
+	}
+
+	insights2, err := s.db.GetInsights(ctx, projectID, datastore.LeadsFilter{
+		RelevancyScore: 1,
+		Limit:          100,
+		Offset:         0,
+		DateRange:      pbportal.DateRangeFilter_DATE_RANGE_7_DAYS,
+	})
+	if err != nil {
+		return false, err
+	}
+
+	if len(insights2) >= 100 {
+		s.logger.Info("reached max posts to extact insights per week",
 			zap.Int("count", len(insights)))
 		return true, nil
 	}

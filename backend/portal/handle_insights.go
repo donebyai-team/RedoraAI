@@ -4,6 +4,7 @@ import (
 	"connectrpc.com/connect"
 	"context"
 	"github.com/shank318/doota/datastore"
+	"github.com/shank318/doota/integrations/reddit"
 	pbcore "github.com/shank318/doota/pb/doota/core/v1"
 	pbportal "github.com/shank318/doota/pb/doota/portal/v1"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -32,7 +33,17 @@ func (p *Portal) GetInsights(ctx context.Context, c *connect.Request[emptypb.Emp
 
 	insightsProto := make([]*pbcore.PostInsight, 0, len(insights))
 	for _, insight := range insights {
-		insightsProto = append(insightsProto, new(pbcore.PostInsight).FromModel(insight))
+		insightProto := new(pbcore.PostInsight).FromModel(insight)
+
+		// TODO make it specific to source
+		insightProto.Source = insight.Source.SourceType.String()
+		insightProto.HighlightedComments = make([]string, 0, len(insight.Metadata.HighlightedComments))
+		insightProto.PostId = reddit.GetPostURL(insight.PostID, insight.Source.Name)
+		for _, item := range insight.Metadata.HighlightedComments {
+			insightProto.HighlightedComments = append(insightProto.HighlightedComments, reddit.GetCommentURL(insight.PostID, insight.Source.Name, item))
+		}
+
+		insightsProto = append(insightsProto, insightProto)
 	}
 
 	return connect.NewResponse(&pbportal.InsightsResponse{Insights: insightsProto}), nil

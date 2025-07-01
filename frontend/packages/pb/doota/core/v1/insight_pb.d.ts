@@ -79,6 +79,11 @@ export declare type PostInsight = Message<"doota.core.v1.PostInsight"> & {
    * @generated from field: google.protobuf.Timestamp post_created_at = 13;
    */
   postCreatedAt?: Timestamp;
+
+  /**
+   * @generated from field: string keyword = 14;
+   */
+  keyword: string;
 };
 
 /**

@@ -21,11 +21,12 @@ func (r *Database) CreatePostInsight(ctx context.Context, insight *models.PostIn
 	err := stmt.GetContext(ctx, &id, map[string]interface{}{
 		"project_id":      insight.ProjectID,
 		"post_id":         insight.PostID,
+		"source_id":       insight.SourceID,
+		"keyword_id":      insight.KeywordID,
 		"topic":           insight.Topic,
 		"sentiment":       insight.Sentiment,
 		"metadata":        insight.Metadata,
 		"relevancy_score": insight.RelevancyScore,
-		"source_type":     insight.Source.String(),
 		"highlights":      insight.Highlights,
 	})
 	insight.ID = id
@@ -39,9 +40,9 @@ func (r *Database) GetInsightsByPostID(ctx context.Context, projectID, postID st
 	})
 }
 
-func (r *Database) GetInsights(ctx context.Context, projectID string, filter datastore.LeadsFilter) ([]*models.PostInsight, error) {
+func (r *Database) GetInsights(ctx context.Context, projectID string, filter datastore.LeadsFilter) ([]*models.AugmentedPostInsight, error) {
 	startDateTime, endDateTime := GetDateRange(filter.DateRange, time.Now().UTC())
-	return getMany[models.PostInsight](ctx, r, "post_insight/query_insight_by_project.sql", map[string]any{
+	return getMany[models.AugmentedPostInsight](ctx, r, "post_insight/query_insight_by_project.sql", map[string]any{
 		"relevancy_score": filter.RelevancyScore,
 		"project_id":      projectID,
 		"limit":           filter.Limit,

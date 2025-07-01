@@ -22,4 +22,5 @@ message PostInsight {
   string cot = 11;
   google.protobuf.Timestamp created_at = 12;
   google.protobuf.Timestamp post_created_at = 13;
+  string keyword = 14;
 }

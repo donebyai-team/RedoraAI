@@ -167,7 +167,7 @@ func (r *Client) GetSubRedditByName(ctx context.Context, name string) (*SubReddi
 
 //go:generate go-enum -f=$GOFILE
 
-// ENUM(TOP, HOT, RELEVANCE, NEW, COMMENT_COUNT)
+// ENUM(TOP, HOT, RELEVANCE, NEW, COMMENT_COUNT, CONFIDENCE)
 type SortBy string
 
 // ENUM(ALL, YEAR, WEEK, MONTH, TODAY, HOUR)

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/shank318/doota/models"
+	"github.com/shank318/doota/utils"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 	"math/rand"
@@ -20,6 +21,16 @@ const (
 	redditAuthURL        = "https://www.reddit.com/api/v1/authorize"
 	redditTokenURL       = "https://www.reddit.com/api/v1/access_token"
 )
+
+func GetPostURL(postID, subreddit string) string {
+	subreddit = utils.CleanSubredditName(subreddit)
+	return fmt.Sprintf("%s/r/%s/comments/%s", redditAPINonAuthBase, subreddit, postID)
+}
+
+func GetCommentURL(postID, subreddit, commentID string) string {
+	postURL := GetPostURL(postID, subreddit)
+	return fmt.Sprintf("%s/comment/%s", postURL, commentID)
+}
 
 type unAuthorizedErrorCallback func(ctx context.Context)
 

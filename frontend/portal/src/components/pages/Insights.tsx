@@ -6,13 +6,16 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { TrendingUp, Search, MessageSquare, BarChart3, PenTool, ExternalLink, Loader2 } from "lucide-react";
+import { TrendingUp, Search, BarChart3, PenTool, ExternalLink, Loader2 } from "lucide-react";
 import { PostInsight } from "@doota/pb/doota/core/v1/insight_pb";
 import { useClientsContext } from "@doota/ui-core/context/ClientContext";
 import { getFormattedDate } from "@/utils/format";
+import { useAuth } from "@doota/ui-core/hooks/useAuth";
+import { SubscriptionPlanID } from "@doota/pb/doota/core/v1/core_pb";
 
 
 export default function Insights() {
+    const { planDetails } = useAuth()
     const { portalClient } = useClientsContext();
     const [insights, setInsights] = useState<PostInsight[]>([]);
     const [searchTerm, setSearchTerm] = useState("");
@@ -22,6 +25,8 @@ export default function Insights() {
 
 
     useEffect(() => {
+        if (planDetails.planId == SubscriptionPlanID.SUBSCRIPTION_PLAN_FREE) return;
+
         setIsFetching(true);
         portalClient
             .getInsights({})
@@ -42,9 +47,6 @@ export default function Insights() {
         // TODO: Implement post creation functionality
     };
 
-    const getRedditCommentUrl = (postId: string, commentId: string) => {
-        return `https://reddit.com/comments/${postId}/_/${commentId}`;
-    };
 
     const getSentimentColor = (sentiment: string) => {
         switch (sentiment) {
@@ -87,7 +89,7 @@ export default function Insights() {
                             <div>
                                 <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
                                     <TrendingUp className="h-8 w-8" />
-                                    Weekly Insights
+                                    Weekly Insights(Beta)
                                 </h2>
                                 <p className="text-muted-foreground mt-2">
                                     Discover trending topics and discussions across communities
@@ -149,10 +151,6 @@ export default function Insights() {
                                                 <CardTitle className="text-lg leading-tight mb-2">
                                                     {insight.topic}
                                                 </CardTitle>
-                                                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                                                    <MessageSquare className="h-4 w-4" />
-                                                    <span className="truncate max-w-md">{insight.postTitle}</span>
-                                                </div>
                                             </div>
                                             <div className="flex flex-col items-end gap-2">
                                                 <div className="flex items-center gap-1">
@@ -191,10 +189,20 @@ export default function Insights() {
                                                 <div>
                                                     <h4 className="font-medium text-sm mb-2">References:</h4>
                                                     <div className="flex flex-wrap gap-2">
-                                                        {insight.highlightedComments.map((commentId, index) => (
+                                                        <a
+                                                            key={insight.postId}
+                                                            href={insight.postId}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 hover:underline bg-blue-50 px-2 py-1 rounded-md transition-colors"
+                                                        >
+                                                            {insight.postTitle}
+                                                            <ExternalLink className="h-3 w-3" />
+                                                        </a>
+                                                        {insight.highlightedComments.map((comment, index) => (
                                                             <a
-                                                                key={commentId}
-                                                                href={getRedditCommentUrl(insight.postId, commentId)}
+                                                                key={index + 1}
+                                                                href={comment}
                                                                 target="_blank"
                                                                 rel="noopener noreferrer"
                                                                 className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 hover:underline bg-blue-50 px-2 py-1 rounded-md transition-colors"
@@ -207,11 +215,14 @@ export default function Insights() {
                                                 </div>
                                             )}
 
-                                            <div className="flex items-center justify-between pt-2 border-t">
+                                            <div className="flex items-center justify-between pt-3 border-t">
                                                 <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground">
                                                     <span>Source: {insight.source}</span>
                                                     <span>Post: {getFormattedDate(insight.postCreatedAt)}</span>
                                                     <span>Analyzed: {getFormattedDate(insight.createdAt!)}</span>
+                                                    <span>
+                                                        Keyword: <span className="text-foreground font-medium bg-muted px-1.5 py-0.5 rounded">{insight.keyword}</span>
+                                                    </span>
                                                 </div>
                                                 <Button
                                                     size="sm"
@@ -219,7 +230,7 @@ export default function Insights() {
                                                     className="h-8 px-3"
                                                 >
                                                     <PenTool className="h-3 w-3 mr-1" />
-                                                    Create Post
+                                                    Create Post (Coming soon)
                                                 </Button>
                                             </div>
                                         </div>
@@ -228,19 +239,34 @@ export default function Insights() {
                             ))}
                         </div>
 
-                        {filteredInsights.length === 0 && (
-                            <Card>
-                                <CardContent className="flex items-center justify-center py-12">
+                        {planDetails.planId != SubscriptionPlanID.SUBSCRIPTION_PLAN_FREE ? (
+                            filteredInsights.length === 0 && (
+                                <Card>
+                                    <CardContent className="flex items-center justify-center py-12">
+                                        <div className="text-center">
+                                            <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                                            <h3 className="text-lg font-medium mb-2">No insights found</h3>
+                                            <p className="text-muted-foreground">
+                                                We surface the most relevant topics from communities each week. New insights will appear here as soon as we find them.
+                                            </p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            )
+                        ) : (
+                            <Card className="border-dashed border-2 border-yellow-400">
+                                <CardContent className="flex items-center justify-center py-10">
                                     <div className="text-center">
-                                        <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                                        <h3 className="text-lg font-medium mb-2">No insights found</h3>
+                                        <h3 className="text-lg font-semibold mb-2 text-yellow-600">What Your Users Are Talking About</h3>
                                         <p className="text-muted-foreground">
-                                            Try adjusting your search terms or filters to see more results.
+                                            This feature is available only on paid plans. Upgrade to unlock weekly insights curated from top community discussions.
                                         </p>
                                     </div>
                                 </CardContent>
                             </Card>
                         )}
+
+
                     </div>
                 </>
             )}

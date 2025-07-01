@@ -157,7 +157,7 @@ type PromptTypeRepository interface {
 type PostInsightRepository interface {
 	CreatePostInsight(ctx context.Context, insight *models.PostInsight) (*models.PostInsight, error)
 	GetInsightsByPostID(ctx context.Context, projectID, postID string) ([]*models.PostInsight, error)
-	GetInsights(ctx context.Context, projectID string, filter LeadsFilter) ([]*models.PostInsight, error)
+	GetInsights(ctx context.Context, projectID string, filter LeadsFilter) ([]*models.AugmentedPostInsight, error)
 }
 
 type CustomerCaseFilter struct {

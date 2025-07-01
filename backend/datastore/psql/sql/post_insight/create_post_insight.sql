@@ -1,7 +1,8 @@
 INSERT INTO post_insights (
     project_id,
     post_id,
-    source_type,
+    source_id,
+    keyword_id,
     relevancy_score,
     topic,
     sentiment,
@@ -10,7 +11,8 @@ INSERT INTO post_insights (
 VALUES (
            :project_id,
            :post_id,
-           :source_type,
+           :source_id,
+           :keyword_id,
            :relevancy_score,
            :topic,
            :sentiment,

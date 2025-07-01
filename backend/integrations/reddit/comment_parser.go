@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"go.uber.org/zap"
 	"net/http"
 	"strings"
 
@@ -103,6 +104,10 @@ func (r *Client) parseCommentTree(
 			c.Comments = replies
 			total++ // Count this comment
 			return &c, total, nil
+		} else {
+			r.logger.Info("skipped comment",
+				zap.Int("score", c.Score),
+				zap.Int("body_length", len(c.Body)))
 		}
 
 		// If this comment isn't included but replies are, pass those up
