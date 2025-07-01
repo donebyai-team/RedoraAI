@@ -177,6 +177,10 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 
 	interaction.Status = models.LeadInteractionStatusSENT
 	interaction.Reason = ""
+
+	if loginConfig.Username != "" {
+		interaction.From = loginConfig.Username
+	}
 	redditLead.LeadMetadata.AutomatedDMSent = true
 	redditLead.Status = models.LeadStatusAIRESPONDED
 
