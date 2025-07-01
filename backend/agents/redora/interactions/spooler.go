@@ -8,6 +8,7 @@ import (
 	"github.com/shank318/doota/models"
 	"github.com/shank318/doota/notifiers/alerts"
 	"go.uber.org/zap"
+	"strings"
 	"time"
 )
 
@@ -73,6 +74,9 @@ func (s *Spooler) processInteraction(ctx context.Context, tracker *models.LeadIn
 
 		const maxRetries = 2
 		const retryDelay = 10 * time.Second
+		nonRetryableErrors := []string{
+			"Unable to invite the selected invitee",
+		}
 
 		var lastErr error
 		for i := 0; i < maxRetries; i++ {
@@ -86,6 +90,22 @@ func (s *Spooler) processInteraction(ctx context.Context, tracker *models.LeadIn
 
 			if lastErr == nil {
 				return // success
+			}
+
+			errMsg := lastErr.Error()
+			for _, nonRetry := range nonRetryableErrors {
+				if strings.Contains(errMsg, nonRetry) {
+					s.logger.Warn("non-retryable error occurred, skipping retries",
+						zap.String("interaction_type", tracker.Type.String()),
+						zap.String("reason", nonRetry),
+						zap.Error(lastErr),
+					)
+
+					if s.notifier != nil {
+						s.notifier.SendInteractionError(ctx, tracker.ID, lastErr)
+					}
+					return
+				}
 			}
 
 			s.logger.Warn("interaction attempt failed, will retry in 10 seconds:",
