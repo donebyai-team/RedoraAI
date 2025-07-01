@@ -6,9 +6,14 @@ Target Customer Persona:
 TargetCustomerPersona: {{ .TargetCustomerPersona }}
 
 Post Details:
-Title: {{ .Title }}
-Source: Reddit
-Description: {{ .Description }}
+Title:
+{{ .Title }}
+
+Source:
+Reddit
+
+Description:
+{{ .Description }}
 
 Comments Thread:
 {{ range $index, $element := .Comments }}

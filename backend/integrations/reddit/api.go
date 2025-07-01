@@ -287,7 +287,7 @@ func (r *Client) GetPostWithAllComments(ctx context.Context, postID string, filt
 
 	v.Set("raw_json", "1")
 
-	reqURL := fmt.Sprintf("%s/comments/%s.json?%s", r.baseURL, v.Encode())
+	reqURL := fmt.Sprintf("%s/comments/%s.json?%s", r.baseURL, postID, v.Encode())
 	resp, err := r.doRequest(ctx, http.MethodGet, reqURL, nil)
 	if err != nil {
 		return nil, err

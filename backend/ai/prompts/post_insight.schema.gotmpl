@@ -18,11 +18,11 @@
             "properties": {
               "topic": {
                 "type": "string",
-                "description": "A concise label or phrase summarizing the main discussion theme/topic."
+                "description": "A concise label or phrase summarizing the main discussion theme/topic. relevant_confidence_score >80"
               },
               "relevant_confidence_score": {
                 "type": "number",
-                "description": "Score from 0 to 100 indicating how relevant this post is to the product and persona. Only if score > 80, topics should be listed."
+                "description": "Score from 0 to 100 indicating how relevant the discussion topic is to the product and persona. Only if score > 80, topics should be listed."
               },
               "chain_of_thought": {
                 "type": "string",
@@ -46,11 +46,12 @@
               },
               "highlights": {
                 "type": "string",
-                "description": "Summary of the discussion, with key quotes or paraphrased ideas that help illustrate the topic’s importance."
+                "description": "Brief Summary of the discussion, with key quotes or paraphrased ideas that help illustrate the discussed topic’s importance."
               }
             },
             "required": [
               "topic",
+              "relevant_confidence_score",
               "chain_of_thought",
               "highlighted_comments",
               "sentiment",

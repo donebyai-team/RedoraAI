@@ -77,9 +77,8 @@ func (b CaseDecisionResponse) IsEmpty() bool {
 }
 
 type PostInsightResponse struct {
-	ChainOfThoughtIsRelevant  string            `json:"chain_of_thought"`
-	IsRelevantConfidenceScore float64           `json:"relevant_confidence_score"`
-	Insights                  []PostInsightItem `json:"insights"`
+	ChainOfThoughtIsRelevant string            `json:"chain_of_thought"`
+	Insights                 []PostInsightItem `json:"insights"`
 }
 
 type PostInsightItem struct {

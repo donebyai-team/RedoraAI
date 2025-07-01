@@ -74,8 +74,8 @@ var lowSignalPatterns = []*regexp.Regexp{
 }
 
 const (
-	MinScore  = 3
-	MinLength = 20
+	MinScore  = 1
+	MinLength = 10
 )
 
 func (f Comment) ShouldInclude() bool {

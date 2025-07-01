@@ -25,7 +25,7 @@ func (r *Database) CreatePostInsight(ctx context.Context, insight *models.PostIn
 		"sentiment":       insight.Sentiment,
 		"metadata":        insight.Metadata,
 		"relevancy_score": insight.RelevancyScore,
-		"source":          insight.Source,
+		"source_type":     insight.Source.String(),
 		"highlights":      insight.Highlights,
 	})
 	insight.ID = id

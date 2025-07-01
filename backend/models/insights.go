@@ -7,14 +7,15 @@ import (
 
 type PostInsight struct {
 	ID             string              `db:"id"`
-	RelevancyScore float64             `db:"relevance_score"`
+	RelevancyScore float64             `db:"relevancy_score"`
 	ProjectID      string              `db:"project_id"`
 	PostID         string              `db:"post_id"`
-	Source         SourceType          `db:"source"`
+	Source         SourceType          `db:"source_type"`
 	Topic          string              `db:"topic"`
 	Sentiment      string              `db:"sentiment"`
 	Highlights     string              `db:"highlights"`
 	CreatedAt      time.Time           `db:"created_at"`
+	UpdatedAt      *time.Time          `db:"updated_at"`
 	Metadata       PostInsightMetadata `db:"metadata"`
 }
 

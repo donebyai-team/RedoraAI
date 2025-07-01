@@ -104,7 +104,7 @@ func (s *redditKeywordTracker) TrackInSights(ctx context.Context, tracker *model
 			},
 		}
 
-		isValid, reason := s.isValidPost(post)
+		isValid, reason := s.isValidPostForInsight(post)
 		if isValid {
 			redditQueryComments := reddit.QueryFilters{
 				SortBy:      utils.Ptr(reddit.SortByTOP),
@@ -129,17 +129,19 @@ func (s *redditKeywordTracker) TrackInSights(ctx context.Context, tracker *model
 				continue
 			}
 
-			if postInsightAIResponse.IsRelevantConfidenceScore < defaultRelevancyScoreInsights {
-				s.logger.Info("post is not relevant",
+			if len(postInsightAIResponse.Insights) == 0 {
+				s.logger.Info("post has not enough insights, skipping",
 					zap.String("post_id", post.ID),
 				)
 
 				postInsights[0].Metadata.ChainOfThought = reason
-				postInsights[0].RelevancyScore = postInsightAIResponse.IsRelevantConfidenceScore
 			} else {
-				countPostsWithHighRelevancy++
+				var generatedPostInsights []models.PostInsight
 				for _, item := range postInsightAIResponse.Insights {
-					postInsights = append(postInsights, models.PostInsight{
+					if item.RelevancyScore >= defaultRelevancyScoreInsights {
+						countPostsWithHighRelevancy++
+					}
+					generatedPostInsights = append(generatedPostInsights, models.PostInsight{
 						RelevancyScore: item.RelevancyScore,
 						ProjectID:      project.ID,
 						PostID:         post.ID,
@@ -151,8 +153,13 @@ func (s *redditKeywordTracker) TrackInSights(ctx context.Context, tracker *model
 							ChainOfThought:      item.ChainOfThought,
 							HighlightedComments: item.HighLightedComments,
 							Title:               post.Title,
+							PostCreatedAt:       time.Unix(int64(post.CreatedAt), 0),
 						},
 					})
+				}
+
+				if len(generatedPostInsights) > 0 {
+					postInsights = generatedPostInsights
 				}
 			}
 		} else {
@@ -187,9 +194,25 @@ func (s *redditKeywordTracker) TrackInSights(ctx context.Context, tracker *model
 		zap.Int("total_posts_queried", len(posts)),
 		zap.Int("total_new_posts", len(newPosts)),
 		zap.Int("total_invalid_posts", countSkippedPosts),
-		zap.Int("high_relevancy_posts", countPostsWithHighRelevancy))
+		zap.Int("high_relevancy_insights", countPostsWithHighRelevancy))
 
 	return nil
+}
+
+func (s *redditKeywordTracker) isValidPostForInsight(post *reddit.Post) (bool, string) {
+	if post.NumComments < 3 {
+		return false, "less than 3 comments"
+	}
+
+	if post.Ups < 5 {
+		return false, "less than 5 upvotes"
+	}
+
+	if post.Score == 0 {
+		return false, "score is 0"
+	}
+
+	return s.isValidPost(post)
 }
 
 func (s *redditKeywordTracker) isMaxPostInsightsReached(ctx context.Context, projectID string) (bool, error) {

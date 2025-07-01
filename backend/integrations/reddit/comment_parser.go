@@ -113,11 +113,11 @@ func (r *Client) parseCommentTree(
 		}
 
 		// Fully filtered out
-		return nil, 0, nil
+		return nil, total, nil
 
 	case "more":
 		if !includeMore {
-			return nil, 0, nil
+			return nil, remaining, nil
 		}
 		var more struct {
 			Children []string `json:"children"`
@@ -129,7 +129,7 @@ func (r *Client) parseCommentTree(
 		}
 		moreComment, err := r.fetchMoreComments(ctx, more.Children, more.ParentID, remaining)
 		if err != nil || moreComment == nil {
-			return nil, 0, err
+			return nil, remaining, err
 		}
 		return moreComment, len(moreComment.Comments), nil
 
