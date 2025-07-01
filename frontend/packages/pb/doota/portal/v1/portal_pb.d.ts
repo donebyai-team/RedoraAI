@@ -4,6 +4,7 @@
 
 import type { GenEnum, GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv1";
 import type { Message } from "@bufbuild/protobuf";
+import type { PostInsight } from "../../core/v1/insight_pb";
 import type { Keyword, Lead, LeadInteraction, LeadInteractionStatus, LeadStatus, Project, ProjectSchema, Source, SourceSchema, Subscription, SubscriptionPlanID, SubscriptionSchema } from "../../core/v1/core_pb";
 import type { EmptySchema, Timestamp } from "@bufbuild/protobuf/wkt";
 
@@ -11,6 +12,22 @@ import type { EmptySchema, Timestamp } from "@bufbuild/protobuf/wkt";
  * Describes the file doota/portal/v1/portal.proto.
  */
 export declare const file_doota_portal_v1_portal: GenFile;
+
+/**
+ * @generated from message doota.portal.v1.InsightsResponse
+ */
+export declare type InsightsResponse = Message<"doota.portal.v1.InsightsResponse"> & {
+  /**
+   * @generated from field: repeated doota.core.v1.PostInsight insights = 1;
+   */
+  insights: PostInsight[];
+};
+
+/**
+ * Describes the message doota.portal.v1.InsightsResponse.
+ * Use `create(InsightsResponseSchema)` to create a new message.
+ */
+export declare const InsightsResponseSchema: GenMessage<InsightsResponse>;
 
 /**
  * @generated from message doota.portal.v1.UpgradeSubscriptionRequest
@@ -1479,6 +1496,16 @@ export declare const PortalService: GenService<{
     methodKind: "unary";
     input: typeof EmptySchema;
     output: typeof SubscriptionSchema;
+  },
+  /**
+   * Insights
+   *
+   * @generated from rpc doota.portal.v1.PortalService.GetInsights
+   */
+  getInsights: {
+    methodKind: "unary";
+    input: typeof EmptySchema;
+    output: typeof InsightsResponseSchema;
   },
 }>;
 

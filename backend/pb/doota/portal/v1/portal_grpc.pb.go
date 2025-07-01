@@ -49,6 +49,7 @@ const (
 	PortalService_VerifySubscription_FullMethodName          = "/doota.portal.v1.PortalService/VerifySubscription"
 	PortalService_UpgradeSubscription_FullMethodName         = "/doota.portal.v1.PortalService/UpgradeSubscription"
 	PortalService_CancelSubscription_FullMethodName          = "/doota.portal.v1.PortalService/CancelSubscription"
+	PortalService_GetInsights_FullMethodName                 = "/doota.portal.v1.PortalService/GetInsights"
 )
 
 // PortalServiceClient is the client API for PortalService service.
@@ -87,6 +88,8 @@ type PortalServiceClient interface {
 	VerifySubscription(ctx context.Context, in *VerifySubscriptionRequest, opts ...grpc.CallOption) (*v1.Subscription, error)
 	UpgradeSubscription(ctx context.Context, in *UpgradeSubscriptionRequest, opts ...grpc.CallOption) (*v1.Subscription, error)
 	CancelSubscription(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*v1.Subscription, error)
+	// Insights
+	GetInsights(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*InsightsResponse, error)
 }
 
 type portalServiceClient struct {
@@ -372,6 +375,15 @@ func (c *portalServiceClient) CancelSubscription(ctx context.Context, in *emptyp
 	return out, nil
 }
 
+func (c *portalServiceClient) GetInsights(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*InsightsResponse, error) {
+	out := new(InsightsResponse)
+	err := c.cc.Invoke(ctx, PortalService_GetInsights_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PortalServiceServer is the server API for PortalService service.
 // All implementations must embed UnimplementedPortalServiceServer
 // for forward compatibility
@@ -408,6 +420,8 @@ type PortalServiceServer interface {
 	VerifySubscription(context.Context, *VerifySubscriptionRequest) (*v1.Subscription, error)
 	UpgradeSubscription(context.Context, *UpgradeSubscriptionRequest) (*v1.Subscription, error)
 	CancelSubscription(context.Context, *emptypb.Empty) (*v1.Subscription, error)
+	// Insights
+	GetInsights(context.Context, *emptypb.Empty) (*InsightsResponse, error)
 	mustEmbedUnimplementedPortalServiceServer()
 }
 
@@ -498,6 +512,9 @@ func (UnimplementedPortalServiceServer) UpgradeSubscription(context.Context, *Up
 }
 func (UnimplementedPortalServiceServer) CancelSubscription(context.Context, *emptypb.Empty) (*v1.Subscription, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CancelSubscription not implemented")
+}
+func (UnimplementedPortalServiceServer) GetInsights(context.Context, *emptypb.Empty) (*InsightsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetInsights not implemented")
 }
 func (UnimplementedPortalServiceServer) mustEmbedUnimplementedPortalServiceServer() {}
 
@@ -1019,6 +1036,24 @@ func _PortalService_CancelSubscription_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PortalService_GetInsights_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortalServiceServer).GetInsights(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortalService_GetInsights_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortalServiceServer).GetInsights(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // PortalService_ServiceDesc is the grpc.ServiceDesc for PortalService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1133,6 +1168,10 @@ var PortalService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CancelSubscription",
 			Handler:    _PortalService_CancelSubscription_Handler,
+		},
+		{
+			MethodName: "GetInsights",
+			Handler:    _PortalService_GetInsights_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

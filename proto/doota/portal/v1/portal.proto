@@ -7,6 +7,7 @@ option go_package = "github.com/shank318/doota/pb/doota/portal/v1;pbportal";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
 import "doota/core/v1/core.proto";
+import "doota/core/v1/insight.proto";
 
 service PortalService {
   rpc GetConfig(.google.protobuf.Empty) returns (Config);
@@ -43,6 +44,13 @@ service PortalService {
   rpc VerifySubscription(VerifySubscriptionRequest) returns (doota.core.v1.Subscription);
   rpc UpgradeSubscription(UpgradeSubscriptionRequest) returns (doota.core.v1.Subscription);
   rpc CancelSubscription(.google.protobuf.Empty) returns (doota.core.v1.Subscription);
+
+  // Insights
+  rpc GetInsights(.google.protobuf.Empty) returns (InsightsResponse);
+}
+
+message InsightsResponse {
+ repeated doota.core.v1.PostInsight insights = 1;
 }
 
 message UpgradeSubscriptionRequest {

@@ -1,6 +1,9 @@
 package models
 
-import "database/sql/driver"
+import (
+	"database/sql/driver"
+	"time"
+)
 
 type PostInsight struct {
 	ID             string              `db:"id"`
@@ -11,7 +14,7 @@ type PostInsight struct {
 	Topic          string              `db:"topic"`
 	Sentiment      string              `db:"sentiment"`
 	Highlights     string              `db:"highlights"`
-	CreatedAt      string              `db:"created_at"`
+	CreatedAt      time.Time           `db:"created_at"`
 	Metadata       PostInsightMetadata `db:"metadata"`
 }
 

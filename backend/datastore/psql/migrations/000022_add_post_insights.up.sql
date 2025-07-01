@@ -18,12 +18,12 @@ CREATE TABLE post_insights
 -- Assuming projects and posts are tracked in other tables
 ALTER TABLE post_insights ADD CONSTRAINT fk1_post_insights FOREIGN KEY (project_id) REFERENCES projects (id);
 
--- Indexes to support efficient querying
-CREATE INDEX idx_post_insights_project_created_at ON post_insights (project_id, created_at);
-CREATE INDEX idx_post_insights_project_id ON post_insights (project_id);
+CREATE INDEX idx_post_insights_proj_score_created
+    ON post_insights (project_id, relevancy_score, created_at);
 
+CREATE INDEX idx_post_insights_post_project
+    ON post_insights (post_id, project_id);
 
--- Optional: audit trigger
 CREATE TRIGGER trigger_record_changed_on_post_insights
     BEFORE UPDATE
     ON post_insights

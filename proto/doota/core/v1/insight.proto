@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package doota.core.v1;
+
+option go_package = "github.com/shank318/doota/pb/doota/core/v1;pbcore";
+import "google/protobuf/timestamp.proto";
+
+import "google/protobuf/any.proto";
+
+
+message PostInsight {
+  string id = 1;
+  string project_id = 2;
+  string source = 3;
+  string post_id = 4;
+  string topic = 5;
+  string highlights = 6;
+  double relevancy_score = 7;
+  string sentiment = 8;
+  string post_title = 9;
+  repeated string highlighted_comments = 10;
+  string cot = 11;
+  google.protobuf.Timestamp created_at = 12;
+}
