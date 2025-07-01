@@ -83,6 +83,7 @@ type PostInsightResponse struct {
 }
 
 type PostInsightItem struct {
+	RelevancyScore      float64  `json:"relevant_confidence_score"`
 	Topic               string   `json:"topic"`                // suggested topic discussed
 	ChainOfThought      string   `json:"chain_of_thought"`     // why the topic is suggested
 	HighLightedComments []string `json:"highlighted_comments"` // comment ids from as a source

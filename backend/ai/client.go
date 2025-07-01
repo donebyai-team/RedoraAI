@@ -9,6 +9,7 @@ import (
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"
 	"github.com/openai/openai-go/shared"
+	"github.com/shank318/doota/integrations/reddit"
 	"github.com/shank318/doota/models"
 	"github.com/shank318/doota/utils"
 	"github.com/streamingfast/derr"
@@ -324,23 +325,34 @@ func (c *Client) GetSourceCommunityRulesEvaluation(ctx context.Context, model mo
 
 type PostInsightInput struct {
 	Project *models.Project `json:"project"`
-	Post    *models.Lead    `json:"post"`
-	Source  *models.Source  `json:"source"`
+	Post    *reddit.Post    `json:"post"`
 }
 
 func (c *Client) ExtractPostInsight(ctx context.Context, model models.LLMModel, input PostInsightInput, logger *zap.Logger) (*models.PostInsightResponse, *models.LLMModelUsage, error) {
-	runID := fmt.Sprintf("insight-%s-%s-%s", input.Project.ID, input.Post.PostID, uuid.New().String())
+	runID := fmt.Sprintf("insight-%s-%s-%s", input.Project.ID, input.Post.ID, uuid.New().String())
 	out := make(Variable)
 	out["ProductName"] = input.Project.Name
 	out["ProductDescription"] = input.Project.ProductDescription
 	out["TargetCustomerPersona"] = input.Project.CustomerPersona
 
-	if input.Post.Title != nil {
-		out["Title"] = input.Post.Title
-	} else {
-		out["Title"] = "Comment"
+	out["Title"] = input.Post.Title
+	out["Description"] = input.Post.Selftext
+
+	var lines []string
+	var walk func(c *reddit.Comment)
+	walk = func(c *reddit.Comment) {
+		line := fmt.Sprintf("[Depth %d] Comment ID: %s - %s", c.Depth, c.ID, c.Body)
+		lines = append(lines, line)
+		for _, reply := range c.Comments {
+			walk(reply)
+		}
 	}
-	out["Description"] = input.Post.Description
+
+	for _, c := range input.Post.Comments {
+		walk(c)
+	}
+
+	out["Comments"] = lines
 
 	llmModelToUse := c.defaultLLMModel
 	if string(model) != "" {
@@ -360,7 +372,7 @@ func (c *Client) ExtractPostInsight(ctx context.Context, model models.LLMModel, 
 		messages,
 		responseFormat,
 		logger,
-		"reddit_post_relevancy.output",
+		"post_insight.output",
 	)
 	if err != nil {
 		return nil, nil, err

@@ -279,7 +279,7 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 		return err
 	}
 
-	redditQuery := reddit.PostFilters{
+	redditQuery := reddit.QueryFilters{
 		Keywords: []string{keyword.Keyword},
 		SortBy:   utils.Ptr(reddit.SortByNEW),
 		Limit:    100,
@@ -689,14 +689,15 @@ func (s *redditKeywordTracker) isMaxLeadLimitReached(ctx context.Context, org *m
 }
 
 const (
-	minSelftextLength           = 30
-	minTitleLength              = 5
-	maxPostAgeInMonths          = 6
-	defaultRelevancyScoreGlobal = 90 // relevancy score to re-confirm with higher model and also max leads
-	dailyPostsRelevancyScore    = 80
-	minRelevancyScore           = 70
-	defaultLLMFailedCount       = 3
-	maxPostsToTrackPerDay       = 600
+	minSelftextLength             = 30
+	minTitleLength                = 5
+	maxPostAgeInMonths            = 6
+	defaultRelevancyScoreGlobal   = 90 // relevancy score to re-confirm with higher model and also max leads
+	dailyPostsRelevancyScore      = 80
+	minRelevancyScore             = 70
+	defaultLLMFailedCount         = 3
+	maxPostsToTrackPerDay         = 600
+	defaultRelevancyScoreInsights = 90
 )
 
 var systemAuthors = []string{"[deleted]", "AutoModerator"}

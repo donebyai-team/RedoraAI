@@ -11,12 +11,10 @@ import (
 	"github.com/shank318/doota/models"
 	"github.com/shank318/doota/utils"
 	"go.uber.org/zap"
-	"time"
 )
 
 func (s *redditKeywordTracker) TrackInSights(ctx context.Context, tracker *models.AugmentedKeywordTracker) error {
-	if !s.shouldTrack(tracker) {
-		go s.disableProject(ctx, tracker.Organization)
+	if !s.shouldTrack(tracker) || tracker.Organization.FeatureFlags.GetSubscriptionPlan() == models.SubscriptionPlanTypeFREE {
 		return nil
 	}
 
@@ -40,11 +38,13 @@ func (s *redditKeywordTracker) TrackInSights(ctx context.Context, tracker *model
 	// to make it available downstream
 	source.OrgID = project.OrganizationID
 
-	redditQuery := reddit.PostFilters{
-		Keywords: []string{keyword.Keyword},
-		SortBy:   utils.Ptr(reddit.SortByTOP),
-		TimeRage: utils.Ptr(reddit.TimeRangeWEEK),
-		Limit:    100,
+	redditQuery := reddit.QueryFilters{
+		Keywords:    []string{keyword.Keyword},
+		SortBy:      utils.Ptr(reddit.SortByTOP),
+		TimeRage:    utils.Ptr(reddit.TimeRangeWEEK),
+		Limit:       100,
+		MaxComments: 20,
+		IncludeMore: false,
 	}
 
 	s.logger.Info("started tracking insights",
@@ -58,69 +58,119 @@ func (s *redditKeywordTracker) TrackInSights(ctx context.Context, tracker *model
 
 	newPosts := []*reddit.Post{}
 	for _, post := range posts {
-		lead, err := s.db.GetLeadByPostID(ctx, project.ID, post.ID)
-		if err != nil && !errors.Is(err, datastore.NotFound) {
+		insights, err := s.db.GetInsightsByPostID(ctx, project.ID, post.ID)
+		if err != nil {
 			// Unexpected error, log and skip
-			s.logger.Error("error while checking if lead exists by post id", zap.Error(err))
+			s.logger.Error("error while checking if insight exists by post id", zap.Error(err))
 			continue
 		}
-		if err == nil && lead != nil {
-			s.logger.Debug("post already exists", zap.String("post_id", post.ID))
+
+		if len(insights) > 0 {
+			s.logger.Debug("post insight already exists", zap.String("post_id", post.ID))
 			continue
 		}
-		// Post doesn't exist, keep it
+		// insight doesn't exist, keep it
 		newPosts = append(newPosts, post)
 	}
 
-	countPostsWithHighRelevancy := 0
 	countSkippedPosts := 0
 	aiErrorsCount := 0
+	countPostsWithHighRelevancy := 0
 
-	s.logger.Info("posts to be evaluated on relevancy via ai", zap.Int("total_posts", len(newPosts)))
+	s.logger.Info("posts insights to be evaluated on relevancy via ai", zap.Int("total_posts", len(newPosts)))
 	// Filter by AI
 	for _, post := range newPosts {
 		if aiErrorsCount >= defaultLLMFailedCount {
 			return fmt.Errorf("more than %d llm called failed, skipped processing", defaultLLMFailedCount)
 		}
 
-		insight := &models.PostInsight{
-			ProjectID:      project.ID,
-			PostID:         post.ID,
-			Source:         models.SourceTypeSUBREDDIT,
-			RelevancyScore: 0,
-			Metadata: models.PostInsightMetadata{
-				Title: post.Title,
+		postInsights := []models.PostInsight{
+			{
+				ProjectID:      project.ID,
+				PostID:         post.ID,
+				Source:         models.SourceTypeSUBREDDIT,
+				RelevancyScore: 0,
+				Metadata: models.PostInsightMetadata{
+					Title: post.Title,
+				},
 			},
 		}
 
 		isValid, reason := s.isValidPost(post)
 		if isValid {
-			// call ai
-			postWithAllComments, err := redditClient.GetPostWithAllComments(ctx, post.ID, 10, false)
+			redditQueryComments := reddit.QueryFilters{
+				SortBy:      utils.Ptr(reddit.SortByTOP),
+				TimeRage:    utils.Ptr(reddit.TimeRangeWEEK),
+				Limit:       100,
+				MaxComments: 20,
+				IncludeMore: false,
+			}
+			postWithAllComments, err := redditClient.GetPostWithAllComments(ctx, post.ID, redditQueryComments)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to get post with all comments: %w", err)
 			}
 
-			postInsight, m, err := s.aiClient.ExtractPostInsight(ctx, s.aiClient.GetAdvanceModel(), ai.PostInsightInput{
-				Project: nil,
-				Post:    nil,
-				Source:  nil,
+			postInsightAIResponse, _, err := s.aiClient.ExtractPostInsight(ctx, s.aiClient.GetAdvanceModel(), ai.PostInsightInput{
+				Project: tracker.Project,
+				Post:    postWithAllComments,
 			}, s.logger)
+
 			if err != nil {
-				return err
+				s.logger.Error("failed to get insights", zap.Error(err), zap.String("post_id", post.ID))
+				aiErrorsCount++
+				continue
 			}
 
+			if postInsightAIResponse.IsRelevantConfidenceScore < defaultRelevancyScoreInsights {
+				s.logger.Info("post is not relevant",
+					zap.String("post_id", post.ID),
+				)
+
+				postInsights[0].Metadata.ChainOfThought = reason
+				postInsights[0].RelevancyScore = postInsightAIResponse.IsRelevantConfidenceScore
+			} else {
+				countPostsWithHighRelevancy++
+				for _, item := range postInsightAIResponse.Insights {
+					postInsights = append(postInsights, models.PostInsight{
+						RelevancyScore: item.RelevancyScore,
+						ProjectID:      project.ID,
+						PostID:         post.ID,
+						Source:         models.SourceTypeSUBREDDIT,
+						Topic:          item.Topic,
+						Sentiment:      item.Sentiment,
+						Highlights:     item.Highlights,
+						Metadata: models.PostInsightMetadata{
+							ChainOfThought:      item.ChainOfThought,
+							HighlightedComments: item.HighLightedComments,
+							Title:               post.Title,
+						},
+					})
+				}
+			}
 		} else {
 			countSkippedPosts++
-			s.logger.Info("ignoring reddit post for ai relevancy check",
+			s.logger.Info("ignoring reddit post insight for ai relevancy check",
 				zap.String("post_id", post.ID),
-				zap.String("author", post.Author),
 				zap.String("reason", reason),
 			)
+			postInsights[0].Metadata.ChainOfThought = reason
+		}
 
-			insight.RelevancyScore = 0
-			insight.Metadata.ChainOfThought = reason
+		// save the default one
+		for _, insight := range postInsights {
+			_, err = s.db.CreatePostInsight(ctx, &insight)
+			if err != nil {
+				s.logger.Error("failed to create post insight", zap.Error(err), zap.String("post_id", post.ID))
+				return fmt.Errorf("failed to create post insight: %w", err)
+			}
 		}
 	}
 
+	s.logger.Info("post_insight_summary",
+		zap.Int("total_posts_queried", len(posts)),
+		zap.Int("total_new_posts", len(newPosts)),
+		zap.Int("total_invalid_posts", countSkippedPosts),
+		zap.Int("high_relevancy_posts", countPostsWithHighRelevancy))
+
+	return nil
 }

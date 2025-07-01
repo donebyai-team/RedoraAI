@@ -173,20 +173,22 @@ type SortBy string
 // ENUM(ALL, YEAR, WEEK, MONTH, TODAY, HOUR)
 type TimeRange string
 
-type PostFilters struct {
-	Keywords []string
-	SortBy   *SortBy
-	TimeRage *TimeRange
-	After    *string
-	Before   *string
-	Limit    int
+type QueryFilters struct {
+	Keywords    []string
+	SortBy      *SortBy
+	TimeRage    *TimeRange
+	After       *string
+	Before      *string
+	Limit       int
+	MaxComments int
+	IncludeMore bool
 }
 
 func (r *Client) GetConfig() *models.RedditConfig {
 	return r.config
 }
 
-func (r *Client) GetPosts(ctx context.Context, subRedditName string, filters PostFilters) ([]*Post, error) {
+func (r *Client) GetPosts(ctx context.Context, subRedditName string, filters QueryFilters) ([]*Post, error) {
 	v := url.Values{}
 	if len(filters.Keywords) > 0 {
 		v.Set("q", strings.Join(filters.Keywords, " "))
@@ -264,8 +266,28 @@ func (r *Client) GetPostByID(ctx context.Context, postID string) (*Post, error) 
 	return nil, ErrNotFound // Post not found in the response
 }
 
-func (r *Client) GetPostWithAllComments(ctx context.Context, postID string, maxComments int, includeMore bool) (*Post, error) {
-	reqURL := fmt.Sprintf("%s/comments/%s.json?raw_json=1&sort=new", r.baseURL, postID)
+func (r *Client) GetPostWithAllComments(ctx context.Context, postID string, filters QueryFilters) (*Post, error) {
+	v := url.Values{}
+	// IMP: make sure the sort by is in lower case else it won't work
+	if filters.SortBy != nil {
+		v.Set("sort", strings.ToLower(filters.SortBy.String()))
+	}
+
+	if filters.TimeRage != nil {
+		v.Set("t", strings.ToLower(filters.TimeRage.String()))
+	}
+
+	if filters.Limit != 0 {
+		v.Set("limit", strconv.Itoa(filters.Limit))
+	}
+
+	if filters.After != nil {
+		v.Set("after", *filters.After)
+	}
+
+	v.Set("raw_json", "1")
+
+	reqURL := fmt.Sprintf("%s/comments/%s.json?%s", r.baseURL, v.Encode())
 	resp, err := r.doRequest(ctx, http.MethodGet, reqURL, nil)
 	if err != nil {
 		return nil, err
@@ -276,7 +298,7 @@ func (r *Client) GetPostWithAllComments(ctx context.Context, postID string, maxC
 	if err := decodeJSON(resp.Body, &rawResp); err != nil {
 		return nil, err
 	}
-	return r.parsePostWithComments(ctx, rawResp, maxComments, includeMore)
+	return r.parsePostWithComments(ctx, rawResp, filters.MaxComments, filters.IncludeMore)
 }
 
 func (r *Client) isTokenExpired() bool {

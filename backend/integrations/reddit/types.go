@@ -1,5 +1,10 @@
 package reddit
 
+import (
+	"regexp"
+	"strings"
+)
+
 // SubReddit represents information about a subreddit.
 type SubReddit struct {
 	ID          string  `json:"id"`           // subreddit id eg. 2qib3
@@ -59,6 +64,34 @@ type Comment struct {
 	Comments   []*Comment
 	AuthorInfo *User
 	// Add other relevant comment fields
+}
+
+var lowSignalPatterns = []*regexp.Regexp{
+	regexp.MustCompile(`^\s*$`),
+	regexp.MustCompile(`(?i)^thanks\b`),
+	regexp.MustCompile(`(?i)^lol$`),
+	regexp.MustCompile(`^👍+$`),
+}
+
+const (
+	MinScore  = 3
+	MinLength = 20
+)
+
+func (f Comment) ShouldInclude() bool {
+	if f.Score < MinScore {
+		return false
+	}
+	if len(f.Body) < MinLength {
+		return false
+	}
+	lower := strings.ToLower(strings.TrimSpace(f.Body))
+	for _, re := range lowSignalPatterns {
+		if re.MatchString(lower) {
+			return false
+		}
+	}
+	return true
 }
 
 // User represents a Reddit user.

@@ -35,6 +35,7 @@ type Repository interface {
 	ProjectRepository
 	LeadInteractionRepository
 	SubscriptionRepository
+	PostInsightRepository
 }
 
 type OrganizationRepository interface {
@@ -151,6 +152,12 @@ type PromptTypeRepository interface {
 	CreatePromptType(ctx context.Context, PromptType *models.PromptType) (*models.PromptType, error)
 	UpdatePromptType(ctx context.Context, PromptType *models.PromptType) error
 	GetPromptTypeByName(ctx context.Context, name string) (*models.PromptType, error)
+}
+
+type PostInsightRepository interface {
+	CreatePostInsight(ctx context.Context, insight *models.PostInsight) (*models.PostInsight, error)
+	GetInsightsByPostID(ctx context.Context, projectID, postID string) ([]*models.PostInsight, error)
+	GetInsights(ctx context.Context, projectID string, filter LeadsFilter) ([]*models.PostInsight, error)
 }
 
 type CustomerCaseFilter struct {

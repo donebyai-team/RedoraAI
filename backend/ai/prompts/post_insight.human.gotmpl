@@ -11,6 +11,6 @@ Source: Reddit
 Description: {{ .Description }}
 
 Comments Thread:
-{{ range .Comments }}
-[Depth {{ .Depth }}] Comment ID: {{ .ID }} - {{ .Text }}
+{{ range $index, $element := .Comments }}
+- {{ $element }}
 {{ end }}

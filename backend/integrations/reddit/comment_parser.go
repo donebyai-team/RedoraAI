@@ -50,7 +50,12 @@ func (r *Client) parsePostWithComments(ctx context.Context, rawResp []json.RawMe
 	return &post, nil
 }
 
-func (r *Client) parseCommentTree(ctx context.Context, raw json.RawMessage, remaining int, includeMore bool) (*Comment, int, error) {
+func (r *Client) parseCommentTree(
+	ctx context.Context,
+	raw json.RawMessage,
+	remaining int,
+	includeMore bool,
+) (*Comment, int, error) {
 	if remaining <= 0 {
 		return nil, 0, nil
 	}
@@ -64,12 +69,14 @@ func (r *Client) parseCommentTree(ctx context.Context, raw json.RawMessage, rema
 	}
 
 	switch kindWrapper.Kind {
-	case "t1": // comment
+	case "t1": // Comment
 		var c Comment
 		if err := json.Unmarshal(kindWrapper.Data, &c); err != nil {
 			return nil, 0, err
 		}
-		total := 1
+
+		total := 0
+		var replies []*Comment
 
 		// Recurse into replies
 		if rawReplies, ok := extractReplies(kindWrapper.Data); ok && remaining > 1 {
@@ -85,13 +92,28 @@ func (r *Client) parseCommentTree(ctx context.Context, raw json.RawMessage, rema
 					}
 					childComment, used, err := r.parseCommentTree(ctx, child, remaining-total, includeMore)
 					if err == nil && childComment != nil {
-						c.Comments = append(c.Comments, childComment)
+						replies = append(replies, childComment)
 						total += used
 					}
 				}
 			}
 		}
-		return &c, total, nil
+
+		if c.ShouldInclude() {
+			c.Comments = replies
+			total++ // Count this comment
+			return &c, total, nil
+		}
+
+		// If this comment isn't included but replies are, pass those up
+		if len(replies) > 0 {
+			// Return a dummy parent to hold children
+			c.Comments = replies
+			return &c, total, nil
+		}
+
+		// Fully filtered out
+		return nil, 0, nil
 
 	case "more":
 		if !includeMore {
