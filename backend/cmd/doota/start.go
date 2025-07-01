@@ -41,7 +41,8 @@ var StartCmd = cli.Command(startCmdE,
 		flags.String("common-resend-api-key", "", "Resend email api key")
 		flags.String("common-dodopayment-api-key", "", "DodoPayment api key")
 		flags.String("common-browserless-api-key", "", "Browserless api key")
-		flags.String("common-openai-api-key", "", "OpenAI API key")
+		flags.String("common-openai-api-key", "", "LiteLLM API key")
+		flags.String("common-openai-gpt-api-key", "", "OpenAI API key")
 		flags.String("common-openai-debug-store", "data/debugstore", "OpenAI debug store")
 		flags.String("common-playwright-debug-store", "data/debugstore", "PlayWright debug store")
 		flags.String("common-openai-organization", "", "OpenAI Organization")
@@ -120,14 +121,14 @@ func startCmdE(cmd *cobra.Command, args []string) error {
 }
 
 func openAILangsmithLegacyHandling(cmd *cobra.Command, prefix string) (string, string, string, string, string) {
-	openaiApiKey, openaiApiKeyLegacyFlagPresent := sflags.MustGetStringProvided(cmd, prefix+"-openai-api-key")
+	liteLLMKey, liteLLMKeyLegacyFlagPresent := sflags.MustGetStringProvided(cmd, prefix+"-openai-api-key")
 	openaiOrganization, openaiOrganizationLegacyFlagPresent := sflags.MustGetStringProvided(cmd, prefix+"-openai-organization")
 	openaiDebugStore, openaiDebugStoreLegacyFlagPresent := sflags.MustGetStringProvided(cmd, prefix+"-openai-debug-store")
 	langsmithApiKey, langsmithApiKeyLegacyFlagPresent := sflags.MustGetStringProvided(cmd, prefix+"-langsmith-api-key")
 	langsmithProject, langsmithProjectLegacyFlagPresent := sflags.MustGetStringProvided(cmd, prefix+"-langsmith-project")
 
-	if !openaiApiKeyLegacyFlagPresent {
-		openaiApiKey = sflags.MustGetString(cmd, "common-openai-api-key")
+	if !liteLLMKeyLegacyFlagPresent {
+		liteLLMKey = sflags.MustGetString(cmd, "common-openai-api-key")
 	}
 
 	if !openaiOrganizationLegacyFlagPresent {
@@ -146,11 +147,11 @@ func openAILangsmithLegacyHandling(cmd *cobra.Command, prefix string) (string, s
 		langsmithProject = sflags.MustGetString(cmd, "common-langsmith-project")
 	}
 
-	return openaiApiKey, openaiOrganization, openaiDebugStore, langsmithApiKey, langsmithProject
+	return liteLLMKey, openaiOrganization, openaiDebugStore, langsmithApiKey, langsmithProject
 }
 
 func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
-	openaiApiKey, _, openaiDebugStore, langsmithApiKey, langsmithProject := openAILangsmithLegacyHandling(cmd, "common")
+	liteLLMKey, openAIOrg, openaiDebugStore, langsmithApiKey, langsmithProject := openAILangsmithLegacyHandling(cmd, "common")
 	redisAddr := sflags.MustGetString(cmd, "redis-addr")
 	deps, err := app.NewDependenciesBuilder().
 		WithDataStore(sflags.MustGetString(cmd, "pg-dsn")).
@@ -158,7 +159,9 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		WithAI(
 			models.LLMModel(sflags.MustGetString(cmd, "common-gpt-model")),
 			models.LLMModel(sflags.MustGetString(cmd, "common-gpt-advance-model")),
-			openaiApiKey,
+			liteLLMKey,
+			sflags.MustGetString(cmd, "common-openai-gpt-api-key"),
+			openAIOrg,
 			openaiDebugStore,
 			langsmithApiKey,
 			langsmithProject,
@@ -188,7 +191,7 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		isDev,
 		redditOauthClient,
 		deps.DataStore,
-		deps.AIClient,
+		deps.LiteLLMClient,
 		logger,
 		deps.ConversationState,
 		alerts.NewSlackNotifier(sflags.MustGetString(cmd, "common-resend-api-key"), deps.DataStore, logger),
@@ -255,7 +258,7 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 	return redora.New(
 		deps.DataStore,
 		interactionsSpooler,
-		deps.AIClient,
+		deps.LiteLLMClient,
 		deps.ConversationState,
 		50,
 		10,
@@ -267,13 +270,15 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 }
 
 func vanaSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
-	openaiApiKey, _, openaiDebugStore, langsmithApiKey, langsmithProject := openAILangsmithLegacyHandling(cmd, "common")
+	liteLLMKey, openAIOrg, openaiDebugStore, langsmithApiKey, langsmithProject := openAILangsmithLegacyHandling(cmd, "common")
 	deps, err := app.NewDependenciesBuilder().
 		WithDataStore(sflags.MustGetString(cmd, "pg-dsn")).
 		WithAI(
 			models.LLMModel(sflags.MustGetString(cmd, "common-gpt-model")),
 			models.LLMModel(sflags.MustGetString(cmd, "common-gpt-advance-model")),
-			openaiApiKey,
+			liteLLMKey,
+			sflags.MustGetString(cmd, "common-openai-gpt-api-key"),
+			openAIOrg,
 			openaiDebugStore,
 			langsmithApiKey,
 			langsmithProject,
@@ -292,11 +297,11 @@ func vanaSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 	logger := zlog.Named("spooler")
 
 	integrationsFactory := integrations.NewFactory(deps.DataStore, logger)
-	caseInvestigator := vana.NewCaseInvestigator(deps.DataStore, deps.AIClient, logger, deps.ConversationState)
+	caseInvestigator := vana.NewCaseInvestigator(deps.DataStore, deps.LiteLLMClient, logger, deps.ConversationState)
 
 	return vana.New(
 		deps.DataStore,
-		deps.AIClient,
+		deps.LiteLLMClient,
 		deps.ConversationState,
 		caseInvestigator,
 		integrationsFactory,
@@ -317,7 +322,7 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		isDev = true
 	}
 
-	openaiApiKey, _, openaiDebugStore, langsmithApiKey, langsmithProject := openAILangsmithLegacyHandling(cmd, "common")
+	liteLLMKey, openAIOrg, openaiDebugStore, langsmithApiKey, langsmithProject := openAILangsmithLegacyHandling(cmd, "common")
 	deps, err := app.NewDependenciesBuilder().
 		WithDataStore(sflags.MustGetString(cmd, "pg-dsn")).
 		WithKMSKeyPath(sflags.MustGetString(cmd, "jwt-kms-keypath")).
@@ -331,7 +336,9 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		WithAI(
 			models.LLMModel(sflags.MustGetString(cmd, "common-gpt-model")),
 			models.LLMModel(sflags.MustGetString(cmd, "common-gpt-advance-model")),
-			openaiApiKey,
+			liteLLMKey,
+			sflags.MustGetString(cmd, "common-openai-gpt-api-key"),
+			openAIOrg,
 			openaiDebugStore,
 			langsmithApiKey,
 			langsmithProject,
@@ -358,7 +365,7 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 
 	integrationsFactory := integrations.NewFactory(deps.DataStore, logger)
 
-	caseInvestigator := vana.NewCaseInvestigator(deps.DataStore, deps.AIClient, logger, deps.ConversationState)
+	caseInvestigator := vana.NewCaseInvestigator(deps.DataStore, deps.LiteLLMClient, logger, deps.ConversationState)
 
 	vanaWebhookHandler := vana.NewVanaWebhookHandler(
 		deps.DataStore,
@@ -405,7 +412,7 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 	dodoSubscriptionService := services.NewDodoSubscriptionService(deps.DataStore, alertNotifier, dodoPaymentToken, logger, isDev)
 
 	p := portal.New(
-		deps.AIClient,
+		deps.OpenAIClient,
 		redditOauthClient,
 		deps.GoogleClient,
 		authenticator,

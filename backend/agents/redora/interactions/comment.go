@@ -169,6 +169,10 @@ func (r redditInteractions) SendComment(ctx context.Context, interaction *models
 
 		redditLead.LeadMetadata.AutomatedCommentURL = fmt.Sprintf("https://www.reddit.com/%s", interaction.Metadata.Permalink)
 		redditLead.Status = models.LeadStatusAIRESPONDED
+
+		if redditClient != nil && redditClient.GetConfig() != nil {
+			interaction.From = redditClient.GetConfig().Name
+		}
 	}
 
 	r.logger.Info("successfully sent reddit comment",

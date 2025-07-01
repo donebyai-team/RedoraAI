@@ -324,6 +324,10 @@ func (d dodoSubscriptionService) handleActiveSubscription(
 	plan models.SubscriptionPlanType,
 ) (*models.Subscription, error) {
 	oldSubExpiresAt := oldSub.ExpiresAt
+	oldPlanID := oldSub.PlanID
+
+	newPlan := psql.CreateSubscriptionObject(plan)
+	oldSub.Metadata = newPlan.Metadata
 	oldSub.PlanID = plan
 	oldSub.OrganizationID = orgID
 	oldSub.ExternalID = nil
@@ -360,7 +364,7 @@ func (d dodoSubscriptionService) handleActiveSubscription(
 	d.logger.Info("subscription activated", zap.String("orgID", orgID), zap.Any("subscription", oldSub))
 
 	// Send email notifications
-	if oldSub.PlanID == models.SubscriptionPlanTypeFREE {
+	if oldPlanID == models.SubscriptionPlanTypeFREE {
 		go d.notifier.SendSubscriptionCreatedEmail(context.Background(), orgID)
 	} else if !oldSubExpiresAt.Equal(externalSub.NextBillingDate) {
 		go d.notifier.SendSubscriptionRenewedEmail(context.Background(), orgID)

@@ -55,7 +55,8 @@ type conversationState struct {
 }
 
 type AIConfig struct {
-	OpenAIKey            string
+	LiteLLMAPIKey        string
+	OpenAIAPIKey         string
 	OpenAIOrganization   string
 	OpenAIDebugLogsStore string
 	LangsmithApiKey      string
@@ -96,9 +97,11 @@ func (b *DependenciesBuilder) WithConversationState(phoneCallStateTTL time.Durat
 	return b
 }
 
-func (b *DependenciesBuilder) WithAI(defaultLLMModel, advanceLLMModel models.LLMModel, openAIKey string, openAIDebugLogsStore string, langsmithApiKey string, langsmithProject string) *DependenciesBuilder {
+func (b *DependenciesBuilder) WithAI(defaultLLMModel, advanceLLMModel models.LLMModel, liteLLMAPIKey string, openAIAPIKey string, openAIOrg string, openAIDebugLogsStore string, langsmithApiKey string, langsmithProject string) *DependenciesBuilder {
 	b.AIConfig = &AIConfig{
-		OpenAIKey:            openAIKey,
+		LiteLLMAPIKey:        liteLLMAPIKey,
+		OpenAIAPIKey:         openAIAPIKey,
+		OpenAIOrganization:   openAIOrg,
 		OpenAIDebugLogsStore: openAIDebugLogsStore,
 		LangsmithApiKey:      langsmithApiKey,
 		LangsmithProject:     langsmithProject,
@@ -168,8 +171,8 @@ func (b *DependenciesBuilder) Build(ctx context.Context, logger *zap.Logger, tra
 			return nil, fmt.Errorf("unable to create debug store: %w", err)
 		}
 
-		out.AIClient, err = ai.NewOpenAI(
-			b.AIConfig.OpenAIKey,
+		out.LiteLLMClient, err = ai.NewLLMClient(
+			b.AIConfig.LiteLLMAPIKey,
 			b.AIConfig.DefaultLLMModel,
 			b.AIConfig.AdvanceLLMModel,
 			ai.LangsmithConfig{
@@ -180,7 +183,23 @@ func (b *DependenciesBuilder) Build(ctx context.Context, logger *zap.Logger, tra
 			logger,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("unable to create openai client: %w", err)
+			return nil, fmt.Errorf("unable to create litellm client: %w", err)
+		}
+
+		if b.AIConfig.OpenAIAPIKey != "" && b.AIConfig.OpenAIOrganization != "" {
+			out.OpenAIClient, err = ai.NewOpenAIClient(
+				b.AIConfig.OpenAIAPIKey,
+				b.AIConfig.OpenAIOrganization,
+				"gpt-4.1-2025-04-14",
+				"gpt-4.1-2025-04-14",
+				ai.LangsmithConfig{},
+				debugStore,
+				logger,
+			)
+
+			if err != nil {
+				return nil, fmt.Errorf("unable to create openai client: %w", err)
+			}
 		}
 	}
 
@@ -208,7 +227,8 @@ type Dependencies struct {
 
 	dootaDepMissing []string
 
-	AIClient          *ai.Client
+	LiteLLMClient     *ai.Client
+	OpenAIClient      *ai.Client
 	GoogleClient      *google2.OauthClient
 	ConversationState state.ConversationState
 }

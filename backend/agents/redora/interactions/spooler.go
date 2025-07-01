@@ -8,6 +8,7 @@ import (
 	"github.com/shank318/doota/models"
 	"github.com/shank318/doota/notifiers/alerts"
 	"go.uber.org/zap"
+	"strings"
 	"time"
 )
 
@@ -49,7 +50,6 @@ func (s *Spooler) processInteraction(ctx context.Context, tracker *models.LeadIn
 
 	uniqueID := fmt.Sprintf("interactions:%s", tracker.ID)
 
-	// Check if a call is already running across organizations
 	isRunning, err := s.state.IsRunning(ctx, uniqueID)
 	if err != nil {
 		return fmt.Errorf("failed to check if interaction is running: %w", err)
@@ -62,29 +62,69 @@ func (s *Spooler) processInteraction(ctx context.Context, tracker *models.LeadIn
 
 	// Async call to TrackKeyword
 	go func() {
-		// Try to acquire the lock and if fails return
 		if err := s.state.Acquire(ctx, tracker.Organization.ID, uniqueID); err != nil {
 			s.logger.Warn("could not acquire lock for keyword tracker, skipping", zap.Error(err))
 			return
 		}
-
 		defer func() {
 			if err := s.state.Release(ctx, uniqueID); err != nil {
 				s.logger.Error("failed to release lock on keyword tracker", zap.Error(err))
 			}
 		}()
 
-		var err error
-		if tracker.Type == models.LeadInteractionTypeCOMMENT {
-			err = s.automatedInteractions.SendComment(ctx, tracker)
-		} else if tracker.Type == models.LeadInteractionTypeDM {
-			err = s.automatedInteractions.SendDM(ctx, tracker)
+		const maxRetries = 2
+		const retryDelay = 10 * time.Second
+		nonRetryableErrors := []string{
+			"Unable to invite the selected invitee",
 		}
-		if err != nil {
-			s.logger.Error("failed to send interaction", zap.String("interaction_type", tracker.Type.String()), zap.Error(err))
-			if s.notifier != nil {
-				s.notifier.SendInteractionError(ctx, tracker.ID, err)
+
+		var lastErr error
+		for i := 0; i < maxRetries; i++ {
+			if tracker.Type == models.LeadInteractionTypeCOMMENT {
+				lastErr = s.automatedInteractions.SendComment(ctx, tracker)
+			} else if tracker.Type == models.LeadInteractionTypeDM {
+				lastErr = s.automatedInteractions.SendDM(ctx, tracker)
+			} else {
+				lastErr = fmt.Errorf("unsupported interaction type: %v", tracker.Type)
 			}
+
+			if lastErr == nil {
+				return // success
+			}
+
+			errMsg := lastErr.Error()
+			for _, nonRetry := range nonRetryableErrors {
+				if strings.Contains(errMsg, nonRetry) {
+					s.logger.Warn("non-retryable error occurred, skipping retries",
+						zap.String("interaction_type", tracker.Type.String()),
+						zap.String("reason", nonRetry),
+						zap.Error(lastErr),
+					)
+
+					if s.notifier != nil {
+						s.notifier.SendInteractionError(ctx, tracker.ID, lastErr)
+					}
+					return
+				}
+			}
+
+			s.logger.Warn("interaction attempt failed, will retry in 10 seconds:",
+				zap.Int("attempt", i+1),
+				zap.String("interaction_type", tracker.Type.String()),
+				zap.Error(lastErr),
+			)
+
+			time.Sleep(retryDelay)
+		}
+
+		// Final failure after retries
+		s.logger.Error("failed to send interaction after retries",
+			zap.String("interaction_type", tracker.Type.String()),
+			zap.Error(lastErr),
+		)
+
+		if s.notifier != nil {
+			s.notifier.SendInteractionError(ctx, tracker.ID, lastErr)
 		}
 	}()
 

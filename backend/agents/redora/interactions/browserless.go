@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/playwright-community/playwright-go"
 	"github.com/shank318/doota/datastore"
+	"github.com/shank318/doota/models"
 	"github.com/streamingfast/dstore"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
@@ -314,6 +315,13 @@ func (r browserless) SendDM(ctx context.Context, params DMParams) (cookies []byt
 		return nil, fmt.Errorf("chat error: invalid user")
 	}
 
+	displayName, err := page.Locator("rs-current-user").GetAttribute("display-name")
+	if err != nil {
+		r.logger.Error("failed to get display name")
+	} else {
+		r.logger.Error("logged in as user", zap.String("display_name", displayName))
+	}
+
 	// Wait for message textarea to load
 	selectors := []string{
 		"textarea[name='message']",
@@ -545,7 +553,7 @@ func (r browserless) storeScreenshot(stage, id string, page playwright.Page) {
 //	return strings.Join(errors, " | ")
 //}
 
-func (r browserless) WaitAndGetCookies(ctx context.Context, browserURL string) ([]byte, error) {
+func (r browserless) WaitAndGetCookies(ctx context.Context, browserURL string) (*models.RedditDMLoginConfig, error) {
 	pw, err := playwright.Run()
 	if err != nil {
 		return nil, fmt.Errorf("playwright start failed: %w", err)
@@ -572,11 +580,33 @@ func (r browserless) WaitAndGetCookies(ctx context.Context, browserURL string) (
 			currentURL := page.URL()
 			if (strings.HasPrefix(currentURL, "https://www.reddit.com") || strings.HasPrefix(currentURL, "https://chat.reddit.com")) &&
 				!strings.Contains(currentURL, "/login") {
+
+				displayName, err := page.Locator("rs-current-user").GetAttribute("display-name")
+				if err != nil {
+					r.logger.Error("failed to get display name, while login")
+				} else {
+					r.logger.Error("logged in as user while login", zap.String("display_name", displayName))
+				}
+
 				cookies, err := pageContext.Cookies()
 				if err != nil {
 					return nil, fmt.Errorf("failed to read cookies: %w", err)
 				}
-				return json.Marshal(cookies)
+
+				marshal, err := json.Marshal(cookies)
+				if err != nil {
+					return nil, fmt.Errorf("failed to marshal cookies: %w", err)
+				}
+
+				if len(marshal) == 0 {
+					return nil, errors.New("no cookies found")
+				}
+
+				loginConfig := &models.RedditDMLoginConfig{
+					Username: displayName,
+					Cookies:  string(marshal),
+				}
+				return loginConfig, nil
 			}
 		}
 	}

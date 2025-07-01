@@ -39,7 +39,7 @@ type Portal struct {
 	authStateStore      state.AuthStateStore
 	redditOauthClient   *reddit.OauthClient
 	googleOauthClient   *google2.OauthClient
-	aiClient            *ai.Client
+	openAIClient        *ai.Client
 	cache               state2.ConversationState
 	alertNotifier       alerts.AlertNotifier
 	interactionService  interactions.AutomatedInteractions
@@ -47,7 +47,7 @@ type Portal struct {
 }
 
 func New(
-	aiClient *ai.Client,
+	openAIClient *ai.Client,
 	redditOauthClient *reddit.OauthClient,
 	googleOauthClient *google2.OauthClient,
 	authenticator *auth.Authenticator,
@@ -69,7 +69,7 @@ func New(
 	subscriptionService services.SubscriptionService,
 ) *Portal {
 	return &Portal{
-		aiClient:            aiClient,
+		openAIClient:        openAIClient,
 		redditOauthClient:   redditOauthClient,
 		googleOauthClient:   googleOauthClient,
 		authStateStore:      authStateStore,

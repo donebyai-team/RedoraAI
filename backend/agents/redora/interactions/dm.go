@@ -177,6 +177,10 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 
 	interaction.Status = models.LeadInteractionStatusSENT
 	interaction.Reason = ""
+
+	if loginConfig.Username != "" {
+		interaction.From = loginConfig.Username
+	}
 	redditLead.LeadMetadata.AutomatedDMSent = true
 	redditLead.Status = models.LeadStatusAIRESPONDED
 
@@ -196,7 +200,7 @@ func (r redditInteractions) Authenticate(ctx context.Context, orgID string) (str
 	}
 
 	return cdp.LiveURL, func() error {
-		cookies, err := r.browserLessClient.WaitAndGetCookies(ctx, cdp.BrowserWSEndpoint)
+		updatedLoginConfig, err := r.browserLessClient.WaitAndGetCookies(ctx, cdp.BrowserWSEndpoint)
 		if err != nil {
 			return err
 		}
@@ -207,10 +211,7 @@ func (r redditInteractions) Authenticate(ctx context.Context, orgID string) (str
 			Type:           models.IntegrationTypeREDDITDMLOGIN,
 		}
 
-		out := &models.RedditDMLoginConfig{
-			Cookies: string(cookies),
-		}
-		integration = models.SetIntegrationType(integration, models.IntegrationTypeREDDITDMLOGIN, out)
+		integration = models.SetIntegrationType(integration, models.IntegrationTypeREDDITDMLOGIN, updatedLoginConfig)
 		_, err = r.db.UpsertIntegration(ctx, integration)
 		if err != nil {
 			r.logger.Warn("failed to update integration", zap.Error(err), zap.String("org_id", orgID))

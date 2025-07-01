@@ -213,7 +213,7 @@ func (p *Portal) SuggestKeywordsAndSources(ctx context.Context, c *connect.Reque
 
 	if len(project.Metadata.SuggestedKeywords) == 0 || len(project.Metadata.SuggestedSubReddits) == 0 {
 		p.logger.Info("suggesting keywords", zap.String("project_id", project.ID))
-		suggestions, usage, err := p.aiClient.SuggestKeywordsAndSubreddits(ctx, p.aiClient.GetAdvanceModel(), project, p.logger)
+		suggestions, usage, err := p.openAIClient.SuggestKeywordsAndSubreddits(ctx, p.openAIClient.GetAdvanceModel(), project, p.logger)
 		if err != nil {
 			p.logger.Error("failed to get keyword suggestions", zap.Error(err))
 		}
@@ -378,7 +378,7 @@ func (p *Portal) AddSource(ctx context.Context, c *connect.Request[pbportal.AddS
 	if err != nil {
 		return nil, err
 	}
-	redditService := services.NewRedditService(p.logger, p.db, redditClient, p.aiClient, p.cache)
+	redditService := services.NewRedditService(p.logger, p.db, redditClient, p.openAIClient, p.cache)
 
 	source := &models.Source{
 		ProjectID: project.ID,
