@@ -31,6 +31,7 @@ export const routes = {
     keywords: '/keywords',
     leads: '/leads',
     interactions: '/interactions',
+    insights: '/insights',
     edit_product: '/settings/product',
     integrations: '/settings/integrations',
     automation: '/settings/automation',

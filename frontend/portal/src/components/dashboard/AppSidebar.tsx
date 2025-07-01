@@ -13,7 +13,8 @@ import {
   Zap,
   X,
   PanelLeft,
-  HelpCircle
+  HelpCircle,
+  TrendingUp
 } from "lucide-react";
 import {
   Sidebar,
@@ -57,6 +58,12 @@ export function AppSidebar() {
       path: routes.new.dashboard,
       icon: LayoutDashboard,
       active: isActive(routes.new.dashboard),
+    },
+    {
+      title: "Insights",
+      path: routes.new.insights,
+      icon: TrendingUp,
+      active: isActive(routes.new.insights),
     },
     {
       title: "Keywords & Subreddits",
