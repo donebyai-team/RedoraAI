@@ -18,5 +18,6 @@ func (u *PostInsight) FromModel(lead *models.PostInsight) *PostInsight {
 	u.Cot = lead.Metadata.ChainOfThought
 	u.PostId = lead.PostID
 	u.CreatedAt = timestamppb.New(lead.CreatedAt)
+	u.PostCreatedAt = timestamppb.New(lead.Metadata.PostCreatedAt)
 	return u
 }

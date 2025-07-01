@@ -9,13 +9,20 @@ import (
 	"github.com/shank318/doota/errorx"
 	"github.com/shank318/doota/integrations/reddit"
 	"github.com/shank318/doota/models"
+	pbportal "github.com/shank318/doota/pb/doota/portal/v1"
 	"github.com/shank318/doota/utils"
 	"go.uber.org/zap"
+	"time"
 )
 
 func (s *redditKeywordTracker) TrackInSights(ctx context.Context, tracker *models.AugmentedKeywordTracker) error {
 	if !s.shouldTrack(tracker) || tracker.Organization.FeatureFlags.GetSubscriptionPlan() == models.SubscriptionPlanTypeFREE {
 		return nil
+	}
+
+	// We will try to keep searching until we reach the max relevant posts per day >= defaultRelevancyScore
+	if ok, err := s.isMaxPostInsightsReached(ctx, tracker.Project.ID); err != nil || ok {
+		return err
 	}
 
 	redditClient, err := s.redditOauthClient.GetOrCreate(ctx, tracker.Project.OrganizationID, false)
@@ -91,7 +98,8 @@ func (s *redditKeywordTracker) TrackInSights(ctx context.Context, tracker *model
 				Source:         models.SourceTypeSUBREDDIT,
 				RelevancyScore: 0,
 				Metadata: models.PostInsightMetadata{
-					Title: post.Title,
+					Title:         post.Title,
+					PostCreatedAt: time.Unix(int64(post.CreatedAt), 0),
 				},
 			},
 		}
@@ -164,6 +172,15 @@ func (s *redditKeywordTracker) TrackInSights(ctx context.Context, tracker *model
 				return fmt.Errorf("failed to create post insight: %w", err)
 			}
 		}
+
+		// We will try to keep searching until we reach the max relevant posts per day >= defaultRelevancyScore
+		ok, err := s.isMaxPostInsightsReached(ctx, tracker.Project.ID)
+		if err != nil || ok {
+			if err != nil {
+				return err
+			}
+			break
+		}
 	}
 
 	s.logger.Info("post_insight_summary",
@@ -173,4 +190,24 @@ func (s *redditKeywordTracker) TrackInSights(ctx context.Context, tracker *model
 		zap.Int("high_relevancy_posts", countPostsWithHighRelevancy))
 
 	return nil
+}
+
+func (s *redditKeywordTracker) isMaxPostInsightsReached(ctx context.Context, projectID string) (bool, error) {
+	insights, err := s.db.GetInsights(ctx, projectID, datastore.LeadsFilter{
+		RelevancyScore: 90,
+		Limit:          100,
+		Offset:         0,
+		DateRange:      pbportal.DateRangeFilter_DATE_RANGE_7_DAYS,
+	})
+	if err != nil {
+		return false, err
+	}
+
+	if len(insights) >= 10 {
+		s.logger.Info("reached max insights per week",
+			zap.Int("count", len(insights)))
+		return true, nil
+	}
+
+	return false, nil
 }

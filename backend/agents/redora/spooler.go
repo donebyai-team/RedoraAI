@@ -126,8 +126,16 @@ func (s *Spooler) processKeywordsTracking(ctx context.Context, tracker *models.A
 				s.logger.Error("failed to release lock on keyword tracker", zap.Error(err))
 			}
 		}()
-		keywordTracker := s.keywordTracker.GetKeywordTrackerBySource(tracker.Source.SourceType)
-		if err := keywordTracker.WithLogger(logger).TrackKeyword(ctx, tracker); err != nil {
+
+		keywordTracker := s.keywordTracker.GetKeywordTrackerBySource(tracker.Source.SourceType).WithLogger(logger)
+
+		go func() {
+			if err := keywordTracker.TrackInSights(ctx, tracker); err != nil {
+				logger.Error("failed to track keyword insights", zap.Error(err))
+			}
+		}()
+
+		if err := keywordTracker.TrackKeyword(ctx, tracker); err != nil {
 			logger.Error("failed to track keyword", zap.Error(err))
 		}
 	}()

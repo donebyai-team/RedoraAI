@@ -13,6 +13,7 @@ import (
 )
 
 type KeywordTracker interface {
+	TrackInSights(ctx context.Context, tracker *models.AugmentedKeywordTracker) error
 	TrackKeyword(ctx context.Context, tracker *models.AugmentedKeywordTracker) error
 	WithLogger(logger *zap.Logger) KeywordTracker
 }

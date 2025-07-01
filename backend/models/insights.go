@@ -19,9 +19,10 @@ type PostInsight struct {
 }
 
 type PostInsightMetadata struct {
-	ChainOfThought      string   `json:"chain_of_thought"`
-	HighlightedComments []string `json:"highlighted_comments"`
-	Title               string   `json:"title"`
+	ChainOfThought      string    `json:"chain_of_thought"`
+	HighlightedComments []string  `json:"highlighted_comments"`
+	Title               string    `json:"title"`
+	PostCreatedAt       time.Time `json:"post_created_at"`
 }
 
 func (b PostInsightMetadata) Value() (driver.Value, error) {
