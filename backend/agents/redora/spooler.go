@@ -92,7 +92,7 @@ func (s *Spooler) worker(ctx context.Context, id int) {
 			s.logger.Info("worker exiting: shutting down", zap.Int("worker_id", id))
 			return
 		case tracker := <-s.queue:
-			s.logger.Debug("worker picked up tracker", zap.Int("queue_size", len(s.queue)), zap.Int("worker_id", id))
+			s.logger.Info("worker picked up tracker", zap.Int("queue_size", len(s.queue)), zap.Int("worker_id", id))
 			if err := s.processKeywordsTracking(ctx, tracker); err != nil {
 				s.logger.Error("failed to process tracker", zap.Error(err))
 			}
