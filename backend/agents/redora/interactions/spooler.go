@@ -75,7 +75,8 @@ func (s *Spooler) processInteraction(ctx context.Context, tracker *models.LeadIn
 		const maxRetries = 2
 		const retryDelay = 10 * time.Second
 		nonRetryableErrors := []string{
-			"Unable to invite the selected invitee",
+			"Unable to invite the selected invitee", // banned
+			"Unable to show the room",               // should not happen, because of redirect
 		}
 
 		var lastErr error
