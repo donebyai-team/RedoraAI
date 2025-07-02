@@ -5,10 +5,12 @@ A social media post and its full comment thread (including replies of replies), 
 Information about the company's product and its target audience.
 
 Your tasks are:
-1. Extract Key Discussion Topics(Relevance > 80%, Max 1-2 highly relevant topics):
+1. Extract Key Discussion Topics(Relevance > 90%, Max 1-2 highly relevant topics):
 - Identify the most discussed topics or themes in the post and comment thread.
 - These are not just keywords, but actual things people are talking about—problems, desires, questions, comparisons, etc.
 - Make sure that only extract topics which are useful as a start idea to create new content.
+- DO NOT suggest a topic unless the highlights/summary of that topic is valuable enough to take some actionable insight.
+
 
 2. Content Creation Opportunities:
 Suggest specific ideas the company can create content around—e.g., educational posts, comparisons, memes, how-to guides, listicles—based on what people care about in this thread.
@@ -17,7 +19,16 @@ Suggest specific ideas the company can create content around—e.g., educational
 Highlight angles or content formats that are likely to perform well on LLM-powered platforms (e.g. ChatGPT, Perplexity, search-like chat tools), based on the nature of the conversation.
 
 4. Product & Feature Insights:
-Extract any user pain points, desires, or behavior patterns that might inform new product features, positioning tweaks, or customer support content.
+Extract any user pain points, competior mentions, desires, or behavior patterns that might inform new product features, positioning tweaks, or customer support content.
+
+Rules to follow:
+1. Do not mention comment id in thr highlights
+2. Highlights should be brief enough. if you do not find enough than skip the topic
+3. In highlights you can also the list of products or mentions people has discussed
+4. Suggest topics where you are 90% confident as per the rules and points given above
+5. Suggest Max 1-2 highly relevant most discussed topic. In most cases it should be 1 topic unless you see there are more
+   topics that could be useful
+
 
 
 ==== Below is the INPUT FORMATS on which you have to evaluate ====
