@@ -406,7 +406,7 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 
 			// Mark the tracker alive in case the execution taking too much time
 			// Doing it here because that's the only place that takes time
-			if err := s.state.KeepAlive(ctx, project.OrganizationID, tracker.GetID()); err != nil {
+			if err := s.state.KeepAliveTracker(ctx, project.ID, tracker.GetID()); err != nil {
 				s.logger.Error("failed to mark tracker alive", zap.Error(err))
 			}
 		} else {

@@ -96,9 +96,12 @@ func (s *Spooler) worker(ctx context.Context, id int) {
 			if err := s.processKeywordsTracking(ctx, tracker); err != nil {
 				s.logger.Error("failed to process tracker", zap.Error(err))
 			}
+			s.queued.Delete(tracker.GetID())
 		}
 	}
 }
+
+const maxParallelTrackerPerProject = 5
 
 func (s *Spooler) processKeywordsTracking(ctx context.Context, tracker *models.AugmentedKeywordTracker) error {
 	logger := s.logger.With(
@@ -108,7 +111,7 @@ func (s *Spooler) processKeywordsTracking(ctx context.Context, tracker *models.A
 
 	logger.Debug("processing tracker", zap.Int("queue_size", len(s.queue)))
 
-	isRunning, err := s.state.IsRunning(ctx, tracker.GetID())
+	isRunning, err := s.state.IsRunningTracker(ctx, tracker.Project.ID, tracker.GetID())
 	if err != nil {
 		return fmt.Errorf("failed to check if tracker is running: %w", err)
 	}
@@ -119,20 +122,26 @@ func (s *Spooler) processKeywordsTracking(ctx context.Context, tracker *models.A
 	}
 
 	// Try to acquire the lock and if fails return
-	if err := s.state.Acquire(ctx, tracker.Project.OrganizationID, tracker.GetID()); err != nil {
-		s.logger.Warn("could not acquire lock for keyword tracker, skipping", zap.Error(err))
+	acquired, err := s.state.AcquireTracker(ctx, tracker.Project.ID, tracker.GetID(), maxParallelTrackerPerProject)
+	if err != nil {
+		logger.Warn("could not acquire lock for keyword tracker, skipping", zap.Error(err))
+		return fmt.Errorf("failed to acquire lock for keyword tracker: %w", err)
+	}
+
+	if !acquired {
+		logger.Info("could not acquire lock for keyword tracker, max tracker per project reached, skipping")
 		return nil
 	}
+
 	defer func() {
-		s.queued.Delete(tracker.GetID())
-		if err := s.state.Release(ctx, tracker.GetID()); err != nil {
-			s.logger.Error("failed to release lock on keyword tracker", zap.Error(err))
+		if err := s.state.ReleaseTracker(ctx, tracker.Project.ID, tracker.GetID()); err != nil {
+			logger.Error("failed to release lock on keyword tracker", zap.Error(err))
 		}
 	}()
 
 	keywordTracker := s.keywordTracker.GetKeywordTrackerBySource(tracker.Source.SourceType).WithLogger(logger)
 
-	// Run TrackInSights in parallel if desired
+	// Run TrackInSights in parallel
 	go func() {
 		if err := keywordTracker.TrackInSights(ctx, tracker); err != nil {
 			logger.Error("failed to track keyword insights", zap.Error(err))

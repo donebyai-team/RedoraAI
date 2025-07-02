@@ -48,7 +48,8 @@ func (s *Spooler) processInteraction(ctx context.Context, tracker *models.LeadIn
 	logger := s.logger.With(
 		zap.String("interaction_id", tracker.ID))
 
-	uniqueID := fmt.Sprintf("interactions:%s", tracker.ID)
+	// we want only one type of interaction to be executed at once
+	uniqueID := fmt.Sprintf("interactions:%s:type:%s", tracker.ProjectID, tracker.Type.String())
 
 	isRunning, err := s.state.IsRunning(ctx, uniqueID)
 	if err != nil {

@@ -117,6 +117,24 @@ func (r *customerCaseState) IsRunning(ctx context.Context, phone string) (bool, 
 	return true, nil
 }
 
+func (r *customerCaseState) KeepAlive(ctx context.Context, organizationID, phone string) error {
+	key := callRunningKey(r.namespace, r.prefix, phone)
+	value, err := r.redisClient.Get(ctx, key).Bytes()
+	if err != nil && err != redis.Nil {
+		return fmt.Errorf("get state: %w", err)
+	}
+
+	if err == redis.Nil {
+		return r.start(ctx, organizationID, phone)
+	}
+
+	if cmd := r.redisClient.Set(ctx, key, value, r.customerCaseRunningTTL); cmd.Err() != nil {
+		return fmt.Errorf("set case state: %w", cmd.Err())
+	}
+
+	return nil
+}
+
 func (r *customerCaseState) ActiveCount(ctx context.Context) (uint64, error) {
 	iter := r.redisClient.Scan(ctx, 0, allCallKeyPattern(r.namespace, r.prefix)+"*", 0).Iterator()
 	count := uint64(0)
@@ -149,24 +167,6 @@ func (r *customerCaseState) Get(ctx context.Context, key string) ([]byte, error)
 	}
 
 	return value, nil
-}
-
-func (r *customerCaseState) KeepAlive(ctx context.Context, organizationID, phone string) error {
-	key := callRunningKey(r.namespace, r.prefix, phone)
-	value, err := r.redisClient.Get(ctx, key).Bytes()
-	if err != nil && err != redis.Nil {
-		return fmt.Errorf("get state: %w", err)
-	}
-
-	if err == redis.Nil {
-		return r.start(ctx, organizationID, phone)
-	}
-
-	if cmd := r.redisClient.Set(ctx, key, value, r.customerCaseRunningTTL); cmd.Err() != nil {
-		return fmt.Errorf("set case state: %w", cmd.Err())
-	}
-
-	return nil
 }
 
 func (r *customerCaseState) start(ctx context.Context, organizationID, phone string) error {
