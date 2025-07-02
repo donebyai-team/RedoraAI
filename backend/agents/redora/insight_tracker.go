@@ -15,6 +15,16 @@ import (
 	"time"
 )
 
+const (
+	keyMaxInsightsPerWeek         = "insights_per_week"
+	keyMaxPostsForInsightsPerWeek = "posts_tracked_for_insights_per_week"
+
+	// insights
+	defaultRelevancyScoreInsights     = 90
+	maxInsightsPerWeek                = 10
+	maxPostsToTrackForInsightsPerWeek = 100
+)
+
 func (s *redditKeywordTracker) TrackInSights(ctx context.Context, tracker *models.AugmentedKeywordTracker) error {
 	if !s.shouldTrack(tracker) || tracker.Organization.FeatureFlags.GetSubscriptionPlan() == models.SubscriptionPlanTypeFREE {
 		return nil
@@ -177,13 +187,31 @@ func (s *redditKeywordTracker) TrackInSights(ctx context.Context, tracker *model
 			postInsights[0].Metadata.ChainOfThought = reason
 		}
 
-		// save the default one
+		shouldFinish := false
+		// we will let extra insights to get saved
+		// if max is achieved, will break after saving all
 		for _, insight := range postInsights {
 			_, err = s.db.CreatePostInsight(ctx, &insight)
 			if err != nil {
 				s.logger.Error("failed to create post insight", zap.Error(err), zap.String("post_id", post.ID))
 				return fmt.Errorf("failed to create post insight: %w", err)
 			}
+
+			// check if we reached max
+			if insight.RelevancyScore >= defaultRelevancyScoreInsights {
+				isAllowed, err := s.state.CheckIfUnderLimitAndIncrement(ctx, weeklyCounterKey(tracker.Organization.ID), keyMaxInsightsPerWeek, maxInsightsPerWeek, 8*24*time.Hour)
+				if err != nil {
+					return fmt.Errorf("failed to check if under limit and increment: %w", err)
+				}
+				if !isAllowed {
+					shouldFinish = true
+				}
+			}
+		}
+
+		if shouldFinish {
+			s.logger.Info("max insight limit reached, skipping comment", zap.String("post_id", post.ID))
+			break
 		}
 
 		// We will try to keep searching until we reach the max relevant posts per day >= defaultRelevancyScore
@@ -223,7 +251,7 @@ func (s *redditKeywordTracker) isValidPostForInsight(post *reddit.Post) (bool, s
 
 func (s *redditKeywordTracker) isMaxPostInsightsReached(ctx context.Context, projectID string) (bool, error) {
 	insights, err := s.db.GetInsights(ctx, projectID, datastore.LeadsFilter{
-		RelevancyScore: 90,
+		RelevancyScore: defaultRelevancyScoreInsights,
 		Limit:          100,
 		Offset:         0,
 		DateRange:      pbportal.DateRangeFilter_DATE_RANGE_7_DAYS,
@@ -232,7 +260,7 @@ func (s *redditKeywordTracker) isMaxPostInsightsReached(ctx context.Context, pro
 		return false, err
 	}
 
-	if len(insights) >= 10 {
+	if len(insights) >= maxInsightsPerWeek {
 		s.logger.Info("reached max insights per week",
 			zap.Int("count", len(insights)))
 		return true, nil
@@ -248,11 +276,16 @@ func (s *redditKeywordTracker) isMaxPostInsightsReached(ctx context.Context, pro
 		return false, err
 	}
 
-	if len(insights2) >= 100 {
+	if len(insights2) >= maxPostsToTrackForInsightsPerWeek {
 		s.logger.Info("reached max posts to extact insights per week",
 			zap.Int("count", len(insights)))
 		return true, nil
 	}
 
 	return false, nil
+}
+
+func weeklyCounterKey(orgID string) string {
+	year, week := time.Now().UTC().ISOWeek()
+	return fmt.Sprintf("org:%s:counters:%d-W%02d", orgID, year, week)
 }

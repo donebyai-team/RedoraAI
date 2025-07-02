@@ -427,6 +427,7 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 		}
 
 		// is post highly relevant
+		// TODO: Do it after CreateLead as we have anyways did the relevancy check
 		if redditLead.RelevancyScore >= defaultRelevancyScoreGlobal {
 			countPostsWithHighRelevancy++
 			isAllowed, err := s.isMaxLeadLimitUnderLimit(ctx, tracker.Organization)
@@ -689,15 +690,14 @@ func (s *redditKeywordTracker) isMaxLeadLimitReached(ctx context.Context, org *m
 }
 
 const (
-	minSelftextLength             = 30
-	minTitleLength                = 5
-	maxPostAgeInMonths            = 6
-	defaultRelevancyScoreGlobal   = 90 // relevancy score to re-confirm with higher model and also max leads
-	dailyPostsRelevancyScore      = 80
-	minRelevancyScore             = 70
-	defaultLLMFailedCount         = 3
-	maxPostsToTrackPerDay         = 600
-	defaultRelevancyScoreInsights = 90
+	minSelftextLength           = 30
+	minTitleLength              = 5
+	maxPostAgeInMonths          = 6
+	defaultRelevancyScoreGlobal = 90 // relevancy score to re-confirm with higher model and also max leads
+	dailyPostsRelevancyScore    = 80
+	minRelevancyScore           = 70
+	defaultLLMFailedCount       = 3
+	maxPostsToTrackPerDay       = 600
 )
 
 var systemAuthors = []string{"[deleted]", "AutoModerator"}
