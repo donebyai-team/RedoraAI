@@ -14,6 +14,8 @@ import (
 	"time"
 )
 
+const defaultMaxParallelCalls = 10 // Adjust this value based on observed performance
+
 type Spooler struct {
 	*shutter.Shutter
 	interactionSpooler *interactions.Spooler
@@ -41,6 +43,10 @@ func New(
 	keywordTracker *KeywordTrackerFactory,
 	logger *zap.Logger,
 ) *Spooler {
+	if maxParallelCalls == 0 {
+		maxParallelCalls = defaultMaxParallelCalls
+	}
+
 	return &Spooler{
 		Shutter:            shutter.New(),
 		interactionSpooler: interactionSpooler,
@@ -58,37 +64,37 @@ func New(
 }
 
 func (s *Spooler) Run(ctx context.Context) error {
-	go s.runLoop(ctx)
+	s.logger.Info("starting spooler", zap.Uint64("max_parallel_calls", s.maxParallelCalls))
+
+	// Start fixed number of workers to consume from queue
+	for i := uint64(0); i < s.maxParallelCalls; i++ {
+		go s.worker(ctx, int(i))
+	}
+
 	if !s.keywordTracker.isDev {
 		go s.pollKeywordTrackers(ctx)
 		go s.interactionSpooler.Start(ctx)
 	}
+
 	return nil
 }
 
-func (s *Spooler) runLoop(ctx context.Context) {
-	s.logger.Info("running spooler loop")
+// worker is a bounded parallel consumer from the shared queue
+func (s *Spooler) worker(ctx context.Context, id int) {
+	s.logger.Info("worker started", zap.Int("worker_id", id))
+
 	for {
 		select {
 		case <-ctx.Done():
-			s.logger.Info("ctx done, run loop ending")
+			s.logger.Info("worker exiting: context canceled", zap.Int("worker_id", id))
 			return
 		case <-s.Terminating():
-			s.logger.Info("spooler terminating, run loop ending")
+			s.logger.Info("worker exiting: shutting down", zap.Int("worker_id", id))
 			return
-		case subReddit := <-s.queue:
-			// Remove the case from the queued map, we are processing it
-			s.queued.Delete(subReddit.GetID())
-
-			// FIXME: We need to deal with errors differently here. We need to separated
-			// internal spooler error that are irecoverable from the ones that are
-			// coming from the investigator or are recoverable.
-			//
-			// Indeed, we don't want to stop the spooler if the investigator is broken or
-			// something.
-			if err := s.processKeywordsTracking(ctx, subReddit); err != nil {
-				s.Shutdown(fmt.Errorf("process subreddits: %w", err))
-				return
+		case tracker := <-s.queue:
+			s.logger.Debug("worker picked up tracker", zap.Int("queue_size", len(s.queue)), zap.Int("worker_id", id))
+			if err := s.processKeywordsTracking(ctx, tracker); err != nil {
+				s.logger.Error("failed to process tracker", zap.Error(err))
 			}
 		}
 	}
@@ -102,7 +108,6 @@ func (s *Spooler) processKeywordsTracking(ctx context.Context, tracker *models.A
 
 	logger.Debug("processing tracker", zap.Int("queue_size", len(s.queue)))
 
-	// Check if a call is already running across organizations
 	isRunning, err := s.state.IsRunning(ctx, tracker.GetID())
 	if err != nil {
 		return fmt.Errorf("failed to check if tracker is running: %w", err)
@@ -113,39 +118,36 @@ func (s *Spooler) processKeywordsTracking(ctx context.Context, tracker *models.A
 		return nil
 	}
 
-	// Async call to TrackKeyword
-	go func() {
-		// Try to acquire the lock and if fails return
-		if err := s.state.Acquire(ctx, tracker.Project.OrganizationID, tracker.GetID()); err != nil {
-			s.logger.Warn("could not acquire lock for keyword tracker, skipping", zap.Error(err))
-			return
-		}
-
-		defer func() {
-			if err := s.state.Release(ctx, tracker.GetID()); err != nil {
-				s.logger.Error("failed to release lock on keyword tracker", zap.Error(err))
-			}
-		}()
-
-		keywordTracker := s.keywordTracker.GetKeywordTrackerBySource(tracker.Source.SourceType).WithLogger(logger)
-
-		go func() {
-			if err := keywordTracker.TrackInSights(ctx, tracker); err != nil {
-				logger.Error("failed to track keyword insights", zap.Error(err))
-			}
-		}()
-
-		if err := keywordTracker.TrackKeyword(ctx, tracker); err != nil {
-			logger.Error("failed to track keyword", zap.Error(err))
+	// Try to acquire the lock and if fails return
+	if err := s.state.Acquire(ctx, tracker.Project.OrganizationID, tracker.GetID()); err != nil {
+		s.logger.Warn("could not acquire lock for keyword tracker, skipping", zap.Error(err))
+		return nil
+	}
+	defer func() {
+		s.queued.Delete(tracker.GetID())
+		if err := s.state.Release(ctx, tracker.GetID()); err != nil {
+			s.logger.Error("failed to release lock on keyword tracker", zap.Error(err))
 		}
 	}()
 
+	keywordTracker := s.keywordTracker.GetKeywordTrackerBySource(tracker.Source.SourceType).WithLogger(logger)
+
+	// Run TrackInSights in parallel if desired
+	go func() {
+		if err := keywordTracker.TrackInSights(ctx, tracker); err != nil {
+			logger.Error("failed to track keyword insights", zap.Error(err))
+		}
+	}()
+
+	if err := keywordTracker.TrackKeyword(ctx, tracker); err != nil {
+		logger.Error("failed to track keyword", zap.Error(err))
+	}
+
 	return nil
 }
-
 func (s *Spooler) pollKeywordTrackers(ctx context.Context) {
-	// 0 so the first time we poll, we do it right away
-	interval := 0 * time.Second
+	interval := 0 * time.Second // Run immediately on startup
+
 	for {
 		select {
 		case <-time.After(interval):
@@ -153,9 +155,10 @@ func (s *Spooler) pollKeywordTrackers(ctx context.Context) {
 				s.Shutdown(fmt.Errorf("fail to load customer sessions from db: %w", err))
 			}
 		case <-ctx.Done():
+			return
 		}
 
-		// If we have 0 it means we just started, move to the real interval now
+		// After first run, switch to regular interval
 		if interval == 0 {
 			interval = s.dbPollingInterval
 		}
@@ -164,27 +167,35 @@ func (s *Spooler) pollKeywordTrackers(ctx context.Context) {
 
 func (s *Spooler) loadKeywordTrackersToTrack(ctx context.Context) error {
 	t0 := time.Now()
-	// Query all subreddits per org based on lastTrackedAt, should be > 24hours
-	// For each subreddit start the process
+
 	trackers, err := s.db.GetKeywordTrackers(ctx)
 	if err != nil {
 		return fmt.Errorf("processing trackers: %w", err)
 	}
 
 	for _, tracker := range trackers {
-		s.pushKeywordToTack(tracker)
+		s.pushKeywordToTrack(tracker)
 	}
-	s.logger.Info("found trackers to process from db", zap.Int("count", len(trackers)), zap.Duration("elapsed", time.Since(t0)))
+
+	s.logger.Info("found trackers to process from db",
+		zap.Int("count", len(trackers)),
+		zap.Int("queue_size", len(s.queue)),
+		zap.Duration("elapsed", time.Since(t0)))
 
 	return nil
 }
 
-func (s *Spooler) pushKeywordToTack(tracker *models.AugmentedKeywordTracker) {
+func (s *Spooler) pushKeywordToTrack(tracker *models.AugmentedKeywordTracker) {
 	if s.queued.Has(tracker.GetID()) {
 		return
 	}
 
-	// TODO should we check size vs buffer?
-	s.queue <- tracker
 	s.queued.Set(tracker.GetID(), true)
+
+	select {
+	case s.queue <- tracker:
+		// Enqueued successfully
+	case <-time.After(5 * time.Second):
+		s.logger.Warn("enqueue timeout - queue may be full", zap.String("tracker_id", tracker.GetID()), zap.Int("queue_size", len(s.queue)))
+	}
 }
