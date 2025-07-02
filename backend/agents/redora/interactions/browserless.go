@@ -369,13 +369,28 @@ func (r browserless) SendDM(ctx context.Context, params DMParams) (cookies []byt
 	// Screenshot after chat page load (optional)
 	r.storeScreenshot("click_send", params.ID, page)
 
+	// Check if page navigated unexpectedly
+	redirectedURL := page.URL()
+	if !strings.Contains(redirectedURL, "/user/") {
+		r.logger.Warn("Unexpected navigation after sending message",
+			zap.String("interaction", params.ID),
+			zap.String("redirected_to", redirectedURL))
+	}
+
 	// Check for error banner on chat page
 	if alert, _ := page.QuerySelector("faceplate-banner[appearance='error']"); alert != nil {
 		msg, _ := alert.GetAttribute("msg")
-		if msg != "" {
+		if msg == "" {
+			return nil, fmt.Errorf("chat error: unknown error with no message")
+		}
+
+		if !strings.Contains(strings.ToLower(msg), "unable to show the room") {
 			return nil, fmt.Errorf("chat error: %s", msg)
 		}
-		return nil, fmt.Errorf("chat error: invalid user")
+
+		r.logger.Warn("Reddit chat warning (ignorable)",
+			zap.String("interaction", params.ID),
+			zap.String("error_message", msg))
 	}
 
 	page.WaitForTimeout(1500)
