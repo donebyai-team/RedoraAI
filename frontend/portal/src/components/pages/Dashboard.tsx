@@ -99,7 +99,7 @@ export default function Dashboard() {
               <div className="space-y-2 mb-6">
                 <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">Redora AI Dashboard</h1>
                 <p className="text-muted-foreground">
-                  Track and engage with potential leads from Reddit based on your keywords and subreddits.
+                  Explore emerging trends and community discussions across the internet, powered by your keywords.
                 </p>
               </div>
 
@@ -111,7 +111,7 @@ export default function Dashboard() {
                 </div>
               </>) : (<div className="flex-1 flex flex-col space-y-4 mt-6">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-background/95 py-2">
-                  <h2 className="text-xl font-semibold">Latest Tracked Posts</h2>
+                  <h2 className="text-xl font-semibold">Latest Tracked Conversations</h2>
                   <FilterControls />
                 </div>
 

@@ -66,13 +66,13 @@ export function AppSidebar() {
       active: isActive(routes.new.insights),
     },
     {
-      title: "Keywords & Subreddits",
+      title: "Keywords",
       path: routes.new.keywords,
       icon: Tag,
       active: isActive(routes.new.keywords),
     },
     {
-      title: "Lead Feed",
+      title: "Tracked Conversations",
       path: routes.new.leads,
       icon: MessageSquare,
       active: isActive(routes.new.leads),
