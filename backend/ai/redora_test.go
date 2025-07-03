@@ -67,7 +67,7 @@ func TestRedoraCase(t *testing.T) {
 		t.FailNow()
 	}
 	defaultModel := models.LLMModel("redora-dev-gpt-4.1-2025-04-14")
-	ai, err := NewOpenAI(utils.GetEnvTestReq(t, "OPENAI_API_KEY_DEV"), defaultModel, defaultModel, LangsmithConfig{}, debugStore, logger)
+	ai, err := NewLLMClient(utils.GetEnvTestReq(t, "OPENAI_API_KEY_DEV"), defaultModel, defaultModel, LangsmithConfig{}, debugStore, logger)
 	if err != nil {
 		t.FailNow()
 	}

@@ -60,7 +60,7 @@ func TestCommunityGuidelines(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			ai, err := NewOpenAI(utils.GetEnvTestReq(t, "OPENAI_API_KEY_DEV"), tc.model, tc.model, LangsmithConfig{}, debugStore, logger)
+			ai, err := NewLLMClient(utils.GetEnvTestReq(t, "OPENAI_API_KEY_DEV"), tc.model, tc.model, LangsmithConfig{}, debugStore, logger)
 			assert.NoError(t, err)
 
 			source := &models.Source{

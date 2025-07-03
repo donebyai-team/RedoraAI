@@ -82,7 +82,7 @@ func TestRedditKeywordSuggestion(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			ai, err := NewOpenAI(utils.GetEnvTestReq(t, "OPENAI_API_KEY_DEV"), tc.model, tc.model, LangsmithConfig{}, debugStore, logger)
+			ai, err := NewLLMClient(utils.GetEnvTestReq(t, "OPENAI_API_KEY_DEV"), tc.model, tc.model, LangsmithConfig{}, debugStore, logger)
 			assert.NoError(t, err)
 
 			output, _, err := ai.SuggestKeywordsAndSubreddits(context.Background(), tc.model, tc.project, logger)
