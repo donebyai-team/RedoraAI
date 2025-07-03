@@ -88,24 +88,26 @@ export function WorkspaceSwitcher() {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="max-h-[300px] overflow-y-auto">
-          {user.organizations.map((workspace) => (
-            <DropdownMenuItem
-              key={workspace.id}
-              onClick={() => {
-                setCurrentOrganization(workspace)
-                  .then(() => {
-                    window.location.reload()
+          {[...user.organizations]
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .map((workspace) => (
+              <DropdownMenuItem
+                key={workspace.id}
+                onClick={() => {
+                  setCurrentOrganization(workspace).then(() => {
+                    window.location.reload();
                   });
-              }}
-              className="cursor-pointer flex items-center justify-between"
-            >
-              <span className="truncate">{workspace?.name}</span>
-              {currentOrg?.id === workspace.id && (
-                <span className="w-2 h-2 rounded-full bg-primary ml-2"></span>
-              )}
-            </DropdownMenuItem>
-          ))}
+                }}
+                className="cursor-pointer flex items-center justify-between"
+              >
+                <span className="truncate">{workspace?.name}</span>
+                {currentOrg?.id === workspace.id && (
+                  <span className="w-2 h-2 rounded-full bg-primary ml-2"></span>
+                )}
+              </DropdownMenuItem>
+            ))}
         </DropdownMenuContent>
+
       </DropdownMenu>
     )}
   </>);
