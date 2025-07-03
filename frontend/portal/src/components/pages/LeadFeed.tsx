@@ -87,16 +87,16 @@ export default function LeadFeed() {
           <div className="flex flex-col lg:flex-row gap-6">
             {/* Main content area */}
             <div className="flex-1 flex flex-col">
-              <div className="space-y-2 mb-6">
-                <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">Lead Feed</h1>
+              <div className="space-y-2 mb-2">
+                <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">Tracked Conversations</h1>
                 <p className="text-muted-foreground">
-                  Track and engage with potential leads from Reddit based on your keywords and subreddits.
+                  Highly relevant community discussions powered by your keywords and product capabilities.
                 </p>
               </div>
 
-              <div className="flex-1 flex flex-col space-y-4 mt-6">
+              <div className="flex-1 flex flex-col space-y-4 mt-4">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-background/95 py-2">
-                  <h2 className="text-xl font-semibold">Relevant Posts</h2>
+                  {/* <h2 className="text-xl font-semibold">Relevant Posts</h2> */}
                   <FilterControls isLeadStatusFilter={false} />
                 </div>
 

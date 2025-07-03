@@ -220,7 +220,7 @@ export default function KeywordManagement() {
               Keywords & Subreddits
             </h1>
             <p className="text-muted-foreground">
-              Manage what you track to find the most relevant leads on Reddit.
+              Manage what you track to find the most relevant community discussions across the internet.
             </p>
           </div>
 
