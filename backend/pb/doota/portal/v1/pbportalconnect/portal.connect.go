@@ -118,6 +118,11 @@ const (
 	// PortalServiceGetInsightsProcedure is the fully-qualified name of the PortalService's GetInsights
 	// RPC.
 	PortalServiceGetInsightsProcedure = "/doota.portal.v1.PortalService/GetInsights"
+	// PortalServiceCreatePostProcedure is the fully-qualified name of the PortalService's CreatePost
+	// RPC.
+	PortalServiceCreatePostProcedure = "/doota.portal.v1.PortalService/CreatePost"
+	// PortalServiceGetPostsProcedure is the fully-qualified name of the PortalService's GetPosts RPC.
+	PortalServiceGetPostsProcedure = "/doota.portal.v1.PortalService/GetPosts"
 )
 
 // These variables are the protoreflect.Descriptor objects for the RPCs defined in this package.
@@ -152,6 +157,8 @@ var (
 	portalServiceUpgradeSubscriptionMethodDescriptor         = portalServiceServiceDescriptor.Methods().ByName("UpgradeSubscription")
 	portalServiceCancelSubscriptionMethodDescriptor          = portalServiceServiceDescriptor.Methods().ByName("CancelSubscription")
 	portalServiceGetInsightsMethodDescriptor                 = portalServiceServiceDescriptor.Methods().ByName("GetInsights")
+	portalServiceCreatePostMethodDescriptor                  = portalServiceServiceDescriptor.Methods().ByName("CreatePost")
+	portalServiceGetPostsMethodDescriptor                    = portalServiceServiceDescriptor.Methods().ByName("GetPosts")
 )
 
 // PortalServiceClient is a client for the doota.portal.v1.PortalService service.
@@ -190,6 +197,9 @@ type PortalServiceClient interface {
 	CancelSubscription(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v11.Subscription], error)
 	// Insights
 	GetInsights(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.InsightsResponse], error)
+	// Posts
+	CreatePost(context.Context, *connect.Request[v11.PostSettings]) (*connect.Response[v11.Post], error)
+	GetPosts(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetPostsResponse], error)
 }
 
 // NewPortalServiceClient constructs a client for the doota.portal.v1.PortalService service. By
@@ -376,6 +386,18 @@ func NewPortalServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(portalServiceGetInsightsMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
+		createPost: connect.NewClient[v11.PostSettings, v11.Post](
+			httpClient,
+			baseURL+PortalServiceCreatePostProcedure,
+			connect.WithSchema(portalServiceCreatePostMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
+		getPosts: connect.NewClient[emptypb.Empty, v1.GetPostsResponse](
+			httpClient,
+			baseURL+PortalServiceGetPostsProcedure,
+			connect.WithSchema(portalServiceGetPostsMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -410,6 +432,8 @@ type portalServiceClient struct {
 	upgradeSubscription         *connect.Client[v1.UpgradeSubscriptionRequest, v11.Subscription]
 	cancelSubscription          *connect.Client[emptypb.Empty, v11.Subscription]
 	getInsights                 *connect.Client[emptypb.Empty, v1.InsightsResponse]
+	createPost                  *connect.Client[v11.PostSettings, v11.Post]
+	getPosts                    *connect.Client[emptypb.Empty, v1.GetPostsResponse]
 }
 
 // GetConfig calls doota.portal.v1.PortalService.GetConfig.
@@ -557,6 +581,16 @@ func (c *portalServiceClient) GetInsights(ctx context.Context, req *connect.Requ
 	return c.getInsights.CallUnary(ctx, req)
 }
 
+// CreatePost calls doota.portal.v1.PortalService.CreatePost.
+func (c *portalServiceClient) CreatePost(ctx context.Context, req *connect.Request[v11.PostSettings]) (*connect.Response[v11.Post], error) {
+	return c.createPost.CallUnary(ctx, req)
+}
+
+// GetPosts calls doota.portal.v1.PortalService.GetPosts.
+func (c *portalServiceClient) GetPosts(ctx context.Context, req *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetPostsResponse], error) {
+	return c.getPosts.CallUnary(ctx, req)
+}
+
 // PortalServiceHandler is an implementation of the doota.portal.v1.PortalService service.
 type PortalServiceHandler interface {
 	GetConfig(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.Config], error)
@@ -593,6 +627,9 @@ type PortalServiceHandler interface {
 	CancelSubscription(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v11.Subscription], error)
 	// Insights
 	GetInsights(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.InsightsResponse], error)
+	// Posts
+	CreatePost(context.Context, *connect.Request[v11.PostSettings]) (*connect.Response[v11.Post], error)
+	GetPosts(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetPostsResponse], error)
 }
 
 // NewPortalServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -775,6 +812,18 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(portalServiceGetInsightsMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
+	portalServiceCreatePostHandler := connect.NewUnaryHandler(
+		PortalServiceCreatePostProcedure,
+		svc.CreatePost,
+		connect.WithSchema(portalServiceCreatePostMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
+	portalServiceGetPostsHandler := connect.NewUnaryHandler(
+		PortalServiceGetPostsProcedure,
+		svc.GetPosts,
+		connect.WithSchema(portalServiceGetPostsMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/doota.portal.v1.PortalService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case PortalServiceGetConfigProcedure:
@@ -835,6 +884,10 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 			portalServiceCancelSubscriptionHandler.ServeHTTP(w, r)
 		case PortalServiceGetInsightsProcedure:
 			portalServiceGetInsightsHandler.ServeHTTP(w, r)
+		case PortalServiceCreatePostProcedure:
+			portalServiceCreatePostHandler.ServeHTTP(w, r)
+		case PortalServiceGetPostsProcedure:
+			portalServiceGetPostsHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -958,4 +1011,12 @@ func (UnimplementedPortalServiceHandler) CancelSubscription(context.Context, *co
 
 func (UnimplementedPortalServiceHandler) GetInsights(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.InsightsResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.GetInsights is not implemented"))
+}
+
+func (UnimplementedPortalServiceHandler) CreatePost(context.Context, *connect.Request[v11.PostSettings]) (*connect.Response[v11.Post], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.CreatePost is not implemented"))
+}
+
+func (UnimplementedPortalServiceHandler) GetPosts(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetPostsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.GetPosts is not implemented"))
 }
