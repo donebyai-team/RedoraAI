@@ -628,7 +628,7 @@ func (r browserless) WaitAndGetCookies(ctx context.Context, browserURL string) (
 }
 
 func (r browserless) StartLogin(ctx context.Context) (*CDPInfo, error) {
-	cdp, err := r.getCDPUrl(ctx, chatURL, true, false)
+	cdp, err := r.getCDPUrl(ctx, chatURL, true, true)
 	if err != nil {
 		return nil, err
 	}
