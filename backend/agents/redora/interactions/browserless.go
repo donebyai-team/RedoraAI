@@ -575,6 +575,8 @@ func (r browserless) WaitAndGetCookies(ctx context.Context, browserURL string) (
 	}
 	defer pw.Stop()
 
+	// added a hack to reconnect wait
+	time.Sleep(3 * time.Second)
 	browser, err := pw.Chromium.ConnectOverCDP(browserURL)
 	if err != nil {
 		return nil, fmt.Errorf("CDP connection failed: %w", err)
@@ -628,7 +630,7 @@ func (r browserless) WaitAndGetCookies(ctx context.Context, browserURL string) (
 }
 
 func (r browserless) StartLogin(ctx context.Context) (*CDPInfo, error) {
-	cdp, err := r.getCDPUrl(ctx, chatURL, true, true)
+	cdp, err := r.getCDPUrl(ctx, chatURL, true, false)
 	if err != nil {
 		return nil, err
 	}
@@ -680,7 +682,7 @@ func (r browserless) getCDPUrl(ctx context.Context, startURL string, includeLive
 	}
 
 	queryBuilder.WriteString(`
-  reconnect(timeout: 30000) {
+  reconnect {
     browserWSEndpoint
   }
 }`)
