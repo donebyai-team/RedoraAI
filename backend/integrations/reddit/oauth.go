@@ -139,6 +139,11 @@ func (r *OauthClient) newRedditClient(ctx context.Context, orgID string, forceAu
 	if client.isTokenExpired() {
 		err := client.refreshToken(ctx)
 		if err != nil {
+			// revoke
+			client.unAuthorizedErrorCallback(ctx)
+			if !forceAuth {
+				return NewClientWithOutConfig(r.logger), nil
+			}
 			return nil, &errorx.RefreshTokenError{Reason: err.Error()}
 		}
 
