@@ -669,9 +669,14 @@ func (r browserless) getCDPUrl(ctx context.Context, startURL string, includeLive
 
 	if includeLiveURL {
 		queryBuilder.WriteString(`
-  live: liveURL(timeout: 600000) {
+  live: liveURL(timeout: 600000 quality: 20 type: jpeg) {
     liveURL
   }`)
+
+		queryBuilder.WriteString(`
+  clickInput: click(selector: "#login-username") {
+  time
+}`)
 	}
 
 	queryBuilder.WriteString(`
