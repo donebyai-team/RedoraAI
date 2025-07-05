@@ -2,11 +2,11 @@ package pbportal
 
 import (
 	"fmt"
-	pbcore "github.com/shank318/doota/pb/doota/core/v1"
-	"strings"
-
 	"github.com/shank318/doota/models"
+	pbcore "github.com/shank318/doota/pb/doota/core/v1"
+	"github.com/shank318/doota/utils"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"strings"
 )
 
 func (r *UserRole) FromModel(model models.UserRole) {
@@ -78,6 +78,50 @@ func (o *Organization) FromModel(model *models.Organization) *Organization {
 
 	o.CreatedAt = timestamppb.New(model.CreatedAt)
 	return o
+}
+
+// Convert models.PostMetadata to pbcore.PostMetadata
+func convertMetadata(meta models.PostMetadata) *pbcore.PostMetadata {
+	history := []*pbcore.PostRegenerationHistory{}
+	for _, h := range meta.History {
+		history = append(history, &pbcore.PostRegenerationHistory{
+			Text: h.Text,
+			PostSettings: &pbcore.PostSettings{
+				Topic:       h.PostSettings.Topic,
+				Context:     h.PostSettings.Context,
+				Goal:        h.PostSettings.Goal,
+				Tone:        h.PostSettings.Tone,
+				ReferenceId: utils.StringPtrOrNil(h.PostSettings.ReferenceID),
+			},
+		})
+	}
+
+	return &pbcore.PostMetadata{
+		Settings: &pbcore.PostSettings{
+			Topic:       meta.Settings.Topic,
+			Context:     meta.Settings.Context,
+			Goal:        meta.Settings.Goal,
+			Tone:        meta.Settings.Tone,
+			ReferenceId: utils.StringPtrOrNil(meta.Settings.ReferenceID),
+		},
+		History: history,
+	}
+}
+
+// Main converter: models.Post → pbcore.Post
+func FromModel(post *models.Post) *pbcore.Post {
+	return &pbcore.Post{
+		Id:          post.ID,
+		ProjectId:   post.ProjectID,
+		Source:      post.SourceID,
+		Topic:       post.Title,
+		Description: post.Description,
+		Status:      string(post.Status),
+		Reason:      post.Reason,
+		CreatedAt:   timestamppb.New(post.CreatedAt),
+		ScheduledAt: utils.TimestamppbOrNil(post.ScheduleAt),
+		Metadata:    convertMetadata(post.Metadata),
+	}
 }
 
 func (i *IntegrationType) FromModel(model models.IntegrationType) {

@@ -11,7 +11,7 @@ CREATE TABLE posts
     metadata jsonb DEFAULT '{}'::jsonb NOT NULL,
     reason TEXT,
     reference_id uuid, -- Insight table ID optional
-    schedule_at timestamp
+    schedule_at timestamp,
     created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at  timestamp
 );

@@ -35,6 +35,8 @@ message PostSettings {
   string goal = 3;
   string tone = 4;
   optional string reference_id = 5;
+  optional string id = 6; // unique identifier for the post settings
+  string source_id = 7;
 }
 
 message PostMetadata {

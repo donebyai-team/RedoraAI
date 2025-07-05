@@ -107,3 +107,20 @@ func SanitizeKeyword(input string) string {
 
 	return input
 }
+
+// Helper: Convert *string to *string (filters nil or empty)
+func StringPtrOrNil(s *string) *string {
+	if s == nil || *s == "" {
+		return nil
+	}
+	return s
+}
+
+// NullableUUID safely converts an optional *string to interface{} for SQL usage.
+// - If the input is nil or points to an empty string (""), it returns `interface{}(nil)`
+func NullableUUID(s *string) interface{} {
+	if s == nil || *s == "" {
+		return interface{}(nil) // force proper SQL NULL
+	}
+	return *s
+}

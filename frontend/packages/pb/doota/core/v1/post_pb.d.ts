@@ -100,6 +100,18 @@ export declare type PostSettings = Message<"doota.core.v1.PostSettings"> & {
    * @generated from field: optional string reference_id = 5;
    */
   referenceId?: string;
+
+  /**
+   * unique identifier for the post settings
+   *
+   * @generated from field: optional string id = 6;
+   */
+  id?: string;
+
+  /**
+   * @generated from field: string source_id = 7;
+   */
+  sourceId: string;
 };
 
 /**

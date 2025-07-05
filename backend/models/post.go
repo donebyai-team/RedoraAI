@@ -16,6 +16,7 @@ type Post struct {
 	Title       string       `db:"title"`
 	Description string       `db:"description"`
 	SourceID    string       `db:"source_id"`
+	ReferenceID *string      `db:"reference_id"`
 	Status      PostStatus   `db:"status"`
 	Reason      string       `db:"reason"`
 	ScheduleAt  *time.Time   `db:"schedule_at"`
