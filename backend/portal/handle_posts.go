@@ -37,7 +37,7 @@ func (p *Portal) CreatePost(ctx context.Context, c *connect.Request[pbcore.PostS
 		return nil, err
 	}
 
-	return connect.NewResponse(pbportal.FromModel(createdPost)), nil
+	return connect.NewResponse(new(pbcore.Post).FromModel(createdPost)), nil
 }
 
 func (p *Portal) GetPosts(ctx context.Context, c *connect.Request[emptypb.Empty]) (*connect.Response[pbportal.GetPostsResponse], error) {

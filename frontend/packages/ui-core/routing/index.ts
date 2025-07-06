@@ -37,6 +37,11 @@ export const routes = {
     automation: '/settings/automation',
     billing: '/settings/billing',
     onboarding: '/onboarding',
+    postCreationHub: {
+      create: '/post-creation-hub/create',
+      posts: '/post-creation-hub/posts',
+      editor: '/post-creation-hub/editor'
+    },
   }
 }
 

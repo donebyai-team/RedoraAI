@@ -2,11 +2,9 @@ package psql
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+
 	"github.com/shank318/doota/models"
-	"github.com/shank318/doota/utils"
-	"go.uber.org/zap"
 )
 
 func init() {
@@ -20,10 +18,14 @@ func init() {
 func (r *Database) CreatePost(ctx context.Context, post *models.Post) (*models.Post, error) {
 	stmt := r.mustGetStmt("post/create_post.sql")
 
-	// Marshal metadata to JSON
-	metadataJSON, err := json.Marshal(post.Metadata)
+	metadataVal, err := post.Metadata.Value()
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal post metadata: %w", err)
+		fmt.Println("error while marshaling metadata:", err)
+		return nil, err
+	}
+
+	if *post.ReferenceID == "" {
+		post.ReferenceID = nil
 	}
 
 	var id string
@@ -33,19 +35,17 @@ func (r *Database) CreatePost(ctx context.Context, post *models.Post) (*models.P
 		"description":  post.Description,
 		"source_id":    post.SourceID,
 		"status":       post.Status,
-		"metadata":     metadataJSON,
+		"metadata":     metadataVal,
 		"reason":       post.Reason,
-		"reference_id": utils.NullableUUID(post.ReferenceID), // optional
-		"schedule_at":  post.ScheduleAt,                      // nullable
+		"reference_id": post.ReferenceID,
+		"schedule_at":  post.ScheduleAt,
 	})
+
 	if err != nil {
-		fmt.Println("error while creating post", err)
+		fmt.Println("error while creating posts:", err)
 		return nil, err
 	}
 
-	r.zlogger.Info("Post created successfully", zap.String("post_id", id))
-
-	// Set the returned ID and return the populated object
 	post.ID = id
 	return post, nil
 }
@@ -59,9 +59,10 @@ func (r *Database) GetPostByID(ctx context.Context, ID string) (*models.Post, er
 func (r *Database) UpdatePost(ctx context.Context, post *models.Post) error {
 	stmt := r.mustGetStmt("post/update_post.sql")
 
-	metadataJSON, err := json.Marshal(post.Metadata)
+	metadataVal, err := post.Metadata.Value()
 	if err != nil {
-		return fmt.Errorf("failed to marshal post metadata: %w", err)
+		fmt.Println("error while marshaling metadata:", err)
+		return err
 	}
 
 	_, err = stmt.ExecContext(ctx, map[string]interface{}{
@@ -70,7 +71,7 @@ func (r *Database) UpdatePost(ctx context.Context, post *models.Post) error {
 		"description":  post.Description,
 		"status":       post.Status,
 		"reason":       post.Reason,
-		"metadata":     metadataJSON,
+		"metadata":     metadataVal,
 		"reference_id": post.ReferenceID,
 		"schedule_at":  post.ScheduleAt,
 	})

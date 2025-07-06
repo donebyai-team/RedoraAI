@@ -14,7 +14,7 @@ import {
   X,
   PanelLeft,
   HelpCircle,
-  TrendingUp
+  TrendingUp, Edit3, ChevronRight, Plus, List
 } from "lucide-react";
 import {
   Sidebar,
@@ -27,7 +27,10 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  useSidebar,
+    useSidebar,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
@@ -38,6 +41,8 @@ import { Image } from "@doota/ui-core/atoms/Image";
 import { getFreePlanDateStatus } from "@/utils/format";
 import { Button } from "../ui/button";
 import { SubscriptionPlanID } from "@doota/pb/doota/core/v1/core_pb";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useState } from "react";
 
 export function AppSidebar() {
 
@@ -47,6 +52,7 @@ export function AppSidebar() {
   const { getPlanDetails, currentOrganization } = useAuth();
   const { planId } = getPlanDetails();
   // const [open, setOpen] = useState(true);
+  const [postCreationOpen, setPostCreationOpen] = useState(true);
 
   const isActive = (path: string) => {
     return location.startsWith(path);
@@ -82,6 +88,21 @@ export function AppSidebar() {
       path: routes.new.interactions,
       icon: Zap,
       active: isActive(routes.new.interactions),
+    },
+  ];
+
+  const postCreationItems = [
+    {
+      title: "Create Post",
+      path: routes.new.postCreationHub.create,
+      icon: Plus,
+      active: isActive(routes.new.postCreationHub.create),
+    },
+    {
+      title: "Posts",
+      path: routes.new.postCreationHub.posts,
+      icon: List,
+      active: isActive(routes.new.postCreationHub.posts),
     },
   ];
 
@@ -177,6 +198,36 @@ export function AppSidebar() {
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
+
+          <Collapsible open={postCreationOpen} onOpenChange={setPostCreationOpen}>
+            <SidebarMenuItem>
+              <CollapsibleTrigger asChild>
+                <SidebarMenuButton isActive={
+                    isActive(routes.new.postCreationHub.create) ||
+                    isActive(routes.new.postCreationHub.posts)  ||
+                    isActive(routes.new.postCreationHub.editor)
+                }>
+                  <Edit3 className="h-4 w-4 mr-2" />
+                  <span>Post Creation Hub</span>
+                  <ChevronRight className={`h-4 w-4 ml-auto transition-transform ${postCreationOpen ? 'rotate-90' : ''}`} />
+                </SidebarMenuButton>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarMenuSub>
+                  {postCreationItems.map((item) => (
+                      <SidebarMenuSubItem key={item.path}>
+                        <SidebarMenuSubButton asChild isActive={item.active}>
+                          <Link href={item.path} className="flex items-center">
+                            <item.icon className="h-4 w-4 mr-2" />
+                            <span>{item.title}</span>
+                          </Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                  ))}
+                </SidebarMenuSub>
+              </CollapsibleContent>
+            </SidebarMenuItem>
+          </Collapsible>
         </SidebarGroup>
 
         <SidebarGroup>
