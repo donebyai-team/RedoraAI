@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"google.golang.org/protobuf/types/known/timestamppb"
 	"strings"
 	"time"
 
@@ -47,12 +46,4 @@ func ToTimezone(in string, tz *time.Location, logger *zap.Logger) *time.Time {
 		t = t.In(tz)
 	}
 	return &t
-}
-
-// Helper: Convert *time.Time to *timestamppb.Timestamp
-func TimestamppbOrNil(t *time.Time) *timestamppb.Timestamp {
-	if t == nil {
-		return nil
-	}
-	return timestamppb.New(*t)
 }

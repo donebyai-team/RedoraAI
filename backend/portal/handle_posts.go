@@ -6,7 +6,6 @@ import (
 	"github.com/shank318/doota/models"
 	pbcore "github.com/shank318/doota/pb/doota/core/v1"
 	pbportal "github.com/shank318/doota/pb/doota/portal/v1"
-	"github.com/shank318/doota/services"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -30,8 +29,7 @@ func (p *Portal) CreatePost(ctx context.Context, c *connect.Request[pbcore.PostS
 		newPost.ReferenceID = c.Msg.ReferenceId
 	}
 
-	postService := services.NewPostService(p.logger, p.db, p.openAIClient)
-	createdPost, err := postService.CreatePost(ctx, newPost, c.Msg)
+	createdPost, err := p.postService.CreatePost(ctx, newPost, c.Msg)
 
 	if err != nil {
 		return nil, err

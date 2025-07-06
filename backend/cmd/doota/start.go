@@ -410,6 +410,7 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 
 	dodoPaymentToken := sflags.MustGetString(cmd, "common-dodopayment-api-key")
 	dodoSubscriptionService := services.NewDodoSubscriptionService(deps.DataStore, alertNotifier, dodoPaymentToken, logger, isDev)
+	postsService := services.NewPostService(logger, deps.DataStore, deps.OpenAIClient)
 
 	p := portal.New(
 		deps.OpenAIClient,
@@ -432,6 +433,7 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		alertNotifier,
 		interactionService,
 		dodoSubscriptionService,
+		postsService,
 	)
 	return p, nil
 }

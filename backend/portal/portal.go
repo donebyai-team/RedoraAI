@@ -44,6 +44,7 @@ type Portal struct {
 	alertNotifier       alerts.AlertNotifier
 	interactionService  interactions.AutomatedInteractions
 	subscriptionService services.SubscriptionService
+	postService         services.PostService
 }
 
 func New(
@@ -67,6 +68,7 @@ func New(
 	alertNotifier alerts.AlertNotifier,
 	interactionService interactions.AutomatedInteractions,
 	subscriptionService services.SubscriptionService,
+	postService services.PostService,
 ) *Portal {
 	return &Portal{
 		openAIClient:        openAIClient,
@@ -90,6 +92,7 @@ func New(
 		alertNotifier:       alertNotifier,
 		interactionService:  interactionService,
 		subscriptionService: subscriptionService,
+		postService:         postService,
 	}
 }
 
