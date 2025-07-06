@@ -24,7 +24,7 @@ func (r *Database) CreatePost(ctx context.Context, post *models.Post) (*models.P
 		return nil, err
 	}
 
-	if *post.ReferenceID == "" {
+	if post.ReferenceID != nil && *post.ReferenceID == "" {
 		post.ReferenceID = nil
 	}
 
