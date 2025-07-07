@@ -3,46 +3,61 @@ package pbcore
 import (
 	"github.com/shank318/doota/models"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"time"
 )
 
+// FromModel converts a models.Post into a protobuf Post.
 func (p *Post) FromModel(post *models.Post) *Post {
-	history := []*PostRegenerationHistory{}
-	for _, h := range post.Metadata.History {
-		history = append(history, &PostRegenerationHistory{
-			Text: h.Text,
-			PostSettings: &PostSettings{
-				Topic:       h.PostSettings.Topic,
-				Context:     h.PostSettings.Context,
-				Goal:        h.PostSettings.Goal,
-				Tone:        h.PostSettings.Tone,
-				ReferenceId: h.PostSettings.ReferenceID,
-			},
-		})
+	return &Post{
+		Id:          post.ID,
+		ProjectId:   post.ProjectID,
+		Source:      post.SourceID,
+		Topic:       post.Title,
+		Description: post.Description,
+		Status:      string(post.Status),
+		Reason:      post.Reason,
+		CreatedAt:   timestamppb.New(post.CreatedAt),
+		ScheduledAt: toTimestamp(post.ScheduleAt),
+		Metadata:    new(PostMetadata).FromModel(post.Metadata),
 	}
+}
 
-	p.Id = post.ID
-	p.ProjectId = post.ProjectID
-	p.Source = post.SourceID
-	p.Topic = post.Title
-	p.Description = post.Description
-	p.Status = string(post.Status)
-	p.Reason = post.Reason
-	p.CreatedAt = timestamppb.New(post.CreatedAt)
-
-	if post.ScheduleAt != nil {
-		p.ScheduledAt = timestamppb.New(*post.ScheduleAt)
+// FromModel converts a models.PostSettings into a protobuf PostSettings.
+func (ps *PostSettings) FromModel(m models.PostSettings) *PostSettings {
+	return &PostSettings{
+		Topic:       m.Topic,
+		Context:     m.Context,
+		Goal:        m.Goal,
+		Tone:        m.Tone,
+		ReferenceId: m.ReferenceID,
 	}
+}
 
-	p.Metadata = &PostMetadata{
-		Settings: &PostSettings{
-			Topic:       post.Metadata.Settings.Topic,
-			Context:     post.Metadata.Settings.Context,
-			Goal:        post.Metadata.Settings.Goal,
-			Tone:        post.Metadata.Settings.Tone,
-			ReferenceId: post.Metadata.Settings.ReferenceID,
-		},
-		History: history,
+// FromModel converts a models.PostMetadata into a protobuf PostMetadata.
+func (pm *PostMetadata) FromModel(m models.PostMetadata) *PostMetadata {
+	var history []*PostRegenerationHistory
+	for _, h := range m.History {
+		history = append(history, new(PostRegenerationHistory).FromModel(h))
 	}
+	return &PostMetadata{
+		Settings: new(PostSettings).FromModel(m.Settings),
+		History:  history,
+	}
+}
 
-	return p
+// FromModel converts a models.PostRegenerationHistory into a protobuf PostRegenerationHistory.
+func (prh *PostRegenerationHistory) FromModel(m models.PostRegenerationHistory) *PostRegenerationHistory {
+	return &PostRegenerationHistory{
+		PostSettings: new(PostSettings).FromModel(m.PostSettings),
+		Title:        m.Title,
+		Description:  m.Description,
+	}
+}
+
+// Helper function to convert *time.Time to *timestamppb.Timestamp
+func toTimestamp(t *time.Time) *timestamppb.Timestamp {
+	if t == nil {
+		return nil
+	}
+	return timestamppb.New(*t)
 }

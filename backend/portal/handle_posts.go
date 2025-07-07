@@ -6,6 +6,8 @@ import (
 	"github.com/shank318/doota/models"
 	pbcore "github.com/shank318/doota/pb/doota/core/v1"
 	pbportal "github.com/shank318/doota/pb/doota/portal/v1"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -13,6 +15,11 @@ func (p *Portal) CreatePost(ctx context.Context, c *connect.Request[pbcore.PostS
 	actor, err := p.gethAuthContext(ctx)
 	if err != nil {
 		return nil, err
+	}
+
+	_, err = p.db.GetSourceByID(ctx, c.Msg.GetSourceId())
+	if err != nil {
+		return nil, status.New(codes.InvalidArgument, "Failed to get source by ID").Err()
 	}
 
 	project, err := p.getProject(ctx, c.Header(), actor.OrganizationID)
@@ -39,16 +46,28 @@ func (p *Portal) CreatePost(ctx context.Context, c *connect.Request[pbcore.PostS
 }
 
 func (p *Portal) GetPosts(ctx context.Context, c *connect.Request[emptypb.Empty]) (*connect.Response[pbportal.GetPostsResponse], error) {
-	//actor, err := p.gethAuthContext(ctx)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
-	//project, err := p.getProject(ctx, c.Header(), actor.OrganizationID)
-	//if err != nil {
-	//	return nil, err
-	//}
+	actor, err := p.gethAuthContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-	// call service to fetch posts by project id
-	return nil, nil
+	project, err := p.getProject(ctx, c.Header(), actor.OrganizationID)
+	if err != nil {
+		return nil, err
+	}
+
+	posts, err := p.db.GetPostsByProjectID(ctx, project.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	protoPosts := make([]*pbcore.Post, 0, len(posts))
+	for _, post := range posts {
+		proto := new(pbcore.Post).FromModel(post)
+		protoPosts = append(protoPosts, proto)
+	}
+
+	return connect.NewResponse(&pbportal.GetPostsResponse{
+		Posts: protoPosts,
+	}), nil
 }

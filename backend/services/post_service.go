@@ -45,19 +45,12 @@ func (s *postService) CreatePost(ctx context.Context, post *models.Post, setting
 	}
 
 	if existingPost != nil {
-		// Marshal previous title & description into JSON
-		historyTextBytes, err := json.Marshal(map[string]string{
-			"title":       existingPost.Title,
-			"description": existingPost.Description,
-		})
-		if err != nil {
-			return nil, fmt.Errorf("failed to marshal history text: %w", err)
-		}
 
 		// Create history entry
 		historyEntry := models.PostRegenerationHistory{
 			PostSettings: existingPost.Metadata.Settings,
-			Text:         string(historyTextBytes),
+			Title:        existingPost.Title,
+			Description:  existingPost.Description,
 		}
 
 		// Append to history and update post
@@ -86,10 +79,6 @@ func (s *postService) CreatePost(ctx context.Context, post *models.Post, setting
 	post.Description = description
 	post.Status = models.PostStatusCREATED
 
-	historyTextBytes, err := json.Marshal(map[string]string{
-		"title":       title,
-		"description": description,
-	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal history text: %w", err)
 	}
@@ -102,7 +91,8 @@ func (s *postService) CreatePost(ctx context.Context, post *models.Post, setting
 			Tone:        settings.Tone,
 			ReferenceID: settings.ReferenceId,
 		},
-		Text: string(historyTextBytes),
+		Title:       title,
+		Description: description,
 	}
 
 	post.Metadata = models.PostMetadata{

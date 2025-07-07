@@ -48,7 +48,8 @@ type PostMetadata struct {
 
 type PostRegenerationHistory struct {
 	PostSettings PostSettings `json:"post_settings"`
-	Text         string       `db:"text"`
+	Title        string       `db:"title"`
+	Description  string       `db:"description"`
 }
 
 func (b PostMetadata) Value() (driver.Value, error) {

@@ -9,6 +9,7 @@ import { paremsReducer } from './Params/ParamsSlice';
 import { redditIntegrationReducer } from './slices/redditIntegrationSlice';
 import { stepperReducer } from './Onboarding/OnboardingSlice';
 import { redditReducer } from './Reddit/RedditSlice';
+import { postCreationReducer } from "@/store/PostCreation/PostCreationSlice";
 
 const rootReducer = combineReducers({
   source: sourceReducer,
@@ -17,6 +18,7 @@ const rootReducer = combineReducers({
   redditIntegration: redditIntegrationReducer,
   stepper: stepperReducer,
   reddit: redditReducer,
+  postCreation: postCreationReducer,
 });
 
 const persistConfig = {

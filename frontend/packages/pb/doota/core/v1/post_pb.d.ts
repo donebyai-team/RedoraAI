@@ -151,9 +151,14 @@ export declare type PostRegenerationHistory = Message<"doota.core.v1.PostRegener
   postSettings?: PostSettings;
 
   /**
-   * @generated from field: string text = 2;
+   * @generated from field: string title = 2;
    */
-  text: string;
+  title: string;
+
+  /**
+   * @generated from field: string description = 3;
+   */
+  description: string;
 };
 
 /**
