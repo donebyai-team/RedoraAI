@@ -18,8 +18,8 @@ CREATE TABLE post_insights
 
 -- Assuming projects and posts are tracked in other tables
 ALTER TABLE post_insights ADD CONSTRAINT fk1_post_insights FOREIGN KEY (project_id) REFERENCES projects (id);
-ALTER TABLE leads ADD CONSTRAINT fk2_post_insights FOREIGN KEY (source_id) REFERENCES sources (id);
-ALTER TABLE leads ADD CONSTRAINT fk3_post_insights FOREIGN KEY (keyword_id) REFERENCES keywords (id);
+ALTER TABLE post_insights ADD CONSTRAINT fk2_post_insights FOREIGN KEY (source_id) REFERENCES sources (id);
+ALTER TABLE post_insights ADD CONSTRAINT fk3_post_insights FOREIGN KEY (keyword_id) REFERENCES keywords (id);
 
 CREATE INDEX idx_post_insights_proj_score_created
     ON post_insights (project_id, relevancy_score, created_at);
