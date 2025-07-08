@@ -165,7 +165,8 @@ type PostRepository interface {
 	CreatePost(ctx context.Context, post *models.Post) (*models.Post, error)
 	GetPostByID(ctx context.Context, ID string) (*models.Post, error)
 	UpdatePost(ctx context.Context, post *models.Post) error
-	GetPostsByProjectID(ctx context.Context, projectID string) ([]*models.Post, error)
+	GetPostsByProjectID(ctx context.Context, projectID string) ([]*models.AugmentedPost, error)
+	SchedulePost(ctx context.Context, postID string, scheduleAt time.Time) error
 }
 
 type CustomerCaseFilter struct {

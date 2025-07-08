@@ -3,6 +3,7 @@ package psql
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/shank318/doota/models"
 )
@@ -13,6 +14,7 @@ func init() {
 		"post/query_post_by_id.sql",
 		"post/update_post.sql",
 		"post/query_post_by_project.sql",
+		"post/schedule_post.sql",
 	})
 }
 
@@ -65,8 +67,19 @@ func (r *Database) UpdatePost(ctx context.Context, post *models.Post) error {
 	return err
 }
 
-func (r *Database) GetPostsByProjectID(ctx context.Context, projectID string) ([]*models.Post, error) {
-	return getMany[models.Post](ctx, r, "post/query_post_by_project.sql", map[string]any{
+func (r *Database) GetPostsByProjectID(ctx context.Context, projectID string) ([]*models.AugmentedPost, error) {
+	return getMany[models.AugmentedPost](ctx, r, "post/query_post_by_project.sql", map[string]any{
 		"project_id": projectID,
 	})
+}
+
+func (r *Database) SchedulePost(ctx context.Context, postID string, scheduleAt time.Time) error {
+	stmt := r.mustGetStmt("post/schedule_post.sql")
+
+	_, err := stmt.ExecContext(ctx, map[string]interface{}{
+		"id":          postID,
+		"schedule_at": scheduleAt,
+		"status":      models.PostStatusSCHEDULED,
+	})
+	return err
 }

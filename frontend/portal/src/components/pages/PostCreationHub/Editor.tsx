@@ -6,6 +6,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
+    ArrowLeft,
     Calendar, History, Loader2, Save, Undo
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -15,15 +16,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAppSelector } from "@/store/hooks";
 import { PostRegenerationHistory, Post } from "@doota/pb/doota/core/v1/post_pb";
 import { useCreatePost } from "@/components/hooks/useCreatePost";
-
-interface ParsedHistory {
-    title: string;
-    description: string;
-}
+import { routes } from "@doota/ui-core/routing";
+import { useRouter } from "next/navigation";
+import { portalClient } from "@/services/grpc";
+import toast from "react-hot-toast";
+import { Timestamp } from "@bufbuild/protobuf/wkt";
 
 export default function PostEditor() {
     const { post } = useAppSelector((state) => state.postCreation);
     const { createPost } = useCreatePost();
+    const router = useRouter();
 
     const [isLoading, setIsLoading] = useState(false);
     const [title, setTitle] = useState("");
@@ -84,19 +86,40 @@ export default function PostEditor() {
         console.log("Saving as draft...");
     };
 
-    const handleSchedule = () => {
+    const handleSchedule = async () => {
         if (!scheduledDate) {
-            alert("Please select a schedule date.");
+            toast.error("Please select a schedule date.");
             return;
         }
-        console.log("Scheduling post for:", scheduledDate);
-    };
 
-    const formatHistoryTime = (timestamp: string) =>
-        new Date(timestamp).toLocaleTimeString("en-US", {
-            hour: "2-digit",
-            minute: "2-digit",
-        });
+        try {
+            const date = new Date(scheduledDate);
+            if (isNaN(date.getTime())) {
+                throw new Error("Invalid date format");
+            }
+
+            const timestamp: Omit<Timestamp, '$typeName'> = {
+                seconds: BigInt(Math.floor(date.getTime() / 1000)),
+                nanos: (date.getTime() % 1000) * 1_000_000,
+            };
+
+            setIsLoading(true)
+            await portalClient.schedulePost({
+                id: post?.id || "",
+                scheduleAt: timestamp,
+            });
+            setIsLoading(false)
+            toast.success("Post scheduled successfully!");
+            setTimeout(() => {
+                router.push(routes.new.postCreationHub.posts);
+            }, 300);
+        } catch (err: any) {
+            setIsLoading(false)
+            const message =
+                err?.response?.data?.message || err.message || "Failed to schedule post";
+            toast.error(message);
+        }
+    };
 
     return (
         <div>
@@ -105,11 +128,24 @@ export default function PostEditor() {
                     <Loader2 className="animate-spin" size={35} />
                 </div>
             ) : (
-                <div className="p-6 max-w-4xl mx-auto">
+                <div>
+                    <div className="mt-4 ml-4">
+                        <Button
+                            variant="outline"
+                            onClick={() => router.back()}
+                        >
+                            <ArrowLeft className="h-2 w-2 mr-2" />
+                            Back to Create
+                        </Button>
+                    </div>
+                    <div className="p-6 max-w-4xl mx-auto">
+                    {/* Back Button aligned to extreme left */}
                     <div className="mb-6 flex items-center gap-4">
-                        <div>
-                            <h1 className="text-2xl font-bold">Edit Generated Post</h1>
-                            <p className="text-gray-600">Review, edit, and schedule your AI-generated posts</p>
+                        <div className="mb-6 flex items-center gap-4">
+                            <div>
+                                <h1 className="text-2xl font-bold">Edit Generated Post</h1>
+                                <p className="text-gray-600">Review, edit, and schedule your AI-generated post</p>
+                            </div>
                         </div>
                     </div>
 
@@ -214,15 +250,15 @@ export default function PostEditor() {
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Button
-                                            onClick={handleSaveDraft}
-                                            variant="outline"
-                                            className="w-full"
-                                            disabled={isLoading || !post?.topic}
-                                        >
-                                            <Save className="h-4 w-4 mr-2" />
-                                            Save as Draft
-                                        </Button>
+                                        {/*<Button*/}
+                                        {/*    onClick={handleSaveDraft}*/}
+                                        {/*    variant="outline"*/}
+                                        {/*    className="w-full"*/}
+                                        {/*    disabled={isLoading || !post?.topic}*/}
+                                        {/*>*/}
+                                        {/*    <Save className="h-4 w-4 mr-2" />*/}
+                                        {/*    Save as Draft*/}
+                                        {/*</Button>*/}
 
                                         <Button
                                             onClick={handleSchedule}
@@ -248,6 +284,7 @@ export default function PostEditor() {
                             </Card>
                         </div>
                     </div>
+                </div>
                 </div>
             )}
         </div>

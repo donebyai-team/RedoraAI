@@ -168,6 +168,52 @@ export declare type PostRegenerationHistory = Message<"doota.core.v1.PostRegener
 export declare const PostRegenerationHistorySchema: GenMessage<PostRegenerationHistory>;
 
 /**
+ * @generated from message doota.core.v1.AugmentedPost
+ */
+export declare type AugmentedPost = Message<"doota.core.v1.AugmentedPost"> & {
+  /**
+   * Base post information
+   *
+   * @generated from field: doota.core.v1.Post post = 1;
+   */
+  post?: Post;
+
+  /**
+   * Additional field
+   *
+   * @generated from field: string source_name = 2;
+   */
+  sourceName: string;
+};
+
+/**
+ * Describes the message doota.core.v1.AugmentedPost.
+ * Use `create(AugmentedPostSchema)` to create a new message.
+ */
+export declare const AugmentedPostSchema: GenMessage<AugmentedPost>;
+
+/**
+ * @generated from message doota.core.v1.SchedulePostRequest
+ */
+export declare type SchedulePostRequest = Message<"doota.core.v1.SchedulePostRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp schedule_at = 2;
+   */
+  scheduleAt?: Timestamp;
+};
+
+/**
+ * Describes the message doota.core.v1.SchedulePostRequest.
+ * Use `create(SchedulePostRequestSchema)` to create a new message.
+ */
+export declare const SchedulePostRequestSchema: GenMessage<SchedulePostRequest>;
+
+/**
  * @generated from enum doota.core.v1.PostStatus
  */
 export enum PostStatus {

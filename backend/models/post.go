@@ -17,6 +17,7 @@ type Post struct {
 	Description string       `db:"description"`
 	SourceID    string       `db:"source_id"`
 	ReferenceID *string      `db:"reference_id"`
+	PostID      *string      `db:"post_id"`
 	Status      PostStatus   `db:"status"`
 	Reason      string       `db:"reason"`
 	ScheduleAt  *time.Time   `db:"schedule_at"`
@@ -35,6 +36,7 @@ type AugmentedPost struct {
 	Status      LeadInteractionStatus `db:"status"`
 	Reason      string                `db:"reason"`
 	ReferenceID *string               `db:"reference_id"` // id of the insight
+	PostID      *string               `db:"post_id"`
 	ScheduleAt  *time.Time            `db:"schedule_at"`
 	CreatedAt   time.Time             `db:"created_at"`
 	UpdatedAt   *time.Time            `db:"updated_at"`

@@ -50,3 +50,13 @@ message PostRegenerationHistory {
   string description = 3;
 }
 
+message AugmentedPost {
+  Post post = 1;           // Base post information
+  string source_name = 2;  // Additional field
+}
+
+message SchedulePostRequest {
+  string id = 1;
+  google.protobuf.Timestamp schedule_at = 2;
+}
+

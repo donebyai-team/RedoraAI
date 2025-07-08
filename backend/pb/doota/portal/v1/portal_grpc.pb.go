@@ -52,6 +52,7 @@ const (
 	PortalService_GetInsights_FullMethodName                 = "/doota.portal.v1.PortalService/GetInsights"
 	PortalService_CreatePost_FullMethodName                  = "/doota.portal.v1.PortalService/CreatePost"
 	PortalService_GetPosts_FullMethodName                    = "/doota.portal.v1.PortalService/GetPosts"
+	PortalService_SchedulePost_FullMethodName                = "/doota.portal.v1.PortalService/SchedulePost"
 )
 
 // PortalServiceClient is the client API for PortalService service.
@@ -95,6 +96,7 @@ type PortalServiceClient interface {
 	// Posts
 	CreatePost(ctx context.Context, in *v1.PostSettings, opts ...grpc.CallOption) (*v1.Post, error)
 	GetPosts(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetPostsResponse, error)
+	SchedulePost(ctx context.Context, in *v1.SchedulePostRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type portalServiceClient struct {
@@ -407,6 +409,15 @@ func (c *portalServiceClient) GetPosts(ctx context.Context, in *emptypb.Empty, o
 	return out, nil
 }
 
+func (c *portalServiceClient) SchedulePost(ctx context.Context, in *v1.SchedulePostRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, PortalService_SchedulePost_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PortalServiceServer is the server API for PortalService service.
 // All implementations must embed UnimplementedPortalServiceServer
 // for forward compatibility
@@ -448,6 +459,7 @@ type PortalServiceServer interface {
 	// Posts
 	CreatePost(context.Context, *v1.PostSettings) (*v1.Post, error)
 	GetPosts(context.Context, *emptypb.Empty) (*GetPostsResponse, error)
+	SchedulePost(context.Context, *v1.SchedulePostRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedPortalServiceServer()
 }
 
@@ -547,6 +559,9 @@ func (UnimplementedPortalServiceServer) CreatePost(context.Context, *v1.PostSett
 }
 func (UnimplementedPortalServiceServer) GetPosts(context.Context, *emptypb.Empty) (*GetPostsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetPosts not implemented")
+}
+func (UnimplementedPortalServiceServer) SchedulePost(context.Context, *v1.SchedulePostRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SchedulePost not implemented")
 }
 func (UnimplementedPortalServiceServer) mustEmbedUnimplementedPortalServiceServer() {}
 
@@ -1122,6 +1137,24 @@ func _PortalService_GetPosts_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PortalService_SchedulePost_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(v1.SchedulePostRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortalServiceServer).SchedulePost(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortalService_SchedulePost_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortalServiceServer).SchedulePost(ctx, req.(*v1.SchedulePostRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // PortalService_ServiceDesc is the grpc.ServiceDesc for PortalService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1248,6 +1281,10 @@ var PortalService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetPosts",
 			Handler:    _PortalService_GetPosts_Handler,
+		},
+		{
+			MethodName: "SchedulePost",
+			Handler:    _PortalService_SchedulePost_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

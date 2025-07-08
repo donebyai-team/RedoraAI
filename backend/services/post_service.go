@@ -6,15 +6,17 @@ import (
 	"errors"
 	"fmt"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/shank318/doota/ai"
 	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/models"
-	pbcore "github.com/shank318/doota/pb/doota/core/v1"
 	"go.uber.org/zap"
 )
 
 type PostService interface {
-	CreatePost(ctx context.Context, post *models.Post, settings *pbcore.PostSettings) (*models.Post, error)
+	CreatePost(ctx context.Context, post *models.Post) (*models.Post, error)
 }
 type postService struct {
 	aiClient *ai.Client
@@ -26,24 +28,29 @@ func NewPostService(logger *zap.Logger, db datastore.Repository, aiClient *ai.Cl
 	return &postService{logger: logger, db: db, aiClient: aiClient}
 }
 
-func (s *postService) CreatePost(ctx context.Context, post *models.Post, settings *pbcore.PostSettings) (*models.Post, error) {
-	var existingPost *models.Post
-	var err error
+func (s *postService) CreatePost(ctx context.Context, post *models.Post) (*models.Post, error) {
+	_, err := s.db.GetSourceByID(ctx, post.SourceID)
+	if err != nil {
+		return nil, status.New(codes.InvalidArgument, "failed to get source by ID").Err()
+	}
 
-	if settings.Id != nil {
+	var existingPost *models.Post
+
+	if post.ID != "" {
 		// Only query if ID is present
-		existingPost, err = s.db.GetPostByID(ctx, *settings.Id)
+		existingPost, err = s.db.GetPostByID(ctx, post.ID)
 		if err != nil && !errors.Is(err, datastore.NotFound) {
 			return nil, fmt.Errorf("failed to check existing post: %w", err)
 		}
 	}
 
 	// Generate new AI content
-	title, description, err := generateAIContent(ctx, settings)
+	title, description, err := generateAIContent(ctx, post.Metadata.Settings)
 	if err != nil {
 		return nil, fmt.Errorf("AI generation failed: %w", err)
 	}
 
+	settings := post.Metadata.Settings
 	if existingPost != nil {
 
 		// Create history entry
@@ -58,14 +65,14 @@ func (s *postService) CreatePost(ctx context.Context, post *models.Post, setting
 		existingPost.Title = title
 		existingPost.Description = description
 		existingPost.Status = models.PostStatusPROCESSING
-		existingPost.ReferenceID = settings.ReferenceId
+		existingPost.ReferenceID = settings.ReferenceID
 
 		existingPost.Metadata.Settings = models.PostSettings{
 			Topic:       settings.Topic,
 			Context:     settings.Context,
 			Goal:        settings.Goal,
 			Tone:        settings.Tone,
-			ReferenceID: settings.ReferenceId,
+			ReferenceID: settings.ReferenceID,
 		}
 
 		if err := s.db.UpdatePost(ctx, existingPost); err != nil {
@@ -79,17 +86,13 @@ func (s *postService) CreatePost(ctx context.Context, post *models.Post, setting
 	post.Description = description
 	post.Status = models.PostStatusCREATED
 
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal history text: %w", err)
-	}
-
 	historyEntry := models.PostRegenerationHistory{
 		PostSettings: models.PostSettings{
 			Topic:       settings.Topic,
 			Context:     settings.Context,
 			Goal:        settings.Goal,
 			Tone:        settings.Tone,
-			ReferenceID: settings.ReferenceId,
+			ReferenceID: settings.ReferenceID,
 		},
 		Title:       title,
 		Description: description,
@@ -110,7 +113,7 @@ func (s *postService) CreatePost(ctx context.Context, post *models.Post, setting
 }
 
 // generateAIContent simulates an OpenAI API call
-func generateAIContent(ctx context.Context, settings *pbcore.PostSettings) (title, description string, err error) {
+func generateAIContent(ctx context.Context, settings models.PostSettings) (title, description string, err error) {
 	// Simulated content generation logic. Replace with actual API call.
 	content := fmt.Sprintf(
 		"Title for topic: %s in tone: %s\nDescription: This is a simulated AI-generated post about '%s' for the goal '%s'.",

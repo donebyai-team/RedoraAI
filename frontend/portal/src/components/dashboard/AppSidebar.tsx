@@ -200,7 +200,7 @@ export function AppSidebar() {
           </SidebarGroupContent>
 
           <Collapsible open={postCreationOpen} onOpenChange={setPostCreationOpen}>
-            <SidebarMenuItem>
+            <SidebarMenuItem className="list-none">
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton isActive={
                     isActive(routes.new.postCreationHub.create) ||
@@ -213,9 +213,9 @@ export function AppSidebar() {
                 </SidebarMenuButton>
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <SidebarMenuSub>
+                <SidebarMenuSub className="list-none">
                   {postCreationItems.map((item) => (
-                      <SidebarMenuSubItem key={item.path}>
+                      <SidebarMenuSubItem key={item.path} className="list-none">
                         <SidebarMenuSubButton asChild isActive={item.active}>
                           <Link href={item.path} className="flex items-center">
                             <item.icon className="h-4 w-4 mr-2" />

@@ -6,6 +6,7 @@ import { useAppDispatch } from "@/store/hooks";
 import toast from "react-hot-toast";
 import { useClientsContext } from "@doota/ui-core/context/ClientContext";
 import { setPost } from "@/store/PostCreation/PostCreationSlice";
+import {routes} from "@doota/ui-core/routing";
 
 /**
  * Hook to create a new post and update Redux state.
@@ -30,8 +31,8 @@ export function useCreatePost() {
 
             if (redirect) {
                 setTimeout(() => {
-                    router.push("/post-creation-hub/editor");
-                }, 500);
+                    router.push(routes.new.postCreationHub.editor);
+                }, 300);
             }
 
             return res;

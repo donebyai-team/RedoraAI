@@ -6,6 +6,7 @@ import (
 	"github.com/shank318/doota/models"
 	pbcore "github.com/shank318/doota/pb/doota/core/v1"
 	pbportal "github.com/shank318/doota/pb/doota/portal/v1"
+	"github.com/shank318/doota/validation"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -17,27 +18,33 @@ func (p *Portal) CreatePost(ctx context.Context, c *connect.Request[pbcore.PostS
 		return nil, err
 	}
 
-	_, err = p.db.GetSourceByID(ctx, c.Msg.GetSourceId())
-	if err != nil {
-		return nil, status.New(codes.InvalidArgument, "Failed to get source by ID").Err()
-	}
-
 	project, err := p.getProject(ctx, c.Header(), actor.OrganizationID)
 	if err != nil {
 		return nil, err
 	}
 
+	// Create post using value types
 	newPost := &models.Post{
-		ProjectID: project.ID,
-		SourceID:  c.Msg.GetSourceId(),
+		ProjectID:   project.ID,
+		SourceID:    c.Msg.SourceId,
+		ID:          c.Msg.GetId(),
+		ReferenceID: c.Msg.ReferenceId,
+		Metadata: models.PostMetadata{
+			Settings: models.PostSettings{
+				Topic:       c.Msg.Topic,
+				Context:     c.Msg.Context,
+				Goal:        c.Msg.Goal,
+				Tone:        c.Msg.Tone,
+				ReferenceID: c.Msg.ReferenceId,
+			},
+		},
 	}
 
-	if c.Msg.ReferenceId != nil {
+	if c.Msg.GetReferenceId() != "" {
 		newPost.ReferenceID = c.Msg.ReferenceId
 	}
 
-	createdPost, err := p.postService.CreatePost(ctx, newPost, c.Msg)
-
+	createdPost, err := p.postService.CreatePost(ctx, newPost)
 	if err != nil {
 		return nil, err
 	}
@@ -61,13 +68,48 @@ func (p *Portal) GetPosts(ctx context.Context, c *connect.Request[emptypb.Empty]
 		return nil, err
 	}
 
-	protoPosts := make([]*pbcore.Post, 0, len(posts))
+	protoPosts := make([]*pbcore.AugmentedPost, 0, len(posts))
 	for _, post := range posts {
-		proto := new(pbcore.Post).FromModel(post)
-		protoPosts = append(protoPosts, proto)
+		proto := new(pbcore.Post).FromAugmentedModel(post)
+		augmented := &pbcore.AugmentedPost{
+			Post:       proto,
+			SourceName: post.Source.Name,
+		}
+		protoPosts = append(protoPosts, augmented)
 	}
 
 	return connect.NewResponse(&pbportal.GetPostsResponse{
 		Posts: protoPosts,
 	}), nil
+}
+
+func (p *Portal) SchedulePost(ctx context.Context, c *connect.Request[pbcore.SchedulePostRequest]) (*connect.Response[emptypb.Empty], error) {
+	actor, err := p.gethAuthContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	project, err := p.getProject(ctx, c.Header(), actor.OrganizationID)
+	if err != nil {
+		return nil, err
+	}
+
+	post, err := p.db.GetPostByID(ctx, c.Msg.Id)
+	if err != nil {
+		return nil, status.New(codes.NotFound, "Post not found").Err()
+	}
+
+	//Validate payload and project ownership
+	err = validation.ValidateSchedulePost(c.Msg, post, project.ID)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, err)
+	}
+
+	scheduleAt := c.Msg.GetScheduleAt().AsTime()
+
+	if err := p.db.SchedulePost(ctx, c.Msg.Id, scheduleAt); err != nil {
+		return nil, status.New(codes.Internal, "Failed to schedule post").Err()
+	}
+
+	return connect.NewResponse(&emptypb.Empty{}), nil
 }

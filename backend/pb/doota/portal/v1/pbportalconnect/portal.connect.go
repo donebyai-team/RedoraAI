@@ -123,6 +123,9 @@ const (
 	PortalServiceCreatePostProcedure = "/doota.portal.v1.PortalService/CreatePost"
 	// PortalServiceGetPostsProcedure is the fully-qualified name of the PortalService's GetPosts RPC.
 	PortalServiceGetPostsProcedure = "/doota.portal.v1.PortalService/GetPosts"
+	// PortalServiceSchedulePostProcedure is the fully-qualified name of the PortalService's
+	// SchedulePost RPC.
+	PortalServiceSchedulePostProcedure = "/doota.portal.v1.PortalService/SchedulePost"
 )
 
 // These variables are the protoreflect.Descriptor objects for the RPCs defined in this package.
@@ -159,6 +162,7 @@ var (
 	portalServiceGetInsightsMethodDescriptor                 = portalServiceServiceDescriptor.Methods().ByName("GetInsights")
 	portalServiceCreatePostMethodDescriptor                  = portalServiceServiceDescriptor.Methods().ByName("CreatePost")
 	portalServiceGetPostsMethodDescriptor                    = portalServiceServiceDescriptor.Methods().ByName("GetPosts")
+	portalServiceSchedulePostMethodDescriptor                = portalServiceServiceDescriptor.Methods().ByName("SchedulePost")
 )
 
 // PortalServiceClient is a client for the doota.portal.v1.PortalService service.
@@ -200,6 +204,7 @@ type PortalServiceClient interface {
 	// Posts
 	CreatePost(context.Context, *connect.Request[v11.PostSettings]) (*connect.Response[v11.Post], error)
 	GetPosts(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetPostsResponse], error)
+	SchedulePost(context.Context, *connect.Request[v11.SchedulePostRequest]) (*connect.Response[emptypb.Empty], error)
 }
 
 // NewPortalServiceClient constructs a client for the doota.portal.v1.PortalService service. By
@@ -398,6 +403,12 @@ func NewPortalServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(portalServiceGetPostsMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
+		schedulePost: connect.NewClient[v11.SchedulePostRequest, emptypb.Empty](
+			httpClient,
+			baseURL+PortalServiceSchedulePostProcedure,
+			connect.WithSchema(portalServiceSchedulePostMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -434,6 +445,7 @@ type portalServiceClient struct {
 	getInsights                 *connect.Client[emptypb.Empty, v1.InsightsResponse]
 	createPost                  *connect.Client[v11.PostSettings, v11.Post]
 	getPosts                    *connect.Client[emptypb.Empty, v1.GetPostsResponse]
+	schedulePost                *connect.Client[v11.SchedulePostRequest, emptypb.Empty]
 }
 
 // GetConfig calls doota.portal.v1.PortalService.GetConfig.
@@ -591,6 +603,11 @@ func (c *portalServiceClient) GetPosts(ctx context.Context, req *connect.Request
 	return c.getPosts.CallUnary(ctx, req)
 }
 
+// SchedulePost calls doota.portal.v1.PortalService.SchedulePost.
+func (c *portalServiceClient) SchedulePost(ctx context.Context, req *connect.Request[v11.SchedulePostRequest]) (*connect.Response[emptypb.Empty], error) {
+	return c.schedulePost.CallUnary(ctx, req)
+}
+
 // PortalServiceHandler is an implementation of the doota.portal.v1.PortalService service.
 type PortalServiceHandler interface {
 	GetConfig(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.Config], error)
@@ -630,6 +647,7 @@ type PortalServiceHandler interface {
 	// Posts
 	CreatePost(context.Context, *connect.Request[v11.PostSettings]) (*connect.Response[v11.Post], error)
 	GetPosts(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetPostsResponse], error)
+	SchedulePost(context.Context, *connect.Request[v11.SchedulePostRequest]) (*connect.Response[emptypb.Empty], error)
 }
 
 // NewPortalServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -824,6 +842,12 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(portalServiceGetPostsMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
+	portalServiceSchedulePostHandler := connect.NewUnaryHandler(
+		PortalServiceSchedulePostProcedure,
+		svc.SchedulePost,
+		connect.WithSchema(portalServiceSchedulePostMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/doota.portal.v1.PortalService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case PortalServiceGetConfigProcedure:
@@ -888,6 +912,8 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 			portalServiceCreatePostHandler.ServeHTTP(w, r)
 		case PortalServiceGetPostsProcedure:
 			portalServiceGetPostsHandler.ServeHTTP(w, r)
+		case PortalServiceSchedulePostProcedure:
+			portalServiceSchedulePostHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -1019,4 +1045,8 @@ func (UnimplementedPortalServiceHandler) CreatePost(context.Context, *connect.Re
 
 func (UnimplementedPortalServiceHandler) GetPosts(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetPostsResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.GetPosts is not implemented"))
+}
+
+func (UnimplementedPortalServiceHandler) SchedulePost(context.Context, *connect.Request[v11.SchedulePostRequest]) (*connect.Response[emptypb.Empty], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.SchedulePost is not implemented"))
 }

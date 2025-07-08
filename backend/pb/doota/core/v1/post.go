@@ -61,3 +61,18 @@ func toTimestamp(t *time.Time) *timestamppb.Timestamp {
 	}
 	return timestamppb.New(*t)
 }
+
+func (p *Post) FromAugmentedModel(post *models.AugmentedPost) *Post {
+	return &Post{
+		Id:          post.ID,
+		ProjectId:   post.ProjectID,
+		Topic:       post.Title,
+		Description: post.Description,
+		Source:      post.SourceID,
+		Status:      string(post.Status),
+		Reason:      post.Reason,
+		CreatedAt:   timestamppb.New(post.CreatedAt),
+		ScheduledAt: toTimestamp(post.ScheduleAt),
+		Metadata:    new(PostMetadata).FromModel(post.Metadata),
+	}
+}
