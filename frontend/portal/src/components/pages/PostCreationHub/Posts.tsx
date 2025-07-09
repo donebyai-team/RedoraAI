@@ -18,22 +18,6 @@ import {portalClient} from "@/services/grpc";
 import {useAppDispatch} from "@/store/hooks";
 import { setPost } from "@/store/PostCreation/PostCreationSlice";
 
-interface ScheduledPost {
-    id: string;
-    title: string;
-    content: string;
-    subreddit: string;
-    status: "draft" | "scheduled" | "posted" | "failed";
-    createdDate: string;
-    scheduledDate?: string;
-    postedDate?: string;
-    engagement?: {
-        upvotes: number;
-        comments: number;
-    };
-    failureReason?: string;
-}
-
 export enum PostStatus {
     CREATED = "CREATED",
     PROCESSING = "PROCESSING",
@@ -46,6 +30,7 @@ export default function Posts() {
     const router = useRouter();
     const dispatch = useAppDispatch();
     const [isLoading, setIsLoading] = useState(false)
+    const [isPostApiCall, setIsPostApiCall] = useState(false)
     const [posts, setPosts] = useState<AugmentedPost[]>([])
 
     useEffect(() => {
@@ -55,7 +40,7 @@ export default function Posts() {
         ])
             .catch(err => console.error('Error fetching data:', err))
             .finally(() => setIsLoading(false))
-    }, [portalClient])
+    }, [])
 
     const getStatusIcon = (status?: string) => {
         switch (status) {
@@ -123,8 +108,8 @@ export default function Posts() {
         <>
             {
                 isLoading ? (
-                        <div className='flex justify-center items-center my-14'>
-                            <Loader2 className='animate-spin' size={35} />
+                        <div className="flex justify-center items-center h-screen">
+                            <Loader2 className="animate-spin" size={35} />
                         </div>
                     )
                     : (

@@ -19,17 +19,14 @@ export function useCreatePost() {
 
     const createPost = async (
         postData: Omit<PostSettings, "$typeName">,
-        redirect: boolean = true,
-        setLoading: (val: boolean) => void
-    ): Promise<Post | undefined> => {
-        setLoading(true);
-
-        try {
+        isCreateNewPost: boolean = true,
+    ): Promise<Post | undefined> => { try {
             const res = await portalClient.createPost(postData);
             dispatch(setPost(res));
-            toast.success("Post created successfully!");
+            if(!isCreateNewPost)
+                toast.success(`Post ${isCreateNewPost ? 'created' : 'regenerated'} successfully!`);
 
-            if (redirect) {
+            if (isCreateNewPost) {
                 setTimeout(() => {
                     router.push(routes.new.postCreationHub.editor);
                 }, 300);
@@ -40,8 +37,6 @@ export function useCreatePost() {
             const message = err?.response?.data?.message || err.message || "Something went wrong";
             toast.error(message);
             return undefined;
-        } finally {
-            setLoading(false);
         }
     };
 

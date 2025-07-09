@@ -55,6 +55,10 @@ func (r *Database) GetPostByID(ctx context.Context, ID string) (*models.Post, er
 func (r *Database) UpdatePost(ctx context.Context, post *models.Post) error {
 	stmt := r.mustGetStmt("post/update_post.sql")
 
+	if post.ReferenceID != nil && *post.ReferenceID == "" {
+		post.ReferenceID = nil
+	}
+
 	_, err := stmt.ExecContext(ctx, map[string]interface{}{
 		"id":           post.ID,
 		"title":        post.Title,

@@ -31,6 +31,7 @@ export default function CreatePost() {
     const { createPost } = useCreatePost()
 
     const [isLoading, setIsLoading] = useState(false)
+    const [isPostApiCall, setIsPostApiCall] = useState(false)
     const [insights, setInsights] = useState<PostInsight[]>([])
     const [sources, setSources] = useState<Source[]>([])
 
@@ -60,15 +61,16 @@ export default function CreatePost() {
             goal: selectedGoal,
             tone: selectedTone
         }
-
-        await createPost(postData, true, setIsLoading)
+        setIsPostApiCall(true)
+        await createPost(postData)
+        setTimeout(() => setIsPostApiCall(false),1000)
     }
 
     return (
         <div>
             {isLoading ? (
-                <div className='flex justify-center items-center my-14'>
-                    <Loader2 className='animate-spin' size={35} />
+                <div className="flex justify-center items-center h-screen">
+                    <Loader2 className="animate-spin" size={35} />
                 </div>
             ) : (
                 <div className='p-6 ml-[10%] mr-[10%]'>
@@ -189,7 +191,7 @@ export default function CreatePost() {
                                         !selectedSubreddit ||
                                         !selectedGoal ||
                                         !selectedTone ||
-                                        isLoading
+                                        isPostApiCall
                                     }
                                     className='px-8 text-base'
                                 >
