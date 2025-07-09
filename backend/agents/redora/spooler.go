@@ -145,11 +145,11 @@ func (s *Spooler) processKeywordsTracking(ctx context.Context, tracker *models.A
 	keywordTracker := s.keywordTracker.GetKeywordTrackerBySource(tracker.Source.SourceType).WithLogger(logger)
 
 	// Run TrackInSights in parallel
-	go func() {
-		if err := keywordTracker.TrackInSights(ctx, tracker); err != nil {
-			logger.Error("failed to track keyword insights", zap.Error(err))
-		}
-	}()
+	//go func() {
+	//	if err := keywordTracker.TrackInSights(ctx, tracker); err != nil {
+	//		logger.Error("failed to track keyword insights", zap.Error(err))
+	//	}
+	//}()
 
 	if err := keywordTracker.TrackKeyword(ctx, tracker); err != nil {
 		logger.Error("failed to track keyword", zap.Error(err))
