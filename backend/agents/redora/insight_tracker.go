@@ -21,7 +21,7 @@ const (
 
 	// insights
 	defaultRelevancyScoreInsights     = 90
-	maxInsightsPerWeek                = 10
+	maxInsightsPerWeek                = 5
 	maxPostsToTrackForInsightsPerWeek = 100
 )
 
