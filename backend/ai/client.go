@@ -323,6 +323,48 @@ func (c *Client) GetSourceCommunityRulesEvaluation(ctx context.Context, model mo
 	return &data, &models.LLMModelUsage{Model: llmModelToUse}, nil
 }
 
+type PostGenerateInput struct {
+	Project     *models.Project      `json:"project"`
+	PostSetting *models.PostSettings `json:"post"`
+}
+
+func (c *Client) GeneratePost(ctx context.Context, model models.LLMModel, input *PostGenerateInput, logger *zap.Logger) (*models.PostGenerationResponse, *models.LLMModelUsage, error) {
+	runID := fmt.Sprintf("postgen-%s-%s", strings.ToLower(strings.ReplaceAll(input.Project.OrganizationID, " ", "-")), uuid.New().String())
+	vars := GetPostGenerationVars(input.PostSetting)
+
+	llmModelToUse := c.defaultLLMModel
+	if string(model) != "" {
+		llmModelToUse = model
+	}
+
+	messages, responseFormat, err := c.buildChatMessages(ctx, runID, postCreateTemplates, logger, vars)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	output, err := c.runChatCompletion(
+		ctx,
+		runID,
+		llmModelToUse,
+		input.Project.OrganizationID,
+		messages,
+		responseFormat,
+		logger,
+		"generated_post.output",
+	)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var data models.PostGenerationResponse
+	if err := json.Unmarshal(output, &data); err != nil {
+		return nil, nil, fmt.Errorf("unable to unmarshal response: %w", err)
+	}
+
+	data.ModelUsed = llmModelToUse
+	return &data, &models.LLMModelUsage{Model: llmModelToUse}, nil
+}
+
 type PostInsightInput struct {
 	Project *models.Project `json:"project"`
 	Post    *reddit.Post    `json:"post"`

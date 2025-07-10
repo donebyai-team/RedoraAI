@@ -269,6 +269,52 @@ func (r *Client) GetPostByID(ctx context.Context, postID string) (*Post, error) 
 	return nil, ErrNotFound // Post not found in the response
 }
 
+func (r *Client) CreatePost(ctx context.Context, subreddit, title, text string) (*Post, error) {
+	form := url.Values{}
+	form.Set("sr", subreddit)       // Subreddit name
+	form.Set("title", title)        // Post title
+	form.Set("text", text)          // Post body
+	form.Set("kind", "self")        // "self" for text post, "link" for link post
+	form.Set("resubmit", "true")    // avoid Reddit duplicate filtering
+	form.Set("sendreplies", "true") // enable inbox replies
+	form.Set("api_type", "json")
+
+	reqURL := fmt.Sprintf("%s/api/submit", r.baseURL)
+	resp, err := r.doRequest(ctx, http.MethodPost, reqURL, strings.NewReader(form.Encode()))
+	if err != nil {
+		return nil, fmt.Errorf("failed to submit post: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Parse response
+	var result struct {
+		JSON struct {
+			Errors [][]interface{} `json:"errors"`
+			Data   struct {
+				URL   string `json:"url"`
+				Name  string `json:"name"`  // Fullname of the new post (e.g., t3_abcdef)
+				ID    string `json:"id"`    // ID of the new post
+				Draft bool   `json:"draft"` // Whether post is a draft
+			} `json:"data"`
+		} `json:"json"`
+	}
+
+	if err := decodeJSON(resp.Body, &result); err != nil {
+		return nil, fmt.Errorf("failed to parse create post response: %w", err)
+	}
+
+	if len(result.JSON.Errors) > 0 {
+		return nil, fmt.Errorf("reddit API error while posting: %v", result.JSON.Errors)
+	}
+
+	return &Post{
+		ID:       result.JSON.Data.ID,
+		URL:      result.JSON.Data.URL,
+		Title:    title,
+		Selftext: text,
+	}, nil
+}
+
 func (r *Client) GetPostWithAllComments(ctx context.Context, postID string, filters QueryFilters) (*Post, error) {
 	v := url.Values{}
 	// IMP: make sure the sort by is in lower case else it won't work

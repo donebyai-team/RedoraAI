@@ -167,6 +167,8 @@ type PostRepository interface {
 	UpdatePost(ctx context.Context, post *models.Post) error
 	GetPostsByProjectID(ctx context.Context, projectID string) ([]*models.AugmentedPost, error)
 	SchedulePost(ctx context.Context, postID string, scheduleAt time.Time) error
+	GetPostsToExecute(ctx context.Context) ([]*models.Post, error)
+	SetPostProcessingStatus(ctx context.Context, post *models.Post) error
 }
 
 type CustomerCaseFilter struct {

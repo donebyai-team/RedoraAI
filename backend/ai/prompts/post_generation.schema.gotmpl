@@ -1,0 +1,30 @@
+{
+  "type": "json_schema",
+  "json_schema": {
+    "name": "reddit_post_generation_response_schema",
+    "strict": true,
+    "schema": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "A concise, engaging, Reddit-friendly post title based on the topic, goal, and tone."
+        },
+        "description": {
+          "type": "string",
+          "description": "The full Reddit post body that elaborates on the title, providing useful content aligned with the goal and tone."
+        },
+        "chain_of_thought": {
+          "type": "string",
+          "description": "Reasoning explaining how the topic, context, goal, and tone were interpreted and used to construct the post."
+        }
+      },
+      "required": [
+        "title",
+        "description",
+        "chain_of_thought"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

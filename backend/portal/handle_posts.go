@@ -1,8 +1,11 @@
 package portal
 
 import (
-	"connectrpc.com/connect"
 	"context"
+	"database/sql"
+	"errors"
+
+	"connectrpc.com/connect"
 	"github.com/shank318/doota/models"
 	pbcore "github.com/shank318/doota/pb/doota/core/v1"
 	pbportal "github.com/shank318/doota/pb/doota/portal/v1"
@@ -44,7 +47,7 @@ func (p *Portal) CreatePost(ctx context.Context, c *connect.Request[pbcore.PostS
 		newPost.ReferenceID = c.Msg.ReferenceId
 	}
 
-	createdPost, err := p.postService.CreatePost(ctx, newPost)
+	createdPost, err := p.postService.CreatePost(ctx, newPost, project)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +98,7 @@ func (p *Portal) SchedulePost(ctx context.Context, c *connect.Request[pbcore.Sch
 	}
 
 	post, err := p.db.GetPostByID(ctx, c.Msg.Id)
-	if err != nil {
+	if errors.Is(err, sql.ErrNoRows) {
 		return nil, status.New(codes.NotFound, "Post not found").Err()
 	}
 

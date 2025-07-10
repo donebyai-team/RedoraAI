@@ -11,7 +11,7 @@ CREATE TABLE posts
     metadata jsonb DEFAULT '{}'::jsonb NOT NULL,
     reason TEXT,
     reference_id uuid, -- Insight table ID optional
-    post_id varchar(255) Null, -- Post ID in the source system (e.g., Reddit, Twitter)
+    post_id varchar(255), -- Post ID in the source system (e.g., Reddit, Twitter)
     schedule_at timestamp,
     created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at  timestamp

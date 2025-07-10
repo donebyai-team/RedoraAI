@@ -3,6 +3,8 @@ package redora
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/shank318/doota/agents"
 	"github.com/shank318/doota/agents/redora/interactions"
 	"github.com/shank318/doota/agents/state"
@@ -11,7 +13,6 @@ import (
 	"github.com/shank318/doota/models"
 	"github.com/streamingfast/shutter"
 	"go.uber.org/zap"
-	"time"
 )
 
 const defaultMaxParallelCalls = 10 // Adjust this value based on observed performance

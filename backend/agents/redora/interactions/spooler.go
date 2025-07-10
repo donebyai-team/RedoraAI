@@ -3,13 +3,14 @@ package interactions
 import (
 	"context"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/shank318/doota/agents/state"
 	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/models"
 	"github.com/shank318/doota/notifiers/alerts"
 	"go.uber.org/zap"
-	"strings"
-	"time"
 )
 
 type Spooler struct {
@@ -34,6 +35,9 @@ func (s *Spooler) Start(ctx context.Context) {
 		case <-time.After(interval):
 			if err := s.leadInteractionsToExecute(ctx); err != nil {
 				s.logger.Error("failed to poll interactions", zap.Error(err))
+			}
+			if err := s.postsToExecute(ctx); err != nil {
+				s.logger.Error("failed to poll scheduled posts", zap.Error(err))
 			}
 		case <-ctx.Done():
 		}
@@ -147,5 +151,103 @@ func (s *Spooler) leadInteractionsToExecute(ctx context.Context) error {
 	}
 	s.logger.Info("found interactions to process from db", zap.Int("count", len(trackers)), zap.Duration("elapsed", time.Since(t0)))
 
+	return nil
+}
+
+func (s *Spooler) processPost(ctx context.Context, post *models.Post) error {
+	logger := s.logger.With(
+		zap.String("post_id", post.ID),
+		zap.String("project_id", post.ProjectID),
+	)
+
+	uniqueID := fmt.Sprintf("post:%s", post.ID)
+
+	isRunning, err := s.state.IsRunning(ctx, uniqueID)
+	if err != nil {
+		return fmt.Errorf("failed to check if post is running: %w", err)
+	}
+
+	if isRunning {
+		logger.Debug("post is already in processing state")
+		return nil
+	}
+
+	go func() {
+		if err := s.state.Acquire(ctx, post.ProjectID, uniqueID); err != nil {
+			s.logger.Warn("could not acquire lock for post, skipping", zap.Error(err))
+			return
+		}
+		defer func() {
+			if err := s.state.Release(ctx, uniqueID); err != nil {
+				s.logger.Error("failed to release lock on post", zap.Error(err))
+			}
+		}()
+
+		const maxRetries = 2
+		const retryDelay = 10 * time.Second
+		nonRetryableErrors := []string{
+			"subreddit not found",
+			"post content violates policy",
+		}
+
+		var lastErr error
+		for i := 0; i < maxRetries; i++ {
+			lastErr = s.automatedInteractions.ProcessScheduledPost(ctx, post)
+			if lastErr == nil {
+				logger.Info("successfully sent post")
+				return
+			}
+
+			errMsg := lastErr.Error()
+			for _, nonRetry := range nonRetryableErrors {
+				if strings.Contains(errMsg, nonRetry) {
+					s.logger.Warn("non-retryable error occurred, skipping retries",
+						zap.String("post_id", post.ID),
+						zap.String("reason", nonRetry),
+						zap.Error(lastErr),
+					)
+					// TODO: Notify about the error
+					//if s.notifier != nil {
+					//	s.notifier.SendPostError(ctx, post.ID, lastErr)
+					//}
+					return
+				}
+			}
+
+			s.logger.Warn("post attempt failed, retrying in 10 seconds",
+				zap.Int("attempt", i+1),
+				zap.Error(lastErr),
+			)
+
+			time.Sleep(retryDelay)
+		}
+
+		s.logger.Error("failed to send post after retries",
+			zap.String("post_id", post.ID),
+			zap.Error(lastErr),
+		)
+
+		// TODO: Notify about the error
+		//if s.notifier != nil {
+		//	s.notifier.SendPostError(ctx, post.ID, lastErr)
+		//}
+	}()
+
+	return nil
+}
+
+func (s *Spooler) postsToExecute(ctx context.Context) error {
+	t0 := time.Now()
+
+	posts, err := s.db.GetPostsToExecute(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to fetch scheduled posts: %w", err)
+	}
+
+	for _, post := range posts {
+		s.processPost(ctx, post)
+	}
+
+	s.logger.Info("found posts to process from db", zap.Int("count", len(posts)), zap.Duration("elapsed", time.Since(t0)))
 	return nil
 }

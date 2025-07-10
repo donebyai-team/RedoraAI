@@ -15,6 +15,8 @@ func init() {
 		"post/update_post.sql",
 		"post/query_post_by_project.sql",
 		"post/schedule_post.sql",
+		"post/query_post_to_execute.sql",
+		"posts/set_post_processing_status.sql",
 	})
 }
 
@@ -26,7 +28,7 @@ func (r *Database) CreatePost(ctx context.Context, post *models.Post) (*models.P
 	}
 
 	var id string
-	err := stmt.GetContext(ctx, &id, map[string]interface{}{
+	_ = stmt.GetContext(ctx, &id, map[string]interface{}{
 		"project_id":   post.ProjectID,
 		"title":        post.Title,
 		"description":  post.Description,
@@ -36,11 +38,6 @@ func (r *Database) CreatePost(ctx context.Context, post *models.Post) (*models.P
 		"reason":       post.Reason,
 		"reference_id": post.ReferenceID,
 	})
-
-	if err != nil {
-		fmt.Println("error while creating posts:", err)
-		return nil, err
-	}
 
 	post.ID = id
 	return post, nil
@@ -75,6 +72,37 @@ func (r *Database) GetPostsByProjectID(ctx context.Context, projectID string) ([
 	return getMany[models.AugmentedPost](ctx, r, "post/query_post_by_project.sql", map[string]any{
 		"project_id": projectID,
 	})
+}
+
+func (r *Database) GetPostsToExecute(ctx context.Context) ([]*models.Post, error) {
+	return getMany[models.Post](ctx, r, "post/query_post_to_execute.sql", map[string]any{
+		"status": models.PostStatusSCHEDULED,
+	})
+}
+
+func (r *Database) SetPostProcessingStatus(ctx context.Context, post *models.Post) error {
+	stmt := r.mustGetStmt("posts/set_post_processing_status.sql")
+	res, err := stmt.ExecContext(ctx, map[string]interface{}{
+		"id":      post.ID,
+		"post_id": post.PostID, // e.g., Reddit Post ID
+		"reason":  post.Reason,
+		"status":  post.Status,
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to update post status to PROCESSING: %w", err)
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get affected rows: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("no rows updated — either post not found or status is not SCHEDULED")
+	}
+
+	return nil
 }
 
 func (r *Database) SchedulePost(ctx context.Context, postID string, scheduleAt time.Time) error {
