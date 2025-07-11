@@ -692,7 +692,7 @@ func (s *redditKeywordTracker) isMaxLeadLimitReached(ctx context.Context, org *m
 const (
 	minSelftextLength           = 30
 	minTitleLength              = 5
-	maxPostAgeInMonths          = 6
+	maxPostAgeInMonths          = 1
 	defaultRelevancyScoreGlobal = 90 // relevancy score to re-confirm with higher model and also max leads
 	dailyPostsRelevancyScore    = 80
 	minRelevancyScore           = 70
