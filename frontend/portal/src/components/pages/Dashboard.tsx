@@ -46,8 +46,6 @@ export default function Dashboard() {
     setIsFetchingMore,
   });
 
-  console.log("####_123");
-
   // get all reddit account, used in Leed Feed
   useEffect(() => {
     dispatch(setLoading(true));

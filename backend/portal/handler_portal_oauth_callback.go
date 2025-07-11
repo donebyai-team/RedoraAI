@@ -3,6 +3,8 @@ package portal
 import (
 	"context"
 	"fmt"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"connectrpc.com/connect"
 	"github.com/shank318/doota/models"
@@ -60,7 +62,7 @@ func (p *Portal) OauthCallback(ctx context.Context, c *connect.Request[pbportal.
 func handleRedditOauth(ctx context.Context, p *Portal, code string, organizationID string, oauthState *state.State) error {
 	config, err := p.redditOauthClient.Authorize(ctx, code)
 	if err != nil {
-		return err
+		return status.New(codes.InvalidArgument, err.Error()).Err()
 	}
 
 	integration := &models.Integration{

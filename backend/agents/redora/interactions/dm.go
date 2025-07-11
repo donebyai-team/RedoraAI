@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/shank318/doota/datastore"
+	"github.com/shank318/doota/integrations/reddit"
 	"github.com/shank318/doota/models"
 	"github.com/shank318/doota/utils"
 	"go.uber.org/zap"
@@ -119,6 +120,16 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 		interaction.Status = models.LeadInteractionStatusFAILED
 		interaction.Reason = "dm integration not found or inactive"
 		return fmt.Errorf(interaction.Reason)
+	}
+
+	_, err = reddit.NewClientWithOutConfig(r.logger).GetUser(ctx, interaction.From)
+	if err != nil {
+		interaction.Status = models.LeadInteractionStatusFAILED
+		interaction.Reason = err.Error()
+		if strings.Contains(err.Error(), "404") {
+			interaction.Reason = fmt.Sprintf("Your connected reddit account[%s] is suspended or banned, please contact us via chat", interaction.From)
+		}
+		return err
 	}
 
 	redditClient, err := r.redditOauthClient.GetOrCreate(ctx, interaction.Organization.ID, false)

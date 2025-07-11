@@ -12,6 +12,7 @@ import (
 	"golang.org/x/oauth2"
 	"io"
 	"net/http"
+	"strings"
 	"sync"
 )
 
@@ -218,6 +219,19 @@ func (r *OauthClient) Authorize(ctx context.Context, code string) (*models.Reddi
 		return nil, fmt.Errorf("failed to parse user info: %w", err)
 	}
 
+	if userInfo.IsSuspended {
+		return nil, fmt.Errorf(USER_SUSPEND_ERROR)
+	}
+
+	// Verify If Account is active
+	_, err = NewClientWithOutConfig(r.logger).GetUser(ctx, userInfo.Name)
+	if err != nil {
+		if strings.Contains(err.Error(), "404") {
+			return nil, fmt.Errorf(USER_SUSPEND_ERROR)
+		}
+		return nil, err
+	}
+
 	return &models.RedditConfig{
 		AccessToken:      token.AccessToken,
 		RefreshToken:     token.RefreshToken,
@@ -240,3 +254,5 @@ func (r *OauthClient) Authorize(ctx context.Context, code string) (*models.Reddi
 		ExpiresAt:        token.Expiry,
 	}, nil
 }
+
+const USER_SUSPEND_ERROR = "User account is suspended, please connect an active reddit account"
