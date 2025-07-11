@@ -141,7 +141,7 @@ func (s *SlackNotifier) SendAutoDMDisabledEmail(ctx context.Context, orgID strin
 		<html>
 			<body style="font-family: Arial, sans-serif; background-color: #f7f9fc; padding: 20px;">
   			<div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 30px; border-radius: 8px;">
-    			<h2>🚫 Automated DMs Disabled for Your Reddit Account</h2>
+    			<h2>Automated DMs Disabled for Your Reddit Account</h2>
     			<p>We've detected an issue with your connected Reddit account <strong>u/%s</strong>:</p>
     			<p style="margin: 20px 0; padding: 15px; background-color: #fef3c7; border-left: 4px solid #facc15; border-radius: 4px;">
       			%s
@@ -207,7 +207,7 @@ func (s *SlackNotifier) SendAutoCommentDisabledEmail(ctx context.Context, orgID 
 		<html>
 			<body style="font-family: Arial, sans-serif; background-color: #f7f9fc; padding: 20px;">
   			<div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 30px; border-radius: 8px;">
-    			<h2>🚫 Automated Comments Disabled for Your Reddit Account</h2>
+    			<h2>Automated Comments Disabled for Your Reddit Account</h2>
     			<p>We've detected an issue with your connected Reddit account <strong>u/%s</strong>:</p>
     			<p style="margin: 20px 0; padding: 15px; background-color: #fef3c7; border-left: 4px solid #facc15; border-radius: 4px;">
       			%s
