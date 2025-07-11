@@ -95,9 +95,7 @@ const plans: PlanInfo[] = [
             'Comment and DM suggestions',
             'Up to 50 automated comments per day',
             'Up to 50 automated DMs per day',
-            'Up to 4 Campaigns/Projects',
             'Real-time Alerts (Slack/Email)',
-            'CRM/Export Integration',
             'Priority Support (Email)'
         ]
     }
