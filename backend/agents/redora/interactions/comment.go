@@ -139,7 +139,8 @@ func (r redditInteractions) SendComment(ctx context.Context, interaction *models
 		}
 		return err
 	}
-
+	
+	// check if user is not suspended
 	_, err = reddit.NewClientWithOutConfig(r.logger).GetUser(ctx, interaction.From)
 	if err != nil {
 		interaction.Status = models.LeadInteractionStatusFAILED
