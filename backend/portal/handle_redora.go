@@ -87,12 +87,12 @@ func (p *Portal) CreateOrEditProject(ctx context.Context, c *connect.Request[pbp
 		return nil, status.New(codes.InvalidArgument, "project name should be between 3 and 30 characters or max 3 words").Err()
 	}
 
-	if len(c.Msg.Description) < 10 {
-		return nil, status.New(codes.InvalidArgument, "project description should be at least 10 characters").Err()
+	if !utils.IsValidDescription(c.Msg.Description) {
+		return nil, status.New(codes.InvalidArgument, "project description should be at least 10 characters and max 100 words").Err()
 	}
 
-	if len(c.Msg.TargetPersona) < 10 {
-		return nil, status.New(codes.InvalidArgument, "project target persona should be at least 10 characters").Err()
+	if !utils.IsValidTargetPersona(c.Msg.TargetPersona) {
+		return nil, status.New(codes.InvalidArgument, "project target persona should be at least 10 characters and max 50 words").Err()
 	}
 
 	if !strings.HasPrefix(c.Msg.Website, "http://") && !strings.HasPrefix(c.Msg.Website, "https://") {
@@ -100,9 +100,13 @@ func (p *Portal) CreateOrEditProject(ctx context.Context, c *connect.Request[pbp
 	}
 
 	// Validate website URL
-	_, err = url.ParseRequestURI(c.Msg.Website)
+	parsed, err := url.ParseRequestURI(c.Msg.Website)
 	if err != nil {
 		return nil, status.New(codes.InvalidArgument, "invalid website URL").Err()
+	}
+
+	if parsed.Scheme == "" || parsed.Host == "" {
+		return nil, status.New(codes.InvalidArgument, "invalid website URL: missing scheme or host").Err()
 	}
 
 	var project *models.Project

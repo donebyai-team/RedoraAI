@@ -12,7 +12,35 @@ const (
 	MaxProductNameWords = 3
 	MaxProductNameChars = 30
 	MinProductNameChars = 3
+
+	MinDescriptionChars = 10
+	MaxDescriptionWords = 100
+
+	MinTargetPersonaChars = 10
+	MaxTargetPersonaWords = 50
 )
+
+func IsValidDescription(desc string) bool {
+	length := len(desc)
+	if length < MinDescriptionChars {
+		return false
+	}
+	if len(strings.Fields(desc)) > MaxDescriptionWords {
+		return false
+	}
+	return true
+}
+
+func IsValidTargetPersona(persona string) bool {
+	length := len(persona)
+	if length < MinTargetPersonaChars {
+		return false
+	}
+	if len(strings.Fields(persona)) > MaxTargetPersonaWords {
+		return false
+	}
+	return true
+}
 
 func IsValidProductName(name string) bool {
 	length := len(name)
