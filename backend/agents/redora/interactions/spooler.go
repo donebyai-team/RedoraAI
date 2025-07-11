@@ -78,6 +78,8 @@ func (s *Spooler) processInteraction(ctx context.Context, tracker *models.LeadIn
 		nonRetryableErrors := []string{
 			"Unable to invite the selected invitee", // banned
 			"Unable to show the room",               // should not happen, because of redirect
+			"suspended",
+			"banned",
 		}
 
 		var lastErr error
@@ -103,7 +105,7 @@ func (s *Spooler) processInteraction(ctx context.Context, tracker *models.LeadIn
 						zap.Error(lastErr),
 					)
 
-					if s.notifier != nil {
+					if s.notifier != nil && !strings.Contains(errMsg, "suspended") {
 						s.notifier.SendInteractionError(ctx, tracker.ID, lastErr)
 					}
 					return

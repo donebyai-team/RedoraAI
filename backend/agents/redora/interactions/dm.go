@@ -128,7 +128,9 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 		interaction.Status = models.LeadInteractionStatusFAILED
 		interaction.Reason = err.Error()
 		if strings.Contains(err.Error(), "404") {
-			interaction.Reason = fmt.Sprintf("Your connected reddit account[%s] is suspended or banned, please contact us via chat", interaction.From)
+			suspendedError := fmt.Errorf("Your connected reddit account[%s] is suspended or banned, please contact us via chat", interaction.From)
+			interaction.Reason = suspendedError.Error()
+			return suspendedError
 		}
 		return err
 	}
