@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/resend/resend-go/v2"
+	"github.com/shank318/doota/agents/state"
 	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/models"
 	"go.uber.org/zap"
@@ -35,23 +36,26 @@ type AlertNotifier interface {
 	SendRedditChatConnectedAlert(ctx context.Context, email string)
 	SendTrialExpiredEmail(ctx context.Context, orgID string, trialDays int) error
 	SendInteractionError(ctx context.Context, interactionID string, err error)
-	SendAutoCommentDisabledEmail(ctx context.Context, orgID string, redditUsername string)
+	SendAutoCommentDisabledEmail(ctx context.Context, orgID string, redditUsername string, reason string)
+	SendAutoDMDisabledEmail(ctx context.Context, orgID string, redditUsername string, reason string)
 	SendSubscriptionCreatedEmail(ctx context.Context, orgID string)
 	SendSubscriptionRenewedEmail(ctx context.Context, orgID string)
 	SendSubscriptionCancelledEmail(ctx context.Context, orgID string)
 }
 
 type SlackNotifier struct {
+	redisClient  state.ConversationState
 	SlackClient  *http.Client
 	ResendClient *resend.Client
 	db           datastore.Repository
 	logger       *zap.Logger
 }
 
-func NewSlackNotifier(resendAPIKey string, db datastore.Repository, logger *zap.Logger) AlertNotifier {
+func NewSlackNotifier(resendAPIKey string, redisClient state.ConversationState, db datastore.Repository, logger *zap.Logger) AlertNotifier {
 	return &SlackNotifier{
 		db:           db,
 		logger:       logger,
+		redisClient:  redisClient,
 		SlackClient:  &http.Client{Timeout: 10 * time.Second},
 		ResendClient: resend.NewClient(resendAPIKey),
 	}
@@ -99,7 +103,25 @@ func (s *SlackNotifier) SendUserActivity(ctx context.Context, activity, orgName,
 	}
 }
 
-func (s *SlackNotifier) SendAutoCommentDisabledEmail(ctx context.Context, orgID string, redditUsername string) {
+func (s *SlackNotifier) SendAutoDMDisabledEmail(ctx context.Context, orgID string, redditUsername string, reason string) {
+	// acquire lock before sending
+	disableAutomatedDMAlertKey := fmt.Sprintf("disable_automated_dm:%s", orgID)
+	// Check if a call is already running across organizations
+	isRunning, err := s.redisClient.IsRunning(ctx, disableAutomatedDMAlertKey)
+	if err != nil {
+		s.logger.Error("failed to check if daily tracking summary is running", zap.Error(err))
+		return
+	}
+	if isRunning {
+		return
+	}
+
+	// Try to acquire the lock
+	if err := s.redisClient.Acquire(ctx, orgID, disableAutomatedDMAlertKey); err != nil {
+		s.logger.Warn("could not acquire lock for disableAutomatedDMAlertKey, skipped", zap.Error(err))
+		return
+	}
+
 	users, err := s.db.GetUsersByOrgID(ctx, orgID)
 	if err != nil {
 		return
@@ -117,20 +139,89 @@ func (s *SlackNotifier) SendAutoCommentDisabledEmail(ctx context.Context, orgID 
 	htmlBody := fmt.Sprintf(`
 		<!DOCTYPE html>
 		<html>
-		<body style="font-family: Arial, sans-serif; background-color: #f7f9fc; padding: 20px;">
-		  <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 30px; border-radius: 8px;">
-		    <h2>🚫 Automated Comments Disabled for Your Reddit Account</h2>
-		    <p>We've detected that your connected Reddit account <strong>u/%s</strong> is less than 2 weeks old. To protect your account from potential bans, we've temporarily disabled automated comments.</p>
-		    <p>New Reddit accounts are under higher scrutiny, and premature automation can result in bans or rate-limiting.</p>
-		    <hr>
-		    <footer style="font-size: 12px; color: #888;">
-		      <p><strong>RedoraAI</strong> — AI for Intelligent Lead Generation</p>
-		      <p>Need help or have questions? <a href="mailto:adarsh@redoraai.com">adarsh@redoraai.com</a></p>
-		    </footer>
-		  </div>
-		</body>
+			<body style="font-family: Arial, sans-serif; background-color: #f7f9fc; padding: 20px;">
+  			<div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 30px; border-radius: 8px;">
+    			<h2>🚫 Automated DMs Disabled for Your Reddit Account</h2>
+    			<p>We've detected an issue with your connected Reddit account <strong>u/%s</strong>:</p>
+    			<p style="margin: 20px 0; padding: 15px; background-color: #fef3c7; border-left: 4px solid #facc15; border-radius: 4px;">
+      			%s
+    			</p>
+    			<p>To continue using automation safely, please reconnect your Reddit account or reach out to us via in-app chat support. We've temporarily disabled automated DMs until this is resolved.</p>
+    			<hr>
+    			<footer style="font-size: 12px; color: #888;">
+      				<p><strong>RedoraAI</strong> — AI for Intelligent Lead Generation</p>
+      				<p>Need help or have questions? <a href="mailto:adarsh@redoraai.com">adarsh@redoraai.com</a></p>
+    			</footer>
+  			</div>
+			</body>
 		</html>
-	`, redditUsername)
+`, redditUsername, reason)
+
+	params := &resend.SendEmailRequest{
+		From:    "RedoraAI <leads@alerts.redoraai.com>",
+		To:      to,
+		Cc:      []string{"shashank@donebyai.team", "adarsh@redoraai.com"},
+		Subject: "🚫 Auto DM Disabled",
+		Html:    htmlBody,
+	}
+
+	_, err = s.ResendClient.Emails.Send(params)
+	return
+}
+
+func (s *SlackNotifier) SendAutoCommentDisabledEmail(ctx context.Context, orgID string, redditUsername string, reason string) {
+	// acquire lock before sending
+	disableAutomatedCommentAlertKey := fmt.Sprintf("disable_automated_comment:%s", orgID)
+	// Check if a call is already running across organizations
+	isRunning, err := s.redisClient.IsRunning(ctx, disableAutomatedCommentAlertKey)
+	if err != nil {
+		s.logger.Error("failed to check if daily tracking summary is running", zap.Error(err))
+		return
+	}
+	if isRunning {
+		return
+	}
+
+	// Try to acquire the lock
+	if err := s.redisClient.Acquire(ctx, orgID, disableAutomatedCommentAlertKey); err != nil {
+		s.logger.Warn("could not acquire lock for disableAutomatedCommentAlertKey, skipped", zap.Error(err))
+		return
+	}
+
+	users, err := s.db.GetUsersByOrgID(ctx, orgID)
+	if err != nil {
+		return
+	}
+
+	if len(users) == 0 {
+		return
+	}
+
+	to := make([]string, 0, len(users))
+	for _, user := range users {
+		to = append(to, user.Email)
+	}
+
+	htmlBody := fmt.Sprintf(`
+		<!DOCTYPE html>
+		<html>
+			<body style="font-family: Arial, sans-serif; background-color: #f7f9fc; padding: 20px;">
+  			<div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 30px; border-radius: 8px;">
+    			<h2>🚫 Automated Comments Disabled for Your Reddit Account</h2>
+    			<p>We've detected an issue with your connected Reddit account <strong>u/%s</strong>:</p>
+    			<p style="margin: 20px 0; padding: 15px; background-color: #fef3c7; border-left: 4px solid #facc15; border-radius: 4px;">
+      			%s
+    			</p>
+    			<p>To continue using automation safely, please reconnect your Reddit account or reach out to us via in-app chat support. We've temporarily disabled automated comments until this is resolved.</p>
+    			<hr>
+    			<footer style="font-size: 12px; color: #888;">
+      				<p><strong>RedoraAI</strong> — AI for Intelligent Lead Generation</p>
+      				<p>Need help or have questions? <a href="mailto:adarsh@redoraai.com">adarsh@redoraai.com</a></p>
+    			</footer>
+  			</div>
+			</body>
+		</html>
+`, redditUsername, reason)
 
 	params := &resend.SendEmailRequest{
 		From:    "RedoraAI <leads@alerts.redoraai.com>",

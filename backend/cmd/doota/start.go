@@ -187,6 +187,8 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		isDev = true
 	}
 
+	alertNotifier := alerts.NewSlackNotifier(sflags.MustGetString(cmd, "common-resend-api-key"), deps.ConversationState, deps.DataStore, logger)
+
 	tracker := redora.NewKeywordTrackerFactory(
 		isDev,
 		redditOauthClient,
@@ -194,7 +196,7 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		deps.LiteLLMClient,
 		logger,
 		deps.ConversationState,
-		alerts.NewSlackNotifier(sflags.MustGetString(cmd, "common-resend-api-key"), deps.DataStore, logger),
+		alertNotifier,
 	)
 
 	debugStore, err := dstore.NewStore(sflags.MustGetString(cmd, "common-playwright-debug-store"), "", "", true)
@@ -203,7 +205,7 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 	}
 
 	browserLessClient := interactions.NewBrowserlessClient(sflags.MustGetString(cmd, "common-browserless-api-key"), debugStore, logger)
-	interactionService := interactions.NewRedditInteractions(deps.DataStore, browserLessClient, redditOauthClient, logger)
+	interactionService := interactions.NewRedditInteractions(deps.DataStore, alertNotifier, browserLessClient, redditOauthClient, logger)
 
 	//organizations, err := deps.DataStore.GetOrganizations(context.Background())
 	//if err != nil {
@@ -243,8 +245,6 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 	//if err != nil {
 	//	return nil, err
 	//}
-
-	alertNotifier := alerts.NewSlackNotifier(sflags.MustGetString(cmd, "common-resend-api-key"), deps.DataStore, logger)
 
 	interactionsSpooler := interactions.NewSpooler(
 		deps.DataStore,
@@ -391,7 +391,7 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		GoogleAuth0CallbackUrl: sflags.MustGetString(cmd, "portal-reddit-redirect-url"),
 	}
 
-	alertNotifier := alerts.NewSlackNotifier(sflags.MustGetString(cmd, "common-resend-api-key"), deps.DataStore, logger)
+	alertNotifier := alerts.NewSlackNotifier(sflags.MustGetString(cmd, "common-resend-api-key"), nil, deps.DataStore, logger)
 
 	authUsecase, err := services.NewAuthUsecase(cmd.Context(), authConfig, deps.DataStore, deps.AuthSigningKeyGetter, alertNotifier, zlog)
 	if err != nil {
@@ -406,7 +406,7 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 	}
 
 	browserLessClient := interactions.NewBrowserlessClient(sflags.MustGetString(cmd, "common-browserless-api-key"), debugStore, logger)
-	interactionService := interactions.NewRedditInteractions(deps.DataStore, browserLessClient, redditOauthClient, logger)
+	interactionService := interactions.NewRedditInteractions(deps.DataStore, alertNotifier, browserLessClient, redditOauthClient, logger)
 
 	dodoPaymentToken := sflags.MustGetString(cmd, "common-dodopayment-api-key")
 	dodoSubscriptionService := services.NewDodoSubscriptionService(deps.DataStore, alertNotifier, dodoPaymentToken, logger, isDev)

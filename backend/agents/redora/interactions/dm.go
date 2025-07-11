@@ -122,11 +122,21 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 		return fmt.Errorf(interaction.Reason)
 	}
 
+	loginConfig := integration.GetRedditDMLoginConfig()
+
+	// use the from which is from the updated integration
+	if loginConfig.Username != "" {
+		interaction.From = loginConfig.Username
+	}
+
 	// check if user is not suspended
 	_, err = reddit.NewClientWithOutConfig(r.logger).GetUser(ctx, interaction.From)
 	if err != nil {
 		interaction.Status = models.LeadInteractionStatusFAILED
 		interaction.Reason = err.Error()
+		if strings.Contains(err.Error(), "banned") || strings.Contains(err.Error(), "suspended") {
+			r.disableAutomation(ctx, interaction, err.Error())
+		}
 		return err
 	}
 
@@ -159,8 +169,6 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 	if err != nil {
 		return err
 	}
-
-	loginConfig := integration.GetRedditDMLoginConfig()
 
 	updatedCookies, err := r.browserLessClient.SendDM(ctx, DMParams{
 		ID:       interaction.ID,

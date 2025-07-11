@@ -515,6 +515,7 @@ func (s *redditKeywordTracker) sendAutomatedDM(ctx context.Context, org *models.
 		return nil
 	}
 
+	// TODO: We need to use the name from the RedditDMConfig
 	from := org.Name
 	if redditConfig != nil {
 		from = redditConfig.Name
@@ -598,7 +599,7 @@ func (s *redditKeywordTracker) sendAutomatedComment(ctx context.Context, org *mo
 
 		s.logger.Info("disabled auto comment", zap.String("org_name", org.Name), zap.String("activity", models.OrgActivityTypeCOMMENTDISABLEDACCOUNTAGENEW.String()))
 
-		go s.sendDisableAutomatedCommentAlert(ctx, org, redditConfig.Name)
+		go s.alertNotifier.SendAutoCommentDisabledEmail(context.Background(), org.ID, redditConfig.Name, "Your Reddit account is less than 2 weeks old and may be at risk of suspension.")
 	}
 
 	// Only proceed if commenting is enabled and user is old enough
@@ -635,30 +636,6 @@ func (s *redditKeywordTracker) sendAutomatedComment(ctx context.Context, org *mo
 	}
 
 	return nil
-}
-
-func (s *redditKeywordTracker) sendDisableAutomatedCommentAlert(ctx context.Context, org *models.Organization, redditAccountName string) {
-	// acquire lock before sending
-	disableAutomatedCommentAlertKey := fmt.Sprintf("disable_automated_comment:%s", org.ID)
-	// Check if a call is already running across organizations
-	isRunning, err := s.state.IsRunning(ctx, disableAutomatedCommentAlertKey)
-	if err != nil {
-		s.logger.Error("failed to check if daily tracking summary is running", zap.Error(err))
-		return
-	}
-	if isRunning {
-		return
-	}
-
-	// Try to acquire the lock
-	if err := s.state.Acquire(ctx, org.ID, disableAutomatedCommentAlertKey); err != nil {
-		s.logger.Warn("could not acquire lock for disableAutomatedCommentAlertKey, skipped", zap.Error(err))
-		return
-	}
-
-	//s.alertNotifier.SendUserActivity(context.Background(), models.OrgActivityTypeCOMMENTDISABLEDACCOUNTAGENEW.String(), org.Name, redditAccountName)
-	s.alertNotifier.SendAutoCommentDisabledEmail(context.Background(), org.Name, redditAccountName)
-	return
 }
 
 func dailyCounterKey(orgID string) string {

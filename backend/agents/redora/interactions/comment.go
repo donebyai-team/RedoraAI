@@ -8,6 +8,7 @@ import (
 	"github.com/shank318/doota/datastore/psql"
 	"github.com/shank318/doota/integrations/reddit"
 	"github.com/shank318/doota/models"
+	"github.com/shank318/doota/notifiers/alerts"
 	pbportal "github.com/shank318/doota/pb/doota/portal/v1"
 	"github.com/shank318/doota/utils"
 	"go.uber.org/zap"
@@ -27,6 +28,7 @@ type AutomatedInteractions interface {
 
 type redditInteractions struct {
 	db                datastore.Repository
+	alertNotifier     alerts.AlertNotifier
 	browserLessClient *browserless
 	redditOauthClient *reddit.OauthClient
 	logger            *zap.Logger
@@ -36,8 +38,8 @@ func (r redditInteractions) GetInteractions(ctx context.Context, projectID strin
 	return r.db.GetLeadInteractions(ctx, projectID, status, dateRange)
 }
 
-func NewRedditInteractions(db datastore.Repository, browserLessClient *browserless, redditOauthClient *reddit.OauthClient, logger *zap.Logger) AutomatedInteractions {
-	return &redditInteractions{redditOauthClient: redditOauthClient, browserLessClient: browserLessClient, db: db, logger: logger}
+func NewRedditInteractions(db datastore.Repository, alertNotifier alerts.AlertNotifier, browserLessClient *browserless, redditOauthClient *reddit.OauthClient, logger *zap.Logger) AutomatedInteractions {
+	return &redditInteractions{alertNotifier: alertNotifier, redditOauthClient: redditOauthClient, browserLessClient: browserLessClient, db: db, logger: logger}
 }
 
 func NewSimpleRedditInteractions(db datastore.Repository, logger *zap.Logger) AutomatedInteractions {
@@ -120,19 +122,7 @@ func (r redditInteractions) SendComment(ctx context.Context, interaction *models
 			interaction.Status = models.LeadInteractionStatusFAILED
 			interaction.Reason = "integration not found or inactive"
 			// disable automated comments
-			interaction.Organization.FeatureFlags.EnableAutoComment = false
-			interaction.Organization.FeatureFlags.Activities = append(interaction.Organization.FeatureFlags.Activities, models.OrgActivity{
-				ActivityType: models.OrgActivityTypeCOMMENTDISABLEDBYSYSTEM,
-				CreatedAt:    time.Now(),
-			})
-
-			updates := map[string]any{
-				psql.FEATURE_FLAG_DISABLE_AUTOMATED_COMMENT_PATH: false,
-				psql.FEATURE_FLAG_ACTIVITIES_PATH:                interaction.Organization.FeatureFlags.Activities,
-			}
-			if err := r.db.UpdateOrganizationFeatureFlags(ctx, interaction.Organization.ID, updates); err != nil {
-				r.logger.Error("failed to update organization feature flags", zap.Error(err))
-			}
+			r.disableAutomation(ctx, interaction, "Reddit integration expired or revoked")
 		} else {
 			interaction.Status = models.LeadInteractionStatusFAILED
 			interaction.Reason = err.Error()
@@ -145,6 +135,9 @@ func (r redditInteractions) SendComment(ctx context.Context, interaction *models
 	if err != nil {
 		interaction.Status = models.LeadInteractionStatusFAILED
 		interaction.Reason = err.Error()
+		if strings.Contains(err.Error(), "banned") || strings.Contains(err.Error(), "suspended") {
+			r.disableAutomation(ctx, interaction, err.Error())
+		}
 		return err
 	}
 
@@ -188,6 +181,53 @@ func (r redditInteractions) SendComment(ctx context.Context, interaction *models
 		zap.String("from", interaction.From))
 
 	return nil
+}
+
+func (r redditInteractions) disableAutomation(ctx context.Context, interaction *models.LeadInteraction, reason string) {
+	if r.alertNotifier == nil {
+		r.logger.Warn("alert notifier is not configured, skipping disable automation")
+		return
+	}
+
+	if interaction.Type == models.LeadInteractionTypeCOMMENT {
+		interaction.Organization.FeatureFlags.EnableAutoComment = false
+		interaction.Organization.FeatureFlags.Activities = append(interaction.Organization.FeatureFlags.Activities, models.OrgActivity{
+			ActivityType: models.OrgActivityTypeCOMMENTDISABLEDBYSYSTEM,
+			CreatedAt:    time.Now(),
+		})
+		updates := map[string]any{
+			psql.FEATURE_FLAG_DISABLE_AUTOMATED_COMMENT_PATH: false,
+			psql.FEATURE_FLAG_ACTIVITIES_PATH:                interaction.Organization.FeatureFlags.Activities,
+		}
+
+		if err := r.db.UpdateOrganizationFeatureFlags(ctx, interaction.Organization.ID, updates); err != nil {
+			r.logger.Error("failed to update organization feature flags", zap.Error(err))
+		}
+
+		go r.alertNotifier.SendAutoCommentDisabledEmail(context.Background(), interaction.Organization.ID, interaction.From, reason)
+	} else if interaction.Type == models.LeadInteractionTypeDM {
+		interaction.Organization.FeatureFlags.EnableAutoDM = false
+		interaction.Organization.FeatureFlags.Activities = append(interaction.Organization.FeatureFlags.Activities, models.OrgActivity{
+			ActivityType: models.OrgActivityTypeCOMMENTDISABLEDBYSYSTEM,
+			CreatedAt:    time.Now(),
+		})
+		updates := map[string]any{
+			psql.FEATURE_FLAG_DISABLE_AUTOMATED_DM_PATH: false,
+			psql.FEATURE_FLAG_ACTIVITIES_PATH:           interaction.Organization.FeatureFlags.Activities,
+		}
+
+		if err := r.db.UpdateOrganizationFeatureFlags(ctx, interaction.Organization.ID, updates); err != nil {
+			r.logger.Error("failed to update organization feature flags", zap.Error(err))
+		}
+
+		go r.alertNotifier.SendAutoDMDisabledEmail(context.Background(), interaction.Organization.ID, interaction.From, reason)
+	}
+
+	r.logger.Info("successfully disabled automation",
+		zap.String("interaction_id", interaction.ID),
+		zap.String("interaction_type", interaction.Type.String()),
+		zap.String("org_id", interaction.Organization.ID),
+		zap.String("reason", reason))
 }
 
 func (r redditInteractions) ScheduleComment(ctx context.Context, info *models.LeadInteraction) (*models.LeadInteraction, error) {
