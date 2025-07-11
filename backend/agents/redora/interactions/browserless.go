@@ -675,10 +675,10 @@ func (r browserless) getCDPUrl(ctx context.Context, startURL string, includeLive
     liveURL
   }`)
 
-		queryBuilder.WriteString(`
-  clickInput: click(selector: "#login-username") {
-  time
-}`)
+		//		queryBuilder.WriteString(`
+		//  clickInput: click(selector: "#login-username") {
+		//  time
+		//}`)
 	}
 
 	queryBuilder.WriteString(`

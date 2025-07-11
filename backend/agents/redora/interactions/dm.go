@@ -127,11 +127,6 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 	if err != nil {
 		interaction.Status = models.LeadInteractionStatusFAILED
 		interaction.Reason = err.Error()
-		if strings.Contains(err.Error(), "404") {
-			suspendedError := fmt.Errorf("Your connected reddit account[%s] is suspended or banned, please contact us via chat", interaction.From)
-			interaction.Reason = suspendedError.Error()
-			return suspendedError
-		}
 		return err
 	}
 
@@ -150,7 +145,7 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 	user, err := redditClient.GetUser(ctx, interaction.To)
 	if err != nil {
 		interaction.Status = models.LeadInteractionStatusFAILED
-		interaction.Reason = fmt.Sprintf("failed to get user: %v", err)
+		interaction.Reason = fmt.Sprintf("Reason: %v", err)
 		return err
 	}
 
@@ -215,6 +210,16 @@ func (r redditInteractions) Authenticate(ctx context.Context, orgID string) (str
 
 	return cdp.LiveURL, func() error {
 		updatedLoginConfig, err := r.browserLessClient.WaitAndGetCookies(ctx, cdp.BrowserWSEndpoint)
+		if err != nil {
+			return err
+		}
+
+		if updatedLoginConfig.Username == "" {
+			return fmt.Errorf("Unable to find username in cookies")
+		}
+
+		// Verify If Account is active
+		_, err = reddit.NewClientWithOutConfig(r.logger).GetUser(ctx, updatedLoginConfig.Username)
 		if err != nil {
 			return err
 		}

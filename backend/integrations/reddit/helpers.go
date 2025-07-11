@@ -15,6 +15,10 @@ import (
 var ErrNotFound = errors.New("not found")
 var ErrUnAuthorized = errors.New("unauthorized")
 
+func redditAccountSuspendedError(username string) error {
+	return fmt.Errorf("Your connected Reddit account [%s] is either suspended or banned, please contact us via chat", username)
+}
+
 func (r *Client) doRequest(ctx context.Context, method, url string, rawBody interface{}) (*http.Response, error) {
 	req, err := r.buildRequest(ctx, rawBody, method, url)
 	if err != nil {

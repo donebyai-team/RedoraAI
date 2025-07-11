@@ -16,10 +16,13 @@ import (
 	"time"
 )
 
-func (r *Client) GetUser(ctx context.Context, userID string) (*User, error) {
-	reqURL := fmt.Sprintf("%s/user/%s/about.json", r.baseURL, userID)
+func (r *Client) GetUser(ctx context.Context, userName string) (*User, error) {
+	reqURL := fmt.Sprintf("%s/user/%s/about.json", r.baseURL, userName)
 	resp, err := r.doRequest(ctx, http.MethodGet, reqURL, nil)
 	if err != nil {
+		if strings.Contains(err.Error(), "404") {
+			return nil, redditAccountSuspendedError(userName)
+		}
 		return nil, err
 	}
 	defer resp.Body.Close()

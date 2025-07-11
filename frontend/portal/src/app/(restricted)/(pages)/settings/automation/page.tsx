@@ -14,6 +14,7 @@ import toast from 'react-hot-toast';
 import Link from 'next/link';
 import { useAppSelector } from '@/store/hooks';
 import { SubscriptionStatus } from '@doota/pb/doota/core/v1/core_pb';
+import { getConnectError } from '@/utils/error';
 
 const StyledSlider = styled(Slider)(() => ({
     color: '#111827', // Dark color for the track
@@ -203,8 +204,7 @@ export default function Page() {
 
             toast.success("Reddit connected successfully");
         } catch (err: any) {
-            const message = err?.response?.data?.message || err.message || "Something went wrong";
-            toast.error(message);
+            toast.error(getConnectError(err));
         } finally {
             setIsConnecting(false);
         }

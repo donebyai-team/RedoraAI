@@ -145,11 +145,6 @@ func (r redditInteractions) SendComment(ctx context.Context, interaction *models
 	if err != nil {
 		interaction.Status = models.LeadInteractionStatusFAILED
 		interaction.Reason = err.Error()
-		if strings.Contains(err.Error(), "404") {
-			suspendedError := fmt.Errorf("Your connected reddit account[%s] is suspended or banned, please contact us via chat", interaction.From)
-			interaction.Reason = suspendedError.Error()
-			return suspendedError
-		}
 		return err
 	}
 
