@@ -117,7 +117,7 @@ func (f OrganizationFeatureFlags) GetMaxLeadsPerDay() int64 {
 // Defined by user or max allowed by plan, whichever is higher
 func (f OrganizationFeatureFlags) GetMaxDMsPerDay() int64 {
 	if f.MaxDMsPerDay == 0 {
-		return f.GetSubscriptionPlanMetadata().DMs.PerDay
+		return defaultMaxDMsPerDay
 	}
 	return f.MaxDMsPerDay
 }
@@ -125,12 +125,14 @@ func (f OrganizationFeatureFlags) GetMaxDMsPerDay() int64 {
 // Defined by user or max allowed by plan, whichever is higher
 func (f OrganizationFeatureFlags) GetMaxCommentsPerDay() int64 {
 	if f.MaxCommentsPerDay == 0 {
-		return f.GetSubscriptionPlanMetadata().Comments.PerDay
+		return defaultMaxCommentsPerDay
 	}
 	return f.MaxCommentsPerDay
 }
 
 const defaultMinRelevancyScoreForAutomatedCommentsAndDM = 90
+const defaultMaxCommentsPerDay = 4
+const defaultMaxDMsPerDay = 10
 
 // Defined by user or max allowed by plan, whichever is higher
 func (f OrganizationFeatureFlags) GetRelevancyScoreDM() float64 {
