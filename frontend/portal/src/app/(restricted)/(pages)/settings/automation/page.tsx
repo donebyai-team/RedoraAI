@@ -101,7 +101,7 @@ export default function Page() {
     const defaultPostFrequency = org?.featureFlags?.notificationSettings?.relevantPostFrequency ?? NotificationFrequency.DAILY;
     const maxDMPerDay = org?.featureFlags?.DM?.maxPerDay || 0;
     const maxCommentPerDayLimit = org?.featureFlags?.subscription?.comments?.perDay || 0;
-    const maxCommentPerDay = org?.featureFlags?.Comment?.maxPerDay || 0;
+    const maxCommentPerDay = org?.featureFlags?.Comment?.maxPerDay || 5;
     const [maxCommentsInput, setMaxCommentsInput] = useState(maxCommentPerDay.toString());
 
     const [relevancyScore, setRelevancyScore] = useState(defaultRelevancyScore);
@@ -502,7 +502,8 @@ export default function Page() {
                                     </Box>
 
                                     <Typography variant="body2" color="text.secondary" sx={{ mt: 1, ml: 0.5 }}>
-                                        {`Enter a number between 1 and ${maxCommentPerDayLimit}`}.
+                                        {/* {`Enter a number between 1 and ${maxCommentPerDayLimit}`}. */}
+                                        {`Enter a number between 1 and ${maxCommentPerDayLimit}. To stay safe, we recommend starting with 2–5 comments/day to reduce the risk of Reddit bans.`}
                                     </Typography>
                                 </Box>
 
