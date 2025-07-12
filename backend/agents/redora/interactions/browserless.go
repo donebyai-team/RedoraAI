@@ -385,7 +385,7 @@ func (r browserless) SendDM(ctx context.Context, params DMParams) (cookies []byt
 		}
 
 		if !strings.Contains(strings.ToLower(msg), "unable to show the room") {
-			return nil, fmt.Errorf("chat error: %s", msg)
+			return nil, fmt.Errorf("%s", msg)
 		}
 
 		r.logger.Warn("Reddit chat warning (ignorable)",

@@ -21,6 +21,8 @@ type DMParams struct {
 	Message  string
 }
 
+const disabledReasonAccNotEstablished = "Your Reddit account hasn't met Reddit's requirements for sending direct messages, which typically include email verification and a history of positive contributions."
+
 func (r redditInteractions) SendDM(ctx context.Context, interaction *models.LeadInteraction) error {
 	if interaction.Type != models.LeadInteractionTypeDM {
 		return fmt.Errorf("interaction type is not DM")
@@ -179,8 +181,13 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 		Message:  utils.FormatDM(redditLead.LeadMetadata.SuggestedDM),
 	})
 	if err != nil {
-		interaction.Reason = fmt.Sprintf("failed to send DM: %v", err)
+		interaction.Reason = fmt.Sprintf("Reason: %v", err)
 		interaction.Status = models.LeadInteractionStatusFAILED
+		if strings.Contains(err.Error(), "account isn't established") {
+			interaction.Reason = disabledReasonAccNotEstablished
+			r.disableAutomation(ctx, interaction, interaction.Reason)
+		}
+
 		return err
 	}
 
