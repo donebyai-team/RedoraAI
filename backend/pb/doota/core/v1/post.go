@@ -1,9 +1,10 @@
 package pbcore
 
 import (
+	"time"
+
 	"github.com/shank318/doota/models"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"time"
 )
 
 // FromModel converts a models.Post into a protobuf Post.

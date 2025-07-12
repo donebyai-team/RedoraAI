@@ -50,13 +50,18 @@ message PostRegenerationHistory {
   string description = 3;
 }
 
-message AugmentedPost {
+message PostDetail {
   Post post = 1;           // Base post information
   string source_name = 2;  // Additional field
+  string post_url = 3;     // URL to the post
 }
 
 message SchedulePostRequest {
   string id = 1;
   google.protobuf.Timestamp schedule_at = 2;
+}
+
+message DeletePostRequest {
+  string id = 1;
 }
 

@@ -1,8 +1,8 @@
 'use client';
 import {
-    Calendar, Save, Send, Eye, Wand2, Edit3, RefreshCw,
-    TrendingUp, MessageSquare, Heart, AlertCircle, CheckCircle,
-    Clock, X, ArrowLeft, Undo, History, Loader2, Trash2
+    Eye, Edit3,
+    AlertCircle, CheckCircle,
+    Clock, Loader2, Trash2
 } from "lucide-react";
 import {
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow
@@ -13,10 +13,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {routes} from "@doota/ui-core/routing";
-import { AugmentedPost, Post} from "@doota/pb/doota/core/v1/post_pb";
+import { Post, PostDetail} from "@doota/pb/doota/core/v1/post_pb";
 import {portalClient} from "@/services/grpc";
 import {useAppDispatch} from "@/store/hooks";
 import { setPost } from "@/store/PostCreation/PostCreationSlice";
+import toast from "react-hot-toast";
 
 export enum PostStatus {
     CREATED = "CREATED",
@@ -31,7 +32,7 @@ export default function Posts() {
     const dispatch = useAppDispatch();
     const [isLoading, setIsLoading] = useState(false)
     const [isPostApiCall, setIsPostApiCall] = useState(false)
-    const [posts, setPosts] = useState<AugmentedPost[]>([])
+    const [posts, setPosts] = useState<PostDetail[]>([])
 
     useEffect(() => {
         setIsLoading(true)
@@ -40,7 +41,7 @@ export default function Posts() {
         ])
             .catch(err => console.error('Error fetching data:', err))
             .finally(() => setIsLoading(false))
-    }, [])
+    }, [isPostApiCall])
 
     const getStatusIcon = (status?: string) => {
         switch (status) {
@@ -82,15 +83,16 @@ export default function Posts() {
         const millis = Number(timestamp.seconds) * 1000 + Math.floor(timestamp.nanos / 1_000_000);
         const date = new Date(millis);
 
-        return date.toLocaleString("en-US", {
+        return date.toLocaleString("en-IN", {
             month: "short",
             day: "numeric",
             hour: "2-digit",
             minute: "2-digit",
-            timeZone: "UTC",
             hour12: false,
+            // Removed timeZone: "UTC" to use local time
         });
     };
+
 
 
     const handleEditPost = (post: Post | undefined) => {
@@ -100,8 +102,16 @@ export default function Posts() {
         }
     };
 
-    const handleDeletePost = (post: Post | undefined) => {
-        console.log('Delete post:', post);
+    const handleDeletePost = async (post: Post | undefined) => {
+        try {
+            setIsPostApiCall(p => !p);
+            const res = await portalClient.deletePost({ id: post?.id || '' });
+            toast.success("Post deleted successfully!");
+        }
+        catch (err: any) {
+            const message = err?.response?.data?.message || err.message || "Something went wrong";
+            toast.error(message);
+        }
     }
 
     return (
@@ -176,24 +186,28 @@ export default function Posts() {
                                                 {/*</TableCell>*/}
                                                 <TableCell>
                                                     <div className="flex gap-1">
-                                                        {[PostStatus.SENT].includes(post.post?.status as PostStatus) && (
-                                                            <Button variant="outline" size="sm">
+                                                        {/*{post.post?.status === PostStatus.FAILED && (*/}
+                                                        {/*    <Button variant="outline" size="sm">*/}
+                                                        {/*        <RefreshCw className="h-3 w-3" />*/}
+                                                        {/*    </Button>*/}
+                                                        {/*)}*/}
+                                                        {post.post?.status as PostStatus && (
+                                                            <Button variant="outline" size="sm" onClick={() => handleEditPost(post.post)}>
+                                                                <Edit3 className="h-3 w-3" />
+                                                            </Button>
+                                                        )}
+                                                        {[PostStatus.SENT, PostStatus.FAILED].includes(post.post?.status as PostStatus) && (
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => window.open(post.postUrl, '_blank')}
+                                                            >
                                                                 <Eye className="h-3 w-3" />
                                                             </Button>
                                                         )}
-                                                        {post.post?.status === PostStatus.FAILED && (
-                                                            <Button variant="outline" size="sm">
-                                                                <RefreshCw className="h-3 w-3" />
-                                                            </Button>
-                                                        )}
-                                                        {([PostStatus.SCHEDULED].includes(post.post?.status as PostStatus)) && (
+                                                        {([PostStatus.SCHEDULED, PostStatus.CREATED, PostStatus.PROCESSING].includes(post.post?.status as PostStatus)) && (
                                                             <Button variant="outline" size="sm" onClick={() => handleDeletePost(post.post)}>
                                                                 <Trash2 className="h-4 w-4 text-destructive" />
-                                                            </Button>
-                                                        )}
-                                                        {([PostStatus.CREATED, PostStatus.PROCESSING].includes(post.post?.status as PostStatus)) && (
-                                                            <Button variant="outline" size="sm" onClick={() => handleEditPost(post.post)}>
-                                                                <Edit3 className="h-3 w-3" />
                                                             </Button>
                                                         )}
                                                     </div>

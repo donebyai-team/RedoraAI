@@ -1,11 +1,12 @@
 package portal
 
 import (
+	"connectrpc.com/connect"
 	"context"
 	"database/sql"
 	"errors"
-
-	"connectrpc.com/connect"
+	"fmt"
+	"github.com/shank318/doota/integrations/reddit"
 	"github.com/shank318/doota/models"
 	pbcore "github.com/shank318/doota/pb/doota/core/v1"
 	pbportal "github.com/shank318/doota/pb/doota/portal/v1"
@@ -71,12 +72,18 @@ func (p *Portal) GetPosts(ctx context.Context, c *connect.Request[emptypb.Empty]
 		return nil, err
 	}
 
-	protoPosts := make([]*pbcore.AugmentedPost, 0, len(posts))
+	protoPosts := make([]*pbcore.PostDetail, 0, len(posts))
 	for _, post := range posts {
 		proto := new(pbcore.Post).FromAugmentedModel(post)
-		augmented := &pbcore.AugmentedPost{
+		var postID string
+		if post.PostID != nil {
+			postID = *post.PostID
+		}
+
+		augmented := &pbcore.PostDetail{
 			Post:       proto,
 			SourceName: post.Source.Name,
+			PostUrl:    reddit.GetPostURL(postID, post.Source.Name),
 		}
 		protoPosts = append(protoPosts, augmented)
 	}
@@ -112,6 +119,20 @@ func (p *Portal) SchedulePost(ctx context.Context, c *connect.Request[pbcore.Sch
 
 	if err := p.db.SchedulePost(ctx, c.Msg.Id, scheduleAt); err != nil {
 		return nil, status.New(codes.Internal, "Failed to schedule post").Err()
+	}
+
+	return connect.NewResponse(&emptypb.Empty{}), nil
+}
+
+func (p *Portal) DeletePost(ctx context.Context, c *connect.Request[pbcore.DeletePostRequest]) (*connect.Response[emptypb.Empty], error) {
+	_, err := p.gethAuthContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	err = p.postService.DeletePost(ctx, c.Msg.Id)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to delete post: %w", err))
 	}
 
 	return connect.NewResponse(&emptypb.Empty{}), nil

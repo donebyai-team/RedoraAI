@@ -28,6 +28,9 @@ import { Timestamp } from '@bufbuild/protobuf/wkt'
 import { PostInsight } from '@doota/pb/doota/core/v1/insight_pb'
 import { Source } from '@doota/pb/doota/core/v1/core_pb'
 import {routes} from "@doota/ui-core/routing";
+import {PostStatus} from "@/components/pages/PostCreationHub/Posts";
+
+const editableStatus = [PostStatus.CREATED, PostStatus.PROCESSING, PostStatus.SCHEDULED]
 
 export default function PostEditor() {
     const router = useRouter()
@@ -53,6 +56,7 @@ export default function PostEditor() {
     const [selectedGoal, setSelectedGoal] = useState(post?.metadata?.settings?.goal || '')
     const [selectedSubreddit, setSelectedSubreddit] = useState(post?.source || '')
     const [selectedTone, setSelectedTone] = useState(post?.metadata?.settings?.tone || '')
+    const [isEditable, setIsEditable] = useState(editableStatus.includes(post?.status as PostStatus || ''))
 
     useEffect(() => {
         if(!post?.id) router.back();
@@ -218,12 +222,13 @@ export default function PostEditor() {
 
                                         <div>
                                             <Label>Title</Label>
-                                            <Input value={title} onChange={e => setTitle(e.target.value)} />
+                                            <Input disabled={!isEditable} value={title} onChange={e => setTitle(e.target.value)} />
                                         </div>
 
                                         <div>
                                             <Label>Content</Label>
                                             <Textarea
+                                                disabled={!isEditable}
                                                 className="min-h-[400px]"
                                                 value={content}
                                                 onChange={e => setContent(e.target.value)}
@@ -249,7 +254,7 @@ export default function PostEditor() {
                                                     {/*Suggested topic*/}
                                                     <div>
                                                         <Label htmlFor="insight-select">Suggested Topics from Insights (Optional)</Label>
-                                                        <Select onValueChange={handleInsightSelect}>
+                                                        <Select onValueChange={handleInsightSelect} disabled={!isEditable}>
                                                             <SelectTrigger>
                                                                 <SelectValue placeholder="Select a suggested topic or leave blank to add your own..." />
                                                             </SelectTrigger>
@@ -277,6 +282,7 @@ export default function PostEditor() {
                                                             onChange={(e) => setCustomTopic(e.target.value)}
                                                             placeholder="Enter your topic..."
                                                             className="min-h-[100px] text-base"
+                                                            disabled={!isEditable}
                                                         />
                                                     </div>
 
@@ -289,6 +295,7 @@ export default function PostEditor() {
                                                             onChange={(e) => setPostDetails(e.target.value)}
                                                             placeholder="Add specific details, context, examples, or requirements for your post..."
                                                             className="min-h-[150px] text-base"
+                                                            disabled={!isEditable}
                                                         />
                                                     </div>
                                                 </div>
@@ -296,7 +303,7 @@ export default function PostEditor() {
                                         </Collapsible>
 
                                         <Button variant="outline" onClick={handleRegenerate}
-                                                disabled={isPostApiCall}
+                                                disabled={isPostApiCall || !isEditable}
                                         >
                                             <Undo className="h-4 w-4 mr-2" /> Regenerate
                                         </Button>
@@ -313,7 +320,9 @@ export default function PostEditor() {
                                     <CardContent className="space-y-4">
                                         <div>
                                             <Label>Subreddit</Label>
-                                            <Select value={selectedSubreddit} onValueChange={setSelectedSubreddit}>
+                                            <Select value={selectedSubreddit} onValueChange={setSelectedSubreddit}
+                                                    disabled={!isEditable}
+                                            >
                                                 <SelectTrigger><SelectValue placeholder="Select subreddit" /></SelectTrigger>
                                                 <SelectContent>
                                                     {sources.map(src => (
@@ -325,7 +334,9 @@ export default function PostEditor() {
 
                                         <div>
                                             <Label>Goal</Label>
-                                            <Select value={selectedGoal} onValueChange={setSelectedGoal}>
+                                            <Select value={selectedGoal} onValueChange={setSelectedGoal}
+                                                    disabled={!isEditable}
+                                            >
                                                 <SelectTrigger><SelectValue placeholder="Select goal" /></SelectTrigger>
                                                 <SelectContent>
                                                     {goalOptions.map(goal => (
@@ -337,7 +348,9 @@ export default function PostEditor() {
 
                                         <div>
                                             <Label>Tone</Label>
-                                            <Select value={selectedTone} onValueChange={setSelectedTone}>
+                                            <Select value={selectedTone} onValueChange={setSelectedTone}
+                                                    disabled={!isEditable}
+                                            >
                                                 <SelectTrigger><SelectValue placeholder="Select tone" /></SelectTrigger>
                                                 <SelectContent>
                                                     {toneOptions.map(tone => (
@@ -376,7 +389,7 @@ export default function PostEditor() {
                                         {/*</Button>*/}
 
                                         <Button onClick={handleSchedule} className="w-full"
-                                            disabled={isPostApiCall}
+                                            disabled={isPostApiCall || !isEditable}
                                         >
                                             <Calendar className="h-4 w-4 mr-2" />
                                             Schedule Post

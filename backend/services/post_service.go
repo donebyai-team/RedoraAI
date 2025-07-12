@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"fmt"
-
 	"github.com/shank318/doota/ai"
 	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/models"
@@ -12,6 +11,7 @@ import (
 
 type PostService interface {
 	CreatePost(ctx context.Context, post *models.Post, project *models.Project) (*models.Post, error)
+	DeletePost(ctx context.Context, postID string) error
 }
 type postService struct {
 	aiClient *ai.Client
@@ -42,7 +42,7 @@ func (s *postService) CreatePost(ctx context.Context, post *models.Post, project
 		PostSetting: &post.Metadata.Settings,
 	}
 
-	resp, _, err := s.aiClient.GeneratePost(ctx, s.aiClient.GetAdvanceModel(), input, s.logger)
+	resp, _, err := s.aiClient.GeneratePost(ctx, s.aiClient.GetDefaultModel(), input, s.logger)
 	if err != nil {
 		return nil, fmt.Errorf("generate post failed: %w", err)
 	}
@@ -102,26 +102,16 @@ func (s *postService) CreatePost(ctx context.Context, post *models.Post, project
 	return newPost, nil
 }
 
-// generateAIContent simulates an OpenAI API call
-// func generateAIContent(ctx context.Context, settings models.PostSettings) (title, description string, err error) {
-// 	// Simulated content generation logic. Replace with actual API call.
-// 	content := fmt.Sprintf(
-// 		"Title for topic: %s in tone: %s\nDescription: This is a simulated AI-generated post about '%s' for the goal '%s'.",
-// 		settings.Topic, settings.Tone, settings.Context, settings.Goal,
-// 	)
+func (s *postService) DeletePost(ctx context.Context, postID string) error {
+	_, err := s.db.GetPostByID(ctx, postID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch post: %w", err)
+	}
 
-// 	// Assume that the AI API could return JSON-encoded structured response
-// 	title = fmt.Sprintf("AI Generated: %s", settings.Topic)
-// 	descriptionBytes, err := json.Marshal(map[string]string{
-// 		"topic":   settings.Topic,
-// 		"context": settings.Context,
-// 		"goal":    settings.Goal,
-// 		"tone":    settings.Tone,
-// 		"content": content,
-// 	})
-// 	if err != nil {
-// 		return "", "", fmt.Errorf("failed to marshal description: %w", err)
-// 	}
+	// Set deleted_at to soft delete
+	if err := s.db.DeletePostByID(ctx, postID); err != nil {
+		return fmt.Errorf("failed to soft delete post: %w", err)
+	}
 
-// 	return title, string(descriptionBytes), nil
-// }
+	return nil
+}

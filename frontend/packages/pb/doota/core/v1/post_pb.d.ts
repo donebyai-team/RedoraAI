@@ -168,9 +168,9 @@ export declare type PostRegenerationHistory = Message<"doota.core.v1.PostRegener
 export declare const PostRegenerationHistorySchema: GenMessage<PostRegenerationHistory>;
 
 /**
- * @generated from message doota.core.v1.AugmentedPost
+ * @generated from message doota.core.v1.PostDetail
  */
-export declare type AugmentedPost = Message<"doota.core.v1.AugmentedPost"> & {
+export declare type PostDetail = Message<"doota.core.v1.PostDetail"> & {
   /**
    * Base post information
    *
@@ -184,13 +184,20 @@ export declare type AugmentedPost = Message<"doota.core.v1.AugmentedPost"> & {
    * @generated from field: string source_name = 2;
    */
   sourceName: string;
+
+  /**
+   * URL to the post
+   *
+   * @generated from field: string post_url = 3;
+   */
+  postUrl: string;
 };
 
 /**
- * Describes the message doota.core.v1.AugmentedPost.
- * Use `create(AugmentedPostSchema)` to create a new message.
+ * Describes the message doota.core.v1.PostDetail.
+ * Use `create(PostDetailSchema)` to create a new message.
  */
-export declare const AugmentedPostSchema: GenMessage<AugmentedPost>;
+export declare const PostDetailSchema: GenMessage<PostDetail>;
 
 /**
  * @generated from message doota.core.v1.SchedulePostRequest
@@ -212,6 +219,22 @@ export declare type SchedulePostRequest = Message<"doota.core.v1.SchedulePostReq
  * Use `create(SchedulePostRequestSchema)` to create a new message.
  */
 export declare const SchedulePostRequestSchema: GenMessage<SchedulePostRequest>;
+
+/**
+ * @generated from message doota.core.v1.DeletePostRequest
+ */
+export declare type DeletePostRequest = Message<"doota.core.v1.DeletePostRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+};
+
+/**
+ * Describes the message doota.core.v1.DeletePostRequest.
+ * Use `create(DeletePostRequestSchema)` to create a new message.
+ */
+export declare const DeletePostRequestSchema: GenMessage<DeletePostRequest>;
 
 /**
  * @generated from enum doota.core.v1.PostStatus

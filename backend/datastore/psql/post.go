@@ -17,6 +17,7 @@ func init() {
 		"post/schedule_post.sql",
 		"post/query_post_to_execute.sql",
 		"posts/set_post_processing_status.sql",
+		"post/delete_post_by_id.sql",
 	})
 }
 
@@ -113,5 +114,27 @@ func (r *Database) SchedulePost(ctx context.Context, postID string, scheduleAt t
 		"schedule_at": scheduleAt,
 		"status":      models.PostStatusSCHEDULED,
 	})
+	return err
+}
+
+func (r *Database) DeletePostByID(ctx context.Context, postID string) error {
+	tx, err := r.BeginTxx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("begin transaction: %w", err)
+	}
+	defer func() {
+		err = executePotentialRollback(tx, err)
+	}()
+
+	// Delete post
+	stmt := r.mustGetTxStmt(ctx, "post/delete_post_by_id.sql", tx)
+	_, err = stmt.ExecContext(ctx, map[string]interface{}{
+		"id": postID,
+	})
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("commit transaction: %w", err)
+	}
+
 	return err
 }

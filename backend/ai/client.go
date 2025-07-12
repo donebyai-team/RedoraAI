@@ -112,6 +112,10 @@ func (c *Client) GetAdvanceModel() models.LLMModel {
 	return c.advanceLLMModel
 }
 
+func (c *Client) GetDefaultModel() models.LLMModel {
+	return c.defaultLLMModel
+}
+
 func (c *Client) processTemplate(ctx context.Context, runID, path, tmplData string, vars map[string]any, logger *zap.Logger) (*bytes.Buffer, error) {
 	buf := new(bytes.Buffer)
 	err := template.Must(template.New(path).Parse(tmplData)).Execute(buf, vars)

@@ -14,7 +14,8 @@ CREATE TABLE posts
     post_id varchar(255), -- Post ID in the source system (e.g., Reddit, Twitter)
     schedule_at timestamp,
     created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at  timestamp
+    updated_at  timestamp,
+    deleted_at  timestamp
 );
 
 -- Assuming projects and posts are tracked in other tables
