@@ -104,9 +104,9 @@ export default function Posts() {
 
     const handleDeletePost = async (post: Post | undefined) => {
         try {
-            setIsPostApiCall(p => !p);
             const res = await portalClient.deletePost({ id: post?.id || '' });
             toast.success("Post deleted successfully!");
+            setIsPostApiCall(p => !p);
         }
         catch (err: any) {
             const message = err?.response?.data?.message || err.message || "Something went wrong";
@@ -196,7 +196,7 @@ export default function Posts() {
                                                                 <Edit3 className="h-3 w-3" />
                                                             </Button>
                                                         )}
-                                                        {[PostStatus.SENT, PostStatus.FAILED].includes(post.post?.status as PostStatus) && (
+                                                        {[PostStatus.SENT].includes(post.post?.status as PostStatus) && (
                                                             <Button
                                                                 variant="outline"
                                                                 size="sm"
