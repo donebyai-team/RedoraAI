@@ -630,7 +630,7 @@ func (r browserless) WaitAndGetCookies(ctx context.Context, browserURL string) (
 }
 
 func (r browserless) StartLogin(ctx context.Context) (*CDPInfo, error) {
-	cdp, err := r.getCDPUrl(ctx, chatURL, true, true)
+	cdp, err := r.getCDPUrl(ctx, loginURL, true, true)
 	if err != nil {
 		return nil, err
 	}
@@ -650,13 +650,7 @@ const chatURL = "https://chat.reddit.com"
 func (r browserless) getCDPUrl(ctx context.Context, startURL string, includeLiveURL, useProxy bool) (*CDPInfo, error) {
 	var queryBuilder strings.Builder
 
-	queryBuilder.WriteString(`mutation {
-  goto(
-    url: "` + startURL + `",
-    waitUntil: firstContentfulPaint
-  ) {
-    status
-  }`)
+	queryBuilder.WriteString("mutation {")
 
 	if useProxy {
 		queryBuilder.WriteString(`
@@ -669,16 +663,19 @@ func (r browserless) getCDPUrl(ctx context.Context, startURL string, includeLive
   }`)
 	}
 
-	if includeLiveURL {
-		queryBuilder.WriteString(`
-  live: liveURL(timeout: 600000 quality: 20 type: jpeg) {
-    liveURL
+	queryBuilder.WriteString(`
+  goto(
+    url: "` + startURL + `",
+    waitUntil: firstContentfulPaint
+  ) {
+    status
   }`)
 
-		//		queryBuilder.WriteString(`
-		//  clickInput: click(selector: "#login-username") {
-		//  time
-		//}`)
+	if includeLiveURL {
+		queryBuilder.WriteString(`
+  live: liveURL(timeout: 600000 quality: 30 type: jpeg) {
+    liveURL
+  }`)
 	}
 
 	queryBuilder.WriteString(`
