@@ -54,6 +54,23 @@ type NotificationSettings struct {
 	LastRelevantPostAlertSentAt *time.Time            `json:"last_relevant_post_alert_sent_at"`
 }
 
+func (f OrganizationFeatureFlags) ShouldSendNotEnoughRelevantPostsAlert() bool {
+	lastSent := f.NotificationSettings.LastRelevantPostAlertSentAt
+	if lastSent == nil || lastSent.IsZero() {
+		return true // to avoid not sending alerts if no leads found on the first day itself
+	}
+
+	// Normalize both times too midnight to ignore the time component
+	lastSentDate := time.Date(lastSent.Year(), lastSent.Month(), lastSent.Day(), 0, 0, 0, 0, lastSent.Location())
+	todayDate := time.Now()
+	todayDate = time.Date(todayDate.Year(), todayDate.Month(), todayDate.Day(), 0, 0, 0, 0, todayDate.Location())
+
+	oneWeekAgo := todayDate.AddDate(0, 0, -7)
+
+	// Send alert if last sent date is before or exactly 7 days ago
+	return !lastSentDate.After(oneWeekAgo)
+}
+
 func (f OrganizationFeatureFlags) ShouldSendRelevantPostAlert() bool {
 	if f.GetNotificationFrequency() == NotificationFrequencyDAILY {
 		return true

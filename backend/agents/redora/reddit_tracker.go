@@ -206,14 +206,16 @@ func (s *redditKeywordTracker) sendAlert(ctx context.Context, project *models.Pr
 		return
 	}
 
+	notificationFrequency := organization.FeatureFlags.GetNotificationFrequency()
+
 	// Send alert
 	if done {
 		s.logger.Info("daily tracking summary for project",
-			zap.String("frequency", organization.FeatureFlags.GetNotificationFrequency().String()),
+			zap.String("frequency", notificationFrequency.String()),
 			zap.String("project_name", project.Name))
 
 		defaultDateRange := pbportal.DateRangeFilter_DATE_RANGE_TODAY
-		if organization.FeatureFlags.GetNotificationFrequency() == models.NotificationFrequencyWEEKLY {
+		if notificationFrequency == models.NotificationFrequencyWEEKLY {
 			defaultDateRange = pbportal.DateRangeFilter_DATE_RANGE_7_DAYS
 		}
 
@@ -222,6 +224,7 @@ func (s *redditKeywordTracker) sendAlert(ctx context.Context, project *models.Pr
 			s.logger.Error("failed to generate lead analysis", zap.Error(err))
 			return
 		}
+
 		// Send alert on redora
 		err = s.alertNotifier.SendLeadsSummary(ctx, alerts.LeadSummary{
 			OrgID:                  project.OrganizationID,
@@ -235,6 +238,35 @@ func (s *redditKeywordTracker) sendAlert(ctx context.Context, project *models.Pr
 			s.logger.Error("failed to send slack notification", zap.Error(err))
 		}
 
+		// Send Daily or Weekly alert to users
+		// ----
+
+		// if we found less than 2 relevant posts in a day, check for relevant posts in the last week
+		// notify user if we found less relevant posts in the last week if the frequency is not weekly
+		if notificationFrequency != models.NotificationFrequencyWEEKLY &&
+			analysis.RelevantPostsFound < 2 {
+
+			if !organization.FeatureFlags.ShouldSendNotEnoughRelevantPostsAlert() {
+				return
+			}
+
+			weeklyAnalysis, err := NewLeadAnalysis(s.db, s.logger).GenerateLeadAnalysis(ctx, project.ID, pbportal.DateRangeFilter_DATE_RANGE_7_DAYS)
+			if err != nil {
+				s.logger.Error("failed to generate lead analysis", zap.Error(err))
+				return
+			}
+
+			// if we find enough posts last week, we don't need to notify
+			if weeklyAnalysis.RelevantPostsFound >= 8 {
+				return
+			}
+
+			analysis = weeklyAnalysis
+			// temo update the frequency to weekly
+			// IMP - Do not update it in the DB
+			notificationFrequency = models.NotificationFrequencyWEEKLY
+		}
+
 		err = s.alertNotifier.SendLeadsSummaryEmail(ctx, alerts.LeadSummary{
 			OrgID:                  project.OrganizationID,
 			ProjectName:            project.Name,
@@ -242,7 +274,7 @@ func (s *redditKeywordTracker) sendAlert(ctx context.Context, project *models.Pr
 			TotalCommentsScheduled: analysis.CommentScheduled,
 			TotalDMScheduled:       analysis.DmScheduled,
 			RelevantPostsCount:     analysis.RelevantPostsFound,
-		}, organization.FeatureFlags.GetNotificationFrequency())
+		}, notificationFrequency)
 		if err != nil {
 			s.logger.Error("failed to send email notification", zap.Error(err))
 		}
