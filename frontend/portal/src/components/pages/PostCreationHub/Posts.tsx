@@ -63,17 +63,17 @@ export default function Posts() {
     const getStatusColor = (status?: string) => {
         switch (status) {
             case PostStatus.SENT:
-                return "bg-green-100 text-green-800";
+                return "bg-green-100 text-green-800 hover:bg-green-100";
             case PostStatus.SCHEDULED:
-                return "bg-blue-100 text-blue-800";
+                return "bg-blue-100 text-blue-800 hover:bg-blue-100";
             case PostStatus.FAILED:
-                return "bg-red-100 text-red-800";
+                return "bg-red-100 text-red-800 hover:bg-red-100";
             case PostStatus.CREATED:
-                return "bg-gray-100 text-gray-800";
             default:
-                return "bg-gray-100 text-gray-800";
+                return "bg-gray-100 text-gray-800 hover:bg-gray-100";
         }
     };
+
 
     const formatProtoTimestampUTC = (
         timestamp?: { seconds: bigint; nanos: number }
@@ -144,7 +144,11 @@ export default function Posts() {
                                                 <TableCell>
                                                     <div className="flex items-center gap-2">
                                                         {getStatusIcon(post.post?.status)}
-                                                        <Badge className={getStatusColor(post.post?.status)}>{post.post?.status}</Badge>
+                                                        <Badge
+                                                            className={`${getStatusColor(post.post?.status)} hover:shadow-none`}
+                                                        >
+                                                            {post.post?.status}
+                                                        </Badge>
                                                     </div>
                                                 </TableCell>
                                                 <TableCell className="max-w-xs">
