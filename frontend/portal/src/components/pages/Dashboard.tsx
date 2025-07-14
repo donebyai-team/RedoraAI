@@ -77,7 +77,7 @@ export default function Dashboard() {
         />
       ) : project && !project.isActive ? (
         <AnnouncementBanner
-          message="⚠️ Your account has been paused due to inactivity or insufficient product usage context."
+          message="⚠️ Your account has been paused due to inactivity or insufficient product information to discover posts."
           buttonText="Reactivate now →"
           buttonHref="/settings/automation"
         />
