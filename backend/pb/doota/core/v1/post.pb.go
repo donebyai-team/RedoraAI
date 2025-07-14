@@ -209,7 +209,7 @@ type PostSettings struct {
 	Goal        string  `protobuf:"bytes,3,opt,name=goal,proto3" json:"goal,omitempty"`
 	Tone        string  `protobuf:"bytes,4,opt,name=tone,proto3" json:"tone,omitempty"`
 	ReferenceId *string `protobuf:"bytes,5,opt,name=reference_id,json=referenceId,proto3,oneof" json:"reference_id,omitempty"`
-	Id          *string `protobuf:"bytes,6,opt,name=id,proto3,oneof" json:"id,omitempty"` // unique identifier for the post settings
+	Id          *string `protobuf:"bytes,6,opt,name=id,proto3,oneof" json:"id,omitempty"` // post id
 	SourceId    string  `protobuf:"bytes,7,opt,name=source_id,json=sourceId,proto3" json:"source_id,omitempty"`
 }
 

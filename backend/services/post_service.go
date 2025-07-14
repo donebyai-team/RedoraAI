@@ -120,7 +120,9 @@ func (s *postService) SchedulePost(ctx context.Context, postID string, scheduleA
 		return fmt.Errorf("cannot schedule post in the past")
 	}
 
-	if err := s.db.SchedulePost(ctx, postID, scheduleAt); err != nil {
+	post.ScheduleAt = &scheduleAt
+	post.Status = models.PostStatusSCHEDULED
+	if err := s.db.UpdatePost(ctx, post); err != nil {
 		return err
 	}
 
