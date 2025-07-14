@@ -14,8 +14,6 @@ import (
 const (
 	// PostStatusCREATED is a PostStatus of type CREATED.
 	PostStatusCREATED PostStatus = "CREATED"
-	// PostStatusPROCESSING is a PostStatus of type PROCESSING.
-	PostStatusPROCESSING PostStatus = "PROCESSING"
 	// PostStatusSENT is a PostStatus of type SENT.
 	PostStatusSENT PostStatus = "SENT"
 	// PostStatusFAILED is a PostStatus of type FAILED.
@@ -39,11 +37,10 @@ func (x PostStatus) IsValid() bool {
 }
 
 var _PostStatusValue = map[string]PostStatus{
-	"CREATED":    PostStatusCREATED,
-	"PROCESSING": PostStatusPROCESSING,
-	"SENT":       PostStatusSENT,
-	"FAILED":     PostStatusFAILED,
-	"SCHEDULED":  PostStatusSCHEDULED,
+	"CREATED":   PostStatusCREATED,
+	"SENT":      PostStatusSENT,
+	"FAILED":    PostStatusFAILED,
+	"SCHEDULED": PostStatusSCHEDULED,
 }
 
 // ParsePostStatus attempts to convert a string to a PostStatus.

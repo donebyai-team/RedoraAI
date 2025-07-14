@@ -21,7 +21,6 @@ import toast from "react-hot-toast";
 
 export enum PostStatus {
     CREATED = "CREATED",
-    PROCESSING = "PROCESSING",
     SENT = "SENT",
     FAILED = "FAILED",
     SCHEDULED = "SCHEDULED",
@@ -53,8 +52,6 @@ export default function Posts() {
                 return <AlertCircle className="h-4 w-4 text-red-600" />;
             case PostStatus.CREATED:
                 return <Edit3 className="h-4 w-4 text-gray-600" />;
-            case PostStatus.PROCESSING:
-                return <Edit3 className="h-4 w-4 text-gray-600" />;
             default:
                 return null;
         }
@@ -78,7 +75,7 @@ export default function Posts() {
     const formatProtoTimestampUTC = (
         timestamp?: { seconds: bigint; nanos: number }
     ): string => {
-        if (!timestamp) return "";
+        if (!timestamp) return "-";
 
         const millis = Number(timestamp.seconds) * 1000 + Math.floor(timestamp.nanos / 1_000_000);
         const date = new Date(millis);
@@ -163,9 +160,9 @@ export default function Posts() {
                                                 <TableCell className="text-sm">{formatProtoTimestampUTC(post.post?.createdAt)}</TableCell>
                                                 <TableCell>
                                                     <div className="text-sm">
-                                                        {post.post?.status === PostStatus.SENT && post.post.scheduledAt ? (
+                                                        {post.post?.status === PostStatus.SENT ? (
                                                             <span>Posted: {formatProtoTimestampUTC(post.post.scheduledAt)}</span>
-                                                        ) : post.post?.status === PostStatus.SCHEDULED && post.post.scheduledAt ? (
+                                                        ) : post.post?.status === PostStatus.SCHEDULED ? (
                                                             <span>Scheduled: {formatProtoTimestampUTC(post.post.scheduledAt)}</span>
                                                         ) : (
                                                             <span className="text-gray-400">-</span>
@@ -209,7 +206,7 @@ export default function Posts() {
                                                                 <Eye className="h-3 w-3" />
                                                             </Button>
                                                         )}
-                                                        {([PostStatus.SCHEDULED, PostStatus.CREATED, PostStatus.PROCESSING].includes(post.post?.status as PostStatus)) && (
+                                                        {([PostStatus.SCHEDULED, PostStatus.CREATED].includes(post.post?.status as PostStatus)) && (
                                                             <Button variant="outline" size="sm" onClick={() => handleDeletePost(post.post)}>
                                                                 <Trash2 className="h-4 w-4 text-destructive" />
                                                             </Button>

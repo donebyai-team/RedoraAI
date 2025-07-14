@@ -183,54 +183,22 @@ func (s *Spooler) processPost(ctx context.Context, post *models.Post) error {
 			}
 		}()
 
-		const maxRetries = 2
-		const retryDelay = 10 * time.Second
-		nonRetryableErrors := []string{
-			"subreddit not found",
-			"post content violates policy",
-		}
-
-		var lastErr error
-		for i := 0; i < maxRetries; i++ {
-			lastErr = s.automatedInteractions.ProcessScheduledPost(ctx, post)
-			if lastErr == nil {
-				logger.Info("successfully sent post")
-				return
-			}
-
-			errMsg := lastErr.Error()
-			for _, nonRetry := range nonRetryableErrors {
-				if strings.Contains(errMsg, nonRetry) {
-					s.logger.Warn("non-retryable error occurred, skipping retries",
-						zap.String("post_id", post.ID),
-						zap.String("reason", nonRetry),
-						zap.Error(lastErr),
-					)
-					// TODO: Notify about the error
-					//if s.notifier != nil {
-					//	s.notifier.SendPostError(ctx, post.ID, lastErr)
-					//}
-					return
-				}
-			}
-
-			s.logger.Warn("post attempt failed, retrying in 10 seconds",
-				zap.Int("attempt", i+1),
-				zap.Error(lastErr),
+		err := s.automatedInteractions.ProcessScheduledPost(ctx, post)
+		if err != nil {
+			s.logger.Error("failed to send post",
+				zap.String("post_id", post.ID),
+				zap.Error(err),
 			)
 
-			time.Sleep(retryDelay)
+			// TODO: Notify about the error
+			// if s.notifier != nil {
+			//     s.notifier.SendPostError(ctx, post.ID, err)
+			// }
+
+			return
 		}
 
-		s.logger.Error("failed to send post after retries",
-			zap.String("post_id", post.ID),
-			zap.Error(lastErr),
-		)
-
-		// TODO: Notify about the error
-		//if s.notifier != nil {
-		//	s.notifier.SendPostError(ctx, post.ID, lastErr)
-		//}
+		logger.Info("successfully sent post")
 	}()
 
 	return nil

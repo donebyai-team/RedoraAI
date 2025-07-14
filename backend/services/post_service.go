@@ -3,6 +3,9 @@ package services
 import (
 	"context"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/shank318/doota/ai"
 	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/models"
@@ -12,6 +15,7 @@ import (
 type PostService interface {
 	CreatePost(ctx context.Context, post *models.Post, project *models.Project) (*models.Post, error)
 	DeletePost(ctx context.Context, postID string) error
+	SchedulePost(ctx context.Context, postID string, scheduleAt time.Time, projectID string) error
 }
 type postService struct {
 	aiClient *ai.Client
@@ -38,6 +42,7 @@ func (s *postService) CreatePost(ctx context.Context, post *models.Post, project
 	}
 
 	input := &ai.PostGenerateInput{
+		Id:          post.ID,
 		Project:     project,
 		PostSetting: &post.Metadata.Settings,
 	}
@@ -47,13 +52,9 @@ func (s *postService) CreatePost(ctx context.Context, post *models.Post, project
 		return nil, fmt.Errorf("generate post failed: %w", err)
 	}
 
-	// resp := struct {
-	// 	Title       string
-	// 	Description string
-	// }{
-	// 	Title:       "My First Reddit Post",
-	// 	Description: "This is a scheduled post using inline struct.",
-	// }
+	if strings.TrimSpace(resp.Title) == "" || strings.TrimSpace(resp.Description) == "" {
+		return nil, fmt.Errorf("generated post is invalid: title or description is empty")
+	}
 
 	settings := post.Metadata.Settings
 
@@ -68,7 +69,6 @@ func (s *postService) CreatePost(ctx context.Context, post *models.Post, project
 		existingPost.Metadata.History = append(existingPost.Metadata.History, historyEntry)
 		existingPost.Title = resp.Title
 		existingPost.Description = resp.Description
-		existingPost.Status = models.PostStatusPROCESSING
 		existingPost.ReferenceID = settings.ReferenceID
 
 		existingPost.Metadata.Settings = models.PostSettings{
@@ -100,6 +100,31 @@ func (s *postService) CreatePost(ctx context.Context, post *models.Post, project
 		return nil, fmt.Errorf("failed to create post: %w", err)
 	}
 	return newPost, nil
+}
+
+func (s *postService) SchedulePost(ctx context.Context, postID string, scheduleAt time.Time, expectedProjectID string) error {
+	post, err := s.db.GetPostByID(ctx, postID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch post: %w", err)
+	}
+
+	if post.ProjectID != expectedProjectID {
+		return fmt.Errorf("you do not have access to this post")
+	}
+
+	if post.Status == models.PostStatusSCHEDULED {
+		return fmt.Errorf("post is already scheduled")
+	}
+
+	if scheduleAt.Before(time.Now()) {
+		return fmt.Errorf("cannot schedule post in the past")
+	}
+
+	if err := s.db.SchedulePost(ctx, postID, scheduleAt); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *postService) DeletePost(ctx context.Context, postID string) error {

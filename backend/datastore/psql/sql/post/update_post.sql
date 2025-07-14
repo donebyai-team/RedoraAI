@@ -6,5 +6,6 @@ SET
     metadata = :metadata,
     reason = :reason,
     reference_id = :reference_id,
+    post_id = :post_id,
     updated_at = CURRENT_TIMESTAMP
 WHERE id = :id;

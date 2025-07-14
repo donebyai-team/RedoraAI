@@ -30,7 +30,12 @@ import { Source } from '@doota/pb/doota/core/v1/core_pb'
 import {routes} from "@doota/ui-core/routing";
 import {PostStatus} from "@/components/pages/PostCreationHub/Posts";
 
-const editableStatus = [PostStatus.CREATED, PostStatus.PROCESSING, PostStatus.SCHEDULED]
+const editableStatus = [PostStatus.CREATED, PostStatus.SCHEDULED]
+
+const getMinDateTimeLocal = () => {
+    const now = new Date()
+    return now.toISOString().slice(0, 16)
+}
 
 export default function PostEditor() {
     const router = useRouter()
@@ -303,7 +308,15 @@ export default function PostEditor() {
                                         </Collapsible>
 
                                         <Button variant="outline" onClick={handleRegenerate}
-                                                disabled={isPostApiCall || !isEditable}
+                                                disabled={
+                                                    isPostApiCall ||
+                                                    !isEditable ||
+                                                    !customTopic ||
+                                                    !selectedSubreddit ||
+                                                    !selectedGoal ||
+                                                    !selectedTone ||
+                                                    !postDetails
+                                                }
                                         >
                                             <Undo className="h-4 w-4 mr-2" /> Regenerate
                                         </Button>
@@ -370,6 +383,7 @@ export default function PostEditor() {
                                         <Label>Schedule Date & Time</Label>
                                         <Input
                                             type="datetime-local"
+                                            min={getMinDateTimeLocal()}
                                             value={scheduledDate}
                                             onChange={(e) => setScheduledDate(e.target.value)}
                                             className="w-full pr-10 text-sm appearance-none relative

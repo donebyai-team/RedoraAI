@@ -16,7 +16,6 @@ func init() {
 		"post/query_post_by_project.sql",
 		"post/schedule_post.sql",
 		"post/query_post_to_execute.sql",
-		"posts/set_post_processing_status.sql",
 		"post/delete_post_by_id.sql",
 	})
 }
@@ -65,6 +64,7 @@ func (r *Database) UpdatePost(ctx context.Context, post *models.Post) error {
 		"reason":       post.Reason,
 		"metadata":     post.Metadata,
 		"reference_id": post.ReferenceID,
+		"post_id":      post.PostID,
 	})
 	return err
 }
@@ -79,31 +79,6 @@ func (r *Database) GetPostsToExecute(ctx context.Context) ([]*models.Post, error
 	return getMany[models.Post](ctx, r, "post/query_post_to_execute.sql", map[string]any{
 		"status": models.PostStatusSCHEDULED,
 	})
-}
-
-func (r *Database) SetPostProcessingStatus(ctx context.Context, post *models.Post) error {
-	stmt := r.mustGetStmt("posts/set_post_processing_status.sql")
-	res, err := stmt.ExecContext(ctx, map[string]interface{}{
-		"id":      post.ID,
-		"post_id": post.PostID, // e.g., Reddit Post ID
-		"reason":  post.Reason,
-		"status":  post.Status,
-	})
-
-	if err != nil {
-		return fmt.Errorf("failed to update post status to PROCESSING: %w", err)
-	}
-
-	rowsAffected, err := res.RowsAffected()
-	if err != nil {
-		return fmt.Errorf("failed to get affected rows: %w", err)
-	}
-
-	if rowsAffected == 0 {
-		return fmt.Errorf("no rows updated — either post not found or status is not SCHEDULED")
-	}
-
-	return nil
 }
 
 func (r *Database) SchedulePost(ctx context.Context, postID string, scheduleAt time.Time) error {

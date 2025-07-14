@@ -24,12 +24,10 @@ export function useCreatePost() {
             const res = await portalClient.createPost(postData);
             dispatch(setPost(res));
             if(!isCreateNewPost)
-                toast.success(`Post ${isCreateNewPost ? 'created' : 'regenerated'} successfully!`);
+                toast.success(`Post ${isCreateNewPost ? '' : 'regenerated'} successfully!`);
 
             if (isCreateNewPost) {
-                setTimeout(() => {
-                    router.push(routes.new.postCreationHub.editor);
-                }, 300);
+                router.push(routes.new.postCreationHub.editor);
             }
 
             return res;

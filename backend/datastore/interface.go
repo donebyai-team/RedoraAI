@@ -168,7 +168,6 @@ type PostRepository interface {
 	GetPostsByProjectID(ctx context.Context, projectID string) ([]*models.AugmentedPost, error)
 	SchedulePost(ctx context.Context, postID string, scheduleAt time.Time) error
 	GetPostsToExecute(ctx context.Context) ([]*models.Post, error)
-	SetPostProcessingStatus(ctx context.Context, post *models.Post) error
 	DeletePostByID(ctx context.Context, postID string) error
 }
 

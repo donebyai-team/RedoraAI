@@ -7,7 +7,7 @@ import (
 
 //go:generate go-enum -f=$GOFILE
 
-// ENUM(CREATED, PROCESSING, SENT, FAILED, SCHEDULED)
+// ENUM(CREATED, SENT, FAILED, SCHEDULED)
 type PostStatus string
 
 type Post struct {
@@ -28,21 +28,21 @@ type Post struct {
 }
 
 type AugmentedPost struct {
-	ID          string                `db:"id"`
-	ProjectID   string                `db:"project_id"`
-	Title       string                `db:"title"`
-	Description string                `db:"description"`
-	SourceID    string                `db:"source_id"`
-	Source      Source                `db:"source"`
-	Status      LeadInteractionStatus `db:"status"`
-	Reason      string                `db:"reason"`
-	ReferenceID *string               `db:"reference_id"` // id of the insight
-	PostID      *string               `db:"post_id"`
-	ScheduleAt  *time.Time            `db:"schedule_at"`
-	CreatedAt   time.Time             `db:"created_at"`
-	UpdatedAt   *time.Time            `db:"updated_at"`
-	DeletedAt   *time.Time            `db:"deleted_at"`
-	Metadata    PostMetadata          `db:"metadata"`
+	ID          string       `db:"id"`
+	ProjectID   string       `db:"project_id"`
+	Title       string       `db:"title"`
+	Description string       `db:"description"`
+	SourceID    string       `db:"source_id"`
+	Source      Source       `db:"source"`
+	Status      PostStatus   `db:"status"`
+	Reason      string       `db:"reason"`
+	ReferenceID *string      `db:"reference_id"` // id of the insight
+	PostID      *string      `db:"post_id"`
+	ScheduleAt  *time.Time   `db:"schedule_at"`
+	CreatedAt   time.Time    `db:"created_at"`
+	UpdatedAt   *time.Time   `db:"updated_at"`
+	DeletedAt   *time.Time   `db:"deleted_at"`
+	Metadata    PostMetadata `db:"metadata"`
 }
 
 type PostMetadata struct {

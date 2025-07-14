@@ -328,12 +328,13 @@ func (c *Client) GetSourceCommunityRulesEvaluation(ctx context.Context, model mo
 }
 
 type PostGenerateInput struct {
+	Id          string               `json:"id"`
 	Project     *models.Project      `json:"project"`
 	PostSetting *models.PostSettings `json:"post"`
 }
 
 func (c *Client) GeneratePost(ctx context.Context, model models.LLMModel, input *PostGenerateInput, logger *zap.Logger) (*models.PostGenerationResponse, *models.LLMModelUsage, error) {
-	runID := fmt.Sprintf("postgen-%s-%s", strings.ToLower(strings.ReplaceAll(input.Project.OrganizationID, " ", "-")), uuid.New().String())
+	runID := input.Id
 	vars := GetPostGenerationVars(input.PostSetting)
 
 	llmModelToUse := c.defaultLLMModel

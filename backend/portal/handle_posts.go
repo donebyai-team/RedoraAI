@@ -3,16 +3,11 @@ package portal
 import (
 	"connectrpc.com/connect"
 	"context"
-	"database/sql"
-	"errors"
 	"fmt"
 	"github.com/shank318/doota/integrations/reddit"
 	"github.com/shank318/doota/models"
 	pbcore "github.com/shank318/doota/pb/doota/core/v1"
 	pbportal "github.com/shank318/doota/pb/doota/portal/v1"
-	"github.com/shank318/doota/validation"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -104,21 +99,10 @@ func (p *Portal) SchedulePost(ctx context.Context, c *connect.Request[pbcore.Sch
 		return nil, err
 	}
 
-	post, err := p.db.GetPostByID(ctx, c.Msg.Id)
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, status.New(codes.NotFound, "Post not found").Err()
-	}
-
-	//Validate payload and project ownership
-	err = validation.ValidateSchedulePost(c.Msg, post, project.ID)
-	if err != nil {
-		return nil, connect.NewError(connect.CodeInvalidArgument, err)
-	}
-
 	scheduleAt := c.Msg.GetScheduleAt().AsTime()
 
-	if err := p.db.SchedulePost(ctx, c.Msg.Id, scheduleAt); err != nil {
-		return nil, status.New(codes.Internal, "Failed to schedule post").Err()
+	if err := p.postService.SchedulePost(ctx, c.Msg.Id, scheduleAt, project.ID); err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("unable to schedule post: %w", err))
 	}
 
 	return connect.NewResponse(&emptypb.Empty{}), nil

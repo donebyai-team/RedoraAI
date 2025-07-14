@@ -47,7 +47,7 @@ func NewSimpleRedditInteractions(db datastore.Repository, logger *zap.Logger) Au
 	return &redditInteractions{db: db, logger: logger}
 }
 
-func (r redditInteractions) ProcessScheduledPost(ctx context.Context, post *models.Post) error {
+func (r redditInteractions) ProcessScheduledPost(ctx context.Context, post *models.Post) (err error) {
 	r.logger.Info("processing scheduled post", zap.String("id", post.ID))
 
 	project, err := r.db.GetProject(ctx, post.ProjectID)
@@ -62,65 +62,50 @@ func (r redditInteractions) ProcessScheduledPost(ctx context.Context, post *mode
 		return err
 	}
 
-	updatedPost := &models.Post{
-		ID: post.ID,
-	}
+	defer func() {
+		if updateErr := r.db.UpdatePost(ctx, post); updateErr != nil {
+			r.logger.Error("failed to update post in defer", zap.String("id", post.ID), zap.Error(updateErr))
+			if err == nil {
+				err = fmt.Errorf("post update failed: %w", updateErr)
+			}
+		}
+	}()
 
-	if !project.IsActive {
-		updatedPost.Status = models.PostStatusFAILED
-		updatedPost.Reason = "Project is not active"
-		return r.db.SetPostProcessingStatus(ctx, updatedPost)
-	}
-
-	if source == nil || strings.TrimSpace(source.Name) == "" {
-		updatedPost.Status = models.PostStatusFAILED
-		updatedPost.Reason = "Invalid source"
-		return r.db.SetPostProcessingStatus(ctx, updatedPost)
-	}
+	//if !project.IsActive {
+	//	post.Status = models.PostStatusFAILED
+	//	post.Reason = "Project is not active"
+	//	return nil
+	//}
 
 	redditClient, err := r.redditOauthClient.GetOrCreate(ctx, project.OrganizationID, true)
 	if err != nil {
 		r.logger.Error("failed to get Reddit client", zap.String("id", post.ID), zap.Error(err))
-		updatedPost.Status = models.PostStatusFAILED
-		updatedPost.Reason = err.Error()
-		_ = r.db.SetPostProcessingStatus(ctx, updatedPost)
-
+		post.Status = models.PostStatusFAILED
+		post.Reason = err.Error()
 		return err
 	}
 
 	subredditName := utils.CleanSubredditName(source.Name)
 	if err := redditClient.JoinSubreddit(ctx, subredditName); err != nil {
-		updatedPost.Status = models.PostStatusFAILED
-		updatedPost.Reason = fmt.Sprintf("failed to join subreddit: %v", err)
-		return r.db.SetPostProcessingStatus(ctx, updatedPost)
+		post.Status = models.PostStatusFAILED
+		post.Reason = fmt.Sprintf("failed to join subreddit: %v", err)
+		return err
 	}
 
-	title := strings.TrimSpace(post.Title)
-	description := strings.TrimSpace(post.Description)
-
-	if title == "" || description == "" {
-		updatedPost.Status = models.PostStatusFAILED
-		updatedPost.Reason = "Post title or description is empty"
-		return r.db.SetPostProcessingStatus(ctx, updatedPost)
-	}
+	title := post.Title
+	description := post.Description
 
 	redditPost, err := redditClient.CreatePost(ctx, subredditName, title, description)
 	if err != nil {
 		r.logger.Error("failed to post to Reddit", zap.String("id", post.ID), zap.Error(err))
-		updatedPost.Status = models.PostStatusFAILED
-		updatedPost.Reason = fmt.Sprintf("Reddit post failed: %v", err)
-		return r.db.SetPostProcessingStatus(ctx, updatedPost)
-	}
-
-	// Mark post as SENT
-	updatedPost.PostID = &redditPost.ID
-	updatedPost.Status = models.PostStatusSENT
-	updatedPost.Reason = ""
-
-	if err := r.db.SetPostProcessingStatus(ctx, updatedPost); err != nil {
-		r.logger.Error("failed to update post after posting to Reddit", zap.String("id", post.ID), zap.Error(err))
+		post.Status = models.PostStatusFAILED
+		post.Reason = fmt.Sprintf("Reddit post failed: %v", err)
 		return err
 	}
+
+	post.PostID = &redditPost.ID
+	post.Status = models.PostStatusSENT
+	post.Reason = ""
 
 	r.logger.Info("successfully posted to Reddit",
 		zap.String("id", post.ID),
