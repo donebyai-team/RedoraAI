@@ -116,7 +116,7 @@ func (s *postService) SchedulePost(ctx context.Context, postID string, scheduleA
 		return fmt.Errorf("post is already scheduled")
 	}
 
-	if scheduleAt.Before(time.Now()) {
+	if scheduleAt.Before(time.Now().Add(-15 * time.Second)) {
 		return fmt.Errorf("cannot schedule post in the past")
 	}
 

@@ -12,7 +12,7 @@ CREATE TABLE posts
     reason TEXT,
     reference_id uuid, -- Insight table ID optional
     post_id varchar(255), -- Post ID in the source system (e.g., Reddit, Twitter)
-    schedule_at timestamp,
+    schedule_at TIMESTAMPTZ,
     created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at  timestamp,
     deleted_at  timestamp

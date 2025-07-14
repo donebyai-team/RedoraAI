@@ -29,6 +29,7 @@ import { PostInsight } from '@doota/pb/doota/core/v1/insight_pb'
 import { Source } from '@doota/pb/doota/core/v1/core_pb'
 import {routes} from "@doota/ui-core/routing";
 import {PostStatus} from "@/components/pages/PostCreationHub/Posts";
+import {setPost} from "@/store/PostCreation/PostCreationSlice";
 
 const editableStatus = [PostStatus.CREATED, PostStatus.SCHEDULED]
 
@@ -39,6 +40,7 @@ const getMinDateTimeLocal = () => {
 
 export default function PostEditor() {
     const router = useRouter()
+    const dispatch = useAppDispatch();
     const { createPost } = useCreatePost()
     const { post } = useAppSelector(state => state.postCreation)
 
@@ -74,6 +76,10 @@ export default function PostEditor() {
         ])
             .catch((err) => console.error('Error fetching data:', err))
             .finally(() => setIsLoading(false));
+
+        return () => {
+            dispatch(setPost(null));
+        }
     }, []);
 
     useEffect(() => {

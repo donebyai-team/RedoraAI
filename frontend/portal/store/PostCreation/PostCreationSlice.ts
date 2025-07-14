@@ -24,9 +24,11 @@ const postSlice = createSlice({
     initialState,
     reducers: {
         // Accept full Post (with $typeName) and strip it for state
-        setPost: (state, action: PayloadAction<Post>) => {
-            const { $typeName, ...rest } = action.payload;
-            state.post = rest;
+        setPost: (state, action: PayloadAction<Post | null>) => {
+            if (action.payload) {
+                const { ...rest } = action.payload;
+                state.post = rest;
+            }
         },
     },
 });

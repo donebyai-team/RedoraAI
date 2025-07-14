@@ -1,9 +1,10 @@
 package portal
 
 import (
-	"connectrpc.com/connect"
 	"context"
 	"fmt"
+
+	"connectrpc.com/connect"
 	"github.com/shank318/doota/integrations/reddit"
 	"github.com/shank318/doota/models"
 	pbcore "github.com/shank318/doota/pb/doota/core/v1"
