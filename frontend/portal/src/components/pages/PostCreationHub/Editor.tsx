@@ -146,6 +146,12 @@ export default function PostEditor() {
     const handleSelectFromHistory = (item: PostRegenerationHistory) => {
         setTitle(item.title || '')
         setContent(item.description || '')
+        setSelectedInsight(item.postSettings?.referenceId || '')
+        setCustomTopic(item.postSettings?.topic || '')
+        setPostDetails(item.postSettings?.context || '')
+        setSelectedSubreddit(post?.source || '')
+        setSelectedGoal(item.postSettings?.goal || '')
+        setSelectedTone(item.postSettings?.tone || '')
         setShowHistory(false)
     }
 
@@ -461,7 +467,7 @@ export default function PostEditor() {
                                             disabled={isPostApiCall || !isEditable}
                                         >
                                             <Calendar className="h-4 w-4 mr-2" />
-                                            {scheduledDate ? "Update Post" :  "Schedule Post"}
+                                            {post?.scheduledAt ? "Update Post" :  "Schedule Post"}
                                         </Button>
                                     </CardContent>
                                 </Card>
