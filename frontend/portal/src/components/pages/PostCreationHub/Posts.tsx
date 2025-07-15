@@ -7,17 +7,18 @@ import {
 import {
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from "@/components/ui/table";
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import {routes} from "@doota/ui-core/routing";
-import { Post, PostDetail} from "@doota/pb/doota/core/v1/post_pb";
-import {portalClient} from "@/services/grpc";
-import {useAppDispatch} from "@/store/hooks";
+import { routes } from "@doota/ui-core/routing";
+import { Post, PostDetail } from "@doota/pb/doota/core/v1/post_pb";
+import { portalClient } from "@/services/grpc";
+import { useAppDispatch } from "@/store/hooks";
 import { setPost } from "@/store/PostCreation/PostCreationSlice";
 import toast from "react-hot-toast";
+import { getConnectError } from "@/utils/error";
 
 export enum PostStatus {
     CREATED = "CREATED",
@@ -93,7 +94,7 @@ export default function Posts() {
 
 
     const handleEditPost = (post: Post | undefined) => {
-        if(post) {
+        if (post) {
             dispatch(setPost(post));
             router.push(routes.new.postCreationHub.editor);
         }
@@ -106,8 +107,7 @@ export default function Posts() {
             setIsPostApiCall(p => !p);
         }
         catch (err: any) {
-            const message = err?.response?.data?.message || err.message || "Something went wrong";
-            toast.error(message);
+            toast.error(getConnectError(err));
         }
     }
 
@@ -115,112 +115,136 @@ export default function Posts() {
         <>
             {
                 isLoading ? (
-                        <div className="flex justify-center items-center h-screen">
-                            <Loader2 className="animate-spin" size={35} />
-                        </div>
-                    )
-                    : (
-                    <div className="p-6">
-                        <Card>
-                            <CardContent className="p-0">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Status</TableHead>
-                                            <TableHead>Title</TableHead>
-                                            <TableHead>Subreddit</TableHead>
-                                            <TableHead>Created</TableHead>
-                                            <TableHead>Scheduled/Posted</TableHead>
-                                            {/*<TableHead>Engagement</TableHead>*/}
-                                            <TableHead>Actions</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {posts.map((post) => (
-                                            <TableRow key={post.post?.id}>
-                                                <TableCell>
-                                                    <div className="flex items-center gap-2">
-                                                        {getStatusIcon(post.post?.status)}
-                                                        <Badge
-                                                            className={`${getStatusColor(post.post?.status)} hover:shadow-none`}
-                                                        >
-                                                            {post.post?.status}
-                                                        </Badge>
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell className="max-w-xs">
-                                                    <div>
-                                                        <p className="font-medium truncate">{post.post?.topic}</p>
-                                                        {post.post?.status === PostStatus.FAILED && post.post.reason && (
-                                                            <p className="text-xs text-red-600 mt-1">{post.post.reason}</p>
-                                                        )}
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell>r/{post.sourceName}</TableCell>
-                                                <TableCell className="text-sm">{formatProtoTimestampUTC(post.post?.createdAt)}</TableCell>
-                                                <TableCell>
-                                                    <div className="text-sm">
-                                                        {post.post?.status === PostStatus.SENT ? (
-                                                            <span>Posted: {formatProtoTimestampUTC(post.post.scheduledAt)}</span>
-                                                        ) : post.post?.status === PostStatus.SCHEDULED ? (
-                                                            <span>Scheduled: {formatProtoTimestampUTC(post.post.scheduledAt)}</span>
-                                                        ) : (
-                                                            <span className="text-gray-400">-</span>
-                                                        )}
-                                                    </div>
-                                                </TableCell>
-                                                {/*<TableCell>*/}
-                                                {/*    {post.engagement ? (*/}
-                                                {/*        <div className="flex gap-3 text-sm">*/}
-                                                {/*            <div className="flex items-center gap-1">*/}
-                                                {/*                <Heart className="h-3 w-3" />*/}
-                                                {/*                {post.engagement.upvotes}*/}
-                                                {/*            </div>*/}
-                                                {/*            <div className="flex items-center gap-1">*/}
-                                                {/*                <MessageSquare className="h-3 w-3" />*/}
-                                                {/*                {post.engagement.comments}*/}
-                                                {/*            </div>*/}
-                                                {/*        </div>*/}
-                                                {/*    ) : (*/}
-                                                {/*        <span className="text-gray-400 text-sm">-</span>*/}
-                                                {/*    )}*/}
-                                                {/*</TableCell>*/}
-                                                <TableCell>
-                                                    <div className="flex gap-1">
-                                                        {/*{post.post?.status === PostStatus.FAILED && (*/}
-                                                        {/*    <Button variant="outline" size="sm">*/}
-                                                        {/*        <RefreshCw className="h-3 w-3" />*/}
-                                                        {/*    </Button>*/}
-                                                        {/*)}*/}
-                                                        {post.post?.status as PostStatus && (
-                                                            <Button variant="outline" size="sm" onClick={() => handleEditPost(post.post)}>
-                                                                <Edit3 className="h-3 w-3" />
-                                                            </Button>
-                                                        )}
-                                                        {[PostStatus.SENT].includes(post.post?.status as PostStatus) && (
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                onClick={() => window.open(post.postUrl, '_blank')}
-                                                            >
-                                                                <Eye className="h-3 w-3" />
-                                                            </Button>
-                                                        )}
-                                                        {([PostStatus.SCHEDULED, PostStatus.CREATED].includes(post.post?.status as PostStatus)) && (
-                                                            <Button variant="outline" size="sm" onClick={() => handleDeletePost(post.post)}>
-                                                                <Trash2 className="h-4 w-4 text-destructive" />
-                                                            </Button>
-                                                        )}
-                                                    </div>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </CardContent>
-                        </Card>
+                    <div className="flex justify-center items-center h-screen">
+                        <Loader2 className="animate-spin" size={35} />
                     </div>
                 )
+                    : (
+                        <div className="p-6">
+                            <div className="mb-6">
+                                <div>
+                                    <h1 className="text-2xl font-bold">Posts Management</h1>
+                                    <p className="text-muted-foreground">Manage your drafts, scheduled posts, and view engagement</p>
+                                </div>
+                            </div>
+                            {posts.length === 0 ? (
+                                <Card>
+                                    <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                                        <div className="mb-4">
+                                            <Edit3 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                                            <h3 className="text-lg font-medium mb-2">No posts created yet</h3>
+                                            <p className="text-muted-foreground max-w-md">
+                                                Get started by creating your first AI-generated Reddit post. You can use insights or create custom posts.
+                                            </p>
+                                        </div>
+                                        <Button onClick={() => router.push("/post-creation-hub/create")}>
+                                            <Edit3 className="h-4 w-4 mr-2" />
+                                            Create Your First Post
+                                        </Button>
+                                    </CardContent>
+                                </Card>
+                            ) : (
+                                <Card>
+                                    <CardContent className="p-0">
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead>Status</TableHead>
+                                                    <TableHead>Title</TableHead>
+                                                    <TableHead>Subreddit</TableHead>
+                                                    <TableHead>Created</TableHead>
+                                                    <TableHead>Scheduled/Posted</TableHead>
+                                                    {/*<TableHead>Engagement</TableHead>*/}
+                                                    <TableHead>Actions</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {posts.map((post) => (
+                                                    <TableRow key={post.post?.id}>
+                                                        <TableCell>
+                                                            <div className="flex items-center gap-2">
+                                                                {getStatusIcon(post.post?.status)}
+                                                                <Badge
+                                                                    className={`${getStatusColor(post.post?.status)} hover:shadow-none`}
+                                                                >
+                                                                    {post.post?.status}
+                                                                </Badge>
+                                                            </div>
+                                                        </TableCell>
+                                                        <TableCell className="max-w-xs">
+                                                            <div>
+                                                                <p className="font-medium truncate">{post.post?.topic}</p>
+                                                                {post.post?.status === PostStatus.FAILED && post.post.reason && (
+                                                                    <p className="text-xs text-red-600 mt-1">{post.post.reason}</p>
+                                                                )}
+                                                            </div>
+                                                        </TableCell>
+                                                        <TableCell>r/{post.sourceName}</TableCell>
+                                                        <TableCell className="text-sm">{formatProtoTimestampUTC(post.post?.createdAt)}</TableCell>
+                                                        <TableCell>
+                                                            <div className="text-sm">
+                                                                {post.post?.status === PostStatus.SENT ? (
+                                                                    <span>Posted: {formatProtoTimestampUTC(post.post.scheduledAt)}</span>
+                                                                ) : post.post?.status === PostStatus.SCHEDULED ? (
+                                                                    <span>Scheduled: {formatProtoTimestampUTC(post.post.scheduledAt)}</span>
+                                                                ) : (
+                                                                    <span className="text-gray-400">-</span>
+                                                                )}
+                                                            </div>
+                                                        </TableCell>
+                                                        {/*<TableCell>*/}
+                                                        {/*    {post.engagement ? (*/}
+                                                        {/*        <div className="flex gap-3 text-sm">*/}
+                                                        {/*            <div className="flex items-center gap-1">*/}
+                                                        {/*                <Heart className="h-3 w-3" />*/}
+                                                        {/*                {post.engagement.upvotes}*/}
+                                                        {/*            </div>*/}
+                                                        {/*            <div className="flex items-center gap-1">*/}
+                                                        {/*                <MessageSquare className="h-3 w-3" />*/}
+                                                        {/*                {post.engagement.comments}*/}
+                                                        {/*            </div>*/}
+                                                        {/*        </div>*/}
+                                                        {/*    ) : (*/}
+                                                        {/*        <span className="text-gray-400 text-sm">-</span>*/}
+                                                        {/*    )}*/}
+                                                        {/*</TableCell>*/}
+                                                        <TableCell>
+                                                            <div className="flex gap-1">
+                                                                {/*{post.post?.status === PostStatus.FAILED && (*/}
+                                                                {/*    <Button variant="outline" size="sm">*/}
+                                                                {/*        <RefreshCw className="h-3 w-3" />*/}
+                                                                {/*    </Button>*/}
+                                                                {/*)}*/}
+                                                                {post.post?.status as PostStatus && (
+                                                                    <Button variant="outline" size="sm" onClick={() => handleEditPost(post.post)}>
+                                                                        <Edit3 className="h-3 w-3" />
+                                                                    </Button>
+                                                                )}
+                                                                {[PostStatus.SENT].includes(post.post?.status as PostStatus) && (
+                                                                    <Button
+                                                                        variant="outline"
+                                                                        size="sm"
+                                                                        onClick={() => window.open(post.postUrl, '_blank')}
+                                                                    >
+                                                                        <Eye className="h-3 w-3" />
+                                                                    </Button>
+                                                                )}
+                                                                {([PostStatus.SCHEDULED, PostStatus.CREATED].includes(post.post?.status as PostStatus)) && (
+                                                                    <Button variant="outline" size="sm" onClick={() => handleDeletePost(post.post)}>
+                                                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                                                    </Button>
+                                                                )}
+                                                            </div>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </CardContent>
+                                </Card>
+                            )}
+                        </div>
+                    )
             }
         </>
     );
