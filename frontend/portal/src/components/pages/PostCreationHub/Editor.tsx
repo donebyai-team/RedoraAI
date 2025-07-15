@@ -30,6 +30,7 @@ import { Source } from '@doota/pb/doota/core/v1/core_pb'
 import {routes} from "@doota/ui-core/routing";
 import {PostStatus} from "@/components/pages/PostCreationHub/Posts";
 import {setPost} from "@/store/PostCreation/PostCreationSlice";
+import {getConnectError} from "@/utils/error";
 
 const editableStatus = [PostStatus.CREATED, PostStatus.SCHEDULED]
 
@@ -145,7 +146,7 @@ export default function PostEditor() {
             toast.success('Post scheduled successfully!')
             router.push(routes.new.postCreationHub.posts)
         } catch (err: any) {
-            toast.error(err?.message || 'Failed to schedule post')
+            toast.error(getConnectError(err));
         } finally {
             setTimeout(() => setIsPostApiCall(false),1000)
         }
@@ -232,12 +233,12 @@ export default function PostEditor() {
                                         )}
 
                                         <div>
-                                            <Label>Title</Label>
+                                            <Label className='mb-2.5 block'>Title</Label>
                                             <Input disabled={!isEditable} value={title} onChange={e => setTitle(e.target.value)} />
                                         </div>
 
                                         <div>
-                                            <Label>Content</Label>
+                                            <Label className='mb-2.5 block'>Content</Label>
                                             <Textarea
                                                 disabled={!isEditable}
                                                 className="min-h-[400px]"
@@ -264,7 +265,7 @@ export default function PostEditor() {
                                                 <div className="mt-4 space-y-4 bg-gray-50 border rounded-lg p-4">
                                                     {/*Suggested topic*/}
                                                     <div>
-                                                        <Label htmlFor="insight-select">Suggested Topics from Insights (Optional)</Label>
+                                                        <Label htmlFor="insight-select" className='mb-2.5 block'>Suggested Topics from Insights (Optional)</Label>
                                                         <Select onValueChange={handleInsightSelect} disabled={!isEditable}>
                                                             <SelectTrigger>
                                                                 <SelectValue placeholder="Select a suggested topic or leave blank to add your own..." />
@@ -286,7 +287,7 @@ export default function PostEditor() {
 
                                                     {/* Topic Input */}
                                                     <div>
-                                                        <Label htmlFor="topic">Topic</Label>
+                                                        <Label htmlFor="topic" className='mb-2.5 block'>Topic</Label>
                                                         <Textarea
                                                             id="topic"
                                                             value={customTopic}
@@ -299,13 +300,13 @@ export default function PostEditor() {
 
                                                     {/* Post Details */}
                                                     <div>
-                                                        <Label htmlFor="details">Post Details & Context</Label>
+                                                        <Label htmlFor="details" className='mb-2.5 block'>Post Details & Context</Label>
                                                         <Textarea
                                                             id="details"
                                                             value={postDetails}
                                                             onChange={(e) => setPostDetails(e.target.value)}
                                                             placeholder="Add specific details, context, examples, or requirements for your post..."
-                                                            className="min-h-[150px] text-base"
+                                                            className="min-h-[250px] text-base"
                                                             disabled={!isEditable}
                                                         />
                                                     </div>
@@ -324,7 +325,8 @@ export default function PostEditor() {
                                                     !postDetails
                                                 }
                                         >
-                                            <Undo className="h-4 w-4 mr-2" /> Regenerate
+                                            <Undo className="h-4 w-4 mr-2" />
+                                            {isPostApiCall ? 'Regenerating...' : 'Regenerate' }
                                         </Button>
                                     </CardContent>
                                 </Card>
@@ -338,7 +340,7 @@ export default function PostEditor() {
                                     </CardHeader>
                                     <CardContent className="space-y-4">
                                         <div>
-                                            <Label>Subreddit</Label>
+                                            <Label className='mb-2.5 block'>Subreddit</Label>
                                             <Select value={selectedSubreddit} onValueChange={setSelectedSubreddit}
                                                     disabled={!isEditable}
                                             >
@@ -352,7 +354,7 @@ export default function PostEditor() {
                                         </div>
 
                                         <div>
-                                            <Label>Goal</Label>
+                                            <Label className='mb-2.5 block'>Goal</Label>
                                             <Select value={selectedGoal} onValueChange={setSelectedGoal}
                                                     disabled={!isEditable}
                                             >
@@ -366,7 +368,7 @@ export default function PostEditor() {
                                         </div>
 
                                         <div>
-                                            <Label>Tone</Label>
+                                            <Label className='mb-2.5 block'>Tone</Label>
                                             <Select value={selectedTone} onValueChange={setSelectedTone}
                                                     disabled={!isEditable}
                                             >

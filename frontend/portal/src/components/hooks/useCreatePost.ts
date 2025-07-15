@@ -7,6 +7,7 @@ import toast from "react-hot-toast";
 import { useClientsContext } from "@doota/ui-core/context/ClientContext";
 import { setPost } from "@/store/PostCreation/PostCreationSlice";
 import {routes} from "@doota/ui-core/routing";
+import {getConnectError} from "@/utils/error";
 
 /**
  * Hook to create a new post and update Redux state.
@@ -32,8 +33,7 @@ export function useCreatePost() {
 
             return res;
         } catch (err: any) {
-            const message = err?.response?.data?.message || err.message || "Something went wrong";
-            toast.error(message);
+            toast.error(getConnectError(err));
             return undefined;
         }
     };

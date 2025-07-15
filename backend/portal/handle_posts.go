@@ -45,8 +45,9 @@ func (p *Portal) CreatePost(ctx context.Context, c *connect.Request[pbcore.PostS
 	}
 
 	createdPost, err := p.postService.CreatePost(ctx, newPost, project)
+
 	if err != nil {
-		return nil, err
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("%w", err))
 	}
 
 	return connect.NewResponse(new(pbcore.Post).FromModel(createdPost)), nil

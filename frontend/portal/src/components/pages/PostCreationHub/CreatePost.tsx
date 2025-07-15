@@ -66,6 +66,19 @@ export default function CreatePost() {
         setIsPostApiCall(false)
     }
 
+    const handleInsightChange = (value: string) => {
+        setSelectedInsight(value)
+
+        const selected = insights.find(insight => insight.id === value)
+        if (selected) {
+            setCustomTopic(selected.topic)
+            setPostDetails(selected.highlights)
+        } else {
+            setCustomTopic('')
+            setPostDetails('')
+        }
+    }
+
     return (
         <div className='p-6 ml-[10%] mr-[10%]'>
             <h1 className='text-2xl font-bold mb-1'>Create New Post</h1>
@@ -77,10 +90,10 @@ export default function CreatePost() {
                 <CardContent className='p-6 space-y-6'>
                     {/* Insight Suggestions */}
                     <div>
-                        <Label className='mb-1 block'>
+                        <Label className='mb-2.5 block'>
                             Suggested Topics from Insights (Optional)
                         </Label>
-                        <Select onValueChange={setSelectedInsight} value={selectedInsight}>
+                        <Select onValueChange={handleInsightChange} value={selectedInsight}>
                             <SelectTrigger>
                                 <SelectValue placeholder='Select a suggested topic or leave blank to add your own...' />
                             </SelectTrigger>
@@ -91,7 +104,7 @@ export default function CreatePost() {
                                             <Badge variant='secondary' className='text-xs'>
                                                 {insight.relevancyScore}%
                                             </Badge>
-                                            <span className='truncate max-w-[300px] text-sm'>
+                                            <span className='truncate text-sm'>
                                                 {insight.topic}
                                             </span>
                                         </div>
@@ -103,7 +116,7 @@ export default function CreatePost() {
 
                     {/* Topic */}
                     <div>
-                        <Label htmlFor='topic'>Topic</Label>
+                        <Label className='mb-2.5 block' htmlFor='topic'>Topic</Label>
                         <Textarea
                             id='topic'
                             value={customTopic}
@@ -115,20 +128,20 @@ export default function CreatePost() {
 
                     {/* Post Details */}
                     <div>
-                        <Label htmlFor='details'>Post Details & Context</Label>
+                        <Label htmlFor='details' className='mb-2.5 block'>Post Details & Context</Label>
                         <Textarea
                             id='details'
                             value={postDetails}
                             onChange={e => setPostDetails(e.target.value)}
                             placeholder='Add specific details, context, examples, or requirements for your post...'
-                            className='min-h-[150px] text-base'
+                            className='min-h-[250px] text-base'
                         />
                     </div>
 
                     {/* Options */}
                     <div className='grid grid-cols-1 sm:grid-cols-3 gap-4'>
                         <div>
-                            <Label className='mb-1 block'>Target Subreddit</Label>
+                            <Label className='mb-2.5 block'>Target Subreddit</Label>
                             <Select value={selectedSubreddit} onValueChange={setSelectedSubreddit}>
                                 <SelectTrigger>
                                     <SelectValue placeholder='Select subreddit' />
@@ -144,7 +157,7 @@ export default function CreatePost() {
                         </div>
 
                         <div>
-                            <Label className='mb-1 block'>Post Goal</Label>
+                            <Label className='mb-2.5 block'>Post Goal</Label>
                             <Select value={selectedGoal} onValueChange={setSelectedGoal}>
                                 <SelectTrigger>
                                     <SelectValue placeholder='Select goal' />
@@ -160,7 +173,7 @@ export default function CreatePost() {
                         </div>
 
                         <div>
-                            <Label className='mb-1 block'>Tone</Label>
+                            <Label className='mb-2.5 block'>Tone</Label>
                             <Select value={selectedTone} onValueChange={setSelectedTone}>
                                 <SelectTrigger>
                                     <SelectValue placeholder='Select tone' />
@@ -191,7 +204,7 @@ export default function CreatePost() {
                             className='px-8 text-base'
                         >
                             <Wand2 className='h-4 w-4 mr-2' />
-                            Generate Post with AI
+                            {isPostApiCall ? 'Generating post…' : 'Generate Post with AI'}
                         </Button>
                     </div>
                 </CardContent>
