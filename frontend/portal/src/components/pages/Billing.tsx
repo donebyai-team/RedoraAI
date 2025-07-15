@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { CreditCard, Calendar, Star, Crown, Zap, Check } from 'lucide-react'
+import { CreditCard, Calendar, Star, Crown, Zap, Check, ShieldCheck, Handshake } from 'lucide-react'
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader'
 import { useAuth } from '@doota/ui-core/hooks/useAuth'
 import { SubscriptionPlanID, SubscriptionStatus } from '@doota/pb/doota/core/v1/core_pb'
@@ -52,12 +52,14 @@ const plans: PlanInfo[] = [
         description: '7-day trial of Founder plan',
         icon: <Star className='h-5 w-5' />,
         features: [
-            '5 Tracked Keywords',
-            '5 Monitored Subreddits',
+            '7 Tracked Keywords',
+            '7 Monitored Subreddits',
             'Up to 25 highly relevant posts per day',
-            'Comment and DM suggestions',
-            'Up to 25 automated comments per day',
+            'Post Creation: Add or schedule 5 Reddit posts/month',
+            'AI-suggested Comments (manual only)',
             'Up to 25 automated DMs per day',
+            'ChatGPT Scoring for Relevancy',
+            'New content ideas from reddit conversations',
             'Real-time Alerts (In-app only)',
             'Basic Analytics'
         ]
@@ -70,33 +72,58 @@ const plans: PlanInfo[] = [
         description: 'For indie founders doing cold outreach',
         icon: <Crown className='h-5 w-5' />,
         features: [
-            '5 Tracked Keywords',
-            '5 Monitored Subreddits',
+            '7 Tracked Keywords',
+            '7 Monitored Subreddits',
             'Up to 25 highly relevant posts per day',
-            'Comment and DM suggestions',
-            'Up to 25 automated comments per day',
+            'Post Creation: Add or schedule 5 Reddit posts/month',
+            'AI-suggested Comments (manual only)',
             'Up to 25 automated DMs per day',
+            'ChatGPT Scoring for Relevancy',
+            'Weekly Trends & content ideas from reddit conversations',
             'Real-time Alerts (In-app only)',
             'Basic Analytics'
         ],
         popular: true
     },
+    // {
+    //     id: SubscriptionPlanID.SUBSCRIPTION_PLAN_PRO,
+    //     name: "Pro",
+    //     price: '$99',
+    //     interval: 'per month',
+    //     description: 'For sales & growth teams',
+    //     icon: <Zap className='h-5 w-5' />,
+    //     features: [
+    //         'Unlimited Keywords',
+    //         'Unlimited Subreddits',
+    //         'Automated DMs & Comments',
+    //         'Reddit Post Creation via AI trained on brand voice',
+    //         'Multiple Reddit Accounts Support',
+    //         'Weekly Trends & Topical Authority Reports',
+    //         'LLM Ranking for Outreach Prioritization',
+    //         'Sentiment Analysis + Thought Leadership Strategy',
+    //         'Slack or Email Support',
+    //         'CRM-ready exports',
+    //     ]
+    // },
     {
-        id: SubscriptionPlanID.SUBSCRIPTION_PLAN_PRO,
-        name: "Pro",
-        price: '$99',
-        interval: 'per month',
-        description: 'For sales & growth teams',
-        icon: <Zap className='h-5 w-5' />,
+        id: SubscriptionPlanID.SUBSCRIPTION_PLAN_ENTERPRISE,
+        name: "Done-For-You Plan",
+        price: 'Custom',
+        interval: '',
+        description: 'Redora team handles Reddit strategy, growth, and outreach for you',
+        icon: <Handshake className='h-5 w-5' />,
         features: [
-            '20 Tracked Keywords',
-            '20 Monitored Subreddits',
-            'Up to 50 highly relevant posts per day',
-            'Comment and DM suggestions',
-            'Up to 50 automated comments per day',
-            'Up to 50 automated DMs per day',
-            'Real-time Alerts (Slack/Email)',
-            'Priority Support (Email)'
+            'Reddit account warmups to avoid suspension',
+            'Unlimited Keywords',
+            'Unlimited Subreddits',
+            'Automated DMs & Comments',
+            'Reddit Post Creation via AI trained on brand voice',
+            'Multiple Reddit Accounts Support',
+            'Weekly Trends & Topical Authority Reports',
+            'LLM Ranking for Outreach Prioritization',
+            'Sentiment Analysis + Thought Leadership Strategy',
+            'Slack or Email Support',
+            'CRM-ready exports',
         ]
     }
 ]
@@ -463,7 +490,7 @@ export default function Billing() {
                                                 </div>
                                             ))}
                                         </div>
-                                        {subscription.plan !== plan.id && subscription.id ? (
+                                        {subscription.plan !== plan.id && subscription.id && plan.id != SubscriptionPlanID.SUBSCRIPTION_PLAN_ENTERPRISE ? (
                                             <AlertDialog>
                                                 <AlertDialogTrigger asChild>
                                                     <Button
@@ -497,21 +524,30 @@ export default function Billing() {
                                                 </AlertDialogContent>
                                             </AlertDialog>
                                         ) : (
-                                            <Button
-                                                onClick={() => handleUpgradePlan(plan.id)}
-                                                className={`w-full ${subscription.plan === plan.id
-                                                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                                                    : plan.popular
-                                                        ? 'bg-gradient-to-r from-primary to-purple-500 hover:from-primary/90 hover:to-purple-500/90'
-                                                        : ''
-                                                    }`}
-                                                variant={
-                                                    plan.popular && subscription.plan !== plan.id ? 'default' : 'outline'
-                                                }
-                                                disabled={subscription.plan === plan.id || plan.id === SubscriptionPlanID.SUBSCRIPTION_PLAN_FREE}
-                                            >
-                                                {subscription.plan === plan.id ? 'Current Plan' : `Upgrade to ${plan.name}`}
-                                            </Button>
+                                            plan.id == SubscriptionPlanID.SUBSCRIPTION_PLAN_ENTERPRISE ? (
+                                                <Button
+                                                    className="w-full bg-gradient-to-r from-primary to-purple-500 text-white hover:from-primary/90 hover:to-purple-500/90"
+                                                    onClick={() => window.open("https://calendly.com/adarsh-ilu/30min", "_blank")}
+                                                >
+                                                    Talk to Sales
+                                                </Button>
+                                            ) : (
+                                                <Button
+                                                    onClick={() => handleUpgradePlan(plan.id)}
+                                                    className={`w-full ${subscription.plan === plan.id
+                                                        ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                                                        : plan.popular
+                                                            ? 'bg-gradient-to-r from-primary to-purple-500 hover:from-primary/90 hover:to-purple-500/90'
+                                                            : ''
+                                                        }`}
+                                                    variant={
+                                                        plan.popular && subscription.plan !== plan.id ? 'default' : 'outline'
+                                                    }
+                                                    disabled={subscription.plan === plan.id || plan.id === SubscriptionPlanID.SUBSCRIPTION_PLAN_FREE}
+                                                >
+                                                    {subscription.plan === plan.id ? 'Current Plan' : `Upgrade to ${plan.name}`}
+                                                </Button>
+                                            )
                                         )}
 
                                     </CardContent>

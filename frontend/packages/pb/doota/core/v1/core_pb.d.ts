@@ -851,6 +851,11 @@ export enum SubscriptionPlanID {
    * @generated from enum value: SUBSCRIPTION_PLAN_PRO = 3;
    */
   SUBSCRIPTION_PLAN_PRO = 3,
+
+  /**
+   * @generated from enum value: SUBSCRIPTION_PLAN_ENTERPRISE = 4;
+   */
+  SUBSCRIPTION_PLAN_ENTERPRISE = 4,
 }
 
 /**

@@ -51,8 +51,8 @@ var RedoraPlans = map[SubscriptionPlanType]*SubscriptionPlan{
 			RelevantPosts: UsageLimits{
 				PerDay: 25,
 			},
-			MaxSources:  5,
-			MaxKeywords: 5,
+			MaxSources:  7,
+			MaxKeywords: 7,
 		},
 	},
 	SubscriptionPlanTypeFOUNDER: {
@@ -70,8 +70,8 @@ var RedoraPlans = map[SubscriptionPlanType]*SubscriptionPlan{
 			RelevantPosts: UsageLimits{
 				PerDay: 25,
 			},
-			MaxSources:  5,
-			MaxKeywords: 5,
+			MaxSources:  7,
+			MaxKeywords: 7,
 		},
 	},
 	SubscriptionPlanTypePRO: {
