@@ -71,11 +71,11 @@ func (r redditInteractions) ProcessScheduledPost(ctx context.Context, post *mode
 		}
 	}()
 
-	//if !project.IsActive {
-	//	post.Status = models.PostStatusFAILED
-	//	post.Reason = "Project is not active"
-	//	return nil
-	//}
+	if !project.IsActive {
+		post.Status = models.PostStatusFAILED
+		post.Reason = "Project is not active"
+		return nil
+	}
 
 	redditClient, err := r.redditOauthClient.GetOrCreate(ctx, project.OrganizationID, true)
 	if err != nil {
