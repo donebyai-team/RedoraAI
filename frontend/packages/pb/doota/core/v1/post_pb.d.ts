@@ -212,6 +212,13 @@ export declare type SchedulePostRequest = Message<"doota.core.v1.SchedulePostReq
    * @generated from field: google.protobuf.Timestamp schedule_at = 2;
    */
   scheduleAt?: Timestamp;
+
+  /**
+   * regeneration version
+   *
+   * @generated from field: string version = 3;
+   */
+  version: string;
 };
 
 /**

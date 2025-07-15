@@ -39,6 +39,19 @@ const getMinDateTimeLocal = () => {
     return now.toISOString().slice(0, 16)
 }
 
+export function formatTimestampToLocalInput(timestamp?: Timestamp): string {
+    if (!timestamp || typeof timestamp.seconds === 'undefined') return '';
+
+    const milliseconds =
+        Number(timestamp.seconds) * 1000 + Math.floor(timestamp.nanos / 1_000_000);
+
+    const utcDate = new Date(milliseconds);
+
+    const localDate = new Date(utcDate.getTime() - utcDate.getTimezoneOffset() * 60000);
+
+    return localDate.toISOString().slice(0, 16); // "yyyy-MM-ddTHH:mm"
+}
+
 export default function PostEditor() {
     const router = useRouter()
     const dispatch = useAppDispatch();
@@ -65,6 +78,8 @@ export default function PostEditor() {
     const [selectedSubreddit, setSelectedSubreddit] = useState(post?.source || '')
     const [selectedTone, setSelectedTone] = useState(post?.metadata?.settings?.tone || '')
     const [isEditable, setIsEditable] = useState(editableStatus.includes(post?.status as PostStatus || ''))
+    const [selectedVersionIndex, setSelectedVersionIndex] = useState<number>(0)
+
 
     useEffect(() => {
         if(!post?.id) router.back();
@@ -87,6 +102,12 @@ export default function PostEditor() {
         if (post?.topic && post?.description) {
             setGenerationHistory(post?.metadata?.history ?? [])
         }
+
+        if (post?.scheduledAt) {
+            const inputFormatted = formatTimestampToLocalInput(post.scheduledAt);
+            setScheduledDate(inputFormatted);
+        }
+
     }, [post])
 
     const handleInsightSelect = (insightId: string) => {
@@ -119,7 +140,7 @@ export default function PostEditor() {
             setGenerationHistory(res.metadata?.history || [])
         }
 
-        setTimeout(() => setIsPostApiCall(false),1000)
+        setIsPostApiCall(false)
     }
 
     const handleSelectFromHistory = (item: PostRegenerationHistory) => {
@@ -142,7 +163,11 @@ export default function PostEditor() {
             }
 
             setIsPostApiCall(true)
-            await portalClient.schedulePost({ id: post?.id || '', scheduleAt: timestamp })
+            await portalClient.schedulePost({
+                id: post?.id || '',
+                scheduleAt: timestamp,
+                version: "v"+(selectedVersionIndex + 1),
+            })
             toast.success('Post scheduled successfully!')
             router.push(routes.new.postCreationHub.posts)
         } catch (err: any) {
@@ -170,6 +195,15 @@ export default function PostEditor() {
     ]
 
     const formatTime = (index: number) => `v${generationHistory.length - index}`
+
+    useEffect(() => {
+        if (post?.topic && generationHistory.length > 0) {
+            const matchIndex = generationHistory.findIndex(h => h.title === post.topic)
+            if (matchIndex !== -1) {
+                setSelectedVersionIndex(matchIndex)
+            }
+        }
+    }, [generationHistory, post])
 
     return (
         <div>
@@ -213,21 +247,34 @@ export default function PostEditor() {
                                             <div className="border p-4 bg-gray-50 rounded-lg">
                                                 <h4 className="font-medium mb-3">Generation History</h4>
                                                 <div className="space-y-2 max-h-60 overflow-y-auto">
-                                                    {[...generationHistory].reverse().map((item, index) => (
-                                                        <div
-                                                            key={index}
-                                                            className="flex items-center justify-between p-3 bg-white rounded border cursor-pointer hover:bg-gray-50"
-                                                            onClick={() => handleSelectFromHistory(item)}
-                                                        >
-                                                            <div className="min-w-0">
-                                                                <p className="font-medium text-sm truncate">{item.title}</p>
-                                                                <p className="text-xs text-muted-foreground truncate">{item.description}</p>
+                                                    {[...generationHistory].reverse().map((item, index) => {
+                                                        const actualIndex = generationHistory.length - 1 - index; // to map back to real index
+                                                        const isSelected = selectedVersionIndex == actualIndex;
+
+                                                        const highlightClass = isSelected
+                                                            ? 'bg-gray-200 hover:bg-gray-200 border-gray-400'
+                                                            : 'bg-white hover:bg-gray-50';
+
+                                                        return (
+                                                            <div
+                                                                key={index}
+                                                                className={`flex items-center justify-between p-3 rounded border cursor-pointer ${highlightClass}`}
+                                                                onClick={() => {
+                                                                    handleSelectFromHistory(item);
+                                                                    setSelectedVersionIndex(actualIndex);
+                                                                }}
+                                                            >
+                                                                <div className="min-w-0">
+                                                                    <p className="font-medium text-sm truncate">{item.title}</p>
+                                                                    <p className="text-xs text-muted-foreground truncate">{item.description}</p>
+                                                                </div>
+                                                                <Badge variant="secondary" className="text-xs">
+                                                                    {formatTime(index)}
+                                                                </Badge>
                                                             </div>
-                                                            <Badge variant="secondary" className="text-xs">
-                                                                {formatTime(index)}
-                                                            </Badge>
-                                                        </div>
-                                                    ))}
+                                                        );
+                                                    })}
+
                                                 </div>
                                             </div>
                                         )}
@@ -414,7 +461,7 @@ export default function PostEditor() {
                                             disabled={isPostApiCall || !isEditable}
                                         >
                                             <Calendar className="h-4 w-4 mr-2" />
-                                            Schedule Post
+                                            {scheduledDate ? "Update Post" :  "Schedule Post"}
                                         </Button>
                                     </CardContent>
                                 </Card>

@@ -59,6 +59,7 @@ message PostDetail {
 message SchedulePostRequest {
   string id = 1;
   google.protobuf.Timestamp schedule_at = 2;
+  string version = 3; // regeneration version
 }
 
 message DeletePostRequest {

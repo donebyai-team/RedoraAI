@@ -96,14 +96,14 @@ func (p *Portal) SchedulePost(ctx context.Context, c *connect.Request[pbcore.Sch
 		return nil, err
 	}
 
-	project, err := p.getProject(ctx, c.Header(), actor.OrganizationID)
+	_, err = p.getProject(ctx, c.Header(), actor.OrganizationID)
 	if err != nil {
 		return nil, err
 	}
 
 	scheduleAt := c.Msg.GetScheduleAt().AsTime()
 
-	if err := p.postService.SchedulePost(ctx, c.Msg.Id, scheduleAt, project.ID); err != nil {
+	if err := p.postService.SchedulePost(ctx, c.Msg.Id, c.Msg.Version, scheduleAt); err != nil {
 		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("unable to schedule post: %w", err))
 	}
 

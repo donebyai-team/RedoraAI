@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -15,7 +16,7 @@ import (
 type PostService interface {
 	CreatePost(ctx context.Context, post *models.Post, project *models.Project) (*models.Post, error)
 	DeletePost(ctx context.Context, postID string) error
-	SchedulePost(ctx context.Context, postID string, scheduleAt time.Time, projectID string) error
+	SchedulePost(ctx context.Context, postID, version string, scheduleAt time.Time) error
 }
 type postService struct {
 	aiClient *ai.Client
@@ -59,25 +60,15 @@ func (s *postService) CreatePost(ctx context.Context, post *models.Post, project
 	settings := post.Metadata.Settings
 
 	if existingPost != nil {
-		// Update existing post
+		// Append generated result to history but DO NOT update existing title/desc/settings
 		historyEntry := models.PostRegenerationHistory{
-			PostSettings: existingPost.Metadata.Settings,
-			Title:        existingPost.Title,
-			Description:  existingPost.Description,
+			PostSettings: settings,
+			Title:        resp.Title,
+			Description:  resp.Description,
 		}
 
 		existingPost.Metadata.History = append(existingPost.Metadata.History, historyEntry)
-		existingPost.Title = resp.Title
-		existingPost.Description = resp.Description
-		existingPost.ReferenceID = settings.ReferenceID
-
-		existingPost.Metadata.Settings = models.PostSettings{
-			Topic:       settings.Topic,
-			Context:     settings.Context,
-			Goal:        settings.Goal,
-			Tone:        settings.Tone,
-			ReferenceID: settings.ReferenceID,
-		}
+		existingPost.Metadata.Settings.ReferenceID = settings.ReferenceID
 
 		if err := s.db.UpdatePost(ctx, existingPost); err != nil {
 			return nil, fmt.Errorf("failed to update post: %w", err)
@@ -85,14 +76,20 @@ func (s *postService) CreatePost(ctx context.Context, post *models.Post, project
 		return existingPost, nil
 	}
 
-	//Create new post
+	// New Post: Set everything and initialize history
 	post.Title = resp.Title
 	post.Description = resp.Description
 	post.Status = models.PostStatusCREATED
 
 	post.Metadata = models.PostMetadata{
 		Settings: settings,
-		History:  []models.PostRegenerationHistory{},
+		History: []models.PostRegenerationHistory{
+			{
+				PostSettings: settings,
+				Title:        resp.Title,
+				Description:  resp.Description,
+			},
+		},
 	}
 
 	newPost, err := s.db.CreatePost(ctx, post)
@@ -102,26 +99,39 @@ func (s *postService) CreatePost(ctx context.Context, post *models.Post, project
 	return newPost, nil
 }
 
-func (s *postService) SchedulePost(ctx context.Context, postID string, scheduleAt time.Time, expectedProjectID string) error {
+func (s *postService) SchedulePost(ctx context.Context, postID, version string, scheduleAt time.Time) error {
 	post, err := s.db.GetPostByID(ctx, postID)
-	if err != nil {
-		return fmt.Errorf("failed to fetch post: %w", err)
-	}
 
-	if post.ProjectID != expectedProjectID {
-		return fmt.Errorf("you do not have access to this post")
-	}
-
-	if post.Status == models.PostStatusSCHEDULED {
-		return fmt.Errorf("post is already scheduled")
+	if err != nil && !errors.Is(err, datastore.NotFound) {
+		return fmt.Errorf("invalid post id: %w", err)
 	}
 
 	if scheduleAt.Before(time.Now().Add(-15 * time.Second)) {
 		return fmt.Errorf("cannot schedule post in the past")
 	}
 
+	// Parse version string like "v1"
+	var versionIndex int
+	if _, err := fmt.Sscanf(version, "v%d", &versionIndex); err != nil || versionIndex < 1 {
+		return fmt.Errorf("invalid version format: %s", version)
+	}
+
+	history := post.Metadata.History
+	if versionIndex > len(history) || versionIndex < 1 {
+		return fmt.Errorf("version index out of bounds")
+	}
+
+	realIndex := versionIndex - 1
+	selectedHistory := history[realIndex]
+
+	// Update post with selected version data
+	post.Title = selectedHistory.Title
+	post.Description = selectedHistory.Description
+	post.Metadata.Settings = selectedHistory.PostSettings
+
 	post.ScheduleAt = &scheduleAt
 	post.Status = models.PostStatusSCHEDULED
+
 	if err := s.db.UpdatePost(ctx, post); err != nil {
 		return err
 	}
