@@ -55,6 +55,12 @@ type CaseDecisionResponse struct {
 	NextCallScheduledAtConfidenceScore float64            `json:"next_call_scheduled_at_confidence_score"`
 	NextCallScheduledAtTime            *time.Time         `json:"-"`
 }
+type PostGenerationResponse struct {
+	Title          string   `json:"title"`
+	Description    string   `json:"description"`
+	ChainOfThought string   `json:"chain_of_thought"`
+	ModelUsed      LLMModel `json:"model_used"`
+}
 
 func (b CaseDecisionResponse) Value() (driver.Value, error) {
 	if b.IsEmpty() {

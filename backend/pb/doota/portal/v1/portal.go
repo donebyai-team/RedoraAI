@@ -2,11 +2,10 @@ package pbportal
 
 import (
 	"fmt"
-	pbcore "github.com/shank318/doota/pb/doota/core/v1"
-	"strings"
-
 	"github.com/shank318/doota/models"
+	pbcore "github.com/shank318/doota/pb/doota/core/v1"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"strings"
 )
 
 func (r *UserRole) FromModel(model models.UserRole) {

@@ -86,6 +86,15 @@ func (v Variable) WithPastConversations(conversations []*models.Conversation) Va
 	return v
 }
 
+func GetPostGenerationVars(input *models.PostSettings) Variable {
+	out := make(Variable)
+	out["Topic"] = input.Topic
+	out["Context"] = input.Context
+	out["Goal"] = input.Goal
+	out["Tone"] = input.Tone
+	return out
+}
+
 func (v Variable) WithVariable(key string, value any) Variable {
 	v[key] = value
 	return v

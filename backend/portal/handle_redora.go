@@ -1,10 +1,15 @@
 package portal
 
 import (
-	"connectrpc.com/connect"
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+	"net/url"
+	"strings"
+	"time"
+
+	"connectrpc.com/connect"
 	"github.com/shank318/doota/agents/redora"
 	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/models"
@@ -16,10 +21,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
-	"net/http"
-	"net/url"
-	"strings"
-	"time"
 )
 
 func (p *Portal) getProject(ctx context.Context, headers http.Header, orgID string) (*models.Project, error) {

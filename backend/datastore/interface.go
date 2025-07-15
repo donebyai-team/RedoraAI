@@ -36,6 +36,7 @@ type Repository interface {
 	LeadInteractionRepository
 	SubscriptionRepository
 	PostInsightRepository
+	PostRepository
 }
 
 type OrganizationRepository interface {
@@ -158,6 +159,15 @@ type PostInsightRepository interface {
 	CreatePostInsight(ctx context.Context, insight *models.PostInsight) (*models.PostInsight, error)
 	GetInsightsByPostID(ctx context.Context, projectID, postID string) ([]*models.PostInsight, error)
 	GetInsights(ctx context.Context, projectID string, filter LeadsFilter) ([]*models.AugmentedPostInsight, error)
+}
+
+type PostRepository interface {
+	CreatePost(ctx context.Context, post *models.Post) (*models.Post, error)
+	GetPostByID(ctx context.Context, ID string) (*models.Post, error)
+	UpdatePost(ctx context.Context, post *models.Post) error
+	GetPostsByProjectID(ctx context.Context, projectID string) ([]*models.AugmentedPost, error)
+	GetPostsToExecute(ctx context.Context) ([]*models.Post, error)
+	DeletePostByID(ctx context.Context, postID string) error
 }
 
 type CustomerCaseFilter struct {

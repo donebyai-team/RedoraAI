@@ -112,6 +112,10 @@ func (c *Client) GetAdvanceModel() models.LLMModel {
 	return c.advanceLLMModel
 }
 
+func (c *Client) GetDefaultModel() models.LLMModel {
+	return c.defaultLLMModel
+}
+
 func (c *Client) processTemplate(ctx context.Context, runID, path, tmplData string, vars map[string]any, logger *zap.Logger) (*bytes.Buffer, error) {
 	buf := new(bytes.Buffer)
 	err := template.Must(template.New(path).Parse(tmplData)).Execute(buf, vars)
@@ -320,6 +324,49 @@ func (c *Client) GetSourceCommunityRulesEvaluation(ctx context.Context, model mo
 	if err := json.Unmarshal(output, &data); err != nil {
 		return nil, nil, fmt.Errorf("unable to unmarshal response: %w", err)
 	}
+	return &data, &models.LLMModelUsage{Model: llmModelToUse}, nil
+}
+
+type PostGenerateInput struct {
+	Id          string               `json:"id"`
+	Project     *models.Project      `json:"project"`
+	PostSetting *models.PostSettings `json:"post"`
+}
+
+func (c *Client) GeneratePost(ctx context.Context, model models.LLMModel, input *PostGenerateInput, logger *zap.Logger) (*models.PostGenerationResponse, *models.LLMModelUsage, error) {
+	runID := input.Id
+	vars := GetPostGenerationVars(input.PostSetting)
+
+	llmModelToUse := c.defaultLLMModel
+	if string(model) != "" {
+		llmModelToUse = model
+	}
+
+	messages, responseFormat, err := c.buildChatMessages(ctx, runID, postCreateTemplates, logger, vars)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	output, err := c.runChatCompletion(
+		ctx,
+		runID,
+		llmModelToUse,
+		input.Project.OrganizationID,
+		messages,
+		responseFormat,
+		logger,
+		"generated_post.output",
+	)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var data models.PostGenerationResponse
+	if err := json.Unmarshal(output, &data); err != nil {
+		return nil, nil, fmt.Errorf("unable to unmarshal response: %w", err)
+	}
+
+	data.ModelUsed = llmModelToUse
 	return &data, &models.LLMModelUsage{Model: llmModelToUse}, nil
 }
 

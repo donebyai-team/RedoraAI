@@ -8,6 +8,7 @@ import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
 import "doota/core/v1/core.proto";
 import "doota/core/v1/insight.proto";
+import "doota/core/v1/post.proto";
 
 service PortalService {
   rpc GetConfig(.google.protobuf.Empty) returns (Config);
@@ -47,6 +48,16 @@ service PortalService {
 
   // Insights
   rpc GetInsights(.google.protobuf.Empty) returns (InsightsResponse);
+
+  // Posts
+  rpc CreatePost(doota.core.v1.PostSettings) returns (doota.core.v1.Post);
+  rpc GetPosts(.google.protobuf.Empty) returns (GetPostsResponse);
+  rpc SchedulePost(doota.core.v1.SchedulePostRequest) returns (.google.protobuf.Empty);
+  rpc DeletePost(doota.core.v1.DeletePostRequest) returns (.google.protobuf.Empty);
+}
+
+message GetPostsResponse {
+  repeated doota.core.v1.PostDetail posts = 1;
 }
 
 message InsightsResponse {

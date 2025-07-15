@@ -4,6 +4,7 @@
 
 import type { GenEnum, GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv1";
 import type { Message } from "@bufbuild/protobuf";
+import type { DeletePostRequestSchema, PostDetail, PostSchema, PostSettingsSchema, SchedulePostRequestSchema } from "../../core/v1/post_pb";
 import type { PostInsight } from "../../core/v1/insight_pb";
 import type { Keyword, Lead, LeadInteraction, LeadInteractionStatus, LeadStatus, Project, ProjectSchema, Source, SourceSchema, Subscription, SubscriptionPlanID, SubscriptionSchema } from "../../core/v1/core_pb";
 import type { EmptySchema, Timestamp } from "@bufbuild/protobuf/wkt";
@@ -12,6 +13,22 @@ import type { EmptySchema, Timestamp } from "@bufbuild/protobuf/wkt";
  * Describes the file doota/portal/v1/portal.proto.
  */
 export declare const file_doota_portal_v1_portal: GenFile;
+
+/**
+ * @generated from message doota.portal.v1.GetPostsResponse
+ */
+export declare type GetPostsResponse = Message<"doota.portal.v1.GetPostsResponse"> & {
+  /**
+   * @generated from field: repeated doota.core.v1.PostDetail posts = 1;
+   */
+  posts: PostDetail[];
+};
+
+/**
+ * Describes the message doota.portal.v1.GetPostsResponse.
+ * Use `create(GetPostsResponseSchema)` to create a new message.
+ */
+export declare const GetPostsResponseSchema: GenMessage<GetPostsResponse>;
 
 /**
  * @generated from message doota.portal.v1.InsightsResponse
@@ -1506,6 +1523,40 @@ export declare const PortalService: GenService<{
     methodKind: "unary";
     input: typeof EmptySchema;
     output: typeof InsightsResponseSchema;
+  },
+  /**
+   * Posts
+   *
+   * @generated from rpc doota.portal.v1.PortalService.CreatePost
+   */
+  createPost: {
+    methodKind: "unary";
+    input: typeof PostSettingsSchema;
+    output: typeof PostSchema;
+  },
+  /**
+   * @generated from rpc doota.portal.v1.PortalService.GetPosts
+   */
+  getPosts: {
+    methodKind: "unary";
+    input: typeof EmptySchema;
+    output: typeof GetPostsResponseSchema;
+  },
+  /**
+   * @generated from rpc doota.portal.v1.PortalService.SchedulePost
+   */
+  schedulePost: {
+    methodKind: "unary";
+    input: typeof SchedulePostRequestSchema;
+    output: typeof EmptySchema;
+  },
+  /**
+   * @generated from rpc doota.portal.v1.PortalService.DeletePost
+   */
+  deletePost: {
+    methodKind: "unary";
+    input: typeof DeletePostRequestSchema;
+    output: typeof EmptySchema;
   },
 }>;
 

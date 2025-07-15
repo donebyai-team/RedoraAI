@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package doota.core.v1;
+
+option go_package = "github.com/shank318/doota/pb/doota/core/v1;pbcore";
+import "google/protobuf/timestamp.proto";
+
+import "google/protobuf/any.proto";
+
+enum PostStatus {
+  POST_STATUS_UNSPECIFIED = 0;
+  POST_STATUS_CREATED = 1;
+  POST_STATUS_PROCESSING = 2;
+  POST_STATUS_SENT = 3;
+  POST_STATUS_FAILED = 4;
+  POST_STATUS_SCHEDULED = 5;
+}
+
+message Post {
+  string id = 1;
+  string project_id = 2;
+  string source = 3;
+  string topic = 4;
+  string description = 5;
+  string status = 6;
+  string reason = 7;
+  google.protobuf.Timestamp created_at = 8;
+  optional google.protobuf.Timestamp scheduled_at = 9;
+  PostMetadata metadata = 11;
+}
+
+message PostSettings {
+  string topic = 1;
+  string context = 2;
+  string goal = 3;
+  string tone = 4;
+  optional string reference_id = 5;
+  optional string id = 6; // post id
+  string source_id = 7;
+}
+
+message PostMetadata {
+  PostSettings settings = 1;
+  repeated PostRegenerationHistory history = 2;
+}
+
+message PostRegenerationHistory {
+  PostSettings post_settings = 1;
+  string title = 2;
+  string description = 3;
+}
+
+message PostDetail {
+  Post post = 1;           // Base post information
+  string source_name = 2;  // Additional field
+  string post_url = 3;     // URL to the post
+}
+
+message SchedulePostRequest {
+  string id = 1;
+  google.protobuf.Timestamp schedule_at = 2;
+}
+
+message DeletePostRequest {
+  string id = 1;
+}
+

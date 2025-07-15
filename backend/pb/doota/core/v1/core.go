@@ -57,7 +57,7 @@ func (u *Source_RedditMetadata) FromModel(metadata *models.SubRedditMetadata) *S
 func (u *Source) FromModel(source *models.Source, details isSource_Details) *Source {
 	u.Id = source.ID
 	if source.SourceType == models.SourceTypeSUBREDDIT {
-		u.Name = fmt.Sprintf("r/%s", source.Name)
+		u.Name = source.Name
 	} else {
 		u.Name = source.Name
 	}
