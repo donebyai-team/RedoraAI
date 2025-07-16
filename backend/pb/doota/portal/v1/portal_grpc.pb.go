@@ -52,7 +52,7 @@ const (
 	PortalService_GetInsights_FullMethodName                 = "/doota.portal.v1.PortalService/GetInsights"
 	PortalService_CreatePost_FullMethodName                  = "/doota.portal.v1.PortalService/CreatePost"
 	PortalService_GetPosts_FullMethodName                    = "/doota.portal.v1.PortalService/GetPosts"
-	PortalService_SchedulePost_FullMethodName                = "/doota.portal.v1.PortalService/SchedulePost"
+	PortalService_UpdatePost_FullMethodName                  = "/doota.portal.v1.PortalService/UpdatePost"
 	PortalService_DeletePost_FullMethodName                  = "/doota.portal.v1.PortalService/DeletePost"
 )
 
@@ -97,7 +97,7 @@ type PortalServiceClient interface {
 	// Posts
 	CreatePost(ctx context.Context, in *v1.PostSettings, opts ...grpc.CallOption) (*v1.Post, error)
 	GetPosts(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetPostsResponse, error)
-	SchedulePost(ctx context.Context, in *v1.SchedulePostRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	UpdatePost(ctx context.Context, in *v1.UpdatePostRequest, opts ...grpc.CallOption) (*v1.Post, error)
 	DeletePost(ctx context.Context, in *v1.DeletePostRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
@@ -411,9 +411,9 @@ func (c *portalServiceClient) GetPosts(ctx context.Context, in *emptypb.Empty, o
 	return out, nil
 }
 
-func (c *portalServiceClient) SchedulePost(ctx context.Context, in *v1.SchedulePostRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, PortalService_SchedulePost_FullMethodName, in, out, opts...)
+func (c *portalServiceClient) UpdatePost(ctx context.Context, in *v1.UpdatePostRequest, opts ...grpc.CallOption) (*v1.Post, error) {
+	out := new(v1.Post)
+	err := c.cc.Invoke(ctx, PortalService_UpdatePost_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -470,7 +470,7 @@ type PortalServiceServer interface {
 	// Posts
 	CreatePost(context.Context, *v1.PostSettings) (*v1.Post, error)
 	GetPosts(context.Context, *emptypb.Empty) (*GetPostsResponse, error)
-	SchedulePost(context.Context, *v1.SchedulePostRequest) (*emptypb.Empty, error)
+	UpdatePost(context.Context, *v1.UpdatePostRequest) (*v1.Post, error)
 	DeletePost(context.Context, *v1.DeletePostRequest) (*emptypb.Empty, error)
 	mustEmbedUnimplementedPortalServiceServer()
 }
@@ -572,8 +572,8 @@ func (UnimplementedPortalServiceServer) CreatePost(context.Context, *v1.PostSett
 func (UnimplementedPortalServiceServer) GetPosts(context.Context, *emptypb.Empty) (*GetPostsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetPosts not implemented")
 }
-func (UnimplementedPortalServiceServer) SchedulePost(context.Context, *v1.SchedulePostRequest) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SchedulePost not implemented")
+func (UnimplementedPortalServiceServer) UpdatePost(context.Context, *v1.UpdatePostRequest) (*v1.Post, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdatePost not implemented")
 }
 func (UnimplementedPortalServiceServer) DeletePost(context.Context, *v1.DeletePostRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeletePost not implemented")
@@ -1152,20 +1152,20 @@ func _PortalService_GetPosts_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
-func _PortalService_SchedulePost_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(v1.SchedulePostRequest)
+func _PortalService_UpdatePost_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(v1.UpdatePostRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(PortalServiceServer).SchedulePost(ctx, in)
+		return srv.(PortalServiceServer).UpdatePost(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: PortalService_SchedulePost_FullMethodName,
+		FullMethod: PortalService_UpdatePost_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PortalServiceServer).SchedulePost(ctx, req.(*v1.SchedulePostRequest))
+		return srv.(PortalServiceServer).UpdatePost(ctx, req.(*v1.UpdatePostRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1316,8 +1316,8 @@ var PortalService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _PortalService_GetPosts_Handler,
 		},
 		{
-			MethodName: "SchedulePost",
-			Handler:    _PortalService_SchedulePost_Handler,
+			MethodName: "UpdatePost",
+			Handler:    _PortalService_UpdatePost_Handler,
 		},
 		{
 			MethodName: "DeletePost",

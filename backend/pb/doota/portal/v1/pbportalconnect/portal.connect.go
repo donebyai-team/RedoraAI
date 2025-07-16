@@ -123,9 +123,9 @@ const (
 	PortalServiceCreatePostProcedure = "/doota.portal.v1.PortalService/CreatePost"
 	// PortalServiceGetPostsProcedure is the fully-qualified name of the PortalService's GetPosts RPC.
 	PortalServiceGetPostsProcedure = "/doota.portal.v1.PortalService/GetPosts"
-	// PortalServiceSchedulePostProcedure is the fully-qualified name of the PortalService's
-	// SchedulePost RPC.
-	PortalServiceSchedulePostProcedure = "/doota.portal.v1.PortalService/SchedulePost"
+	// PortalServiceUpdatePostProcedure is the fully-qualified name of the PortalService's UpdatePost
+	// RPC.
+	PortalServiceUpdatePostProcedure = "/doota.portal.v1.PortalService/UpdatePost"
 	// PortalServiceDeletePostProcedure is the fully-qualified name of the PortalService's DeletePost
 	// RPC.
 	PortalServiceDeletePostProcedure = "/doota.portal.v1.PortalService/DeletePost"
@@ -165,7 +165,7 @@ var (
 	portalServiceGetInsightsMethodDescriptor                 = portalServiceServiceDescriptor.Methods().ByName("GetInsights")
 	portalServiceCreatePostMethodDescriptor                  = portalServiceServiceDescriptor.Methods().ByName("CreatePost")
 	portalServiceGetPostsMethodDescriptor                    = portalServiceServiceDescriptor.Methods().ByName("GetPosts")
-	portalServiceSchedulePostMethodDescriptor                = portalServiceServiceDescriptor.Methods().ByName("SchedulePost")
+	portalServiceUpdatePostMethodDescriptor                  = portalServiceServiceDescriptor.Methods().ByName("UpdatePost")
 	portalServiceDeletePostMethodDescriptor                  = portalServiceServiceDescriptor.Methods().ByName("DeletePost")
 )
 
@@ -208,7 +208,7 @@ type PortalServiceClient interface {
 	// Posts
 	CreatePost(context.Context, *connect.Request[v11.PostSettings]) (*connect.Response[v11.Post], error)
 	GetPosts(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetPostsResponse], error)
-	SchedulePost(context.Context, *connect.Request[v11.SchedulePostRequest]) (*connect.Response[emptypb.Empty], error)
+	UpdatePost(context.Context, *connect.Request[v11.UpdatePostRequest]) (*connect.Response[v11.Post], error)
 	DeletePost(context.Context, *connect.Request[v11.DeletePostRequest]) (*connect.Response[emptypb.Empty], error)
 }
 
@@ -408,10 +408,10 @@ func NewPortalServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(portalServiceGetPostsMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
-		schedulePost: connect.NewClient[v11.SchedulePostRequest, emptypb.Empty](
+		updatePost: connect.NewClient[v11.UpdatePostRequest, v11.Post](
 			httpClient,
-			baseURL+PortalServiceSchedulePostProcedure,
-			connect.WithSchema(portalServiceSchedulePostMethodDescriptor),
+			baseURL+PortalServiceUpdatePostProcedure,
+			connect.WithSchema(portalServiceUpdatePostMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
 		deletePost: connect.NewClient[v11.DeletePostRequest, emptypb.Empty](
@@ -456,7 +456,7 @@ type portalServiceClient struct {
 	getInsights                 *connect.Client[emptypb.Empty, v1.InsightsResponse]
 	createPost                  *connect.Client[v11.PostSettings, v11.Post]
 	getPosts                    *connect.Client[emptypb.Empty, v1.GetPostsResponse]
-	schedulePost                *connect.Client[v11.SchedulePostRequest, emptypb.Empty]
+	updatePost                  *connect.Client[v11.UpdatePostRequest, v11.Post]
 	deletePost                  *connect.Client[v11.DeletePostRequest, emptypb.Empty]
 }
 
@@ -615,9 +615,9 @@ func (c *portalServiceClient) GetPosts(ctx context.Context, req *connect.Request
 	return c.getPosts.CallUnary(ctx, req)
 }
 
-// SchedulePost calls doota.portal.v1.PortalService.SchedulePost.
-func (c *portalServiceClient) SchedulePost(ctx context.Context, req *connect.Request[v11.SchedulePostRequest]) (*connect.Response[emptypb.Empty], error) {
-	return c.schedulePost.CallUnary(ctx, req)
+// UpdatePost calls doota.portal.v1.PortalService.UpdatePost.
+func (c *portalServiceClient) UpdatePost(ctx context.Context, req *connect.Request[v11.UpdatePostRequest]) (*connect.Response[v11.Post], error) {
+	return c.updatePost.CallUnary(ctx, req)
 }
 
 // DeletePost calls doota.portal.v1.PortalService.DeletePost.
@@ -664,7 +664,7 @@ type PortalServiceHandler interface {
 	// Posts
 	CreatePost(context.Context, *connect.Request[v11.PostSettings]) (*connect.Response[v11.Post], error)
 	GetPosts(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.GetPostsResponse], error)
-	SchedulePost(context.Context, *connect.Request[v11.SchedulePostRequest]) (*connect.Response[emptypb.Empty], error)
+	UpdatePost(context.Context, *connect.Request[v11.UpdatePostRequest]) (*connect.Response[v11.Post], error)
 	DeletePost(context.Context, *connect.Request[v11.DeletePostRequest]) (*connect.Response[emptypb.Empty], error)
 }
 
@@ -860,10 +860,10 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(portalServiceGetPostsMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
-	portalServiceSchedulePostHandler := connect.NewUnaryHandler(
-		PortalServiceSchedulePostProcedure,
-		svc.SchedulePost,
-		connect.WithSchema(portalServiceSchedulePostMethodDescriptor),
+	portalServiceUpdatePostHandler := connect.NewUnaryHandler(
+		PortalServiceUpdatePostProcedure,
+		svc.UpdatePost,
+		connect.WithSchema(portalServiceUpdatePostMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
 	portalServiceDeletePostHandler := connect.NewUnaryHandler(
@@ -936,8 +936,8 @@ func NewPortalServiceHandler(svc PortalServiceHandler, opts ...connect.HandlerOp
 			portalServiceCreatePostHandler.ServeHTTP(w, r)
 		case PortalServiceGetPostsProcedure:
 			portalServiceGetPostsHandler.ServeHTTP(w, r)
-		case PortalServiceSchedulePostProcedure:
-			portalServiceSchedulePostHandler.ServeHTTP(w, r)
+		case PortalServiceUpdatePostProcedure:
+			portalServiceUpdatePostHandler.ServeHTTP(w, r)
 		case PortalServiceDeletePostProcedure:
 			portalServiceDeletePostHandler.ServeHTTP(w, r)
 		default:
@@ -1073,8 +1073,8 @@ func (UnimplementedPortalServiceHandler) GetPosts(context.Context, *connect.Requ
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.GetPosts is not implemented"))
 }
 
-func (UnimplementedPortalServiceHandler) SchedulePost(context.Context, *connect.Request[v11.SchedulePostRequest]) (*connect.Response[emptypb.Empty], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.SchedulePost is not implemented"))
+func (UnimplementedPortalServiceHandler) UpdatePost(context.Context, *connect.Request[v11.UpdatePostRequest]) (*connect.Response[v11.Post], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.UpdatePost is not implemented"))
 }
 
 func (UnimplementedPortalServiceHandler) DeletePost(context.Context, *connect.Request[v11.DeletePostRequest]) (*connect.Response[emptypb.Empty], error) {

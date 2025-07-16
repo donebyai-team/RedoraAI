@@ -20,7 +20,7 @@ import {
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '@/components/ui/select'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
-import { PostRegenerationHistory, Post } from '@doota/pb/doota/core/v1/post_pb'
+import { PostRegenerationHistory, Post, PostSettings } from '@doota/pb/doota/core/v1/post_pb'
 import { useCreatePost } from '@/components/hooks/useCreatePost'
 import { portalClient } from '@/services/grpc'
 import toast from 'react-hot-toast'
@@ -144,6 +144,20 @@ export default function PostEditor() {
     }
 
     const handleSelectFromHistory = (item: PostRegenerationHistory) => {
+        const updatedPost: Post = {
+            $typeName: "doota.core.v1.Post",
+            ...post,
+            topic: item.title || '',
+            description: item.description || '',
+            metadata: {
+                $typeName: 'doota.core.v1.PostMetadata',
+                settings: item.postSettings,
+                history: post?.metadata?.history || [],
+            },
+        }
+
+        dispatch(setPost(updatedPost))
+
         setTitle(item.title || '')
         setContent(item.description || '')
         setSelectedInsight(item.postSettings?.referenceId || '')
@@ -155,6 +169,7 @@ export default function PostEditor() {
         setShowHistory(false)
     }
 
+
     const handleSchedule = async () => {
         if (!scheduledDate) {
             toast.error("Please select a date and time")
@@ -163,16 +178,34 @@ export default function PostEditor() {
 
         try {
             const date = new Date(scheduledDate)
-            const timestamp: Omit<Timestamp, '$typeName'> = {
+            const timestamp = {
                 seconds: BigInt(Math.floor(date.getTime() / 1000)),
                 nanos: (date.getTime() % 1000) * 1_000_000
             }
 
             setIsPostApiCall(true)
-            await portalClient.schedulePost({
-                id: post?.id || '',
-                scheduleAt: timestamp,
-                version: "v"+(selectedVersionIndex + 1),
+            
+            await portalClient.updatePost({
+                post: {
+                    ...post,
+                    topic: title || '',
+                    description: content || '',
+                    status: PostStatus.SCHEDULED,
+                    scheduledAt: timestamp,
+                    metadata: {
+                        $typeName: 'doota.core.v1.PostMetadata',
+                        settings: {
+                            $typeName: 'doota.core.v1.PostSettings',
+                            topic: customTopic,
+                            context: postDetails,
+                            goal: selectedGoal,
+                            tone: selectedTone,
+                            referenceId: selectedInsight || '',
+                            sourceId: selectedSubreddit,
+                        },
+                        history: post?.metadata?.history || [],
+                    },
+                }
             })
             toast.success('Post scheduled successfully!')
             router.push(routes.new.postCreationHub.posts)

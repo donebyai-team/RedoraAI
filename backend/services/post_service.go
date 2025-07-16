@@ -16,7 +16,7 @@ import (
 type PostService interface {
 	CreatePost(ctx context.Context, post *models.Post, project *models.Project) (*models.Post, error)
 	DeletePost(ctx context.Context, postID string) error
-	SchedulePost(ctx context.Context, postID, version string, scheduleAt time.Time) error
+	UpdatePost(ctx context.Context, updated *models.Post) (*models.Post, error)
 }
 type postService struct {
 	aiClient *ai.Client
@@ -99,44 +99,35 @@ func (s *postService) CreatePost(ctx context.Context, post *models.Post, project
 	return newPost, nil
 }
 
-func (s *postService) SchedulePost(ctx context.Context, postID, version string, scheduleAt time.Time) error {
-	post, err := s.db.GetPostByID(ctx, postID)
-
+func (s *postService) UpdatePost(ctx context.Context, updated *models.Post) (*models.Post, error) {
+	existing, err := s.db.GetPostByID(ctx, updated.ID)
 	if err != nil && !errors.Is(err, datastore.NotFound) {
-		return fmt.Errorf("invalid post id: %w", err)
+		return nil, fmt.Errorf("invalid post id: %w", err)
 	}
 
-	if scheduleAt.Before(time.Now().Add(-15 * time.Second)) {
-		return fmt.Errorf("cannot schedule post in the past")
+	if updated.ScheduleAt != nil && updated.ScheduleAt.Before(time.Now().Add(-15*time.Second)) {
+		return nil, fmt.Errorf("cannot schedule post in the past")
 	}
 
-	// Parse version string like "v1"
-	var versionIndex int
-	if _, err := fmt.Sscanf(version, "v%d", &versionIndex); err != nil || versionIndex < 1 {
-		return fmt.Errorf("invalid version format: %s", version)
+	if existing.Status == models.PostStatusFAILED || existing.Status == models.PostStatusSENT {
+		return nil, fmt.Errorf("post already sent or failed, cannot update")
 	}
 
-	history := post.Metadata.History
-	if versionIndex > len(history) || versionIndex < 1 {
-		return fmt.Errorf("version index out of bounds")
+	// Apply updates from input
+	existing.Title = updated.Title
+	existing.Description = updated.Description
+	existing.Metadata = updated.Metadata
+	existing.ReferenceID = updated.ReferenceID
+	existing.Status = updated.Status
+	existing.Reason = updated.Reason
+	existing.ScheduleAt = updated.ScheduleAt
+
+	// Save the update
+	if err := s.db.UpdatePost(ctx, existing); err != nil {
+		return nil, fmt.Errorf("failed to update post: %w", err)
 	}
 
-	realIndex := versionIndex - 1
-	selectedHistory := history[realIndex]
-
-	// Update post with selected version data
-	post.Title = selectedHistory.Title
-	post.Description = selectedHistory.Description
-	post.Metadata.Settings = selectedHistory.PostSettings
-
-	post.ScheduleAt = &scheduleAt
-	post.Status = models.PostStatusSCHEDULED
-
-	if err := s.db.UpdatePost(ctx, post); err != nil {
-		return err
-	}
-
-	return nil
+	return existing, nil
 }
 
 func (s *postService) DeletePost(ctx context.Context, postID string) error {

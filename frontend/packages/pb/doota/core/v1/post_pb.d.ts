@@ -200,32 +200,20 @@ export declare type PostDetail = Message<"doota.core.v1.PostDetail"> & {
 export declare const PostDetailSchema: GenMessage<PostDetail>;
 
 /**
- * @generated from message doota.core.v1.SchedulePostRequest
+ * @generated from message doota.core.v1.UpdatePostRequest
  */
-export declare type SchedulePostRequest = Message<"doota.core.v1.SchedulePostRequest"> & {
+export declare type UpdatePostRequest = Message<"doota.core.v1.UpdatePostRequest"> & {
   /**
-   * @generated from field: string id = 1;
+   * @generated from field: doota.core.v1.Post post = 1;
    */
-  id: string;
-
-  /**
-   * @generated from field: google.protobuf.Timestamp schedule_at = 2;
-   */
-  scheduleAt?: Timestamp;
-
-  /**
-   * regeneration version
-   *
-   * @generated from field: string version = 3;
-   */
-  version: string;
+  post?: Post;
 };
 
 /**
- * Describes the message doota.core.v1.SchedulePostRequest.
- * Use `create(SchedulePostRequestSchema)` to create a new message.
+ * Describes the message doota.core.v1.UpdatePostRequest.
+ * Use `create(UpdatePostRequestSchema)` to create a new message.
  */
-export declare const SchedulePostRequestSchema: GenMessage<SchedulePostRequest>;
+export declare const UpdatePostRequestSchema: GenMessage<UpdatePostRequest>;
 
 /**
  * @generated from message doota.core.v1.DeletePostRequest
