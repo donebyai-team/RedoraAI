@@ -13,6 +13,10 @@ import { useClientsContext } from '@doota/ui-core/context/ClientContext'
 import { PostInsight } from '@doota/pb/doota/core/v1/insight_pb'
 import { useCreatePost } from '@/components/hooks/useCreatePost'
 import { PostSettings } from '@doota/pb/doota/core/v1/post_pb'
+import {useAppSelector} from "@/store/hooks";
+import {useRedditIntegrationStatus} from "@/components/Leads/Tabs/useRedditIntegrationStatus";
+import {AnnouncementBanner} from "@/components/dashboard/AnnouncementBanner";
+import {useSearchParams} from "next/navigation";
 
 const toneOptions = [
     { value: 'professional', label: 'Professional' },
@@ -29,6 +33,9 @@ const goalOptions = [
 export default function CreatePost() {
     const { portalClient } = useClientsContext()
     const { createPost } = useCreatePost()
+    const searchParams = useSearchParams()
+    const project = useAppSelector((state) => state.stepper.project);
+    const { isConnected, loading: isLoadingRedditIntegrationStatus } = useRedditIntegrationStatus();
 
     const [isLoading, setIsLoading] = useState(false)
     const [isPostApiCall, setIsPostApiCall] = useState(false)
@@ -51,6 +58,19 @@ export default function CreatePost() {
             .catch(err => console.error('Error fetching data:', err))
             .finally(() => setIsLoading(false))
     }, [])
+
+    useEffect(() => {
+        const insightId = searchParams.get('insightId')
+        if (insightId) {
+            setSelectedInsight(insightId)
+            const insight = insights.find(i => i.id == insightId)
+            console.log('insight', insight)
+            if (insight) {
+                setCustomTopic(insight.topic)
+                setPostDetails(insight.highlights)
+            }
+        }
+    }, [searchParams, insights])
 
     const handleGeneratePost = async () => {
         const postData: Omit<PostSettings, '$typeName'> = {
@@ -80,6 +100,21 @@ export default function CreatePost() {
     }
 
     return (
+        <>
+            {project && !project.isActive ? (
+                <AnnouncementBanner
+                    message="⚠️ Your account has been paused due to inactivity or insufficient product information to discover posts."
+                    buttonText="Reactivate now →"
+                    buttonHref="/settings/automation"
+                />
+                ) : (!isConnected && !isLoadingRedditIntegrationStatus) ? (
+                <AnnouncementBanner
+                    message="⚠️ Connect your Reddit account to get real-time alerts and auto-reply to trending posts."
+                    buttonText="Connect now →"
+                    buttonHref="/settings/integrations"
+                />
+                ) : null
+            }
         <div className='p-6 ml-[10%] mr-[10%]'>
             <h1 className='text-2xl font-bold mb-1'>Create New Post</h1>
             <p className='text-gray-500 mb-6'>
@@ -199,6 +234,8 @@ export default function CreatePost() {
                                 !selectedGoal ||
                                 !selectedTone ||
                                 !postDetails ||
+                                (project && !project.isActive ) ||
+                                !isConnected ||
                                 isPostApiCall
                             }
                             className='px-8 text-base'
@@ -210,5 +247,6 @@ export default function CreatePost() {
                 </CardContent>
             </Card>
         </div>
+        </>
     )
 }
