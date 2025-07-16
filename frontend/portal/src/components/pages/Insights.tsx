@@ -233,7 +233,7 @@ export default function Insights() {
                                                     className="h-8 px-3"
                                                 >
                                                     <PenTool className="h-3 w-3 mr-1" />
-                                                    Create Post (Coming soon)
+                                                    Create Post
                                                 </Button>
                                             </div>
                                         </div>
