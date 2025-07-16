@@ -184,7 +184,7 @@ export default function PostEditor() {
             }
 
             setIsPostApiCall(true)
-            
+
             await portalClient.updatePost({
                 post: {
                     ...post,
@@ -352,7 +352,7 @@ export default function PostEditor() {
                                                     {/*Suggested topic*/}
                                                     <div>
                                                         <Label htmlFor="insight-select" className='mb-2.5 block'>Suggested Topics from Insights (Optional)</Label>
-                                                        <Select onValueChange={handleInsightSelect} disabled={!isEditable}>
+                                                        <Select value={selectedInsight} onValueChange={handleInsightSelect} disabled={!isEditable}>
                                                             <SelectTrigger>
                                                                 <SelectValue placeholder="Select a suggested topic or leave blank to add your own..." />
                                                             </SelectTrigger>
