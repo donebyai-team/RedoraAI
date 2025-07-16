@@ -77,3 +77,65 @@ func (p *Post) FromAugmentedModel(post *models.AugmentedPost) *Post {
 		Metadata:    new(PostMetadata).FromModel(post.Metadata),
 	}
 }
+
+func (p *Post) ToModel() *models.Post {
+	return &models.Post{
+		ID:          p.GetId(),
+		ProjectID:   p.GetProjectId(),
+		SourceID:    p.GetSource(),
+		Title:       p.GetTopic(),
+		Description: p.GetDescription(),
+		ReferenceID: p.GetMetadata().GetSettings().ReferenceId,
+		Status:      models.PostStatus(p.GetStatus()),
+		Reason:      p.GetReason(),
+		CreatedAt:   fromTimestamp(p.GetCreatedAt()),
+		ScheduleAt:  fromTimestampPtr(p.GetScheduledAt()),
+		Metadata:    *p.GetMetadata().ToModel(),
+	}
+}
+
+func (pm *PostMetadata) ToModel() *models.PostMetadata {
+	history := make([]models.PostRegenerationHistory, 0, len(pm.GetHistory()))
+	for _, h := range pm.GetHistory() {
+		history = append(history, *h.ToModel())
+	}
+	return &models.PostMetadata{
+		Settings: *pm.GetSettings().ToModel(),
+		History:  history,
+	}
+}
+
+func (ps *PostSettings) ToModel() *models.PostSettings {
+	return &models.PostSettings{
+		Topic:       ps.GetTopic(),
+		Context:     ps.GetContext(),
+		Goal:        ps.GetGoal(),
+		Tone:        ps.GetTone(),
+		ReferenceID: ps.ReferenceId,
+	}
+}
+
+func (prh *PostRegenerationHistory) ToModel() *models.PostRegenerationHistory {
+	return &models.PostRegenerationHistory{
+		PostSettings: *prh.GetPostSettings().ToModel(),
+		Title:        prh.GetTitle(),
+		Description:  prh.GetDescription(),
+	}
+}
+
+// Helper to convert *timestamppb.Timestamp to time.Time
+func fromTimestamp(ts *timestamppb.Timestamp) time.Time {
+	if ts == nil {
+		return time.Time{}
+	}
+	return ts.AsTime()
+}
+
+// Helper to convert *timestamppb.Timestamp to *time.Time
+func fromTimestampPtr(ts *timestamppb.Timestamp) *time.Time {
+	if ts == nil {
+		return nil
+	}
+	t := ts.AsTime()
+	return &t
+}

@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -15,7 +16,7 @@ import (
 type PostService interface {
 	CreatePost(ctx context.Context, post *models.Post, project *models.Project) (*models.Post, error)
 	DeletePost(ctx context.Context, postID string) error
-	SchedulePost(ctx context.Context, postID string, scheduleAt time.Time, projectID string) error
+	UpdatePost(ctx context.Context, updated *models.Post) (*models.Post, error)
 }
 type postService struct {
 	aiClient *ai.Client
@@ -59,25 +60,15 @@ func (s *postService) CreatePost(ctx context.Context, post *models.Post, project
 	settings := post.Metadata.Settings
 
 	if existingPost != nil {
-		// Update existing post
+		// Append generated result to history but DO NOT update existing title/desc/settings
 		historyEntry := models.PostRegenerationHistory{
-			PostSettings: existingPost.Metadata.Settings,
-			Title:        existingPost.Title,
-			Description:  existingPost.Description,
+			PostSettings: settings,
+			Title:        resp.Title,
+			Description:  resp.Description,
 		}
 
 		existingPost.Metadata.History = append(existingPost.Metadata.History, historyEntry)
-		existingPost.Title = resp.Title
-		existingPost.Description = resp.Description
-		existingPost.ReferenceID = settings.ReferenceID
-
-		existingPost.Metadata.Settings = models.PostSettings{
-			Topic:       settings.Topic,
-			Context:     settings.Context,
-			Goal:        settings.Goal,
-			Tone:        settings.Tone,
-			ReferenceID: settings.ReferenceID,
-		}
+		existingPost.Metadata.Settings.ReferenceID = settings.ReferenceID
 
 		if err := s.db.UpdatePost(ctx, existingPost); err != nil {
 			return nil, fmt.Errorf("failed to update post: %w", err)
@@ -85,14 +76,20 @@ func (s *postService) CreatePost(ctx context.Context, post *models.Post, project
 		return existingPost, nil
 	}
 
-	//Create new post
+	// New Post: Set everything and initialize history
 	post.Title = resp.Title
 	post.Description = resp.Description
 	post.Status = models.PostStatusCREATED
 
 	post.Metadata = models.PostMetadata{
 		Settings: settings,
-		History:  []models.PostRegenerationHistory{},
+		History: []models.PostRegenerationHistory{
+			{
+				PostSettings: settings,
+				Title:        resp.Title,
+				Description:  resp.Description,
+			},
+		},
 	}
 
 	newPost, err := s.db.CreatePost(ctx, post)
@@ -102,31 +99,35 @@ func (s *postService) CreatePost(ctx context.Context, post *models.Post, project
 	return newPost, nil
 }
 
-func (s *postService) SchedulePost(ctx context.Context, postID string, scheduleAt time.Time, expectedProjectID string) error {
-	post, err := s.db.GetPostByID(ctx, postID)
-	if err != nil {
-		return fmt.Errorf("failed to fetch post: %w", err)
+func (s *postService) UpdatePost(ctx context.Context, updated *models.Post) (*models.Post, error) {
+	existing, err := s.db.GetPostByID(ctx, updated.ID)
+	if err != nil && !errors.Is(err, datastore.NotFound) {
+		return nil, fmt.Errorf("invalid post id: %w", err)
 	}
 
-	if post.ProjectID != expectedProjectID {
-		return fmt.Errorf("you do not have access to this post")
+	if updated.ScheduleAt != nil && updated.ScheduleAt.Before(time.Now().Add(-15*time.Second)) {
+		return nil, fmt.Errorf("cannot schedule post in the past")
 	}
 
-	if post.Status == models.PostStatusSCHEDULED {
-		return fmt.Errorf("post is already scheduled")
+	if existing.Status == models.PostStatusFAILED || existing.Status == models.PostStatusSENT {
+		return nil, fmt.Errorf("post already sent or failed, cannot update")
 	}
 
-	if scheduleAt.Before(time.Now().Add(-15 * time.Second)) {
-		return fmt.Errorf("cannot schedule post in the past")
+	// Apply updates from input
+	existing.Title = updated.Title
+	existing.Description = updated.Description
+	existing.Metadata = updated.Metadata
+	existing.ReferenceID = updated.ReferenceID
+	existing.Status = updated.Status
+	existing.Reason = updated.Reason
+	existing.ScheduleAt = updated.ScheduleAt
+
+	// Save the update
+	if err := s.db.UpdatePost(ctx, existing); err != nil {
+		return nil, fmt.Errorf("failed to update post: %w", err)
 	}
 
-	post.ScheduleAt = &scheduleAt
-	post.Status = models.PostStatusSCHEDULED
-	if err := s.db.UpdatePost(ctx, post); err != nil {
-		return err
-	}
-
-	return nil
+	return existing, nil
 }
 
 func (s *postService) DeletePost(ctx context.Context, postID string) error {

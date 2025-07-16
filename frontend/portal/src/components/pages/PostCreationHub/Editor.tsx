@@ -20,7 +20,7 @@ import {
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '@/components/ui/select'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
-import { PostRegenerationHistory, Post } from '@doota/pb/doota/core/v1/post_pb'
+import { PostRegenerationHistory, Post, PostSettings } from '@doota/pb/doota/core/v1/post_pb'
 import { useCreatePost } from '@/components/hooks/useCreatePost'
 import { portalClient } from '@/services/grpc'
 import toast from 'react-hot-toast'
@@ -30,12 +30,26 @@ import { Source } from '@doota/pb/doota/core/v1/core_pb'
 import {routes} from "@doota/ui-core/routing";
 import {PostStatus} from "@/components/pages/PostCreationHub/Posts";
 import {setPost} from "@/store/PostCreation/PostCreationSlice";
+import {getConnectError} from "@/utils/error";
 
 const editableStatus = [PostStatus.CREATED, PostStatus.SCHEDULED]
 
 const getMinDateTimeLocal = () => {
     const now = new Date()
     return now.toISOString().slice(0, 16)
+}
+
+export function formatTimestampToLocalInput(timestamp?: Timestamp): string {
+    if (!timestamp || typeof timestamp.seconds === 'undefined') return '';
+
+    const milliseconds =
+        Number(timestamp.seconds) * 1000 + Math.floor(timestamp.nanos / 1_000_000);
+
+    const utcDate = new Date(milliseconds);
+
+    const localDate = new Date(utcDate.getTime() - utcDate.getTimezoneOffset() * 60000);
+
+    return localDate.toISOString().slice(0, 16); // "yyyy-MM-ddTHH:mm"
 }
 
 export default function PostEditor() {
@@ -64,6 +78,8 @@ export default function PostEditor() {
     const [selectedSubreddit, setSelectedSubreddit] = useState(post?.source || '')
     const [selectedTone, setSelectedTone] = useState(post?.metadata?.settings?.tone || '')
     const [isEditable, setIsEditable] = useState(editableStatus.includes(post?.status as PostStatus || ''))
+    const [selectedVersionIndex, setSelectedVersionIndex] = useState<number>(0)
+
 
     useEffect(() => {
         if(!post?.id) router.back();
@@ -86,6 +102,12 @@ export default function PostEditor() {
         if (post?.topic && post?.description) {
             setGenerationHistory(post?.metadata?.history ?? [])
         }
+
+        if (post?.scheduledAt) {
+            const inputFormatted = formatTimestampToLocalInput(post.scheduledAt);
+            setScheduledDate(inputFormatted);
+        }
+
     }, [post])
 
     const handleInsightSelect = (insightId: string) => {
@@ -113,17 +135,31 @@ export default function PostEditor() {
         )
 
         if (res) {
-            setTitle(res.topic || '')
-            setContent(res.description || '')
             setGenerationHistory(res.metadata?.history || [])
+            const len = res.metadata?.history?.length || 0;
+            if(len > 0) {
+                setSelectedVersionIndex(len-1)
+                updateInputFields(res.metadata?.history[len - 1] as PostRegenerationHistory);
+            }
         }
 
-        setTimeout(() => setIsPostApiCall(false),1000)
+        setIsPostApiCall(false)
     }
 
     const handleSelectFromHistory = (item: PostRegenerationHistory) => {
+        updateInputFields(item)
+    }
+
+    const updateInputFields = (item: PostRegenerationHistory) => {
         setTitle(item.title || '')
         setContent(item.description || '')
+        setSelectedInsight(item.postSettings?.referenceId || '')
+        setCustomTopic(item.postSettings?.topic || '')
+        setPostDetails(item.postSettings?.context || '')
+        setSelectedSubreddit(post?.source || '')
+        setSelectedGoal(item.postSettings?.goal || '')
+        setSelectedTone(item.postSettings?.tone || '')
+
         setShowHistory(false)
     }
 
@@ -135,17 +171,39 @@ export default function PostEditor() {
 
         try {
             const date = new Date(scheduledDate)
-            const timestamp: Omit<Timestamp, '$typeName'> = {
+            const timestamp = {
                 seconds: BigInt(Math.floor(date.getTime() / 1000)),
                 nanos: (date.getTime() % 1000) * 1_000_000
             }
 
             setIsPostApiCall(true)
-            await portalClient.schedulePost({ id: post?.id || '', scheduleAt: timestamp })
+
+            await portalClient.updatePost({
+                post: {
+                    ...post,
+                    topic: title || '',
+                    description: content || '',
+                    status: PostStatus.SCHEDULED,
+                    scheduledAt: timestamp,
+                    metadata: {
+                        $typeName: 'doota.core.v1.PostMetadata',
+                        settings: {
+                            $typeName: 'doota.core.v1.PostSettings',
+                            topic: customTopic,
+                            context: postDetails,
+                            goal: selectedGoal,
+                            tone: selectedTone,
+                            referenceId: selectedInsight || '',
+                            sourceId: selectedSubreddit,
+                        },
+                        history: post?.metadata?.history || [],
+                    },
+                }
+            })
             toast.success('Post scheduled successfully!')
             router.push(routes.new.postCreationHub.posts)
         } catch (err: any) {
-            toast.error(err?.message || 'Failed to schedule post')
+            toast.error(getConnectError(err));
         } finally {
             setTimeout(() => setIsPostApiCall(false),1000)
         }
@@ -169,6 +227,15 @@ export default function PostEditor() {
     ]
 
     const formatTime = (index: number) => `v${generationHistory.length - index}`
+
+    useEffect(() => {
+        if (post?.topic && generationHistory.length > 0) {
+            const matchIndex = generationHistory.findIndex(h => h.title === post.topic)
+            if (matchIndex !== -1) {
+                setSelectedVersionIndex(matchIndex)
+            }
+        }
+    }, [generationHistory, post])
 
     return (
         <div>
@@ -212,32 +279,45 @@ export default function PostEditor() {
                                             <div className="border p-4 bg-gray-50 rounded-lg">
                                                 <h4 className="font-medium mb-3">Generation History</h4>
                                                 <div className="space-y-2 max-h-60 overflow-y-auto">
-                                                    {[...generationHistory].reverse().map((item, index) => (
-                                                        <div
-                                                            key={index}
-                                                            className="flex items-center justify-between p-3 bg-white rounded border cursor-pointer hover:bg-gray-50"
-                                                            onClick={() => handleSelectFromHistory(item)}
-                                                        >
-                                                            <div className="min-w-0">
-                                                                <p className="font-medium text-sm truncate">{item.title}</p>
-                                                                <p className="text-xs text-muted-foreground truncate">{item.description}</p>
+                                                    {[...generationHistory].reverse().map((item, index) => {
+                                                        const actualIndex = generationHistory.length - 1 - index; // to map back to real index
+                                                        const isSelected = selectedVersionIndex == actualIndex;
+
+                                                        const highlightClass = isSelected
+                                                            ? 'bg-gray-200 hover:bg-gray-200 border-gray-400'
+                                                            : 'bg-white hover:bg-gray-50';
+
+                                                        return (
+                                                            <div
+                                                                key={index}
+                                                                className={`flex items-center justify-between p-3 rounded border cursor-pointer ${highlightClass}`}
+                                                                onClick={() => {
+                                                                    handleSelectFromHistory(item);
+                                                                    setSelectedVersionIndex(actualIndex);
+                                                                }}
+                                                            >
+                                                                <div className="min-w-0">
+                                                                    <p className="font-medium text-sm truncate">{item.title}</p>
+                                                                    <p className="text-xs text-muted-foreground truncate">{item.description}</p>
+                                                                </div>
+                                                                <Badge variant="secondary" className="text-xs">
+                                                                    {formatTime(index)}
+                                                                </Badge>
                                                             </div>
-                                                            <Badge variant="secondary" className="text-xs">
-                                                                {formatTime(index)}
-                                                            </Badge>
-                                                        </div>
-                                                    ))}
+                                                        );
+                                                    })}
+
                                                 </div>
                                             </div>
                                         )}
 
                                         <div>
-                                            <Label>Title</Label>
+                                            <Label className='mb-2.5 block'>Title</Label>
                                             <Input disabled={!isEditable} value={title} onChange={e => setTitle(e.target.value)} />
                                         </div>
 
                                         <div>
-                                            <Label>Content</Label>
+                                            <Label className='mb-2.5 block'>Content</Label>
                                             <Textarea
                                                 disabled={!isEditable}
                                                 className="min-h-[400px]"
@@ -264,8 +344,8 @@ export default function PostEditor() {
                                                 <div className="mt-4 space-y-4 bg-gray-50 border rounded-lg p-4">
                                                     {/*Suggested topic*/}
                                                     <div>
-                                                        <Label htmlFor="insight-select">Suggested Topics from Insights (Optional)</Label>
-                                                        <Select onValueChange={handleInsightSelect} disabled={!isEditable}>
+                                                        <Label htmlFor="insight-select" className='mb-2.5 block'>Suggested Topics from Insights (Optional)</Label>
+                                                        <Select value={selectedInsight} onValueChange={handleInsightSelect} disabled={!isEditable}>
                                                             <SelectTrigger>
                                                                 <SelectValue placeholder="Select a suggested topic or leave blank to add your own..." />
                                                             </SelectTrigger>
@@ -286,7 +366,7 @@ export default function PostEditor() {
 
                                                     {/* Topic Input */}
                                                     <div>
-                                                        <Label htmlFor="topic">Topic</Label>
+                                                        <Label htmlFor="topic" className='mb-2.5 block'>Topic</Label>
                                                         <Textarea
                                                             id="topic"
                                                             value={customTopic}
@@ -299,13 +379,13 @@ export default function PostEditor() {
 
                                                     {/* Post Details */}
                                                     <div>
-                                                        <Label htmlFor="details">Post Details & Context</Label>
+                                                        <Label htmlFor="details" className='mb-2.5 block'>Post Details & Context</Label>
                                                         <Textarea
                                                             id="details"
                                                             value={postDetails}
                                                             onChange={(e) => setPostDetails(e.target.value)}
                                                             placeholder="Add specific details, context, examples, or requirements for your post..."
-                                                            className="min-h-[150px] text-base"
+                                                            className="min-h-[250px] text-base"
                                                             disabled={!isEditable}
                                                         />
                                                     </div>
@@ -324,7 +404,8 @@ export default function PostEditor() {
                                                     !postDetails
                                                 }
                                         >
-                                            <Undo className="h-4 w-4 mr-2" /> Regenerate
+                                            <Undo className="h-4 w-4 mr-2" />
+                                            {isPostApiCall ? 'Regenerating...' : 'Regenerate' }
                                         </Button>
                                     </CardContent>
                                 </Card>
@@ -338,7 +419,7 @@ export default function PostEditor() {
                                     </CardHeader>
                                     <CardContent className="space-y-4">
                                         <div>
-                                            <Label>Subreddit</Label>
+                                            <Label className='mb-2.5 block'>Subreddit</Label>
                                             <Select value={selectedSubreddit} onValueChange={setSelectedSubreddit}
                                                     disabled={!isEditable}
                                             >
@@ -352,7 +433,7 @@ export default function PostEditor() {
                                         </div>
 
                                         <div>
-                                            <Label>Goal</Label>
+                                            <Label className='mb-2.5 block'>Goal</Label>
                                             <Select value={selectedGoal} onValueChange={setSelectedGoal}
                                                     disabled={!isEditable}
                                             >
@@ -366,7 +447,7 @@ export default function PostEditor() {
                                         </div>
 
                                         <div>
-                                            <Label>Tone</Label>
+                                            <Label className='mb-2.5 block'>Tone</Label>
                                             <Select value={selectedTone} onValueChange={setSelectedTone}
                                                     disabled={!isEditable}
                                             >
@@ -412,7 +493,7 @@ export default function PostEditor() {
                                             disabled={isPostApiCall || !isEditable}
                                         >
                                             <Calendar className="h-4 w-4 mr-2" />
-                                            Schedule Post
+                                            {post?.scheduledAt ? "Update Post" :  "Schedule Post"}
                                         </Button>
                                     </CardContent>
                                 </Card>

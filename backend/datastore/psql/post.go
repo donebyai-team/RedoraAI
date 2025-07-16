@@ -25,7 +25,7 @@ func (r *Database) CreatePost(ctx context.Context, post *models.Post) (*models.P
 	}
 
 	var id string
-	_ = stmt.GetContext(ctx, &id, map[string]interface{}{
+	err := stmt.GetContext(ctx, &id, map[string]interface{}{
 		"project_id":   post.ProjectID,
 		"title":        post.Title,
 		"description":  post.Description,
@@ -37,7 +37,7 @@ func (r *Database) CreatePost(ctx context.Context, post *models.Post) (*models.P
 	})
 
 	post.ID = id
-	return post, nil
+	return post, err
 }
 
 func (r *Database) GetPostByID(ctx context.Context, ID string) (*models.Post, error) {

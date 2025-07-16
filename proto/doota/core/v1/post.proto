@@ -56,9 +56,8 @@ message PostDetail {
   string post_url = 3;     // URL to the post
 }
 
-message SchedulePostRequest {
-  string id = 1;
-  google.protobuf.Timestamp schedule_at = 2;
+message UpdatePostRequest {
+  Post post = 1;
 }
 
 message DeletePostRequest {

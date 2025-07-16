@@ -12,11 +12,14 @@ import { useClientsContext } from "@doota/ui-core/context/ClientContext";
 import { getFormattedDate } from "@/utils/format";
 import { useAuth } from "@doota/ui-core/hooks/useAuth";
 import { SubscriptionPlanID } from "@doota/pb/doota/core/v1/core_pb";
+import { useRouter } from "next/navigation";
 
 
 export default function Insights() {
     const { planDetails } = useAuth()
     const { portalClient } = useClientsContext();
+    const router = useRouter()
+
     const [insights, setInsights] = useState<PostInsight[]>([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [sentimentFilter, setSentimentFilter] = useState("all");
@@ -44,7 +47,7 @@ export default function Insights() {
 
     const handleCreatePost = (insight: PostInsight) => {
         console.log("Create post for insight:", insight.topic);
-        // TODO: Implement post creation functionality
+        router.push(`/post-creation-hub/create?insightId=${insight.id}`)
     };
 
 
@@ -230,7 +233,7 @@ export default function Insights() {
                                                     className="h-8 px-3"
                                                 >
                                                     <PenTool className="h-3 w-3 mr-1" />
-                                                    Create Post (Coming soon)
+                                                    Create Post
                                                 </Button>
                                             </div>
                                         </div>

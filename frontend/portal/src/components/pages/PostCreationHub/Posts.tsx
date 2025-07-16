@@ -167,7 +167,7 @@ export default function Posts() {
                                                                 <Badge
                                                                     className={`${getStatusColor(post.post?.status)} hover:shadow-none`}
                                                                 >
-                                                                    {post.post?.status}
+                                                                    {post.post?.status == PostStatus.CREATED ? "Draft" : post.post?.status}
                                                                 </Badge>
                                                             </div>
                                                         </TableCell>
