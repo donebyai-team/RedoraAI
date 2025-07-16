@@ -135,29 +135,22 @@ export default function PostEditor() {
         )
 
         if (res) {
-            setTitle(res.topic || '')
-            setContent(res.description || '')
             setGenerationHistory(res.metadata?.history || [])
+            const len = res.metadata?.history?.length || 0;
+            if(len > 0) {
+                setSelectedVersionIndex(len-1)
+                updateInputFields(res.metadata?.history[len - 1] as PostRegenerationHistory);
+            }
         }
 
         setIsPostApiCall(false)
     }
 
     const handleSelectFromHistory = (item: PostRegenerationHistory) => {
-        const updatedPost: Post = {
-            $typeName: "doota.core.v1.Post",
-            ...post,
-            topic: item.title || '',
-            description: item.description || '',
-            metadata: {
-                $typeName: 'doota.core.v1.PostMetadata',
-                settings: item.postSettings,
-                history: post?.metadata?.history || [],
-            },
-        }
+        updateInputFields(item)
+    }
 
-        dispatch(setPost(updatedPost))
-
+    const updateInputFields = (item: PostRegenerationHistory) => {
         setTitle(item.title || '')
         setContent(item.description || '')
         setSelectedInsight(item.postSettings?.referenceId || '')
@@ -166,9 +159,9 @@ export default function PostEditor() {
         setSelectedSubreddit(post?.source || '')
         setSelectedGoal(item.postSettings?.goal || '')
         setSelectedTone(item.postSettings?.tone || '')
+
         setShowHistory(false)
     }
-
 
     const handleSchedule = async () => {
         if (!scheduledDate) {
