@@ -4,7 +4,7 @@
 
 import type { GenEnum, GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv1";
 import type { Message } from "@bufbuild/protobuf";
-import type { DeletePostRequestSchema, PostDetail, PostSchema, PostSettingsSchema, SchedulePostRequestSchema } from "../../core/v1/post_pb";
+import type { DeletePostRequestSchema, PostDetail, PostSchema, PostSettingsSchema, UpdatePostRequestSchema } from "../../core/v1/post_pb";
 import type { PostInsight } from "../../core/v1/insight_pb";
 import type { Keyword, Lead, LeadInteraction, LeadInteractionStatus, LeadStatus, Project, ProjectSchema, Source, SourceSchema, Subscription, SubscriptionPlanID, SubscriptionSchema } from "../../core/v1/core_pb";
 import type { EmptySchema, Timestamp } from "@bufbuild/protobuf/wkt";
@@ -1543,12 +1543,12 @@ export declare const PortalService: GenService<{
     output: typeof GetPostsResponseSchema;
   },
   /**
-   * @generated from rpc doota.portal.v1.PortalService.SchedulePost
+   * @generated from rpc doota.portal.v1.PortalService.UpdatePost
    */
-  schedulePost: {
+  updatePost: {
     methodKind: "unary";
-    input: typeof SchedulePostRequestSchema;
-    output: typeof EmptySchema;
+    input: typeof UpdatePostRequestSchema;
+    output: typeof PostSchema;
   },
   /**
    * @generated from rpc doota.portal.v1.PortalService.DeletePost

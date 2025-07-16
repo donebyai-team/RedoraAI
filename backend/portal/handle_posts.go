@@ -45,8 +45,9 @@ func (p *Portal) CreatePost(ctx context.Context, c *connect.Request[pbcore.PostS
 	}
 
 	createdPost, err := p.postService.CreatePost(ctx, newPost, project)
+
 	if err != nil {
-		return nil, err
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("%w", err))
 	}
 
 	return connect.NewResponse(new(pbcore.Post).FromModel(createdPost)), nil
@@ -89,7 +90,7 @@ func (p *Portal) GetPosts(ctx context.Context, c *connect.Request[emptypb.Empty]
 	}), nil
 }
 
-func (p *Portal) SchedulePost(ctx context.Context, c *connect.Request[pbcore.SchedulePostRequest]) (*connect.Response[emptypb.Empty], error) {
+func (p *Portal) UpdatePost(ctx context.Context, c *connect.Request[pbcore.UpdatePostRequest]) (*connect.Response[pbcore.Post], error) {
 	actor, err := p.gethAuthContext(ctx)
 	if err != nil {
 		return nil, err
@@ -100,13 +101,19 @@ func (p *Portal) SchedulePost(ctx context.Context, c *connect.Request[pbcore.Sch
 		return nil, err
 	}
 
-	scheduleAt := c.Msg.GetScheduleAt().AsTime()
-
-	if err := p.postService.SchedulePost(ctx, c.Msg.Id, scheduleAt, project.ID); err != nil {
-		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("unable to schedule post: %w", err))
+	if c.Msg.Post == nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("missing post in request"))
 	}
 
-	return connect.NewResponse(&emptypb.Empty{}), nil
+	postModel := c.Msg.Post.ToModel()
+	postModel.ProjectID = project.ID
+
+	updatedPost, err := p.postService.UpdatePost(ctx, postModel)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("unable to update post: %w", err))
+	}
+
+	return connect.NewResponse(new(pbcore.Post).FromModel(updatedPost)), nil
 }
 
 func (p *Portal) DeletePost(ctx context.Context, c *connect.Request[pbcore.DeletePostRequest]) (*connect.Response[emptypb.Empty], error) {

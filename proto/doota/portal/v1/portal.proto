@@ -52,7 +52,7 @@ service PortalService {
   // Posts
   rpc CreatePost(doota.core.v1.PostSettings) returns (doota.core.v1.Post);
   rpc GetPosts(.google.protobuf.Empty) returns (GetPostsResponse);
-  rpc SchedulePost(doota.core.v1.SchedulePostRequest) returns (.google.protobuf.Empty);
+  rpc UpdatePost(doota.core.v1.UpdatePostRequest) returns (doota.core.v1.Post);
   rpc DeletePost(doota.core.v1.DeletePostRequest) returns (.google.protobuf.Empty);
 }
 
