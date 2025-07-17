@@ -108,16 +108,9 @@ func (c *OauthClient) WithRotatingAccounts(ctx context.Context, orgID string, in
 }
 
 func (c *OauthClient) WithRotatingAPIClient(ctx context.Context, orgID string, fn func(client *Client) error) error {
-	integrations, err := c.db.GetIntegrationByOrgAndType(ctx, orgID, models.IntegrationTypeREDDIT)
+	activeIntegrations, err := c.GetActiveIntegrations(ctx, orgID, models.IntegrationTypeREDDIT)
 	if err != nil {
 		return fmt.Errorf("failed to get integrations: %w", err)
-	}
-
-	var activeIntegrations []*models.Integration
-	for _, integration := range integrations {
-		if integration.State == models.IntegrationStateACTIVE {
-			activeIntegrations = append(activeIntegrations, integration)
-		}
 	}
 
 	if len(activeIntegrations) == 0 {
@@ -148,8 +141,8 @@ func (c *OauthClient) WithRotatingAPIClient(ctx context.Context, orgID string, f
 	return lastErr
 }
 
-func (c *OauthClient) GetRedditAPIClient(ctx context.Context, orgID string, forceAuth bool) (*Client, error) {
-	integrations, err := c.db.GetIntegrationByOrgAndType(ctx, orgID, models.IntegrationTypeREDDIT)
+func (c *OauthClient) GetActiveIntegrations(ctx context.Context, orgID string, integrationType models.IntegrationType) ([]*models.Integration, error) {
+	integrations, err := c.db.GetIntegrationByOrgAndType(ctx, orgID, integrationType)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get integrations: %w", err)
 	}
@@ -159,6 +152,15 @@ func (c *OauthClient) GetRedditAPIClient(ctx context.Context, orgID string, forc
 		if integration.State == models.IntegrationStateACTIVE {
 			activeIntegrations = append(activeIntegrations, integration)
 		}
+	}
+
+	return activeIntegrations, nil
+}
+
+func (c *OauthClient) GetRedditAPIClient(ctx context.Context, orgID string, forceAuth bool) (*Client, error) {
+	activeIntegrations, err := c.GetActiveIntegrations(ctx, orgID, models.IntegrationTypeREDDIT)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get integrations: %w", err)
 	}
 
 	if len(activeIntegrations) == 0 {

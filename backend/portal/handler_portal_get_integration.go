@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-func (p *Portal) GetIntegration(ctx context.Context, c *connect.Request[pbportal.GetIntegrationRequest]) (*connect.Response[pbportal.Integration], error) {
+func (p *Portal) GetIntegration(ctx context.Context, c *connect.Request[pbportal.GetIntegrationRequest]) (*connect.Response[pbportal.Integrations], error) {
 	actor, err := p.gethAuthContext(ctx)
 	if err != nil {
 		return nil, err
@@ -23,12 +23,23 @@ func (p *Portal) GetIntegration(ctx context.Context, c *connect.Request[pbportal
 	logging.Logger(ctx, p.logger).Info("get integration",
 		zap.Stringer("integration_type", c.Msg.Type),
 	)
-	integration, err := p.db.GetIntegrationByOrgAndType(ctx, actor.OrganizationID, c.Msg.Type.ToModel())
+	integrations, err := p.db.GetIntegrationByOrgAndType(ctx, actor.OrganizationID, c.Msg.Type.ToModel())
 	if err != nil {
 		return nil, fmt.Errorf("get integration: %w", err)
 	}
 
-	return connect.NewResponse(p.protoIntegration(integration)), nil
+	var result []*pbportal.Integration
+
+	for _, i := range integrations {
+		protoInt := p.protoIntegration(i)
+		if protoInt != nil {
+			result = append(result, protoInt)
+		}
+	}
+
+	return connect.NewResponse(&pbportal.Integrations{
+		Integrations: result,
+	}), nil
 }
 
 func (p *Portal) RevokeIntegration(ctx context.Context, c *connect.Request[pbportal.RevokeIntegrationRequest]) (*connect.Response[emptypb.Empty], error) {

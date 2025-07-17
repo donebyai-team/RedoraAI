@@ -64,7 +64,7 @@ type PortalServiceClient interface {
 	Self(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*User, error)
 	// rpc AddUser(AddUserRequest) returns (User);
 	// rpc RenewUser(RenewUserRequest) returns (.google.protobuf.Empty);
-	GetIntegration(ctx context.Context, in *GetIntegrationRequest, opts ...grpc.CallOption) (*Integration, error)
+	GetIntegration(ctx context.Context, in *GetIntegrationRequest, opts ...grpc.CallOption) (*Integrations, error)
 	RevokeIntegration(ctx context.Context, in *RevokeIntegrationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	Batch(ctx context.Context, in *BatchReq, opts ...grpc.CallOption) (*BatchResp, error)
 	CreateCustomerCase(ctx context.Context, in *CreateCustomerCaseReq, opts ...grpc.CallOption) (*emptypb.Empty, error)
@@ -127,8 +127,8 @@ func (c *portalServiceClient) Self(ctx context.Context, in *emptypb.Empty, opts 
 	return out, nil
 }
 
-func (c *portalServiceClient) GetIntegration(ctx context.Context, in *GetIntegrationRequest, opts ...grpc.CallOption) (*Integration, error) {
-	out := new(Integration)
+func (c *portalServiceClient) GetIntegration(ctx context.Context, in *GetIntegrationRequest, opts ...grpc.CallOption) (*Integrations, error) {
+	out := new(Integrations)
 	err := c.cc.Invoke(ctx, PortalService_GetIntegration_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -437,7 +437,7 @@ type PortalServiceServer interface {
 	Self(context.Context, *emptypb.Empty) (*User, error)
 	// rpc AddUser(AddUserRequest) returns (User);
 	// rpc RenewUser(RenewUserRequest) returns (.google.protobuf.Empty);
-	GetIntegration(context.Context, *GetIntegrationRequest) (*Integration, error)
+	GetIntegration(context.Context, *GetIntegrationRequest) (*Integrations, error)
 	RevokeIntegration(context.Context, *RevokeIntegrationRequest) (*emptypb.Empty, error)
 	Batch(context.Context, *BatchReq) (*BatchResp, error)
 	CreateCustomerCase(context.Context, *CreateCustomerCaseReq) (*emptypb.Empty, error)
@@ -485,7 +485,7 @@ func (UnimplementedPortalServiceServer) GetConfig(context.Context, *emptypb.Empt
 func (UnimplementedPortalServiceServer) Self(context.Context, *emptypb.Empty) (*User, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Self not implemented")
 }
-func (UnimplementedPortalServiceServer) GetIntegration(context.Context, *GetIntegrationRequest) (*Integration, error) {
+func (UnimplementedPortalServiceServer) GetIntegration(context.Context, *GetIntegrationRequest) (*Integrations, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetIntegration not implemented")
 }
 func (UnimplementedPortalServiceServer) RevokeIntegration(context.Context, *RevokeIntegrationRequest) (*emptypb.Empty, error) {

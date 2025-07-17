@@ -166,6 +166,7 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 		}
 
 		config.Cookies = string(updatedCookies)
+		integration = models.SetIntegrationType(integration, models.IntegrationTypeREDDITDMLOGIN, config)
 		_, err = r.db.UpsertIntegration(ctx, integration)
 		if err != nil {
 			interaction.Reason = fmt.Sprintf("failed to update integration: %v", err)

@@ -35,7 +35,7 @@ func (s *redditKeywordTracker) TrackInSights(ctx context.Context, tracker *model
 		return err
 	}
 
-	redditClient, err := s.redditOauthClient.GetOrCreate(ctx, tracker.Project.OrganizationID, false)
+	redditClient, err := s.redditOauthClient.GetRedditAPIClient(ctx, tracker.Project.OrganizationID, false)
 	if err != nil {
 		if errors.Is(err, datastore.IntegrationNotFoundOrActive) {
 			return nil

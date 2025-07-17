@@ -15,7 +15,7 @@ service PortalService {
   rpc Self(.google.protobuf.Empty) returns (User);
 //  rpc AddUser(AddUserRequest) returns (User);
 //  rpc RenewUser(RenewUserRequest) returns (.google.protobuf.Empty);
-  rpc GetIntegration(GetIntegrationRequest) returns (Integration);
+  rpc GetIntegration(GetIntegrationRequest) returns (Integrations);
   rpc RevokeIntegration(RevokeIntegrationRequest) returns (.google.protobuf.Empty);
   rpc Batch(BatchReq) returns (BatchResp);
   rpc CreateCustomerCase(CreateCustomerCaseReq) returns (.google.protobuf.Empty);

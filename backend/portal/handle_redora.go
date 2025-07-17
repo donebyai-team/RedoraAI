@@ -379,7 +379,7 @@ func (p *Portal) AddSource(ctx context.Context, c *connect.Request[pbportal.AddS
 			Err()
 	}
 
-	redditClient, err := p.redditOauthClient.GetOrCreate(ctx, actor.OrganizationID, false)
+	redditClient, err := p.redditOauthClient.GetRedditAPIClient(ctx, actor.OrganizationID, false)
 	if err != nil {
 		return nil, err
 	}
@@ -529,15 +529,12 @@ func (p *Portal) UpdateAutomationSettings(ctx context.Context, c *connect.Reques
 
 	if c.Msg.Comment != nil {
 		if c.Msg.Comment.Enabled {
-			integration, err := p.db.GetIntegrationByOrgAndType(ctx, actor.OrganizationID, models.IntegrationTypeREDDIT)
+			integrations, err := p.redditOauthClient.GetActiveIntegrations(ctx, actor.OrganizationID, models.IntegrationTypeREDDIT)
 			if err != nil {
-				if errors.Is(err, datastore.NotFound) {
-					return nil, status.New(codes.InvalidArgument, "Please connect your reddit in integrations to enable automated comments").Err()
-				}
 				return nil, err
 			}
 
-			if integration == nil || integration.State != models.IntegrationStateACTIVE {
+			if len(integrations) == 0 {
 				return nil, status.New(codes.InvalidArgument, "Please connect your reddit in integrations to enable automated comments").Err()
 			}
 

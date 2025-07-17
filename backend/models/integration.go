@@ -3,7 +3,6 @@ package models
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/shank318/doota/utils"
 	"time"
 )
 
@@ -30,14 +29,14 @@ type Integration struct {
 type Serializable interface {
 	EncryptedData() []byte
 	PlainTextData() []byte
-	GetUniqID() string
+	GetUniqID() *string
 }
 
 func SetIntegrationType[T Serializable](integration *Integration, integrationType IntegrationType, t T) *Integration {
 	integration.Type = integrationType
 	integration.EncryptedConfig = string(t.EncryptedData())
 	integration.PlainTextConfig = string(t.PlainTextData())
-	integration.ReferenceID = utils.Ptr(t.GetUniqID())
+	integration.ReferenceID = t.GetUniqID()
 	return integration
 }
 
@@ -52,8 +51,11 @@ type RedditDMLoginConfig struct {
 	Cookies  string `json:"-"`
 }
 
-func (i *RedditDMLoginConfig) GetUniqID() string {
-	return i.Username
+func (i *RedditDMLoginConfig) GetUniqID() *string {
+	if i.Username == "" {
+		panic(fmt.Errorf("username cannot be empty"))
+	}
+	return &i.Username
 }
 
 func (i *RedditDMLoginConfig) EncryptedData() []byte {
@@ -125,8 +127,11 @@ type RedditConfig struct {
 	ExpiresAt        time.Time `json:"expires_at"`
 }
 
-func (r *RedditConfig) GetUniqID() string {
-	return r.Name
+func (r *RedditConfig) GetUniqID() *string {
+	if r.Name == "" {
+		panic(fmt.Errorf("username cannot be empty"))
+	}
+	return &r.Name
 }
 
 // IsUserOldEnough checks if the Reddit user is at least x weeks old.
@@ -193,6 +198,10 @@ type SlackWebhookConfig struct {
 	Channel string `json:"channel"`
 }
 
+func (r *SlackWebhookConfig) GetUniqID() *string {
+	return nil
+}
+
 func (i *SlackWebhookConfig) EncryptedData() []byte {
 	toEncrypt := struct {
 		Webhook string `json:"webhook"`
@@ -241,8 +250,8 @@ type VAPIConfig struct {
 	HostName string `json:"hostname"`
 }
 
-func (i *VAPIConfig) GetUniqID() string {
-	return i.HostName
+func (i *VAPIConfig) GetUniqID() *string {
+	return nil
 }
 
 func NewVAPIConfig(apiKey string) *VAPIConfig {

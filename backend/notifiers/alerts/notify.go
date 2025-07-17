@@ -473,7 +473,7 @@ func (s *SlackNotifier) SendWelcomeEmail(ctx context.Context, orgID string) {
 }
 
 func (s *SlackNotifier) SendLeadsSummary(ctx context.Context, summary LeadSummary) error {
-	integration, err := s.db.GetIntegrationByOrgAndType(ctx, summary.OrgID, models.IntegrationTypeSLACKWEBHOOK)
+	integrations, err := s.db.GetIntegrationByOrgAndType(ctx, summary.OrgID, models.IntegrationTypeSLACKWEBHOOK)
 	if err != nil && errors.Is(err, datastore.NotFound) {
 		s.logger.Info("no integration configured for alerts, skipped")
 	}
@@ -505,12 +505,12 @@ func (s *SlackNotifier) SendLeadsSummary(ctx context.Context, summary LeadSummar
 		}
 	}()
 
-	if integration != nil {
-		err := s.send(ctx, msg, integration.GetSlackWebhook().Webhook)
+	if len(integrations) != 0 {
+		err := s.send(ctx, msg, integrations[0].GetSlackWebhook().Webhook)
 		if err != nil {
 			return err
 		} else {
-			s.logger.Info("sent slack message to slack channel", zap.String("channel", integration.GetSlackWebhook().Channel))
+			s.logger.Info("sent slack message to slack channel", zap.String("channel", integrations[0].GetSlackWebhook().Channel))
 		}
 	}
 	return nil

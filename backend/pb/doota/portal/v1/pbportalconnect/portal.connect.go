@@ -175,7 +175,7 @@ type PortalServiceClient interface {
 	Self(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.User], error)
 	// rpc AddUser(AddUserRequest) returns (User);
 	// rpc RenewUser(RenewUserRequest) returns (.google.protobuf.Empty);
-	GetIntegration(context.Context, *connect.Request[v1.GetIntegrationRequest]) (*connect.Response[v1.Integration], error)
+	GetIntegration(context.Context, *connect.Request[v1.GetIntegrationRequest]) (*connect.Response[v1.Integrations], error)
 	RevokeIntegration(context.Context, *connect.Request[v1.RevokeIntegrationRequest]) (*connect.Response[emptypb.Empty], error)
 	Batch(context.Context, *connect.Request[v1.BatchReq]) (*connect.Response[v1.BatchResp], error)
 	CreateCustomerCase(context.Context, *connect.Request[v1.CreateCustomerCaseReq]) (*connect.Response[emptypb.Empty], error)
@@ -234,7 +234,7 @@ func NewPortalServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(portalServiceSelfMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
-		getIntegration: connect.NewClient[v1.GetIntegrationRequest, v1.Integration](
+		getIntegration: connect.NewClient[v1.GetIntegrationRequest, v1.Integrations](
 			httpClient,
 			baseURL+PortalServiceGetIntegrationProcedure,
 			connect.WithSchema(portalServiceGetIntegrationMethodDescriptor),
@@ -427,7 +427,7 @@ func NewPortalServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 type portalServiceClient struct {
 	getConfig                   *connect.Client[emptypb.Empty, v1.Config]
 	self                        *connect.Client[emptypb.Empty, v1.User]
-	getIntegration              *connect.Client[v1.GetIntegrationRequest, v1.Integration]
+	getIntegration              *connect.Client[v1.GetIntegrationRequest, v1.Integrations]
 	revokeIntegration           *connect.Client[v1.RevokeIntegrationRequest, emptypb.Empty]
 	batch                       *connect.Client[v1.BatchReq, v1.BatchResp]
 	createCustomerCase          *connect.Client[v1.CreateCustomerCaseReq, emptypb.Empty]
@@ -471,7 +471,7 @@ func (c *portalServiceClient) Self(ctx context.Context, req *connect.Request[emp
 }
 
 // GetIntegration calls doota.portal.v1.PortalService.GetIntegration.
-func (c *portalServiceClient) GetIntegration(ctx context.Context, req *connect.Request[v1.GetIntegrationRequest]) (*connect.Response[v1.Integration], error) {
+func (c *portalServiceClient) GetIntegration(ctx context.Context, req *connect.Request[v1.GetIntegrationRequest]) (*connect.Response[v1.Integrations], error) {
 	return c.getIntegration.CallUnary(ctx, req)
 }
 
@@ -631,7 +631,7 @@ type PortalServiceHandler interface {
 	Self(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v1.User], error)
 	// rpc AddUser(AddUserRequest) returns (User);
 	// rpc RenewUser(RenewUserRequest) returns (.google.protobuf.Empty);
-	GetIntegration(context.Context, *connect.Request[v1.GetIntegrationRequest]) (*connect.Response[v1.Integration], error)
+	GetIntegration(context.Context, *connect.Request[v1.GetIntegrationRequest]) (*connect.Response[v1.Integrations], error)
 	RevokeIntegration(context.Context, *connect.Request[v1.RevokeIntegrationRequest]) (*connect.Response[emptypb.Empty], error)
 	Batch(context.Context, *connect.Request[v1.BatchReq]) (*connect.Response[v1.BatchResp], error)
 	CreateCustomerCase(context.Context, *connect.Request[v1.CreateCustomerCaseReq]) (*connect.Response[emptypb.Empty], error)
@@ -957,7 +957,7 @@ func (UnimplementedPortalServiceHandler) Self(context.Context, *connect.Request[
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.Self is not implemented"))
 }
 
-func (UnimplementedPortalServiceHandler) GetIntegration(context.Context, *connect.Request[v1.GetIntegrationRequest]) (*connect.Response[v1.Integration], error) {
+func (UnimplementedPortalServiceHandler) GetIntegration(context.Context, *connect.Request[v1.GetIntegrationRequest]) (*connect.Response[v1.Integrations], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.GetIntegration is not implemented"))
 }
 

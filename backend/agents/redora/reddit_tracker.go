@@ -72,7 +72,7 @@ func (s *redditKeywordTracker) TrackKeyword(ctx context.Context, tracker *models
 		return nil
 	}
 
-	redditClient, err := s.redditOauthClient.GetOrCreate(ctx, tracker.Project.OrganizationID, false)
+	redditClient, err := s.redditOauthClient.GetRedditAPIClient(ctx, tracker.Project.OrganizationID, false)
 	if err != nil {
 		if errors.Is(err, datastore.IntegrationNotFoundOrActive) {
 			return nil
