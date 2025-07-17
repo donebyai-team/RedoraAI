@@ -77,42 +77,42 @@ func (r redditInteractions) ProcessScheduledPost(ctx context.Context, post *mode
 		return nil
 	}
 
-	redditClient, err := r.redditOauthClient.GetOrCreate(ctx, project.OrganizationID, true)
-	if err != nil {
-		r.logger.Error("failed to get Reddit client", zap.String("id", post.ID), zap.Error(err))
+	err = r.redditOauthClient.WithRotatingAPIClient(ctx, project.OrganizationID, func(client *reddit.Client) error {
+		subredditName := utils.CleanSubredditName(source.Name)
+		if err := client.JoinSubreddit(ctx, subredditName); err != nil {
+			post.Status = models.PostStatusFAILED
+			post.Reason = fmt.Sprintf("failed to join subreddit: %v", err)
+			return err
+		}
+
+		title := post.Title
+		description := post.Description
+
+		redditPost, err := client.CreatePost(ctx, subredditName, title, description)
+		if err != nil {
+			r.logger.Error("failed to post to Reddit", zap.String("id", post.ID), zap.Error(err))
+			post.Status = models.PostStatusFAILED
+			post.Reason = fmt.Sprintf("Failed to Post: %v", err)
+			return err
+		}
+
+		post.PostID = &redditPost.ID
+		post.Status = models.PostStatusSENT
+		post.Reason = ""
+
+		r.logger.Info("successfully posted to Reddit",
+			zap.String("id", post.ID),
+			zap.String("reddit_post_id", redditPost.ID),
+		)
+		return nil
+	})
+	
+	if err != nil && errors.Is(err, datastore.IntegrationNotFoundOrActive) {
 		post.Status = models.PostStatusFAILED
 		post.Reason = err.Error()
-		return err
 	}
 
-	subredditName := utils.CleanSubredditName(source.Name)
-	if err := redditClient.JoinSubreddit(ctx, subredditName); err != nil {
-		post.Status = models.PostStatusFAILED
-		post.Reason = fmt.Sprintf("failed to join subreddit: %v", err)
-		return err
-	}
-
-	title := post.Title
-	description := post.Description
-
-	redditPost, err := redditClient.CreatePost(ctx, subredditName, title, description)
-	if err != nil {
-		r.logger.Error("failed to post to Reddit", zap.String("id", post.ID), zap.Error(err))
-		post.Status = models.PostStatusFAILED
-		post.Reason = fmt.Sprintf("Reddit post failed: %v", err)
-		return err
-	}
-
-	post.PostID = &redditPost.ID
-	post.Status = models.PostStatusSENT
-	post.Reason = ""
-
-	r.logger.Info("successfully posted to Reddit",
-		zap.String("id", post.ID),
-		zap.String("reddit_post_id", redditPost.ID),
-	)
-
-	return nil
+	return err
 }
 
 func (r redditInteractions) SendComment(ctx context.Context, interaction *models.LeadInteraction) (err error) {
@@ -185,71 +185,69 @@ func (r redditInteractions) SendComment(ctx context.Context, interaction *models
 		return nil
 	}
 
-	redditClient, err := r.redditOauthClient.GetOrCreate(ctx, interaction.Organization.ID, true)
-	if err != nil {
-		if errors.Is(err, datastore.IntegrationNotFoundOrActive) {
-			interaction.Status = models.LeadInteractionStatusFAILED
-			interaction.Reason = "integration not found or inactive"
-			// disable automated comments
-			r.disableAutomation(ctx, interaction, "Reddit integration expired or revoked")
-		} else {
+	shouldDisableAutomation := false
+
+	err = r.redditOauthClient.WithRotatingAPIClient(ctx, interaction.Organization.ID, func(client *reddit.Client) error {
+		interaction.From = client.GetConfig().Name
+		// check if user is not suspended
+		_, err = reddit.NewClientWithOutConfig(r.logger).GetUser(ctx, interaction.From)
+		if err != nil {
 			interaction.Status = models.LeadInteractionStatusFAILED
 			interaction.Reason = err.Error()
+			if strings.Contains(err.Error(), "banned") || strings.Contains(err.Error(), "suspended") {
+				shouldDisableAutomation = true
+			}
+			return err
 		}
-		return err
-	}
 
-	// check if user is not suspended
-	_, err = reddit.NewClientWithOutConfig(r.logger).GetUser(ctx, interaction.From)
-	if err != nil {
+		err = r.db.SetLeadInteractionStatusProcessing(ctx, interaction.ID)
+		if err != nil {
+			return err
+		}
+
+		subRedditName := utils.CleanSubredditName(redditLead.LeadMetadata.SubRedditPrefixed)
+		if err = client.JoinSubreddit(ctx, subRedditName); err != nil {
+			interaction.Reason = fmt.Sprintf("failed to join subreddit: %v", err)
+			interaction.Status = models.LeadInteractionStatusFAILED
+			return err
+		}
+
+		var comment *reddit.Comment
+		if comment, err = client.PostComment(ctx, fmt.Sprintf("t3_%s", interaction.To), utils.FormatComment(redditLead.LeadMetadata.SuggestedComment)); err != nil {
+			interaction.Reason = fmt.Sprintf("failed to post comment: %v", err)
+			interaction.Status = models.LeadInteractionStatusFAILED
+			return err
+		}
+
+		if comment == nil {
+			interaction.Status = models.LeadInteractionStatusFAILED
+			interaction.Reason = "comment is nil"
+		} else {
+			interaction.Status = models.LeadInteractionStatusSENT
+			interaction.Reason = ""
+			interaction.Metadata.ReferenceID = comment.ID
+			interaction.Metadata.Permalink = fmt.Sprintf("r/%s/comments/%s/comment/%s", subRedditName, interaction.To, comment.ID)
+
+			redditLead.LeadMetadata.AutomatedCommentURL = fmt.Sprintf("https://www.reddit.com/%s", interaction.Metadata.Permalink)
+			redditLead.Status = models.LeadStatusAIRESPONDED
+		}
+
+		r.logger.Info("successfully sent reddit comment",
+			zap.String("interaction_id", interaction.ID),
+			zap.String("from", interaction.From))
+
+		return nil
+	})
+	if err != nil && errors.Is(err, datastore.IntegrationNotFoundOrActive) {
 		interaction.Status = models.LeadInteractionStatusFAILED
 		interaction.Reason = err.Error()
-		if strings.Contains(err.Error(), "banned") || strings.Contains(err.Error(), "suspended") {
-			r.disableAutomation(ctx, interaction, err.Error())
-		}
-		return err
 	}
 
-	err = r.db.SetLeadInteractionStatusProcessing(ctx, interaction.ID)
-	if err != nil {
-		return err
-	}
-	subRedditName := utils.CleanSubredditName(redditLead.LeadMetadata.SubRedditPrefixed)
-	if err = redditClient.JoinSubreddit(ctx, subRedditName); err != nil {
-		interaction.Reason = fmt.Sprintf("failed to join subreddit: %v", err)
-		interaction.Status = models.LeadInteractionStatusFAILED
-		return err
+	if err != nil && shouldDisableAutomation {
+		r.disableAutomation(ctx, interaction, interaction.Reason)
 	}
 
-	var comment *reddit.Comment
-	if comment, err = redditClient.PostComment(ctx, fmt.Sprintf("t3_%s", interaction.To), utils.FormatComment(redditLead.LeadMetadata.SuggestedComment)); err != nil {
-		interaction.Reason = fmt.Sprintf("failed to post comment: %v", err)
-		interaction.Status = models.LeadInteractionStatusFAILED
-		return err
-	}
-
-	if comment == nil {
-		interaction.Status = models.LeadInteractionStatusFAILED
-		interaction.Reason = "comment is nil"
-	} else {
-		interaction.Status = models.LeadInteractionStatusSENT
-		interaction.Reason = ""
-		interaction.Metadata.ReferenceID = comment.ID
-		interaction.Metadata.Permalink = fmt.Sprintf("r/%s/comments/%s/comment/%s", subRedditName, interaction.To, comment.ID)
-
-		redditLead.LeadMetadata.AutomatedCommentURL = fmt.Sprintf("https://www.reddit.com/%s", interaction.Metadata.Permalink)
-		redditLead.Status = models.LeadStatusAIRESPONDED
-
-		if redditClient != nil && redditClient.GetConfig() != nil {
-			interaction.From = redditClient.GetConfig().Name
-		}
-	}
-
-	r.logger.Info("successfully sent reddit comment",
-		zap.String("interaction_id", interaction.ID),
-		zap.String("from", interaction.From))
-
-	return nil
+	return err
 }
 
 func (r redditInteractions) disableAutomation(ctx context.Context, interaction *models.LeadInteraction, reason string) {

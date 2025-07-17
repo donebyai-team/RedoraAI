@@ -97,122 +97,105 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 		return nil
 	}
 
-	// Check the interaction should not exist
-	exists, err := r.db.IsInteractionExists(ctx, interaction)
-	if err != nil {
-		interaction.Status = models.LeadInteractionStatusFAILED
-		interaction.Reason = fmt.Sprintf("failed to check if interaction exists: %s", err.Error())
-		return err
-	}
+	shouldDisableAutomation := false
 
-	if exists {
-		interaction.Status = models.LeadInteractionStatusFAILED
-		interaction.Reason = "DM already exists"
-		return nil
-	}
+	err = r.redditOauthClient.WithRotatingAccounts(ctx, interaction.Organization.ID, models.IntegrationTypeREDDITDMLOGIN, func(integration *models.Integration) error {
+		config := integration.GetRedditDMLoginConfig()
+		interaction.From = config.Username
 
-	integration, err := r.db.GetIntegrationByOrgAndType(ctx, interaction.Organization.ID, models.IntegrationTypeREDDITDMLOGIN)
-	if err != nil && errors.Is(err, datastore.NotFound) {
-		interaction.Status = models.LeadInteractionStatusFAILED
-		interaction.Reason = "integration not found or inactive"
-		return err
-	}
-
-	if integration.State != models.IntegrationStateACTIVE {
-		interaction.Status = models.LeadInteractionStatusFAILED
-		interaction.Reason = "dm integration not found or inactive"
-		return fmt.Errorf(interaction.Reason)
-	}
-
-	loginConfig := integration.GetRedditDMLoginConfig()
-
-	// use the from which is from the updated integration
-	if loginConfig.Username != "" {
-		interaction.From = loginConfig.Username
-	}
-
-	// check if user is not suspended
-	_, err = reddit.NewClientWithOutConfig(r.logger).GetUser(ctx, interaction.From)
-	if err != nil {
-		interaction.Status = models.LeadInteractionStatusFAILED
-		interaction.Reason = err.Error()
-		if strings.Contains(err.Error(), "banned") || strings.Contains(err.Error(), "suspended") {
-			r.disableAutomation(ctx, interaction, err.Error())
-		}
-		return err
-	}
-
-	redditClient, err := r.redditOauthClient.GetOrCreate(ctx, interaction.Organization.ID, false)
-	if err != nil {
-		if errors.Is(err, datastore.IntegrationNotFoundOrActive) {
+		// Check the interaction should not exist
+		exists, err := r.db.IsInteractionExists(ctx, interaction)
+		if err != nil {
 			interaction.Status = models.LeadInteractionStatusFAILED
-			interaction.Reason = "oauth integration not found or inactive"
-		} else {
+			interaction.Reason = fmt.Sprintf("failed to check if interaction exists: %s", err.Error())
+			return err
+		}
+
+		if exists {
+			interaction.Status = models.LeadInteractionStatusFAILED
+			interaction.Reason = "DM already exists"
+			return nil
+		}
+
+		// check if user is not suspended
+		_, err = reddit.NewClientWithOutConfig(r.logger).GetUser(ctx, config.Username)
+		if err != nil {
 			interaction.Status = models.LeadInteractionStatusFAILED
 			interaction.Reason = err.Error()
+			if strings.Contains(err.Error(), "banned") || strings.Contains(err.Error(), "suspended") {
+				shouldDisableAutomation = true
+			}
+			return err
 		}
-		return err
-	}
 
-	user, err := redditClient.GetUser(ctx, interaction.To)
-	if err != nil {
-		interaction.Status = models.LeadInteractionStatusFAILED
-		interaction.Reason = fmt.Sprintf("Reason: %v", err)
-		return err
-	}
+		user, err := reddit.NewClientWithOutConfig(r.logger).GetUser(ctx, interaction.To)
+		if err != nil {
+			interaction.Status = models.LeadInteractionStatusFAILED
+			interaction.Reason = fmt.Sprintf("Reason: %v", err)
+			return err
+		}
 
-	if user == nil || user.ID == "" {
-		interaction.Status = models.LeadInteractionStatusFAILED
-		interaction.Reason = "user does not exist or suspended"
+		if user == nil || user.ID == "" {
+			interaction.Status = models.LeadInteractionStatusFAILED
+			interaction.Reason = "user does not exist or suspended"
+			return nil
+		}
+
+		err = r.db.SetLeadInteractionStatusProcessing(ctx, interaction.ID)
+		if err != nil {
+			return err
+		}
+
+		updatedCookies, err := r.browserLessClient.SendDM(ctx, DMParams{
+			ID:       interaction.ID,
+			Cookie:   config.Cookies,
+			Username: config.Username,
+			Password: config.Password,
+			To:       fmt.Sprintf("t2_%s", user.ID),
+			Message:  utils.FormatDM(redditLead.LeadMetadata.SuggestedDM),
+		})
+		if err != nil {
+			interaction.Reason = fmt.Sprintf("Reason: %v", err)
+			interaction.Status = models.LeadInteractionStatusFAILED
+			if strings.Contains(err.Error(), "account isn't established") {
+				interaction.Reason = disabledReasonAccNotEstablished
+				shouldDisableAutomation = true
+			}
+
+			return err
+		}
+
+		config.Cookies = string(updatedCookies)
+		_, err = r.db.UpsertIntegration(ctx, integration)
+		if err != nil {
+			interaction.Reason = fmt.Sprintf("failed to update integration: %v", err)
+			interaction.Status = models.LeadInteractionStatusFAILED
+			return err
+		}
+
+		interaction.Status = models.LeadInteractionStatusSENT
+		interaction.Reason = ""
+		shouldDisableAutomation = false
+		redditLead.LeadMetadata.AutomatedDMSent = true
+		redditLead.Status = models.LeadStatusAIRESPONDED
+
+		r.logger.Info("successfully sent reddit DM",
+			zap.String("interaction_id", interaction.ID),
+			zap.String("from", interaction.From))
+
 		return nil
-	}
-
-	err = r.db.SetLeadInteractionStatusProcessing(ctx, interaction.ID)
-	if err != nil {
-		return err
-	}
-
-	updatedCookies, err := r.browserLessClient.SendDM(ctx, DMParams{
-		ID:       interaction.ID,
-		Cookie:   loginConfig.Cookies,
-		Username: loginConfig.Username,
-		Password: loginConfig.Password,
-		To:       fmt.Sprintf("t2_%s", user.ID),
-		Message:  utils.FormatDM(redditLead.LeadMetadata.SuggestedDM),
 	})
-	if err != nil {
-		interaction.Reason = fmt.Sprintf("Reason: %v", err)
+
+	if err != nil && errors.Is(err, datastore.IntegrationNotFoundOrActive) {
 		interaction.Status = models.LeadInteractionStatusFAILED
-		if strings.Contains(err.Error(), "account isn't established") {
-			interaction.Reason = disabledReasonAccNotEstablished
-			r.disableAutomation(ctx, interaction, interaction.Reason)
-		}
-
-		return err
+		interaction.Reason = err.Error()
 	}
 
-	loginConfig.Cookies = string(updatedCookies)
-	_, err = r.db.UpsertIntegration(ctx, integration)
-	if err != nil {
-		interaction.Reason = fmt.Sprintf("failed to update integration: %v", err)
-		interaction.Status = models.LeadInteractionStatusFAILED
-		return err
+	if err != nil && shouldDisableAutomation {
+		r.disableAutomation(ctx, interaction, interaction.Reason)
 	}
 
-	interaction.Status = models.LeadInteractionStatusSENT
-	interaction.Reason = ""
-
-	if loginConfig.Username != "" {
-		interaction.From = loginConfig.Username
-	}
-	redditLead.LeadMetadata.AutomatedDMSent = true
-	redditLead.Status = models.LeadStatusAIRESPONDED
-
-	r.logger.Info("successfully sent reddit DM",
-		zap.String("interaction_id", interaction.ID),
-		zap.String("from", interaction.From))
-
-	return nil
+	return err
 }
 
 type loginCallback func() error

@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/shank318/doota/utils"
 	"time"
 )
 
@@ -17,6 +18,7 @@ type IntegrationState string
 type Integration struct {
 	ID              string           `db:"id"`
 	OrganizationID  string           `db:"organization_id"`
+	ReferenceID     *string          `db:"reference_id"`
 	Type            IntegrationType  `db:"type"`
 	State           IntegrationState `db:"state"`
 	EncryptedConfig string           `db:"encrypted_config"`
@@ -28,12 +30,14 @@ type Integration struct {
 type Serializable interface {
 	EncryptedData() []byte
 	PlainTextData() []byte
+	GetUniqID() string
 }
 
 func SetIntegrationType[T Serializable](integration *Integration, integrationType IntegrationType, t T) *Integration {
 	integration.Type = integrationType
 	integration.EncryptedConfig = string(t.EncryptedData())
 	integration.PlainTextConfig = string(t.PlainTextData())
+	integration.ReferenceID = utils.Ptr(t.GetUniqID())
 	return integration
 }
 
@@ -46,6 +50,10 @@ type RedditDMLoginConfig struct {
 	Username string `json:"username"`
 	Password string `json:"-"`
 	Cookies  string `json:"-"`
+}
+
+func (i *RedditDMLoginConfig) GetUniqID() string {
+	return i.Username
 }
 
 func (i *RedditDMLoginConfig) EncryptedData() []byte {
@@ -115,6 +123,10 @@ type RedditConfig struct {
 	CreatedUtc       float64   `json:"created_utc"`
 	CommentKarma     float64   `json:"comment_karma"`
 	ExpiresAt        time.Time `json:"expires_at"`
+}
+
+func (r *RedditConfig) GetUniqID() string {
+	return r.Name
 }
 
 // IsUserOldEnough checks if the Reddit user is at least x weeks old.
@@ -227,6 +239,10 @@ func (i *Integration) GetSlackWebhook() *SlackWebhookConfig {
 type VAPIConfig struct {
 	APIKey   string `json:"-"`
 	HostName string `json:"hostname"`
+}
+
+func (i *VAPIConfig) GetUniqID() string {
+	return i.HostName
 }
 
 func NewVAPIConfig(apiKey string) *VAPIConfig {

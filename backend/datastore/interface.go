@@ -56,7 +56,7 @@ type SubscriptionRepository interface {
 
 type IntegrationRepository interface {
 	UpsertIntegration(ctx context.Context, integration *models.Integration) (*models.Integration, error)
-	GetIntegrationByOrgAndType(ctx context.Context, organizationId string, integrationType models.IntegrationType) (*models.Integration, error)
+	GetIntegrationByOrgAndType(ctx context.Context, organizationId string, integrationType models.IntegrationType) ([]*models.Integration, error)
 	GetIntegrationsByOrgID(ctx context.Context, orgID string) ([]*models.Integration, error)
 	GetIntegrationById(ctx context.Context, id string) (*models.Integration, error)
 }

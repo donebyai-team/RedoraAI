@@ -38,6 +38,7 @@ func (r *Database) UpsertIntegration(ctx context.Context, integration *models.In
 	err := stmt.GetContext(ctx, &out, map[string]interface{}{
 		"id":                integration.ID,
 		"organization_id":   integration.OrganizationID,
+		"reference_id":      integration.ReferenceID,
 		"type":              integration.Type,
 		"encrypted_config":  integration.EncryptedConfig,
 		"plain_text_config": integration.PlainTextConfig,
@@ -49,8 +50,8 @@ func (r *Database) UpsertIntegration(ctx context.Context, integration *models.In
 	return &out, nil
 }
 
-func (r *Database) GetIntegrationByOrgAndType(ctx context.Context, organizationId string, integrationType models.IntegrationType) (*models.Integration, error) {
-	integration, err := getOne[models.Integration](ctx, r, "integration/query_integration_by_org_and_type.sql", map[string]any{
+func (r *Database) GetIntegrationByOrgAndType(ctx context.Context, organizationId string, integrationType models.IntegrationType) ([]*models.Integration, error) {
+	integrations, err := getMany[models.Integration](ctx, r, "integration/query_integration_by_org_and_type.sql", map[string]any{
 		"organization_id": organizationId,
 		"type":            integrationType,
 	})
@@ -59,12 +60,15 @@ func (r *Database) GetIntegrationByOrgAndType(ctx context.Context, organizationI
 		return nil, err
 	}
 
-	integration.EncryptedConfig, err = r.decryptMessage(integration.EncryptedConfig)
-	if err != nil {
-		return nil, fmt.Errorf("failed to decrypt [%s] config", integration.Type)
+	for _, integration := range integrations {
+		integration.EncryptedConfig, err = r.decryptMessage(integration.EncryptedConfig)
+		if err != nil {
+			return nil, errors.Wrap(err, fmt.Sprintf("failed to decrypt [%s] config", integration.Type))
+		}
+
 	}
 
-	return integration, nil
+	return integrations, nil
 }
 
 func (r *Database) GetIntegrationsByOrgID(ctx context.Context, orgID string) ([]*models.Integration, error) {
