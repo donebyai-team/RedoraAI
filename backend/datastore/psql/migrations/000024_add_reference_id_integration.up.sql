@@ -1,3 +1,4 @@
+BEGIN;
 ALTER TABLE integrations
     ADD COLUMN reference_id VARCHAR;
 
@@ -12,3 +13,5 @@ DROP INDEX IF EXISTS idx1_integrations;
 
 CREATE UNIQUE INDEX idx1_integrations_new
     ON integrations (organization_id, type, reference_id);
+
+COMMIT;

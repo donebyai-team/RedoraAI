@@ -293,10 +293,10 @@ func (r *OauthClient) Authorize(ctx context.Context, code string) (*models.Reddi
 	}
 
 	// Verify If Account is active
-	_, err = NewClientWithOutConfig(r.logger).GetUser(ctx, userInfo.Name)
-	if err != nil {
-		return nil, err
-	}
+	//_, err = NewClientWithOutConfig(r.logger).GetUser(ctx, userInfo.Name)
+	//if err != nil {
+	//	return nil, err
+	//}
 
 	return &models.RedditConfig{
 		AccessToken:      token.AccessToken,

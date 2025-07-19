@@ -75,11 +75,10 @@ func (p *Portal) protoIntegration(integration *models.Integration) *pbportal.Int
 			Type:           pbportal.IntegrationType_INTEGRATION_TYPE_REDDIT,
 			Status:         mapIntegrationState(integration.State),
 		}
-		if integration.State == models.IntegrationStateACTIVE {
-			redditConfig := integration.GetRedditConfig()
+		if integration.ReferenceID != nil {
 			resp.Details = &pbportal.Integration_Reddit{
 				Reddit: &pbportal.RedditIntegration{
-					UserName: redditConfig.Name,
+					UserName: *integration.ReferenceID,
 				},
 			}
 		}
@@ -91,11 +90,10 @@ func (p *Portal) protoIntegration(integration *models.Integration) *pbportal.Int
 			Type:           pbportal.IntegrationType_INTEGRATION_TYPE_REDDIT_DM_LOGIN,
 			Status:         mapIntegrationState(integration.State),
 		}
-		if integration.State == models.IntegrationStateACTIVE {
-			redditConfig := integration.GetRedditDMLoginConfig()
+		if integration.ReferenceID != nil {
 			resp.Details = &pbportal.Integration_Reddit{
 				Reddit: &pbportal.RedditIntegration{
-					UserName: redditConfig.Username,
+					UserName: *integration.ReferenceID,
 				},
 			}
 		}

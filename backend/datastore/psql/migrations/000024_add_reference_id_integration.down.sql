@@ -1,3 +1,5 @@
+BEGIN;
+
 -- Drop the new unique index that includes reference_id
 DROP INDEX IF EXISTS idx1_integrations_new;
 
@@ -8,3 +10,5 @@ CREATE UNIQUE INDEX idx1_integrations
 -- Drop the reference_id column
 ALTER TABLE integrations
 DROP COLUMN IF EXISTS reference_id;
+
+COMMIT;
