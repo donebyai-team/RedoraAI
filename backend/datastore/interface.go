@@ -13,6 +13,7 @@ import (
 var NotFound = errors.New("not found")
 var ErrMessageSourceAlreadyExists = errors.New("message source already exists")
 var IntegrationNotFoundOrActive = errors.New("integration not found or active")
+var AllIntegrationsAccountsBanned = errors.New("integration not found or active")
 
 func IsUniqueViolation(err error) bool {
 	if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505" {

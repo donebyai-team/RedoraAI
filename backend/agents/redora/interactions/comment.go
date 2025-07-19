@@ -106,7 +106,7 @@ func (r redditInteractions) ProcessScheduledPost(ctx context.Context, post *mode
 		)
 		return nil
 	})
-	
+
 	if err != nil && errors.Is(err, datastore.IntegrationNotFoundOrActive) {
 		post.Status = models.PostStatusFAILED
 		post.Reason = err.Error()
@@ -122,6 +122,9 @@ func (r redditInteractions) SendComment(ctx context.Context, interaction *models
 	r.logger.Info("sending reddit comment",
 		zap.String("interaction_id", interaction.ID),
 		zap.String("from", interaction.From))
+
+	// reset reason in case we retry
+	interaction.Reason = ""
 
 	project, err := r.db.GetProject(ctx, interaction.ProjectID)
 	if err != nil {
@@ -185,20 +188,8 @@ func (r redditInteractions) SendComment(ctx context.Context, interaction *models
 		return nil
 	}
 
-	shouldDisableAutomation := false
-
 	err = r.redditOauthClient.WithRotatingAPIClient(ctx, interaction.Organization.ID, func(client *reddit.Client) error {
 		interaction.From = client.GetConfig().Name
-		// check if user is not suspended
-		_, err = reddit.NewClientWithOutConfig(r.logger).GetUser(ctx, interaction.From)
-		if err != nil {
-			interaction.Status = models.LeadInteractionStatusFAILED
-			interaction.Reason = err.Error()
-			if strings.Contains(err.Error(), "banned") || strings.Contains(err.Error(), "suspended") {
-				shouldDisableAutomation = true
-			}
-			return err
-		}
 
 		err = r.db.SetLeadInteractionStatusProcessing(ctx, interaction.ID)
 		if err != nil {
@@ -207,14 +198,14 @@ func (r redditInteractions) SendComment(ctx context.Context, interaction *models
 
 		subRedditName := utils.CleanSubredditName(redditLead.LeadMetadata.SubRedditPrefixed)
 		if err = client.JoinSubreddit(ctx, subRedditName); err != nil {
-			interaction.Reason = fmt.Sprintf("failed to join subreddit: %v", err)
+			interaction.Reason = fmt.Sprintf("Failed to join subreddit: %v", err)
 			interaction.Status = models.LeadInteractionStatusFAILED
 			return err
 		}
 
 		var comment *reddit.Comment
 		if comment, err = client.PostComment(ctx, fmt.Sprintf("t3_%s", interaction.To), utils.FormatComment(redditLead.LeadMetadata.SuggestedComment)); err != nil {
-			interaction.Reason = fmt.Sprintf("failed to post comment: %v", err)
+			interaction.Reason = fmt.Sprintf("Failed to post comment: %v", err)
 			interaction.Status = models.LeadInteractionStatusFAILED
 			return err
 		}
@@ -238,13 +229,18 @@ func (r redditInteractions) SendComment(ctx context.Context, interaction *models
 
 		return nil
 	})
-	if err != nil && errors.Is(err, datastore.IntegrationNotFoundOrActive) {
-		interaction.Status = models.LeadInteractionStatusFAILED
-		interaction.Reason = err.Error()
-	}
 
-	if err != nil && shouldDisableAutomation {
-		r.disableAutomation(ctx, interaction, interaction.Reason)
+	if err != nil {
+		interaction.Status = models.LeadInteractionStatusFAILED
+		// if the reason is not set then set it to the error message
+		if interaction.Reason == "" {
+			interaction.Reason = err.Error()
+		}
+		if errors.Is(err, reddit.AllAccountBanned) {
+			r.disableAutomation(ctx, interaction, reddit.AllAccountBanned.Error())
+		} else if errors.Is(err, reddit.AllAccountNotEstablished) {
+			r.disableAutomation(ctx, interaction, reddit.AllAccountNotEstablished.Error())
+		}
 	}
 
 	return err

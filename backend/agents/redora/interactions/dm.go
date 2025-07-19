@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/integrations/reddit"
 	"github.com/shank318/doota/models"
 	"github.com/shank318/doota/utils"
@@ -97,8 +96,6 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 		return nil
 	}
 
-	shouldDisableAutomation := false
-
 	err = r.redditOauthClient.WithRotatingAccounts(ctx, interaction.Organization.ID, models.IntegrationTypeREDDITDMLOGIN, func(integration *models.Integration) error {
 		config := integration.GetRedditDMLoginConfig()
 		interaction.From = config.Username
@@ -115,17 +112,6 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 			interaction.Status = models.LeadInteractionStatusFAILED
 			interaction.Reason = "DM already exists"
 			return nil
-		}
-
-		// check if user is not suspended
-		_, err = reddit.NewClientWithOutConfig(r.logger).GetUser(ctx, config.Username)
-		if err != nil {
-			interaction.Status = models.LeadInteractionStatusFAILED
-			interaction.Reason = err.Error()
-			if strings.Contains(err.Error(), "banned") || strings.Contains(err.Error(), "suspended") {
-				shouldDisableAutomation = true
-			}
-			return err
 		}
 
 		user, err := reddit.NewClientWithOutConfig(r.logger).GetUser(ctx, interaction.To)
@@ -159,7 +145,6 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 			interaction.Status = models.LeadInteractionStatusFAILED
 			if strings.Contains(err.Error(), "account isn't established") {
 				interaction.Reason = disabledReasonAccNotEstablished
-				shouldDisableAutomation = true
 			}
 
 			return err
@@ -176,7 +161,6 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 
 		interaction.Status = models.LeadInteractionStatusSENT
 		interaction.Reason = ""
-		shouldDisableAutomation = false
 		redditLead.LeadMetadata.AutomatedDMSent = true
 		redditLead.Status = models.LeadStatusAIRESPONDED
 
@@ -187,13 +171,18 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 		return nil
 	})
 
-	if err != nil && errors.Is(err, datastore.IntegrationNotFoundOrActive) {
+	if err != nil {
 		interaction.Status = models.LeadInteractionStatusFAILED
-		interaction.Reason = err.Error()
-	}
+		// if the reason is not set then set it to the error message
+		if interaction.Reason == "" {
+			interaction.Reason = err.Error()
+		}
 
-	if err != nil && shouldDisableAutomation {
-		r.disableAutomation(ctx, interaction, interaction.Reason)
+		if errors.Is(err, reddit.AllAccountBanned) {
+			r.disableAutomation(ctx, interaction, reddit.AllAccountBanned.Error())
+		} else if errors.Is(err, reddit.AllAccountNotEstablished) {
+			r.disableAutomation(ctx, interaction, reddit.AllAccountNotEstablished.Error())
+		}
 	}
 
 	return err

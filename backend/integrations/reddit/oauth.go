@@ -3,6 +3,7 @@ package reddit
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/errorx"
@@ -12,6 +13,7 @@ import (
 	"io"
 	"math/rand"
 	"net/http"
+	"strings"
 	"sync"
 )
 
@@ -72,7 +74,41 @@ func NewRedditOauthClient(logger *zap.Logger, db datastore.Repository, clientID,
 	return oauthClient
 }
 
-func (c *OauthClient) WithRotatingAccounts(ctx context.Context, orgID string, integrationType models.IntegrationType, fn func(integration *models.Integration) error) error {
+func (c *OauthClient) WithRotatingAccounts(
+	ctx context.Context,
+	orgID string,
+	integrationType models.IntegrationType,
+	fn func(integration *models.Integration) error,
+) error {
+	return c.withRotatingIntegrations(ctx, orgID, integrationType,
+		nil,
+		nil,
+		fn,
+	)
+}
+
+func (c *OauthClient) WithRotatingAPIClient(
+	ctx context.Context,
+	orgID string,
+	fn func(client *Client) error,
+) error {
+	return c.withRotatingIntegrations(ctx, orgID, models.IntegrationTypeREDDIT,
+		func(integration *models.Integration) (*Client, error) {
+			return c.buildRedditClient(ctx, integration)
+		},
+		fn,
+		nil,
+	)
+}
+
+func (c *OauthClient) withRotatingIntegrations(
+	ctx context.Context,
+	orgID string,
+	integrationType models.IntegrationType,
+	clientBuilder func(integration *models.Integration) (*Client, error),
+	clientHandler func(*Client) error,
+	integrationHandler func(*models.Integration) error,
+) error {
 	integrations, err := c.db.GetIntegrationByOrgAndType(ctx, orgID, integrationType)
 	if err != nil {
 		return fmt.Errorf("failed to get integrations: %w", err)
@@ -94,51 +130,62 @@ func (c *OauthClient) WithRotatingAccounts(ctx context.Context, orgID string, in
 	})
 
 	var lastErr error
+	banned, notEstablished := 0, 0
 
 	for _, integration := range activeIntegrations {
-		err = fn(integration)
-		if err == nil {
-			return nil
-		}
-
-		lastErr = err
-	}
-
-	return lastErr
-}
-
-func (c *OauthClient) WithRotatingAPIClient(ctx context.Context, orgID string, fn func(client *Client) error) error {
-	activeIntegrations, err := c.GetActiveIntegrations(ctx, orgID, models.IntegrationTypeREDDIT)
-	if err != nil {
-		return fmt.Errorf("failed to get integrations: %w", err)
-	}
-
-	if len(activeIntegrations) == 0 {
-		return datastore.IntegrationNotFoundOrActive
-	}
-
-	rand.Shuffle(len(activeIntegrations), func(i, j int) {
-		activeIntegrations[i], activeIntegrations[j] = activeIntegrations[j], activeIntegrations[i]
-	})
-
-	var lastErr error
-
-	for _, integration := range activeIntegrations {
-		client, err := c.buildRedditClient(ctx, integration)
-		if err != nil {
-			lastErr = err
+		if integration.ReferenceID == nil {
+			c.logger.Error("reference id is nil", zap.String("integration_id", integration.ID))
 			continue
 		}
 
-		err = fn(client)
-		if err == nil {
-			return nil
+		// Check if account is valid
+		_, err := NewClientWithOutConfig(c.logger).GetUser(ctx, *integration.ReferenceID)
+		if err != nil {
+			lastErr = err
+			if errors.Is(err, AccountBanned) {
+				banned++
+				c.logger.Error("account is banned", zap.String("integration_id", integration.ID), zap.Error(err))
+				c.revokeIntegration(ctx, integration.ID)
+			}
+			continue
 		}
 
-		lastErr = err
+		if clientBuilder != nil {
+			client, err := clientBuilder(integration)
+			if err != nil {
+				lastErr = err
+				continue
+			}
+
+			err = clientHandler(client)
+			if err == nil {
+				return nil
+			}
+			lastErr = err
+		} else if integrationHandler != nil {
+			err = integrationHandler(integration)
+			if err == nil {
+				return nil
+			}
+			lastErr = err
+		}
+
+		// Revoke integration if account isn't established
+		if strings.Contains(lastErr.Error(), "account isn't established") {
+			notEstablished++
+			c.logger.Error("account isn't established", zap.String("integration_id", integration.ID), zap.Error(err))
+			c.revokeIntegration(ctx, integration.ID)
+		}
 	}
 
-	return lastErr
+	switch {
+	case banned == len(activeIntegrations):
+		return AllAccountBanned
+	case notEstablished == len(activeIntegrations):
+		return AllAccountNotEstablished
+	default:
+		return lastErr
+	}
 }
 
 func (c *OauthClient) GetActiveIntegrations(ctx context.Context, orgID string, integrationType models.IntegrationType) ([]*models.Integration, error) {
@@ -228,6 +275,7 @@ func (c *OauthClient) revokeIntegration(ctx context.Context, integrationID strin
 	if err != nil {
 		c.logger.Error("failed to mark integration as AUTHREVOKED", zap.Error(err))
 	}
+	c.logger.Info("integration marked as AUTHREVOKED", zap.String("integration_id", integrationID))
 	return err
 }
 
@@ -292,11 +340,11 @@ func (r *OauthClient) Authorize(ctx context.Context, code string) (*models.Reddi
 		return nil, fmt.Errorf("failed to parse user info: %w", err)
 	}
 
-	// Verify If Account is active
-	//_, err = NewClientWithOutConfig(r.logger).GetUser(ctx, userInfo.Name)
-	//if err != nil {
-	//	return nil, err
-	//}
+	//Verify If Account is active
+	_, err = NewClientWithOutConfig(r.logger).GetUser(ctx, userInfo.Name)
+	if err != nil {
+		return nil, err
+	}
 
 	return &models.RedditConfig{
 		AccessToken:      token.AccessToken,

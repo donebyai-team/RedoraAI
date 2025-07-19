@@ -21,7 +21,7 @@ func (r *Client) GetUser(ctx context.Context, userName string) (*User, error) {
 	resp, err := r.doRequest(ctx, http.MethodGet, reqURL, nil)
 	if err != nil {
 		if strings.Contains(err.Error(), "404") {
-			return nil, redditAccountSuspendedError(userName)
+			return nil, AccountBanned
 		}
 		return nil, err
 	}
