@@ -9,12 +9,12 @@ import { Button } from '../../../../../atoms/Button';
 import { portalClient } from '../../../../../services/grpc';
 import { isPlatformAdmin } from '@doota/ui-core/helper/role';
 import { Box } from '@mui/system';
-import { Typography, Card, CardContent, Slider, Switch, styled, Tabs, Tab, FormControlLabel, RadioGroup, Radio, Dialog, DialogTitle, DialogContent, DialogActions, TableCell, TableRow, TableBody, TableContainer, Table, TableHead } from '@mui/material';
+import { Typography, Card, CardContent, Slider, Switch, styled, Tabs, Tab, FormControlLabel, RadioGroup, Radio, Dialog, DialogTitle, DialogContent, DialogActions, TableCell, TableRow, TableBody, TableContainer, Table, TableHead, TextField, Link, List, ListItem, ListItemText } from '@mui/material';
 import toast from 'react-hot-toast';
-import Link from 'next/link';
 import { useAppSelector } from '@/store/hooks';
 import { SubscriptionStatus } from '@doota/pb/doota/core/v1/core_pb';
 import { getConnectError } from '@/utils/error';
+import { LoadingButton } from '@mui/lab';
 
 const StyledSlider = styled(Slider)(() => ({
     color: '#111827', // Dark color for the track
@@ -145,10 +145,16 @@ export default function Page() {
         return integrations.find((integration) => integration.type === integrationType && integration.status == IntegrationState.ACTIVE);
     };
 
+    const [showCookieModal, setShowCookieModal] = useState(false);
+    const [cookieInput, setCookieInput] = useState('');
+    const [cookieError, setCookieError] = useState('');
+    const [isSubmittingCookie, setIsSubmittingCookie] = useState(false);
+
+
     const handleConnectReddit = async () => {
+        let popup: Window | null = null;
         try {
             setIsConnecting(true);
-            let popup: Window | null = null;
             popup = window.open('', '_blank', "width=600,height=800");
             if (!popup) {
                 toast.error('Popup was blocked. Please allow popups in your browser.');
@@ -204,7 +210,11 @@ export default function Page() {
 
             toast.success("Reddit connected successfully");
         } catch (err: any) {
-            toast.error(getConnectError(err));
+            if (popup && !popup.closed) {
+                popup.close();
+            }
+            setShowCookieModal(true); // show modal
+            // toast.error(getConnectError(err));
         } finally {
             setIsConnecting(false);
         }
@@ -383,6 +393,135 @@ export default function Page() {
                         {/* DM automation settings */}
                         <Card sx={{ p: 2, mt: 5 }} component={Paper}>
                             <CardContent>
+
+                                <Dialog open={showCookieModal} onClose={() => setShowCookieModal(false)} maxWidth="sm" fullWidth>
+                                    <DialogContent>
+                                        <Card variant="outlined" sx={{ backgroundColor: "#f9f9f9", borderRadius: 2, p: 2, mb: 5 }}>
+                                            <CardContent>
+                                                <Typography variant="subtitle1" gutterBottom fontWeight="bold">
+                                                    Connect Reddit Account Manually
+                                                </Typography>
+
+                                                <Typography variant="body2" sx={{ mb: 2 }}>
+                                                    We couldn't connect to Reddit automatically. Please follow the steps below to connect your account manually:
+                                                </Typography>
+
+                                                <List sx={{ listStyleType: 'disc', pl: 3 }} disablePadding>
+                                                    <ListItem sx={{ display: 'list-item', py: 0.5 }}>
+                                                        <ListItemText
+                                                            primary={
+                                                                <Typography variant="body2">
+                                                                    Go to{" "}
+                                                                    <Link href="https://www.reddit.com" target="_blank" rel="noopener" sx={{ textDecoration: "underline" }}>
+                                                                        reddit.com
+                                                                    </Link>{" "}
+                                                                    and log in to your Reddit account.
+                                                                </Typography>
+                                                            }
+                                                        />
+                                                    </ListItem>
+
+                                                    <ListItem sx={{ display: 'list-item', py: 0.5 }}>
+                                                        <ListItemText
+                                                            primary={
+                                                                <Typography variant="body2">
+                                                                    Install the Chrome extension{" "}
+                                                                    <Link
+                                                                        href="https://chromewebstore.google.com/detail/cookie-editor/hlkenndednhfkekhgcdicdfddnkalmdm"
+                                                                        target="_blank"
+                                                                        rel="noopener"
+                                                                        sx={{ textDecoration: "underline" }}
+                                                                    >
+                                                                        EditThisCookie
+                                                                    </Link>
+                                                                    .
+                                                                </Typography>
+                                                            }
+                                                        />
+                                                    </ListItem>
+
+                                                    <ListItem sx={{ display: 'list-item', py: 0.5 }}>
+                                                        <ListItemText
+                                                            primary={
+                                                                <Typography variant="body2">
+                                                                    Open the extension and copy all cookies for reddit.com in JSON format.
+                                                                </Typography>
+                                                            }
+                                                        />
+                                                    </ListItem>
+
+                                                    <ListItem sx={{ display: 'list-item', py: 0.5 }}>
+                                                        <ListItemText
+                                                            primary={
+                                                                <Typography variant="body2">
+                                                                    Paste the copied cookie JSON into the field below and click <strong>Submit</strong>.
+                                                                </Typography>
+                                                            }
+                                                        />
+                                                    </ListItem>
+                                                </List>
+                                            </CardContent>
+                                        </Card>
+
+
+
+                                        <TextField
+                                            multiline
+                                            fullWidth
+                                            rows={5}
+                                            label="Reddit Cookies JSON"
+                                            value={cookieInput}
+                                            onChange={(e) => setCookieInput(e.target.value)}
+                                            error={!!cookieError}
+                                            helperText={cookieError || 'Paste your cookies in JSON format. Validation will take a few mins'}
+                                        />
+                                    </DialogContent>
+                                    <DialogActions>
+                                        <Button onClick={() => setShowCookieModal(false)} disabled={isSubmittingCookie}>
+                                            Cancel
+                                        </Button>
+                                        <LoadingButton
+                                            loading={isSubmittingCookie}
+                                            variant="contained"
+                                            onClick={async () => {
+                                                try {
+                                                    setIsSubmittingCookie(true);
+                                                    setCookieError('');
+
+                                                    // ✅ Validate JSON format
+                                                    try {
+                                                        JSON.parse(cookieInput);
+                                                    } catch (e) {
+                                                        setCookieError('Please enter valid JSON format.');
+                                                        return;
+                                                    }
+
+                                                    const response = portalClient.connectReddit(
+                                                        {
+                                                            cookieJson: cookieInput
+                                                        }
+                                                    );
+
+                                                    for await (const msg of response) { }
+
+                                                    await handleSaveAutomation({ dm: { enabled: true } });
+                                                    const res = await portalClient.getIntegrations({});
+                                                    setIntegrations(res.integrations);
+                                                    toast.success("Reddit connected successfully");
+                                                    setShowCookieModal(false);
+                                                    setCookieInput('');
+                                                } catch (e: any) {
+                                                    setCookieError(getConnectError(e));
+                                                } finally {
+                                                    setIsSubmittingCookie(false);
+                                                }
+                                            }}
+                                        >
+                                            Submit
+                                        </LoadingButton>
+                                    </DialogActions>
+                                </Dialog>
+
                                 <Box display="flex" alignItems="center" gap={1} mb={2}>
                                     <Typography variant="h5" fontWeight="bold">
                                         DM Automation Settings

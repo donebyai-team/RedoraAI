@@ -37,7 +37,7 @@ service PortalService {
   rpc CreateOrEditProject(CreateProjectRequest) returns (doota.core.v1.Project);
   rpc SuggestKeywordsAndSources(.google.protobuf.Empty) returns (doota.core.v1.Project);
   rpc UpdateAutomationSettings(UpdateAutomationSettingRequest) returns (Organization);
-  rpc ConnectReddit(.google.protobuf.Empty) returns (stream ConnectRedditResponse);
+  rpc ConnectReddit(ConnectRedditRequest) returns (stream ConnectRedditResponse);
   rpc GetLeadInteractions(GetLeadInteractionsRequest) returns (GetLeadInteractionsResponse);
 
   // Payment
@@ -88,6 +88,10 @@ message GetLeadInteractionsRequest {
 
 message GetLeadInteractionsResponse {
   repeated doota.core.v1.LeadInteraction interactions = 1;
+}
+
+message ConnectRedditRequest {
+  string cookie_json = 1;
 }
 
 message ConnectRedditResponse {

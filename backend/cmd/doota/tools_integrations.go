@@ -164,7 +164,7 @@ func toolsCreateIntegrationRedditLogin(cmd *cobra.Command, args []string) error 
 	out.Password = gjson.Get(args[1], "password").String()
 	out.Cookies = gjson.Get(args[1], "cookies").String()
 
-	_, err = interactions.ParseCookiesFromJSON(out.Cookies)
+	_, err = interactions.ParseCookiesFromJSON(out.Cookies, true)
 	if err != nil {
 		return fmt.Errorf("unable to parse cookies: %w", err)
 	}

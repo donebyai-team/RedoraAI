@@ -153,6 +153,22 @@ export declare type GetLeadInteractionsResponse = Message<"doota.portal.v1.GetLe
 export declare const GetLeadInteractionsResponseSchema: GenMessage<GetLeadInteractionsResponse>;
 
 /**
+ * @generated from message doota.portal.v1.ConnectRedditRequest
+ */
+export declare type ConnectRedditRequest = Message<"doota.portal.v1.ConnectRedditRequest"> & {
+  /**
+   * @generated from field: string cookie_json = 1;
+   */
+  cookieJson: string;
+};
+
+/**
+ * Describes the message doota.portal.v1.ConnectRedditRequest.
+ * Use `create(ConnectRedditRequestSchema)` to create a new message.
+ */
+export declare const ConnectRedditRequestSchema: GenMessage<ConnectRedditRequest>;
+
+/**
  * @generated from message doota.portal.v1.ConnectRedditResponse
  */
 export declare type ConnectRedditResponse = Message<"doota.portal.v1.ConnectRedditResponse"> & {
@@ -1469,7 +1485,7 @@ export declare const PortalService: GenService<{
    */
   connectReddit: {
     methodKind: "server_streaming";
-    input: typeof EmptySchema;
+    input: typeof ConnectRedditRequestSchema;
     output: typeof ConnectRedditResponseSchema;
   },
   /**

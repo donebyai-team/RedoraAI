@@ -47,7 +47,7 @@ func (p *Portal) getProject(ctx context.Context, headers http.Header, orgID stri
 	return project, nil
 }
 
-func (p *Portal) ConnectReddit(ctx context.Context, c *connect.Request[emptypb.Empty], stream *connect.ServerStream[pbportal.ConnectRedditResponse]) error {
+func (p *Portal) ConnectReddit(ctx context.Context, c *connect.Request[pbportal.ConnectRedditRequest], stream *connect.ServerStream[pbportal.ConnectRedditResponse]) error {
 	actor, err := p.gethAuthContext(ctx)
 	if err != nil {
 		return err
@@ -56,21 +56,25 @@ func (p *Portal) ConnectReddit(ctx context.Context, c *connect.Request[emptypb.E
 	taskCtx, cancel := context.WithTimeout(ctx, 3*time.Minute)
 	defer cancel()
 
-	liveURL, loginCallback, err := p.interactionService.Authenticate(taskCtx, actor.OrganizationID)
+	liveURL, loginCallback, err := p.interactionService.Authenticate(taskCtx, actor.OrganizationID, c.Msg.CookieJson)
 	if err != nil {
-		return err
-	}
-
-	if err := stream.Send(&pbportal.ConnectRedditResponse{
-		Url: liveURL,
-	}); err != nil {
-		return err
-	}
-
-	err = loginCallback()
-	if err != nil {
-		p.logger.Error("failed to connect reddit DM", zap.Error(err))
 		return status.New(codes.InvalidArgument, err.Error()).Err()
+	}
+
+	if liveURL != "" {
+		if err := stream.Send(&pbportal.ConnectRedditResponse{
+			Url: liveURL,
+		}); err != nil {
+			return err
+		}
+	}
+
+	if loginCallback != nil {
+		err = loginCallback()
+		if err != nil {
+			p.logger.Error("failed to connect reddit DM", zap.Error(err))
+			return status.New(codes.InvalidArgument, err.Error()).Err()
+		}
 	}
 
 	go p.alertNotifier.SendRedditChatConnectedAlert(context.Background(), actor.Email)

@@ -85,7 +85,7 @@ type PortalServiceClient interface {
 	CreateOrEditProject(ctx context.Context, in *CreateProjectRequest, opts ...grpc.CallOption) (*v1.Project, error)
 	SuggestKeywordsAndSources(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*v1.Project, error)
 	UpdateAutomationSettings(ctx context.Context, in *UpdateAutomationSettingRequest, opts ...grpc.CallOption) (*Organization, error)
-	ConnectReddit(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (PortalService_ConnectRedditClient, error)
+	ConnectReddit(ctx context.Context, in *ConnectRedditRequest, opts ...grpc.CallOption) (PortalService_ConnectRedditClient, error)
 	GetLeadInteractions(ctx context.Context, in *GetLeadInteractionsRequest, opts ...grpc.CallOption) (*GetLeadInteractionsResponse, error)
 	// Payment
 	InitiateSubscription(ctx context.Context, in *InitiateSubscriptionRequest, opts ...grpc.CallOption) (*InitiateSubscriptionResponse, error)
@@ -307,7 +307,7 @@ func (c *portalServiceClient) UpdateAutomationSettings(ctx context.Context, in *
 	return out, nil
 }
 
-func (c *portalServiceClient) ConnectReddit(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (PortalService_ConnectRedditClient, error) {
+func (c *portalServiceClient) ConnectReddit(ctx context.Context, in *ConnectRedditRequest, opts ...grpc.CallOption) (PortalService_ConnectRedditClient, error) {
 	stream, err := c.cc.NewStream(ctx, &PortalService_ServiceDesc.Streams[0], PortalService_ConnectReddit_FullMethodName, opts...)
 	if err != nil {
 		return nil, err
@@ -458,7 +458,7 @@ type PortalServiceServer interface {
 	CreateOrEditProject(context.Context, *CreateProjectRequest) (*v1.Project, error)
 	SuggestKeywordsAndSources(context.Context, *emptypb.Empty) (*v1.Project, error)
 	UpdateAutomationSettings(context.Context, *UpdateAutomationSettingRequest) (*Organization, error)
-	ConnectReddit(*emptypb.Empty, PortalService_ConnectRedditServer) error
+	ConnectReddit(*ConnectRedditRequest, PortalService_ConnectRedditServer) error
 	GetLeadInteractions(context.Context, *GetLeadInteractionsRequest) (*GetLeadInteractionsResponse, error)
 	// Payment
 	InitiateSubscription(context.Context, *InitiateSubscriptionRequest) (*InitiateSubscriptionResponse, error)
@@ -545,7 +545,7 @@ func (UnimplementedPortalServiceServer) SuggestKeywordsAndSources(context.Contex
 func (UnimplementedPortalServiceServer) UpdateAutomationSettings(context.Context, *UpdateAutomationSettingRequest) (*Organization, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateAutomationSettings not implemented")
 }
-func (UnimplementedPortalServiceServer) ConnectReddit(*emptypb.Empty, PortalService_ConnectRedditServer) error {
+func (UnimplementedPortalServiceServer) ConnectReddit(*ConnectRedditRequest, PortalService_ConnectRedditServer) error {
 	return status.Errorf(codes.Unimplemented, "method ConnectReddit not implemented")
 }
 func (UnimplementedPortalServiceServer) GetLeadInteractions(context.Context, *GetLeadInteractionsRequest) (*GetLeadInteractionsResponse, error) {
@@ -988,7 +988,7 @@ func _PortalService_UpdateAutomationSettings_Handler(srv interface{}, ctx contex
 }
 
 func _PortalService_ConnectReddit_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(emptypb.Empty)
+	m := new(ConnectRedditRequest)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}

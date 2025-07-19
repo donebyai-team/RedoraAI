@@ -196,7 +196,7 @@ type PortalServiceClient interface {
 	CreateOrEditProject(context.Context, *connect.Request[v1.CreateProjectRequest]) (*connect.Response[v11.Project], error)
 	SuggestKeywordsAndSources(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v11.Project], error)
 	UpdateAutomationSettings(context.Context, *connect.Request[v1.UpdateAutomationSettingRequest]) (*connect.Response[v1.Organization], error)
-	ConnectReddit(context.Context, *connect.Request[emptypb.Empty]) (*connect.ServerStreamForClient[v1.ConnectRedditResponse], error)
+	ConnectReddit(context.Context, *connect.Request[v1.ConnectRedditRequest]) (*connect.ServerStreamForClient[v1.ConnectRedditResponse], error)
 	GetLeadInteractions(context.Context, *connect.Request[v1.GetLeadInteractionsRequest]) (*connect.Response[v1.GetLeadInteractionsResponse], error)
 	// Payment
 	InitiateSubscription(context.Context, *connect.Request[v1.InitiateSubscriptionRequest]) (*connect.Response[v1.InitiateSubscriptionResponse], error)
@@ -354,7 +354,7 @@ func NewPortalServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(portalServiceUpdateAutomationSettingsMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
-		connectReddit: connect.NewClient[emptypb.Empty, v1.ConnectRedditResponse](
+		connectReddit: connect.NewClient[v1.ConnectRedditRequest, v1.ConnectRedditResponse](
 			httpClient,
 			baseURL+PortalServiceConnectRedditProcedure,
 			connect.WithSchema(portalServiceConnectRedditMethodDescriptor),
@@ -447,7 +447,7 @@ type portalServiceClient struct {
 	createOrEditProject         *connect.Client[v1.CreateProjectRequest, v11.Project]
 	suggestKeywordsAndSources   *connect.Client[emptypb.Empty, v11.Project]
 	updateAutomationSettings    *connect.Client[v1.UpdateAutomationSettingRequest, v1.Organization]
-	connectReddit               *connect.Client[emptypb.Empty, v1.ConnectRedditResponse]
+	connectReddit               *connect.Client[v1.ConnectRedditRequest, v1.ConnectRedditResponse]
 	getLeadInteractions         *connect.Client[v1.GetLeadInteractionsRequest, v1.GetLeadInteractionsResponse]
 	initiateSubscription        *connect.Client[v1.InitiateSubscriptionRequest, v1.InitiateSubscriptionResponse]
 	verifySubscription          *connect.Client[v1.VerifySubscriptionRequest, v11.Subscription]
@@ -571,7 +571,7 @@ func (c *portalServiceClient) UpdateAutomationSettings(ctx context.Context, req 
 }
 
 // ConnectReddit calls doota.portal.v1.PortalService.ConnectReddit.
-func (c *portalServiceClient) ConnectReddit(ctx context.Context, req *connect.Request[emptypb.Empty]) (*connect.ServerStreamForClient[v1.ConnectRedditResponse], error) {
+func (c *portalServiceClient) ConnectReddit(ctx context.Context, req *connect.Request[v1.ConnectRedditRequest]) (*connect.ServerStreamForClient[v1.ConnectRedditResponse], error) {
 	return c.connectReddit.CallServerStream(ctx, req)
 }
 
@@ -652,7 +652,7 @@ type PortalServiceHandler interface {
 	CreateOrEditProject(context.Context, *connect.Request[v1.CreateProjectRequest]) (*connect.Response[v11.Project], error)
 	SuggestKeywordsAndSources(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[v11.Project], error)
 	UpdateAutomationSettings(context.Context, *connect.Request[v1.UpdateAutomationSettingRequest]) (*connect.Response[v1.Organization], error)
-	ConnectReddit(context.Context, *connect.Request[emptypb.Empty], *connect.ServerStream[v1.ConnectRedditResponse]) error
+	ConnectReddit(context.Context, *connect.Request[v1.ConnectRedditRequest], *connect.ServerStream[v1.ConnectRedditResponse]) error
 	GetLeadInteractions(context.Context, *connect.Request[v1.GetLeadInteractionsRequest]) (*connect.Response[v1.GetLeadInteractionsResponse], error)
 	// Payment
 	InitiateSubscription(context.Context, *connect.Request[v1.InitiateSubscriptionRequest]) (*connect.Response[v1.InitiateSubscriptionResponse], error)
@@ -1037,7 +1037,7 @@ func (UnimplementedPortalServiceHandler) UpdateAutomationSettings(context.Contex
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.UpdateAutomationSettings is not implemented"))
 }
 
-func (UnimplementedPortalServiceHandler) ConnectReddit(context.Context, *connect.Request[emptypb.Empty], *connect.ServerStream[v1.ConnectRedditResponse]) error {
+func (UnimplementedPortalServiceHandler) ConnectReddit(context.Context, *connect.Request[v1.ConnectRedditRequest], *connect.ServerStream[v1.ConnectRedditResponse]) error {
 	return connect.NewError(connect.CodeUnimplemented, errors.New("doota.portal.v1.PortalService.ConnectReddit is not implemented"))
 }
 

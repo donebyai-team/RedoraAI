@@ -190,7 +190,23 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 
 type loginCallback func() error
 
-func (r redditInteractions) Authenticate(ctx context.Context, orgID string) (string, loginCallback, error) {
+func (r redditInteractions) Authenticate(ctx context.Context, orgID string, cookieJSON string) (string, loginCallback, error) {
+	// Handle direct cookie login
+	if cookieJSON != "" {
+		updatedLoginConfig, err := r.browserLessClient.ValidateCookies(ctx, cookieJSON)
+		if err != nil {
+			return "", nil, err
+		}
+
+		if err := r.finalizeLogin(ctx, orgID, updatedLoginConfig); err != nil {
+			return "", nil, err
+		}
+
+		r.logger.Info("successfully logged in to reddit", zap.String("org_id", orgID))
+		return "", nil, nil
+	}
+
+	// Handle login via browser automation
 	cdp, err := r.browserLessClient.StartLogin(ctx)
 	if err != nil {
 		return "", nil, err
@@ -202,29 +218,37 @@ func (r redditInteractions) Authenticate(ctx context.Context, orgID string) (str
 			return err
 		}
 
-		if updatedLoginConfig.Username == "" {
-			return fmt.Errorf("Unable to find username in cookies")
-		}
-
-		// Verify If Account is active
-		_, err = reddit.NewClientWithOutConfig(r.logger).GetUser(ctx, updatedLoginConfig.Username)
-		if err != nil {
+		if err := r.finalizeLogin(ctx, orgID, updatedLoginConfig); err != nil {
 			return err
 		}
 
-		integration := &models.Integration{
-			OrganizationID: orgID,
-			State:          models.IntegrationStateACTIVE,
-			Type:           models.IntegrationTypeREDDITDMLOGIN,
-		}
-
-		integration = models.SetIntegrationType(integration, models.IntegrationTypeREDDITDMLOGIN, updatedLoginConfig)
-		_, err = r.db.UpsertIntegration(ctx, integration)
-		if err != nil {
-			r.logger.Warn("failed to update integration", zap.Error(err), zap.String("org_id", orgID))
-			return err
-		}
 		r.logger.Info("successfully logged in to reddit", zap.String("org_id", orgID))
 		return nil
 	}, nil
+}
+
+func (r redditInteractions) finalizeLogin(ctx context.Context, orgID string, updatedLoginConfig *models.RedditDMLoginConfig) error {
+	if updatedLoginConfig.Username == "" {
+		return fmt.Errorf("unable to find username in cookies")
+	}
+
+	// Validate Reddit user is still active
+	if _, err := reddit.NewClientWithOutConfig(r.logger).GetUser(ctx, updatedLoginConfig.Username); err != nil {
+		return err
+	}
+
+	integration := &models.Integration{
+		OrganizationID: orgID,
+		State:          models.IntegrationStateACTIVE,
+		Type:           models.IntegrationTypeREDDITDMLOGIN,
+	}
+
+	integration = models.SetIntegrationType(integration, models.IntegrationTypeREDDITDMLOGIN, updatedLoginConfig)
+
+	if _, err := r.db.UpsertIntegration(ctx, integration); err != nil {
+		r.logger.Warn("failed to update integration", zap.Error(err), zap.String("org_id", orgID))
+		return err
+	}
+
+	return nil
 }
