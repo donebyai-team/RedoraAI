@@ -13,6 +13,7 @@ import (
 var NotFound = errors.New("not found")
 var ErrMessageSourceAlreadyExists = errors.New("message source already exists")
 var IntegrationNotFoundOrActive = errors.New("integration not found or active")
+var AllIntegrationsAccountsBanned = errors.New("integration not found or active")
 
 func IsUniqueViolation(err error) bool {
 	if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505" {
@@ -56,7 +57,7 @@ type SubscriptionRepository interface {
 
 type IntegrationRepository interface {
 	UpsertIntegration(ctx context.Context, integration *models.Integration) (*models.Integration, error)
-	GetIntegrationByOrgAndType(ctx context.Context, organizationId string, integrationType models.IntegrationType) (*models.Integration, error)
+	GetIntegrationByOrgAndType(ctx context.Context, organizationId string, integrationType models.IntegrationType) ([]*models.Integration, error)
 	GetIntegrationsByOrgID(ctx context.Context, orgID string) ([]*models.Integration, error)
 	GetIntegrationById(ctx context.Context, id string) (*models.Integration, error)
 }

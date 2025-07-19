@@ -9,7 +9,7 @@ import { Button } from '../../../../../atoms/Button';
 import { portalClient } from '../../../../../services/grpc';
 import { isPlatformAdmin } from '@doota/ui-core/helper/role';
 import { Box } from '@mui/system';
-import { Typography, Card, CardContent, Slider, Switch, styled, Tabs, Tab, FormControlLabel, RadioGroup, Radio, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import { Typography, Card, CardContent, Slider, Switch, styled, Tabs, Tab, FormControlLabel, RadioGroup, Radio, Dialog, DialogTitle, DialogContent, DialogActions, TableCell, TableRow, TableBody, TableContainer, Table, TableHead } from '@mui/material';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import { useAppSelector } from '@/store/hooks';
@@ -211,17 +211,36 @@ export default function Page() {
     };
 
     const handleDisconnectReddit = (id: string) => {
-        // immediately remove
+        // Optimistically update the state to AUTH_REMOVED
         setIntegrations((prev) =>
-            prev.filter((i) => i.id !== id)
+            prev.map((i) =>
+                i.id === id ? { ...i, status: IntegrationState.AUTH_REVOKED } : i
+            )
         );
-        // send api call async
+
+        // Send API call async
         portalClient.revokeIntegration({ id: id })
             .then(() => {
-                handleSaveAutomation({ dm: { enabled: false } });
+                // After successful revoke, check current state
+                setIntegrations((prev) => {
+                    const updated = prev.map((i) =>
+                        i.id === id ? { ...i, status: IntegrationState.AUTH_REVOKED } : i
+                    );
+
+                    const hasActiveReddit = updated.some(
+                        (i) => i.type === IntegrationType.REDDIT_DM_LOGIN && i.status === IntegrationState.ACTIVE
+                    );
+
+                    if (!hasActiveReddit) {
+                        console.log("No active reddit DM account, disabling automated DMs");
+                        handleSaveAutomation({ dm: { enabled: false } });
+                    }
+
+                    return updated;
+                });
             })
             .catch((err) => {
-                console.error("Error disconnecting integrations:", err);
+                toast.error(getConnectError(err));
             });
     };
 
@@ -343,8 +362,9 @@ export default function Page() {
         return <FallbackSpinner />;
     }
 
-    const redditIntegration = getIntegrationByType(integrations, IntegrationType.REDDIT_DM_LOGIN);
-    const redditUsername = redditIntegration?.details?.value?.userName;
+    const redditDMIntegrations = integrations.filter(
+        (i) => i.type === IntegrationType.REDDIT_DM_LOGIN
+    );
 
     return (
         // Added padding to the main Box
@@ -383,46 +403,93 @@ export default function Page() {
                                     </Link>
                                 </Typography>
 
-                                <Box sx={{ mt: 5 }} display="flex" alignItems="center" gap={2}>
-                                    {redditIntegration ? (
-                                        <>
-                                            <Typography variant="body2" color="green" fontWeight="bold">
-                                                Connected
-                                                {redditUsername && (
-                                                    <>
-                                                        {' ('}
-                                                        <Link
-                                                            href={`https://reddit.com/user/${redditUsername}`}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            color="inherit"
-                                                        >
-                                                            {redditUsername}
-                                                        </Link>
-                                                        {')'}
-                                                    </>
-                                                )}
-                                            </Typography>
-                                            <Button
-                                                variant="outlined"
-                                                color="error"
-                                                size="small"
-                                                onClick={() => handleDisconnectReddit(getIntegrationByType(integrations, IntegrationType.REDDIT_DM_LOGIN)?.id!)}
-                                            >
-                                                Disconnect
-                                            </Button>
-                                        </>
-                                    ) : (
-                                        <SaveButton
-                                            onClick={handleConnectReddit}
-                                            variant="contained"
-                                            size="large"
-                                            disabled={isConnecting}
-                                        >
-                                            {isConnecting ? 'Connecting...' : 'Connect Reddit DM'}
-                                        </SaveButton>
+                                <Box sx={{ mt: 5 }}>
+                                    <Paper
+                                        variant="outlined"
+                                        sx={{
+                                            p: 2,
+                                            mb: 2,
+                                            borderLeft: "4px solid #ff4500",
+                                            backgroundColor: "#fff8f6",
+                                        }}
+                                    >
+                                        <Typography variant="body2" sx={{ color: "#4d2c19" }}>
+                                            <strong>Note:</strong> You can connect multiple Reddit accounts. We will automatically rotate between them when sending DMs.
+                                        </Typography>
+                                    </Paper>
+                                    {redditDMIntegrations.length > 0 && (
+                                        <TableContainer component={Paper} variant="outlined" sx={{ mt: 2 }}>
+                                            <Table>
+                                                <TableHead>
+                                                    <TableRow>
+                                                        <TableCell sx={{ fontWeight: "medium" }}>Username</TableCell>
+                                                        <TableCell sx={{ fontWeight: "medium" }}>State</TableCell>
+                                                        <TableCell />
+                                                    </TableRow>
+                                                </TableHead>
+                                                <TableBody>
+                                                    {redditDMIntegrations.map((integration) => {
+                                                        const username = integration.details?.value?.userName ?? '—';
+                                                        const isActive = integration.status === IntegrationState.ACTIVE;
+                                                        const isAuthRemoved = integration.status === IntegrationState.AUTH_REVOKED;
+
+                                                        return (
+                                                            <TableRow key={integration.id}>
+                                                                <TableCell>
+                                                                    {username !== '—' ? (
+                                                                        <Link
+                                                                            href={`https://reddit.com/user/${username}`}
+                                                                            target="_blank"
+                                                                            rel="noopener noreferrer"
+                                                                            color="inherit"
+                                                                        >
+                                                                            {username}
+                                                                        </Link>
+                                                                    ) : (
+                                                                        '—'
+                                                                    )}
+                                                                </TableCell>
+                                                                <TableCell>
+                                                                    {isActive ? 'Active' : 'Revoked'}
+                                                                </TableCell>
+                                                                <TableCell align="right">
+                                                                    {isActive ? (
+                                                                        <Button
+                                                                            variant="outlined"
+                                                                            color="error"
+                                                                            size="small"
+                                                                            onClick={() => handleDisconnectReddit(integration.id)}
+                                                                        >
+                                                                            Disconnect
+                                                                        </Button>
+                                                                    ) : isAuthRemoved ? (
+                                                                        <Button
+                                                                            variant="outlined"
+                                                                            size="small"
+                                                                            onClick={() => handleConnectReddit()}
+                                                                        >
+                                                                            Reconnect
+                                                                        </Button>
+                                                                    ) : null}
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        );
+                                                    })}
+                                                </TableBody>
+                                            </Table>
+                                        </TableContainer>
                                     )}
+
+                                    <SaveButton
+                                        onClick={handleConnectReddit}
+                                        variant="contained"
+                                        size="large"
+                                        disabled={isConnecting}
+                                    >
+                                        {isConnecting ? 'Connecting...' : 'Connect Reddit DM'}
+                                    </SaveButton>
                                 </Box>
+
                             </CardContent>
                         </Card>
 

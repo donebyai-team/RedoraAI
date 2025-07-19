@@ -1308,7 +1308,7 @@ export declare const PortalService: GenService<{
   getIntegration: {
     methodKind: "unary";
     input: typeof GetIntegrationRequestSchema;
-    output: typeof IntegrationSchema;
+    output: typeof IntegrationsSchema;
   },
   /**
    * @generated from rpc doota.portal.v1.PortalService.RevokeIntegration

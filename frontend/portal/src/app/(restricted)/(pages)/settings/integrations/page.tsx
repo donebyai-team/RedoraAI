@@ -22,6 +22,7 @@ import {
   Reddit as RedditIcon,
 } from "@mui/icons-material"
 import toast from 'react-hot-toast'
+import { getConnectError } from '@/utils/error'
 
 export default function Page() {
   const user = useAuthUser()
@@ -51,25 +52,44 @@ export default function Page() {
   };
 
   const handleDisconnectReddit = (id: string) => {
-    // immediately remove
+    // Optimistically update the state to AUTH_REMOVED
     setIntegrations((prev) =>
-      prev.filter((i) => i.id !== id)
-    )
-    // send api call async
+      prev.map((i) =>
+        i.id === id ? { ...i, status: IntegrationState.AUTH_REVOKED } : i
+      )
+    );
+
+    // Send API call async
     portalClient.revokeIntegration({ id: id })
       .then(() => {
-        // disable comments as reddit integration depends on that
-        handleSaveAutomation({ Comment: { enable: false } })
-        // console.log("successfully revoked")
+        // After successful revoke, check current state
+        setIntegrations((prev) => {
+          const updated = prev.map((i) =>
+            i.id === id ? { ...i, status: IntegrationState.AUTH_REVOKED } : i
+          );
+
+          const hasActiveReddit = updated.some(
+            (i) => i.type === IntegrationType.REDDIT && i.status === IntegrationState.ACTIVE
+          );
+
+          if (!hasActiveReddit) {
+            console.log("No active reddit account, disabling automated comments");
+            handleSaveAutomation({ comment: { enabled: false } });
+          }
+
+          return updated;
+        });
       })
       .catch((err) => {
-        console.error("Error disconnecting integrations:", err);
-      })
-  }
+        toast.error(getConnectError(err));
+      });
+  };
+
 
   // TODO: This is duplicate in automation/page as well, merge it into common
   const handleSaveAutomation = async (req: any) => {
     try {
+      console.log("Updating autmation", req);
       const result = await portalClient.updateAutomationSettings(req);
 
       if (isPlatformAdmin(user)) {
@@ -84,13 +104,7 @@ export default function Page() {
         return { ...prev, organizations: updatedOrganizations }
       })
     } catch (err) {
-      if (err instanceof Error) {
-        const message = err.message || "Failed to update automation settings";
-        toast.error(message);
-      } else {
-        console.error("Unexpected error:", err)
-      }
-
+      toast.error(getConnectError(err));
     }
   }
 
@@ -137,52 +151,84 @@ export default function Page() {
       </AppBar>
 
       <Box sx={{ p: 3, flexGrow: 1 }}>
+        <Paper
+          variant="outlined"
+          sx={{
+            p: 2,
+            mb: 2,
+            borderLeft: "4px solid #ff4500",
+            backgroundColor: "#fff8f6",
+          }}
+        >
+          <Typography variant="body2" sx={{ color: "#4d2c19" }}>
+            <strong>Note:</strong> You can connect multiple Reddit accounts. We will automatically rotate between them when sending comments.
+          </Typography>
+        </Paper>
+
         <TableContainer component={Paper} elevation={0} variant="outlined">
           <Table sx={{ minWidth: 650 }}>
             <TableHead>
               <TableRow>
                 <TableCell sx={{ fontWeight: "medium" }}>Provider</TableCell>
                 <TableCell sx={{ fontWeight: "medium" }}>Username</TableCell>
+                <TableCell sx={{ fontWeight: "medium" }}>State</TableCell>
                 <TableCell /> {/* Empty header for action column */}
               </TableRow>
             </TableHead>
             <TableBody>
-              {(() => {
-                const redditIntegration = getIntegrationByType(integrations, IntegrationType.REDDIT);
-                if (redditIntegration) {
+              {integrations
+                .filter((i) => i.type === IntegrationType.REDDIT)
+                .map((integration) => {
+                  const isActive = integration.status === IntegrationState.ACTIVE
+                  const isAuthRemoved = integration.status === IntegrationState.AUTH_REVOKED
+                  const username = integration.details?.value?.userName ?? '—'
+
                   return (
-                    <TableRow key="reddit">
+                    <TableRow key={integration.id}>
                       <TableCell>Reddit</TableCell>
                       <TableCell>
-                        {redditIntegration.details?.value?.userName ? (
+                        {username !== '—' ? (
                           <a
-                            href={`https://reddit.com/user/${redditIntegration.details.value.userName}`}
+                            href={`https://reddit.com/user/${username}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-600 hover:underline"
                           >
-                            {redditIntegration.details.value.userName}
+                            {username}
                           </a>
                         ) : (
                           '—'
                         )}
                       </TableCell>
+                      <TableCell>
+                        {integration.status === IntegrationState.ACTIVE ? 'Active' : 'Revoked'}
+                      </TableCell>
                       <TableCell align="right">
-                        <Button
-                          color="error"
-                          variant="outlined"
-                          size="small"
-                          onClick={() => handleDisconnectReddit(redditIntegration.id)}
-                        >
-                          Disconnect
-                        </Button>
+                        {isActive ? (
+                          <Button
+                            color="error"
+                            variant="outlined"
+                            size="small"
+                            onClick={() => handleDisconnectReddit(integration.id)}
+                          >
+                            Disconnect
+                          </Button>
+                        ) : isAuthRemoved ? (
+                          <Button
+                            color="primary"
+                            variant="outlined"
+                            size="small"
+                            onClick={() => openOauthConsentScreen(IntegrationType.REDDIT)}
+                          >
+                            Reconnect
+                          </Button>
+                        ) : null}
                       </TableCell>
                     </TableRow>
-                  );
-                }
-                return null;
-              })()}
+                  )
+                })}
             </TableBody>
+
           </Table>
         </TableContainer>
       </Box>
