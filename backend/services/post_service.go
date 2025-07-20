@@ -105,7 +105,7 @@ func (s *postService) UpdatePost(ctx context.Context, updated *models.Post) (*mo
 		return nil, fmt.Errorf("invalid post id: %w", err)
 	}
 
-	if updated.ScheduleAt != nil && updated.ScheduleAt.Before(time.Now().Add(-15*time.Second)) {
+	if updated.ScheduleAt != nil && updated.ScheduleAt.Before(time.Now().UTC().Add(-30*time.Second)) {
 		return nil, fmt.Errorf("cannot schedule post in the past")
 	}
 
