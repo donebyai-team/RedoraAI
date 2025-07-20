@@ -356,7 +356,7 @@ export default function PostEditor() {
                                                                             <Badge variant="secondary" className="text-xs">
                                                                                 {insight.relevancyScore}%
                                                                             </Badge>
-                                                                            <span className="truncate max-w-[300px]">{insight.topic}</span>
+                                                                            <span className="truncate text-sm">{insight.topic}</span>
                                                                         </div>
                                                                     </SelectItem>
                                                                 ))}

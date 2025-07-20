@@ -105,22 +105,25 @@ func (s *postService) UpdatePost(ctx context.Context, updated *models.Post) (*mo
 		return nil, fmt.Errorf("invalid post id: %w", err)
 	}
 
-	if updated.ScheduleAt != nil && updated.ScheduleAt.Before(time.Now().Add(-15*time.Second)) {
+	if updated.ScheduleAt != nil && updated.ScheduleAt.Before(time.Now().UTC().Add(-30*time.Second)) {
 		return nil, fmt.Errorf("cannot schedule post in the past")
 	}
 
 	if existing.Status == models.PostStatusFAILED || existing.Status == models.PostStatusSENT {
-		return nil, fmt.Errorf("post already sent or failed, cannot update")
+		return nil, fmt.Errorf("post is in %s status, cannot update", existing.Status)
 	}
 
 	// Apply updates from input
 	existing.Title = updated.Title
 	existing.Description = updated.Description
-	existing.Metadata = updated.Metadata
+	existing.SourceID = updated.SourceID
 	existing.ReferenceID = updated.ReferenceID
-	existing.Status = updated.Status
-	existing.Reason = updated.Reason
-	existing.ScheduleAt = updated.ScheduleAt
+	existing.Metadata.Settings = updated.Metadata.Settings
+
+	if updated.ScheduleAt != nil {
+		existing.ScheduleAt = updated.ScheduleAt
+		existing.Status = models.PostStatusSCHEDULED
+	}
 
 	// Save the update
 	if err := s.db.UpdatePost(ctx, existing); err != nil {
