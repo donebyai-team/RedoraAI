@@ -118,9 +118,12 @@ func (s *postService) UpdatePost(ctx context.Context, updated *models.Post) (*mo
 	existing.Description = updated.Description
 	existing.SourceID = updated.SourceID
 	existing.ReferenceID = updated.ReferenceID
-	existing.Status = models.PostStatusSCHEDULED
-	existing.ScheduleAt = updated.ScheduleAt
 	existing.Metadata.Settings = updated.Metadata.Settings
+
+	if updated.ScheduleAt != nil {
+		existing.ScheduleAt = updated.ScheduleAt
+		existing.Status = models.PostStatusSCHEDULED
+	}
 
 	// Save the update
 	if err := s.db.UpdatePost(ctx, existing); err != nil {
