@@ -81,14 +81,10 @@ func (p *Post) FromAugmentedModel(post *models.AugmentedPost) *Post {
 func (p *Post) ToModel() *models.Post {
 	return &models.Post{
 		ID:          p.GetId(),
-		ProjectID:   p.GetProjectId(),
 		SourceID:    p.GetSource(),
 		Title:       p.GetTopic(),
 		Description: p.GetDescription(),
 		ReferenceID: p.GetMetadata().GetSettings().ReferenceId,
-		Status:      models.PostStatus(p.GetStatus()),
-		Reason:      p.GetReason(),
-		CreatedAt:   fromTimestamp(p.GetCreatedAt()),
 		ScheduleAt:  fromTimestampPtr(p.GetScheduledAt()),
 		Metadata:    *p.GetMetadata().ToModel(),
 	}
@@ -123,19 +119,11 @@ func (prh *PostRegenerationHistory) ToModel() *models.PostRegenerationHistory {
 	}
 }
 
-// Helper to convert *timestamppb.Timestamp to time.Time
-func fromTimestamp(ts *timestamppb.Timestamp) time.Time {
-	if ts == nil {
-		return time.Time{}
-	}
-	return ts.AsTime()
-}
-
 // Helper to convert *timestamppb.Timestamp to *time.Time
 func fromTimestampPtr(ts *timestamppb.Timestamp) *time.Time {
-	if ts == nil {
-		return nil
+	if ts != nil {
+		t := ts.AsTime()
+		return &t
 	}
-	t := ts.AsTime()
-	return &t
+	return nil
 }
