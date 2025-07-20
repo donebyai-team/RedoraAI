@@ -394,7 +394,7 @@ export default function Page() {
                         <Card sx={{ p: 2, mt: 5 }} component={Paper}>
                             <CardContent>
 
-                                <Dialog open={showCookieModal} onClose={() => setShowCookieModal(false)} maxWidth="sm" fullWidth>
+                                <Dialog open={showCookieModal} onClose={() => setShowCookieModal(false)} disableEscapeKeyDown maxWidth="sm" fullWidth>
                                     <DialogContent>
                                         <Card variant="outlined" sx={{ backgroundColor: "#f9f9f9", borderRadius: 2, p: 2, mb: 5 }}>
                                             <CardContent>
