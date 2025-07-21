@@ -46,6 +46,7 @@ type AugmentedPost struct {
 }
 
 type PostMetadata struct {
+	Author   string                    `json:"author"`
 	Settings PostSettings              `json:"settings"`
 	History  []PostRegenerationHistory `json:"history"`
 }

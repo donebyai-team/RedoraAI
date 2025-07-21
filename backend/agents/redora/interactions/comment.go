@@ -78,6 +78,8 @@ func (r redditInteractions) ProcessScheduledPost(ctx context.Context, post *mode
 	}
 
 	err = r.redditOauthClient.WithRotatingAPIClient(ctx, project.OrganizationID, func(client *reddit.Client) error {
+		config := client.GetConfig()
+
 		subredditName := utils.CleanSubredditName(source.Name)
 		if err := client.JoinSubreddit(ctx, subredditName); err != nil {
 			post.Status = models.PostStatusFAILED
@@ -87,6 +89,7 @@ func (r redditInteractions) ProcessScheduledPost(ctx context.Context, post *mode
 
 		title := post.Title
 		description := post.Description
+		post.Metadata.Author = config.Name
 
 		redditPost, err := client.CreatePost(ctx, subredditName, title, description)
 		if err != nil {
