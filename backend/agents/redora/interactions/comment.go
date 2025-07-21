@@ -107,9 +107,12 @@ func (r redditInteractions) ProcessScheduledPost(ctx context.Context, post *mode
 		return nil
 	})
 
-	if err != nil && errors.Is(err, datastore.IntegrationNotFoundOrActive) {
+	if err != nil {
 		post.Status = models.PostStatusFAILED
-		post.Reason = err.Error()
+		// if the reason is not set then set it to the error message
+		if post.Reason == "" {
+			post.Reason = err.Error()
+		}
 	}
 
 	return err
