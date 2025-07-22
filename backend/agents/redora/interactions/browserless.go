@@ -245,6 +245,11 @@ func (r browserless) SendDM(ctx context.Context, params DMParams) (cookies []byt
 
 	// verify if logged in
 	currentURL := page.URL()
+
+	r.logger.Info("sending DM page",
+		zap.String("chat_url", chatURL),
+		zap.String("current_url", currentURL))
+
 	if strings.Contains(currentURL, "/login") {
 		return nil, fmt.Errorf("unable to login, please check your credentials or cookies and try again")
 	}
@@ -544,7 +549,7 @@ func (r browserless) WaitAndGetCookies(ctx context.Context, browserURL string) (
 					return nil, errors.New(msg)
 				}
 			}
-			
+
 			if (strings.HasPrefix(currentURL, "https://www.reddit.com") || strings.HasPrefix(currentURL, "https://chat.reddit.com")) &&
 				!strings.Contains(currentURL, "/login") {
 
