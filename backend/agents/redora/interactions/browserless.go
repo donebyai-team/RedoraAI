@@ -274,6 +274,24 @@ func (r browserless) SendDM(ctx context.Context, params DMParams) (cookies []byt
 	}
 
 	if strings.Contains(currentURL, "www.reddit.com/user") {
+
+		locatorCloseChat := page.Locator("button[aria-label='Close chat window']")
+
+		// Check if the close button exists
+		count, err := locatorCloseChat.Count()
+		if err != nil {
+			return nil, fmt.Errorf("error checking for close chat button: %w", err)
+		}
+
+		if count > 0 {
+			err = locatorCloseChat.Click(playwright.LocatorClickOptions{
+				Timeout: playwright.Float(3000), // short timeout for optional close
+			})
+			if err != nil {
+				return nil, fmt.Errorf("failed to close previous chat window: %w", err)
+			}
+		}
+
 		locatorStartChat := page.Locator("faceplate-tracker[action='click'][noun='chat'] a[href*='chat.reddit.com/user/']")
 		err = locatorStartChat.WaitFor(playwright.LocatorWaitForOptions{
 			Timeout: playwright.Float(20000), // short timeout per selector
