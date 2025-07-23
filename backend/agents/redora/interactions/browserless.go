@@ -236,6 +236,9 @@ func (r browserless) SendDM(ctx context.Context, params DMParams) (cookies []byt
 
 	// Navigate to chat page
 	chatURL := "https://chat.reddit.com/user/" + params.To
+	if params.ToUsername != "" {
+		chatURL = "https://www.reddit.com/user/" + params.ToUsername + "/"
+	}
 	if _, err = page.Goto(chatURL, playwright.PageGotoOptions{Timeout: playwright.Float(10000)}); err != nil {
 		return nil, fmt.Errorf("chat page navigation failed: %w", err)
 	}
@@ -268,6 +271,24 @@ func (r browserless) SendDM(ctx context.Context, params DMParams) (cookies []byt
 		r.logger.Error("failed to get display name")
 	} else {
 		r.logger.Error("logged in as user", zap.String("display_name", displayName))
+	}
+
+	if strings.Contains(currentURL, "www.reddit.com/user") {
+		locatorStartChat := page.Locator("faceplate-tracker[action='click'][noun='chat'] a[href*='chat.reddit.com/user/']")
+		err = locatorStartChat.WaitFor(playwright.LocatorWaitForOptions{
+			Timeout: playwright.Float(20000), // short timeout per selector
+		})
+		if err != nil {
+			return nil, fmt.Errorf("unable to start chat: %w", err)
+		}
+
+		err = locatorStartChat.Click(playwright.LocatorClickOptions{
+			Delay: playwright.Float(100), // Delay before mouseup (in ms)
+		})
+
+		if err != nil {
+			return nil, fmt.Errorf("unable to click start chat: %w", err)
+		}
 	}
 
 	// Wait for message textarea to load

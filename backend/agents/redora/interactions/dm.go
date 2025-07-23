@@ -12,12 +12,11 @@ import (
 )
 
 type DMParams struct {
-	ID       string
-	Username string
-	Password string
-	Cookie   string // json array
-	To       string
-	Message  string
+	ID         string
+	Cookie     string // json array
+	To         string
+	ToUsername string
+	Message    string
 }
 
 const disabledReasonAccNotEstablished = "Your Reddit account hasn't met Reddit's requirements for sending direct messages, which typically include email verification and a history of positive contributions."
@@ -133,12 +132,11 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 		}
 
 		updatedCookies, err := r.browserLessClient.SendDM(ctx, DMParams{
-			ID:       interaction.ID,
-			Cookie:   config.Cookies,
-			Username: config.Username,
-			Password: config.Password,
-			To:       fmt.Sprintf("t2_%s", user.ID),
-			Message:  utils.FormatDM(redditLead.LeadMetadata.SuggestedDM),
+			ID:         interaction.ID,
+			Cookie:     config.Cookies,
+			To:         fmt.Sprintf("t2_%s", user.ID),
+			ToUsername: user.Name,
+			Message:    utils.FormatDM(redditLead.LeadMetadata.SuggestedDM),
 		})
 		if err != nil {
 			interaction.Reason = fmt.Sprintf("Reason: %v", err)
