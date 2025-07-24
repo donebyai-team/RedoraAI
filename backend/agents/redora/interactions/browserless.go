@@ -284,11 +284,11 @@ func (r browserless) SendDM(ctx context.Context, params DMParams) (cookies []byt
 		}
 
 		if count > 0 {
-			err = locatorCloseChat.Click(playwright.LocatorClickOptions{
+			err := locatorCloseChat.Click(playwright.LocatorClickOptions{
 				Timeout: playwright.Float(3000), // short timeout for optional close
 			})
 			if err != nil {
-				return nil, fmt.Errorf("failed to close previous chat window: %w", err)
+				r.logger.Error("error clicking close chat button", zap.Error(err))
 			}
 		}
 
