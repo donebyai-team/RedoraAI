@@ -162,6 +162,7 @@ func (r *Database) UpdateLeadInteraction(ctx context.Context, reddit *models.Lea
 		"status":     reddit.Status,
 		"reason":     reddit.Reason,
 		"metadata":   reddit.Metadata,
+		"from_user":  reddit.From,
 	})
 	return err
 }
