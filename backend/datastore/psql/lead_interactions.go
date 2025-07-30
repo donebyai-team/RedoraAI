@@ -58,6 +58,7 @@ func (r *Database) GetAugmentedLeadInteractions(ctx context.Context, projectID s
 		"project_id":     projectID,
 		"start_datetime": sqlNullTime(startDateTime),
 		"end_datetime":   sqlNullTime(endDateTime),
+		"limit":          200,
 	})
 }
 

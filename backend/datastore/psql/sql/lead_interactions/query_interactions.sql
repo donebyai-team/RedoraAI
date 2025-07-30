@@ -17,4 +17,6 @@ WHERE
   AND (CAST(:start_datetime AS timestamp) IS NULL OR li.created_at >= :start_datetime)
   AND (CAST(:end_datetime AS timestamp) IS NULL OR li.created_at < :end_datetime)
   AND li.schedule_at IS NOT NULL
-  ORDER BY schedule_at DESC 
+ORDER BY
+    schedule_at DESC
+LIMIT :limit;
