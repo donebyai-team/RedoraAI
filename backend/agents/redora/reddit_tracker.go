@@ -713,7 +713,7 @@ func (s *redditKeywordTracker) isMaxLeadLimitReached(ctx context.Context, org *m
 const (
 	minSelftextLength           = 30
 	minTitleLength              = 5
-	maxPostAgeInMonths          = 1
+	maxPostAgeInDays            = 15
 	defaultRelevancyScoreGlobal = 90 // relevancy score to re-confirm with higher model and also max leads
 	dailyPostsRelevancyScore    = 80
 	minRelevancyScore           = 70
@@ -753,7 +753,7 @@ func isValidPostDescription(selfText string) (bool, string) {
 }
 
 func (s *redditKeywordTracker) isValidPost(post *reddit.Post) (bool, string) {
-	sixMonthsAgo := time.Now().UTC().AddDate(0, -maxPostAgeInMonths, 0).Unix()
+	daysAgo := time.Now().UTC().AddDate(0, 0, -maxPostAgeInDays).Unix()
 	author := strings.TrimSpace(post.Author)
 
 	if !isValidAuthor(author) {
@@ -772,8 +772,8 @@ func (s *redditKeywordTracker) isValidPost(post *reddit.Post) (bool, string) {
 		return false, "title or selftext is not big enough"
 	}
 
-	if int64(post.CreatedAt) < sixMonthsAgo || post.Archived {
-		return false, fmt.Sprintf("post is older than %d months or has been archived", maxPostAgeInMonths)
+	if int64(post.CreatedAt) < daysAgo || post.Archived {
+		return false, fmt.Sprintf("post is older than %d days or has been archived", maxPostAgeInDays)
 	}
 
 	if isValid, reason := isValidPostDescription(post.Selftext); !isValid {
