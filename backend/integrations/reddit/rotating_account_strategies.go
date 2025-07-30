@@ -83,25 +83,28 @@ func MostQualifiedAccountStrategy(logger *zap.Logger) IntegrationSelectionStrate
 			switch {
 			case hasDM && isOld:
 				bothTypesOld = append(bothTypesOld, redditIntegration)
-			case hasDM && !isOld:
-				bothTypesRecent = append(bothTypesRecent, redditIntegration)
 			case !hasDM && isOld:
 				onlyRedditOld = append(onlyRedditOld, redditIntegration)
+			case hasDM && !isOld:
+				bothTypesRecent = append(bothTypesRecent, redditIntegration)
 			default:
 				onlyRedditRecent = append(onlyRedditRecent, redditIntegration)
 			}
 		}
 
+		// old accounts are giving the priority
+		// then matching with DM
+
 		var candidates []*models.Integration
 		switch {
 		case len(bothTypesOld) > 0:
-			candidates = bothTypesOld
-		case len(bothTypesRecent) > 0:
-			candidates = bothTypesRecent
+			candidates = bothTypesOld // best case
 		case len(onlyRedditOld) > 0:
 			candidates = onlyRedditOld
+		case len(bothTypesRecent) > 0:
+			candidates = bothTypesRecent // should disable comment automation later
 		default:
-			candidates = onlyRedditRecent
+			candidates = onlyRedditRecent // should disable comment automation later
 		}
 
 		if len(candidates) == 0 {
