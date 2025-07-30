@@ -578,20 +578,28 @@ export default function Page() {
                                                     {redditDMIntegrations.map((integration) => {
                                                         const username = integration.details?.value?.userName ?? '—';
                                                         const isActive = integration.status === IntegrationState.ACTIVE;
-                                                        const isAuthRemoved = integration.status === IntegrationState.AUTH_REVOKED;
+                                                        const isAuthRemoved = integration.status !== IntegrationState.ACTIVE;
+                                                        const reason = integration.details?.value?.reason;
 
                                                         return (
                                                             <TableRow key={integration.id}>
                                                                 <TableCell>
                                                                     {username !== '—' ? (
-                                                                        <Link
-                                                                            href={`https://reddit.com/user/${username}`}
-                                                                            target="_blank"
-                                                                            rel="noopener noreferrer"
-                                                                            color="inherit"
-                                                                        >
-                                                                            {username}
-                                                                        </Link>
+                                                                        <div className="flex flex-col">
+                                                                            <a
+                                                                                href={`https://reddit.com/user/${username}`}
+                                                                                target="_blank"
+                                                                                rel="noopener noreferrer"
+                                                                                className="text-blue-600 hover:underline"
+                                                                            >
+                                                                                {username}
+                                                                            </a>
+                                                                            {reason && (
+                                                                                <span className="text-xs text-yellow-700 mt-1">
+                                                                                    {reason}
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
                                                                     ) : (
                                                                         '—'
                                                                     )}

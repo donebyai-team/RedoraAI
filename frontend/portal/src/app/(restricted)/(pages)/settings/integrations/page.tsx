@@ -180,9 +180,9 @@ export default function Page() {
                 .filter((i) => i.type === IntegrationType.REDDIT)
                 .map((integration) => {
                   const isActive = integration.status === IntegrationState.ACTIVE
-                  const isAuthRemoved = integration.status === IntegrationState.AUTH_REVOKED
+                  const isAuthRemoved = integration.status !== IntegrationState.ACTIVE
                   const username = integration.details?.value?.userName ?? '—'
-                  const isOldEnough = integration.details?.value?.isOldEnough;
+                  const reason = integration.details?.value?.reason;
 
                   return (
                     <TableRow key={integration.id}>
@@ -198,9 +198,9 @@ export default function Page() {
                             >
                               {username}
                             </a>
-                            {!isOldEnough && (
+                            {reason && (
                               <span className="text-xs text-yellow-700 mt-1">
-                                ⚠️ This Reddit account is less than 2 weeks old. It will be used for auto-comments only after the warmup period.
+                                {reason}
                               </span>
                             )}
                           </div>

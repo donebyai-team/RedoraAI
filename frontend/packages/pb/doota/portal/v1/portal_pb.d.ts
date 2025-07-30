@@ -972,9 +972,9 @@ export declare type RedditIntegration = Message<"doota.portal.v1.RedditIntegrati
   userName: string;
 
   /**
-   * @generated from field: bool is_old_enough = 2;
+   * @generated from field: string reason = 2;
    */
-  isOldEnough: boolean;
+  reason: string;
 };
 
 /**
@@ -1293,6 +1293,21 @@ export enum IntegrationState {
    * @generated from enum value: INTEGRATION_STATE_AUTH_REVOKED = 2;
    */
   AUTH_REVOKED = 2,
+
+  /**
+   * @generated from enum value: INTEGRATION_STATE_ACCOUNT_SUSPENDED = 3;
+   */
+  ACCOUNT_SUSPENDED = 3,
+
+  /**
+   * @generated from enum value: INTEGRATION_STATE_AUTH_EXPIRED = 4;
+   */
+  AUTH_EXPIRED = 4,
+
+  /**
+   * @generated from enum value: INTEGRATION_STATE_NOT_ESTABLISHED = 5;
+   */
+  NOT_ESTABLISHED = 5,
 }
 
 /**

@@ -148,7 +148,7 @@ func (c *OauthClient) withRotatingIntegrations(
 			if errors.Is(err, AccountBanned) {
 				banned++
 				c.logger.Error("account is banned", zap.String("integration_id", integration.ID), zap.Error(err))
-				c.revokeIntegration(ctx, integration.ID)
+				c.revokeIntegration(ctx, integration.ID, models.IntegrationStateACCOUNTSUSPENDED)
 			}
 			continue
 		}
@@ -177,7 +177,7 @@ func (c *OauthClient) withRotatingIntegrations(
 		if strings.Contains(lastErr.Error(), "account isn't established") {
 			notEstablished++
 			c.logger.Error("account isn't established", zap.String("integration_id", integration.ID), zap.Error(err))
-			c.revokeIntegration(ctx, integration.ID)
+			c.revokeIntegration(ctx, integration.ID, models.IntegrationStateNOTESTABLISHED)
 		}
 	}
 
@@ -260,7 +260,7 @@ func (c *OauthClient) buildRedditClient(ctx context.Context, integration *models
 		oauthConfig: c.config,
 		baseURL:     redditAPIBase,
 		unAuthorizedErrorCallback: func(ctx context.Context) {
-			_ = c.revokeIntegration(ctx, integration.ID)
+			_ = c.revokeIntegration(ctx, integration.ID, models.IntegrationStateAUTHEXPIRED)
 		},
 	}
 
@@ -282,13 +282,13 @@ func (c *OauthClient) buildRedditClient(ctx context.Context, integration *models
 	return client, nil
 }
 
-func (c *OauthClient) revokeIntegration(ctx context.Context, integrationID string) error {
+func (c *OauthClient) revokeIntegration(ctx context.Context, integrationID string, state models.IntegrationState) error {
 	integration, err := c.db.GetIntegrationById(ctx, integrationID)
 	if err != nil {
 		c.logger.Error("failed to fetch integration to revoke", zap.String("integration_id", integrationID), zap.Error(err))
 		return err
 	}
-	integration.State = models.IntegrationStateAUTHREVOKED
+	integration.State = state
 	_, err = c.db.UpsertIntegration(ctx, integration)
 	if err != nil {
 		c.logger.Error("failed to mark integration as AUTHREVOKED", zap.Error(err))

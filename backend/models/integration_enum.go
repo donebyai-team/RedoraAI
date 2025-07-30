@@ -16,6 +16,12 @@ const (
 	IntegrationStateACTIVE IntegrationState = "ACTIVE"
 	// IntegrationStateAUTHREVOKED is a IntegrationState of type AUTH_REVOKED.
 	IntegrationStateAUTHREVOKED IntegrationState = "AUTH_REVOKED"
+	// IntegrationStateACCOUNTSUSPENDED is a IntegrationState of type ACCOUNT_SUSPENDED.
+	IntegrationStateACCOUNTSUSPENDED IntegrationState = "ACCOUNT_SUSPENDED"
+	// IntegrationStateAUTHEXPIRED is a IntegrationState of type AUTH_EXPIRED.
+	IntegrationStateAUTHEXPIRED IntegrationState = "AUTH_EXPIRED"
+	// IntegrationStateNOTESTABLISHED is a IntegrationState of type NOT_ESTABLISHED.
+	IntegrationStateNOTESTABLISHED IntegrationState = "NOT_ESTABLISHED"
 )
 
 var ErrInvalidIntegrationState = errors.New("not a valid IntegrationState")
@@ -33,8 +39,11 @@ func (x IntegrationState) IsValid() bool {
 }
 
 var _IntegrationStateValue = map[string]IntegrationState{
-	"ACTIVE":       IntegrationStateACTIVE,
-	"AUTH_REVOKED": IntegrationStateAUTHREVOKED,
+	"ACTIVE":            IntegrationStateACTIVE,
+	"AUTH_REVOKED":      IntegrationStateAUTHREVOKED,
+	"ACCOUNT_SUSPENDED": IntegrationStateACCOUNTSUSPENDED,
+	"AUTH_EXPIRED":      IntegrationStateAUTHEXPIRED,
+	"NOT_ESTABLISHED":   IntegrationStateNOTESTABLISHED,
 }
 
 // ParseIntegrationState attempts to convert a string to a IntegrationState.

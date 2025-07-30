@@ -11,7 +11,7 @@ import (
 // ENUM(VOICE_MILLIS, VOICE_VAPI, REDDIT, SLACK_WEBHOOK, REDDIT_DM_LOGIN)
 type IntegrationType string
 
-// ENUM(ACTIVE, AUTH_REVOKED)
+// ENUM(ACTIVE, AUTH_REVOKED, ACCOUNT_SUSPENDED, AUTH_EXPIRED, NOT_ESTABLISHED)
 type IntegrationState string
 
 type Integration struct {
@@ -24,6 +24,23 @@ type Integration struct {
 	PlainTextConfig string           `db:"plain_text_config"`
 	CreatedAt       time.Time        `db:"created_at"`
 	UpdatedAt       *time.Time       `db:"updated_at"`
+}
+
+func (i *Integration) GetIntegrationStatus(isOldEnough bool) string {
+	switch i.State {
+	case IntegrationStateACCOUNTSUSPENDED:
+		return "🚫 Account seem to be suspended or banned"
+	case IntegrationStateAUTHEXPIRED:
+		return "🔑 Account auth is expired, please reconnect"
+	case IntegrationStateNOTESTABLISHED:
+		return "📭 Account is not fully established. Please verify your Reddit email and reconnect"
+	}
+
+	if !isOldEnough {
+		return "⏳ This Reddit account is less than 2 weeks old. It will be used for auto-comments only after the warmup period."
+	}
+
+	return ""
 }
 
 type Serializable interface {

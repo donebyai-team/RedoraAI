@@ -79,8 +79,8 @@ func (p *Portal) protoIntegration(integration *models.Integration) *pbportal.Int
 		if integration.ReferenceID != nil {
 			resp.Details = &pbportal.Integration_Reddit{
 				Reddit: &pbportal.RedditIntegration{
-					UserName:    *integration.ReferenceID,
-					IsOldEnough: config.IsUserOldEnough(2),
+					UserName: *integration.ReferenceID,
+					Reason:   integration.GetIntegrationStatus(config.IsUserOldEnough(2)),
 				},
 			}
 		}
@@ -95,8 +95,8 @@ func (p *Portal) protoIntegration(integration *models.Integration) *pbportal.Int
 		if integration.ReferenceID != nil {
 			resp.Details = &pbportal.Integration_Reddit{
 				Reddit: &pbportal.RedditIntegration{
-					UserName:    *integration.ReferenceID,
-					IsOldEnough: true,
+					UserName: *integration.ReferenceID,
+					Reason:   integration.GetIntegrationStatus(true),
 				},
 			}
 		}

@@ -301,7 +301,7 @@ message Integration {
 
 message RedditIntegration {
   string user_name = 1;
-  bool is_old_enough = 2;
+  string reason = 2;
 }
 
 message Integrations {
@@ -330,6 +330,9 @@ enum IntegrationState {
   // be that case when for multiple reasons, the token we had for this integration is
   // revoked.
   INTEGRATION_STATE_AUTH_REVOKED = 2;
+  INTEGRATION_STATE_ACCOUNT_SUSPENDED = 3;
+  INTEGRATION_STATE_AUTH_EXPIRED = 4;
+  INTEGRATION_STATE_NOT_ESTABLISHED = 5;
 }
 
 message AddUserRequest {
