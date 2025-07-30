@@ -130,7 +130,7 @@ export default function ProductDetailsStep() {
 
   // Show Other field of step one has already metadata details
   const hasAlreadyMetadata = (name || description);
-  
+
   // Not disable button on edit product page
   const isButtonDisable = isOnboardingPage ? hasAlreadyMetadata ? false : (webSiteMetadataStatus === "idle" || webSiteMetadataStatus === "loading") : false;
 
@@ -233,7 +233,7 @@ export default function ProductDetailsStep() {
                 <p className="text-sm text-destructive">{errors.description?.message}</p>
               )}
               <p className="text-xs text-muted-foreground">
-                {description.length} characters (minimum 10)
+                {description.length} characters (minimum 10, max 250 words)
               </p>
             </div>
 
@@ -261,7 +261,7 @@ export default function ProductDetailsStep() {
                 <p className="text-sm text-destructive">{errors.targetPersona?.message}</p>
               )}
               <p className="text-xs text-muted-foreground">
-                {targetPersona.length} characters (minimum 10)
+                {targetPersona.length} characters (minimum 10, max 100 words)
               </p>
             </div>
           </>
