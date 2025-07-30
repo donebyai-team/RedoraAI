@@ -44,67 +44,30 @@ func PreferSpecificAccountStrategy(refID string) IntegrationSelectionStrategy {
 
 func MostQualifiedAccountStrategy(logger *zap.Logger) IntegrationSelectionStrategy {
 	return func(integrations []*models.Integration) []*models.Integration {
-		var (
-			activeRedditIntegrations []*models.Integration
-			activeDMIntegrations     []*models.Integration
-		)
+		var oldAccounts, recentAccounts []*models.Integration
 
-		// Split into Reddit and DM
 		for _, integ := range integrations {
-			switch integ.Type {
-			case models.IntegrationTypeREDDIT:
-				activeRedditIntegrations = append(activeRedditIntegrations, integ)
-			case models.IntegrationTypeREDDITDMLOGIN:
-				activeDMIntegrations = append(activeDMIntegrations, integ)
+			if integ.Type != models.IntegrationTypeREDDIT {
+				continue // skip non-Reddit types
 			}
-		}
-
-		// Index DM by ReferenceID
-		dmSet := make(map[string]struct{})
-		for _, dm := range activeDMIntegrations {
-			if dm.ReferenceID == nil {
-				logger.Error("reddit DM reference id is nil", zap.String("integration_id", dm.ID))
+			if integ.ReferenceID == nil {
+				logger.Error("reddit reference id is nil", zap.String("integration_id", integ.ID))
 				continue
 			}
-			dmSet[strings.ToLower(*dm.ReferenceID)] = struct{}{}
-		}
 
-		// Categorize Reddit integrations
-		var bothTypesOld, bothTypesRecent, onlyRedditOld, onlyRedditRecent []*models.Integration
-		for _, redditIntegration := range activeRedditIntegrations {
-			if redditIntegration.ReferenceID == nil {
-				logger.Error("reddit reference id is nil", zap.String("integration_id", redditIntegration.ID))
-				continue
-			}
-			_, hasDM := dmSet[strings.ToLower(*redditIntegration.ReferenceID)]
-			redditConfig := redditIntegration.GetRedditConfig()
-			isOld := redditConfig.IsUserOldEnough(2)
-
-			switch {
-			case hasDM && isOld:
-				bothTypesOld = append(bothTypesOld, redditIntegration)
-			case !hasDM && isOld:
-				onlyRedditOld = append(onlyRedditOld, redditIntegration)
-			case hasDM && !isOld:
-				bothTypesRecent = append(bothTypesRecent, redditIntegration)
-			default:
-				onlyRedditRecent = append(onlyRedditRecent, redditIntegration)
+			cfg := integ.GetRedditConfig()
+			if cfg.IsUserOldEnough(2) {
+				oldAccounts = append(oldAccounts, integ)
+			} else {
+				recentAccounts = append(recentAccounts, integ)
 			}
 		}
-
-		// old accounts are giving the priority
-		// then matching with DM
 
 		var candidates []*models.Integration
-		switch {
-		case len(bothTypesOld) > 0:
-			candidates = bothTypesOld // best case
-		case len(onlyRedditOld) > 0:
-			candidates = onlyRedditOld
-		case len(bothTypesRecent) > 0:
-			candidates = bothTypesRecent // should disable comment automation later
-		default:
-			candidates = onlyRedditRecent // should disable comment automation later
+		if len(oldAccounts) > 0 {
+			candidates = oldAccounts
+		} else {
+			candidates = recentAccounts
 		}
 
 		if len(candidates) == 0 {

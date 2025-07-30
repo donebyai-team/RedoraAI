@@ -229,12 +229,7 @@ func (c *OauthClient) GetRedditAPIClient(ctx context.Context, orgID string, forc
 	if !forceAuth {
 		candidates = RandomStrategy(activeRedditIntegrations)
 	} else {
-		activeDMIntegrations, err := c.GetActiveIntegrations(ctx, orgID, models.IntegrationTypeREDDITDMLOGIN)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get integrations: %w", err)
-		}
-		allIntegrations := append(activeRedditIntegrations, activeDMIntegrations...)
-		candidates = MostQualifiedAccountStrategy(c.logger)(allIntegrations)
+		candidates = MostQualifiedAccountStrategy(c.logger)(activeRedditIntegrations)
 	}
 
 	// Randomly select one from candidates
