@@ -288,7 +288,7 @@ func (r browserless) SendDM(ctx context.Context, params DMParams) (cookies []byt
 				Timeout: playwright.Float(3000), // short timeout for optional close
 			})
 			if err != nil {
-				r.logger.Error("error clicking close chat button", zap.Error(err))
+				r.logger.Error("error clicking close chat button", zap.Error(err), zap.String("display_name", displayName))
 			}
 		}
 
@@ -297,7 +297,8 @@ func (r browserless) SendDM(ctx context.Context, params DMParams) (cookies []byt
 			Timeout: playwright.Float(20000), // short timeout per selector
 		})
 		if err != nil {
-			return nil, fmt.Errorf("unable to start chat: %w", err)
+			r.logger.Error("error clicking start chat button", zap.Error(err), zap.String("interaction_id", params.ID))
+			return nil, fmt.Errorf("chat could not be initiated. Direct messages may be disabled by the user")
 		}
 
 		err = locatorStartChat.Click(playwright.LocatorClickOptions{

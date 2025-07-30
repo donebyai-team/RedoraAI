@@ -84,6 +84,7 @@ func (s *Spooler) processInteraction(ctx context.Context, tracker *models.LeadIn
 			"Unable to show the room",               // should not happen, because of redirect
 			"suspended",
 			"banned",
+			"Direct messages may be disabled by the user",
 		}
 
 		var lastErr error
