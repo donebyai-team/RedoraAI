@@ -14,10 +14,10 @@ const (
 	MinProductNameChars = 3
 
 	MinDescriptionChars = 10
-	MaxDescriptionWords = 100
+	MaxDescriptionWords = 250
 
 	MinTargetPersonaChars = 10
-	MaxTargetPersonaWords = 50
+	MaxTargetPersonaWords = 100
 )
 
 func IsValidDescription(desc string) bool {
