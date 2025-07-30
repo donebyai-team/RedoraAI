@@ -108,7 +108,7 @@ func (r redditInteractions) ProcessScheduledPost(ctx context.Context, post *mode
 			zap.String("reddit_post_id", redditPost.ID),
 		)
 		return nil
-	})
+	}, reddit.RandomStrategy)
 
 	if err != nil {
 		post.Status = models.PostStatusFAILED
@@ -234,7 +234,7 @@ func (r redditInteractions) SendComment(ctx context.Context, interaction *models
 			zap.String("from", interaction.From))
 
 		return nil
-	})
+	}, reddit.PreferSpecificAccountStrategy(interaction.From))
 
 	if err != nil {
 		interaction.Status = models.LeadInteractionStatusFAILED

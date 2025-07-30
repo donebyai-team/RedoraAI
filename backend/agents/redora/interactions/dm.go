@@ -167,7 +167,7 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 			zap.String("from", interaction.From))
 
 		return nil
-	})
+	}, reddit.PreferSpecificAccountStrategy(interaction.From))
 
 	if err != nil {
 		interaction.Status = models.LeadInteractionStatusFAILED

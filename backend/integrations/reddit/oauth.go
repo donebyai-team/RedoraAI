@@ -11,7 +11,6 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 	"io"
-	"math/rand"
 	"net/http"
 	"strings"
 	"sync"
@@ -79,11 +78,13 @@ func (c *OauthClient) WithRotatingAccounts(
 	orgID string,
 	integrationType models.IntegrationType,
 	fn func(integration *models.Integration) error,
+	strategy IntegrationSelectionStrategy,
 ) error {
 	return c.withRotatingIntegrations(ctx, orgID, integrationType,
 		nil,
 		nil,
 		fn,
+		strategy,
 	)
 }
 
@@ -91,6 +92,7 @@ func (c *OauthClient) WithRotatingAPIClient(
 	ctx context.Context,
 	orgID string,
 	fn func(client *Client) error,
+	strategy IntegrationSelectionStrategy,
 ) error {
 	return c.withRotatingIntegrations(ctx, orgID, models.IntegrationTypeREDDIT,
 		func(integration *models.Integration) (*Client, error) {
@@ -98,6 +100,7 @@ func (c *OauthClient) WithRotatingAPIClient(
 		},
 		fn,
 		nil,
+		strategy,
 	)
 }
 
@@ -108,6 +111,7 @@ func (c *OauthClient) withRotatingIntegrations(
 	clientBuilder func(integration *models.Integration) (*Client, error),
 	clientHandler func(*Client) error,
 	integrationHandler func(*models.Integration) error,
+	strategy IntegrationSelectionStrategy,
 ) error {
 	integrations, err := c.db.GetIntegrationByOrgAndType(ctx, orgID, integrationType)
 	if err != nil {
@@ -125,14 +129,13 @@ func (c *OauthClient) withRotatingIntegrations(
 		return datastore.IntegrationNotFoundOrActive
 	}
 
-	rand.Shuffle(len(activeIntegrations), func(i, j int) {
-		activeIntegrations[i], activeIntegrations[j] = activeIntegrations[j], activeIntegrations[i]
-	})
+	// Final ordered list
+	finalIntegrations := strategy(activeIntegrations)
 
 	var lastErr error
 	banned, notEstablished := 0, 0
 
-	for _, integration := range activeIntegrations {
+	for _, integration := range finalIntegrations {
 		if integration.ReferenceID == nil {
 			c.logger.Error("reference id is nil", zap.String("integration_id", integration.ID))
 			continue
@@ -179,9 +182,9 @@ func (c *OauthClient) withRotatingIntegrations(
 	}
 
 	switch {
-	case banned == len(activeIntegrations):
+	case banned == len(finalIntegrations):
 		return AllAccountBanned
-	case notEstablished == len(activeIntegrations):
+	case notEstablished == len(finalIntegrations):
 		return AllAccountNotEstablished
 	default:
 		return lastErr
@@ -204,32 +207,52 @@ func (c *OauthClient) GetActiveIntegrations(ctx context.Context, orgID string, i
 	return activeIntegrations, nil
 }
 
+// GetRedditAPIClient gives a random connected account as per below strategy
+// 1. Try to find an account for which both integrations type REDDIT and DM exist to let a single user do both comment and DM
+// 2. Prioritize the one that is > 2 weeks old
+// TODO: Also check is account is suspended
 func (c *OauthClient) GetRedditAPIClient(ctx context.Context, orgID string, forceAuth bool) (*Client, error) {
-	activeIntegrations, err := c.GetActiveIntegrations(ctx, orgID, models.IntegrationTypeREDDIT)
+	activeRedditIntegrations, err := c.GetActiveIntegrations(ctx, orgID, models.IntegrationTypeREDDIT)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get integrations: %w", err)
 	}
 
-	if len(activeIntegrations) == 0 {
+	if len(activeRedditIntegrations) == 0 {
 		if !forceAuth {
 			return NewClientWithOutConfig(c.logger), nil
 		}
 		return nil, datastore.IntegrationNotFoundOrActive
 	}
 
-	// randomly select one of the active integrations
-	randIndex := rand.Intn(len(activeIntegrations))
-	integration := activeIntegrations[randIndex]
-
-	client, err := c.buildRedditClient(ctx, integration)
+	activeDMIntegrations, err := c.GetActiveIntegrations(ctx, orgID, models.IntegrationTypeREDDITDMLOGIN)
 	if err != nil {
+		return nil, fmt.Errorf("failed to get integrations: %w", err)
+	}
+
+	allIntegrations := append(activeRedditIntegrations, activeDMIntegrations...)
+	candidates := MostQualifiedAccountStrategy(c.logger)(allIntegrations)
+	if len(candidates) == 0 {
 		if !forceAuth {
 			return NewClientWithOutConfig(c.logger), nil
 		}
-		return nil, err
+		return nil, datastore.IntegrationNotFoundOrActive
 	}
 
-	return client, err
+	// Randomly select one from candidates
+	for _, integration := range candidates {
+		client, err := c.buildRedditClient(ctx, integration)
+		if err == nil {
+			return client, nil
+		}
+		c.logger.Warn("failed to build reddit client from integration", zap.String("integration_id", integration.ID), zap.Error(err))
+	}
+
+	if !forceAuth {
+		return NewClientWithOutConfig(c.logger), nil
+	}
+
+	c.logger.Error("failed to build reddit client from any integrations")
+	return nil, datastore.IntegrationNotFoundOrActive
 }
 
 func (c *OauthClient) buildRedditClient(ctx context.Context, integration *models.Integration) (*Client, error) {
