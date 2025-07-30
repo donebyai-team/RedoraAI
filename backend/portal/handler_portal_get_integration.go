@@ -69,6 +69,7 @@ func (p *Portal) RevokeIntegration(ctx context.Context, c *connect.Request[pbpor
 func (p *Portal) protoIntegration(integration *models.Integration) *pbportal.Integration {
 	switch integration.Type {
 	case models.IntegrationTypeREDDIT:
+		config := integration.GetRedditConfig()
 		resp := &pbportal.Integration{
 			Id:             integration.ID,
 			OrganizationId: integration.OrganizationID,
@@ -78,7 +79,8 @@ func (p *Portal) protoIntegration(integration *models.Integration) *pbportal.Int
 		if integration.ReferenceID != nil {
 			resp.Details = &pbportal.Integration_Reddit{
 				Reddit: &pbportal.RedditIntegration{
-					UserName: *integration.ReferenceID,
+					UserName:    *integration.ReferenceID,
+					IsOldEnough: config.IsUserOldEnough(2),
 				},
 			}
 		}
@@ -93,7 +95,8 @@ func (p *Portal) protoIntegration(integration *models.Integration) *pbportal.Int
 		if integration.ReferenceID != nil {
 			resp.Details = &pbportal.Integration_Reddit{
 				Reddit: &pbportal.RedditIntegration{
-					UserName: *integration.ReferenceID,
+					UserName:    *integration.ReferenceID,
+					IsOldEnough: true,
 				},
 			}
 		}

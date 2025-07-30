@@ -182,20 +182,28 @@ export default function Page() {
                   const isActive = integration.status === IntegrationState.ACTIVE
                   const isAuthRemoved = integration.status === IntegrationState.AUTH_REVOKED
                   const username = integration.details?.value?.userName ?? '—'
+                  const isOldEnough = integration.details?.value?.isOldEnough;
 
                   return (
                     <TableRow key={integration.id}>
                       <TableCell>Reddit</TableCell>
                       <TableCell>
                         {username !== '—' ? (
-                          <a
-                            href={`https://reddit.com/user/${username}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:underline"
-                          >
-                            {username}
-                          </a>
+                          <div className="flex flex-col">
+                            <a
+                              href={`https://reddit.com/user/${username}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline"
+                            >
+                              {username}
+                            </a>
+                            {!isOldEnough && (
+                              <span className="text-xs text-yellow-700 mt-1">
+                                ⚠️ This Reddit account is less than 2 weeks old. It will be used for auto-comments only after the warmup period.
+                              </span>
+                            )}
+                          </div>
                         ) : (
                           '—'
                         )}

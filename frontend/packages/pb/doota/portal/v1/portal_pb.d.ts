@@ -970,6 +970,11 @@ export declare type RedditIntegration = Message<"doota.portal.v1.RedditIntegrati
    * @generated from field: string user_name = 1;
    */
   userName: string;
+
+  /**
+   * @generated from field: bool is_old_enough = 2;
+   */
+  isOldEnough: boolean;
 };
 
 /**

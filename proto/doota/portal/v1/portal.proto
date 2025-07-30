@@ -301,6 +301,7 @@ message Integration {
 
 message RedditIntegration {
   string user_name = 1;
+  bool is_old_enough = 2;
 }
 
 message Integrations {
