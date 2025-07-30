@@ -224,18 +224,17 @@ func (c *OauthClient) GetRedditAPIClient(ctx context.Context, orgID string, forc
 		return nil, datastore.IntegrationNotFoundOrActive
 	}
 
-	activeDMIntegrations, err := c.GetActiveIntegrations(ctx, orgID, models.IntegrationTypeREDDITDMLOGIN)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get integrations: %w", err)
-	}
+	var candidates []*models.Integration
 
-	allIntegrations := append(activeRedditIntegrations, activeDMIntegrations...)
-	candidates := MostQualifiedAccountStrategy(c.logger)(allIntegrations)
-	if len(candidates) == 0 {
-		if !forceAuth {
-			return NewClientWithOutConfig(c.logger), nil
+	if !forceAuth {
+		candidates = RandomStrategy(activeRedditIntegrations)
+	} else {
+		activeDMIntegrations, err := c.GetActiveIntegrations(ctx, orgID, models.IntegrationTypeREDDITDMLOGIN)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get integrations: %w", err)
 		}
-		return nil, datastore.IntegrationNotFoundOrActive
+		allIntegrations := append(activeRedditIntegrations, activeDMIntegrations...)
+		candidates = MostQualifiedAccountStrategy(c.logger)(allIntegrations)
 	}
 
 	// Randomly select one from candidates
@@ -248,6 +247,7 @@ func (c *OauthClient) GetRedditAPIClient(ctx context.Context, orgID string, forc
 	}
 
 	if !forceAuth {
+		c.logger.Warn("all reddit integrations failed, using unauthenticated client")
 		return NewClientWithOutConfig(c.logger), nil
 	}
 

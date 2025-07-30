@@ -544,13 +544,12 @@ func (s *redditKeywordTracker) scheduleInteractions(ctx context.Context, org *mo
 	}
 
 	if redditLead.RelevancyScore >= org.FeatureFlags.GetRelevancyScoreDM() &&
-		org.FeatureFlags.EnableAutoDM {
+		org.FeatureFlags.EnableAutoDM &&
+		len(strings.TrimSpace(redditLead.LeadMetadata.SuggestedDM)) > 0 {
 		// Schedule DM
-		if len(strings.TrimSpace(redditLead.LeadMetadata.SuggestedDM)) > 0 {
-			err := s.sendAutomatedDM(ctx, org, redditConfig, redditLead)
-			if err != nil {
-				s.logger.Error("failed to schedule automated DM", zap.Error(err), zap.String("post_id", redditLead.ID))
-			}
+		err := s.sendAutomatedDM(ctx, org, redditConfig, redditLead)
+		if err != nil {
+			s.logger.Error("failed to schedule automated DM", zap.Error(err), zap.String("post_id", redditLead.ID))
 		}
 	}
 }
