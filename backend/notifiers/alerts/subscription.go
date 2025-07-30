@@ -44,7 +44,7 @@ func (s *SlackNotifier) SendSubscriptionCancelledEmail(ctx context.Context, orgI
 	    <p>🔗 <a href="https://app.redoraai.com/billing" style="color: #3366cc;">Manage Subscription</a></p>
 
 	    <p>Thanks for trying RedoraAI — we’d love to hear your feedback or help with anything.</p>
-	    <p>Just reply to this email or reach us at <a href="mailto:support@redoraai.com">support@redoraai.com</a>.</p>
+	    <p>Just reply to this email or reach us at <a href="mailto:adarsh@redoraai.com">adarsh@redoraai.com</a>.</p>
 	`)
 }
 
