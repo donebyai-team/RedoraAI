@@ -485,25 +485,7 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 		}
 
 		// IMP: Make sure to send comment after saving the lead as we need lead id
-		if redditLead.RelevancyScore >= tracker.Organization.FeatureFlags.GetRelevancyScoreComment() && tracker.Organization.FeatureFlags.EnableAutoComment {
-			// schedule comment
-			if len(strings.TrimSpace(redditLead.LeadMetadata.SuggestedComment)) > 0 {
-				err := s.sendAutomatedComment(ctx, tracker.Organization, redditClient.GetConfig(), redditLead)
-				if err != nil {
-					s.logger.Error("failed to send automated comment", zap.Error(err), zap.String("post_id", post.ID))
-				}
-			}
-		}
-
-		if redditLead.RelevancyScore >= tracker.Organization.FeatureFlags.GetRelevancyScoreDM() && tracker.Organization.FeatureFlags.EnableAutoDM {
-			// Schedule DM
-			if len(strings.TrimSpace(redditLead.LeadMetadata.SuggestedDM)) > 0 {
-				err := s.sendAutomatedDM(ctx, tracker.Organization, redditClient.GetConfig(), redditLead)
-				if err != nil {
-					s.logger.Error("failed to send automated DM", zap.Error(err), zap.String("post_id", post.ID))
-				}
-			}
-		}
+		s.scheduleInteractions(ctx, tracker.Organization, redditLead)
 
 		// track max posts to track per day
 		shouldContinue, err := s.state.CheckIfUnderLimitAndIncrement(ctx, dailyCounterKey(project.OrganizationID), keyTrackedPostPerDay, maxPostsToTrackPerDay, 24*time.Hour)
@@ -541,6 +523,37 @@ const (
 	keyRelevantLeadsPerDay    = "relevant_posts"
 	keyTrackedPostPerDay      = "posts_tracked"
 )
+
+func (s *redditKeywordTracker) scheduleInteractions(ctx context.Context, org *models.Organization, redditLead *models.Lead) {
+	var redditConfig *models.RedditConfig
+	if redditLead.RelevancyScore >= org.FeatureFlags.GetRelevancyScoreComment() &&
+		org.FeatureFlags.EnableAutoComment &&
+		len(strings.TrimSpace(redditLead.LeadMetadata.SuggestedComment)) > 0 {
+		// Get the client
+		redditClient, err := s.redditOauthClient.GetRedditAPIClient(ctx, org.ID, true)
+		if err == nil {
+			redditConfig = redditClient.GetConfig()
+			// Schedule comment
+			err := s.sendAutomatedComment(ctx, org, redditConfig, redditLead)
+			if err != nil {
+				s.logger.Error("failed to schedule automated comment", zap.Error(err), zap.String("post_id", redditLead.PostID))
+			}
+		} else {
+			s.logger.Error("failed to get reddit client, while scheduling comment", zap.Error(err))
+		}
+	}
+
+	if redditLead.RelevancyScore >= org.FeatureFlags.GetRelevancyScoreDM() &&
+		org.FeatureFlags.EnableAutoDM {
+		// Schedule DM
+		if len(strings.TrimSpace(redditLead.LeadMetadata.SuggestedDM)) > 0 {
+			err := s.sendAutomatedDM(ctx, org, redditConfig, redditLead)
+			if err != nil {
+				s.logger.Error("failed to schedule automated DM", zap.Error(err), zap.String("post_id", redditLead.ID))
+			}
+		}
+	}
+}
 
 func (s *redditKeywordTracker) sendAutomatedDM(ctx context.Context, org *models.Organization, redditConfig *models.RedditConfig, redditLead *models.Lead) error {
 	if !org.FeatureFlags.EnableAutoDM {
