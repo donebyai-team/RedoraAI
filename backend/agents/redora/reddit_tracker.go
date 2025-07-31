@@ -573,12 +573,21 @@ func (s *redditKeywordTracker) sendAutomatedDM(ctx context.Context, org *models.
 	}
 
 	if shouldDM {
-		interaction, err := s.automatedInteractions.ScheduleDM(ctx, &models.LeadInteraction{
+		interactionDM := &models.LeadInteraction{
 			LeadID:    redditLead.ID,
 			ProjectID: redditLead.ProjectID,
 			From:      from,
 			To:        redditLead.Author,
-		})
+		}
+
+		// Schedule DM a few minutes after the comment is sent to keep the lead warm
+		if redditLead.LeadMetadata.CommentScheduledAt != nil {
+			newTime := redditLead.LeadMetadata.CommentScheduledAt.Add(5 * time.Minute)
+			interactionDM.ScheduledAt = &newTime
+			s.logger.Info("scheduling the DM right after 5 minutes of comment to keep the lead warm")
+		}
+
+		interaction, err := s.automatedInteractions.ScheduleDM(ctx, interactionDM)
 		if err != nil {
 			rollbackErr := s.state.RollbackCounter(ctx, redisKey, keyDMScheduledPerDay)
 			if rollbackErr != nil {

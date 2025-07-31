@@ -329,17 +329,18 @@ func (r redditInteractions) ScheduleDM(ctx context.Context, info *models.LeadInt
 	)
 	info.Type = models.LeadInteractionTypeDM
 
-	interactions, err := r.GetInteractions(ctx, info.ProjectID, models.LeadInteractionStatusCREATED, pbportal.DateRangeFilter_DATE_RANGE_TODAY)
-	if err != nil {
-		return nil, err
-	}
+	if info.ScheduledAt == nil {
+		interactions, err := r.GetInteractions(ctx, info.ProjectID, models.LeadInteractionStatusCREATED, pbportal.DateRangeFilter_DATE_RANGE_TODAY)
+		if err != nil {
+			return nil, err
+		}
 
-	scheduledAt, err := getNextAvailableScheduleTimeRandomBucket(time.Now().UTC(), interactions, 5*time.Minute, 1)
-	if err != nil {
-		return nil, err
+		scheduledAt, err := getNextAvailableScheduleTimeRandomBucket(time.Now().UTC(), interactions, 5*time.Minute, 1)
+		if err != nil {
+			return nil, err
+		}
+		info.ScheduledAt = utils.Ptr(scheduledAt)
 	}
-
-	info.ScheduledAt = utils.Ptr(scheduledAt)
 
 	return r.db.CreateLeadInteraction(ctx, info)
 }
