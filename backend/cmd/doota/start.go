@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/shank318/doota/agents/redora"
 	"github.com/shank318/doota/agents/redora/interactions"
@@ -41,6 +42,7 @@ var StartCmd = cli.Command(startCmdE,
 		flags.String("common-resend-api-key", "", "Resend email api key")
 		flags.String("common-dodopayment-api-key", "", "DodoPayment api key")
 		flags.String("common-browserless-api-key", "", "Browserless api key")
+		flags.String("common-steel-api-key", "", "Steel Browser api key")
 		flags.String("common-openai-api-key", "", "LiteLLM API key")
 		flags.String("common-openai-gpt-api-key", "", "OpenAI API key")
 		flags.String("common-openai-debug-store", "data/debugstore", "OpenAI debug store")
@@ -204,8 +206,9 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		return nil, fmt.Errorf("unable to create debug store: %w", err)
 	}
 
-	browserLessClient := interactions.NewBrowserlessClient(sflags.MustGetString(cmd, "common-browserless-api-key"), debugStore, logger)
-	interactionService := interactions.NewRedditInteractions(deps.DataStore, alertNotifier, browserLessClient, redditOauthClient, logger)
+	//browserLessClient := interactions.NewBrowserlessClient(sflags.MustGetString(cmd, "common-browserless-api-key"), debugStore, logger)
+	steelBrowserClient := interactions.NewSteelBrowserClient(sflags.MustGetString(cmd, "common-steel-api-key"), debugStore, logger)
+	interactionService := interactions.NewRedditInteractions(deps.DataStore, alertNotifier, steelBrowserClient, redditOauthClient, logger)
 
 	//organizations, err := deps.DataStore.GetOrganizations(context.Background())
 	//if err != nil {
@@ -217,15 +220,16 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 	//	deps.DataStore.UpdateOrganization(context.Background(), org)
 	//}
 
-	//andType, err := deps.DataStore.GetIntegrationByOrgAndType(context.Background(), "5b5955de-a4c1-4bb5-9358-c3c2ba34fdf6", models.IntegrationTypeREDDITDMLOGIN)
+	//andType, err := deps.DataStore.GetIntegrationById(context.Background(), "649fd5e3-c2a1-4e2b-a753-630ef4d2f315")
 	//if err != nil {
 	//	return nil, err
 	//}
-	//_, err = browserLessClient.SendDM(context.Background(), interactions.DMParams{
-	//	To:      "t2_19wvzj68ml",
-	//	Message: "hello",
-	//	ID:      "unique_id",
-	//	Cookie:  andType.GetRedditDMLoginConfig().Cookies,
+	//_, err = steelBrowserClient.SendDM(context.Background(), interactions.DMParams{
+	//	To:         "t2_1otowi6mq2",
+	//	Message:    "hello",
+	//	ID:         "unique_id",
+	//	ToUsername: "Clean-Sport-4436",
+	//	Cookie:     andType.GetRedditDMLoginConfig().Cookies,
 	//})
 	//if err != nil {
 	//	return nil, err
@@ -405,8 +409,9 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		return nil, fmt.Errorf("unable to create debug store: %w", err)
 	}
 
-	browserLessClient := interactions.NewBrowserlessClient(sflags.MustGetString(cmd, "common-browserless-api-key"), debugStore, logger)
-	interactionService := interactions.NewRedditInteractions(deps.DataStore, alertNotifier, browserLessClient, redditOauthClient, logger)
+	//browserLessClient := interactions.NewBrowserlessClient(sflags.MustGetString(cmd, "common-browserless-api-key"), debugStore, logger)
+	steelBrowserClient := interactions.NewSteelBrowserClient(sflags.MustGetString(cmd, "common-steel-api-key"), debugStore, logger)
+	interactionService := interactions.NewRedditInteractions(deps.DataStore, alertNotifier, steelBrowserClient, redditOauthClient, logger)
 
 	dodoPaymentToken := sflags.MustGetString(cmd, "common-dodopayment-api-key")
 	dodoSubscriptionService := services.NewDodoSubscriptionService(deps.DataStore, alertNotifier, dodoPaymentToken, logger, isDev)

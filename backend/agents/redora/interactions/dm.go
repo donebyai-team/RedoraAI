@@ -131,24 +131,24 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 			return err
 		}
 
-		//updatedCookies, err := r.browserLessClient.SendDM(ctx, DMParams{
-		//	ID:         interaction.ID,
-		//	Cookie:     config.Cookies,
-		//	To:         fmt.Sprintf("t2_%s", user.ID),
-		//	ToUsername: user.Name,
-		//	Message:    utils.FormatDM(redditLead.LeadMetadata.SuggestedDM),
-		//})
-		//if err != nil {
-		//	interaction.Reason = fmt.Sprintf("Reason: %v", err)
-		//	interaction.Status = models.LeadInteractionStatusFAILED
-		//	if strings.Contains(err.Error(), "account isn't established") {
-		//		interaction.Reason = disabledReasonAccNotEstablished
-		//	}
-		//
-		//	return err
-		//}
+		updatedCookies, err := r.browserClient.SendDM(ctx, DMParams{
+			ID:         interaction.ID,
+			Cookie:     config.Cookies,
+			To:         fmt.Sprintf("t2_%s", user.ID),
+			ToUsername: user.Name,
+			Message:    utils.FormatDM(redditLead.LeadMetadata.SuggestedDM),
+		})
+		if err != nil {
+			interaction.Reason = fmt.Sprintf("Reason: %v", err)
+			interaction.Status = models.LeadInteractionStatusFAILED
+			if strings.Contains(err.Error(), "account isn't established") {
+				interaction.Reason = disabledReasonAccNotEstablished
+			}
 
-		config.Cookies = string("{updatedCookies}")
+			return err
+		}
+
+		config.Cookies = string(updatedCookies)
 		integration = models.SetIntegrationType(integration, models.IntegrationTypeREDDITDMLOGIN, config)
 		_, err = r.db.UpsertIntegration(ctx, integration)
 		if err != nil {
@@ -190,19 +190,19 @@ type loginCallback func() error
 
 func (r redditInteractions) Authenticate(ctx context.Context, orgID string, cookieJSON string) (string, loginCallback, error) {
 	// Handle direct cookie login
-	//if cookieJSON != "" {
-	//	updatedLoginConfig, err := r.browserClient.ValidateCookies(ctx, cookieJSON)
-	//	if err != nil {
-	//		return "", nil, err
-	//	}
-	//
-	//	if err := r.finalizeLogin(ctx, orgID, updatedLoginConfig); err != nil {
-	//		return "", nil, err
-	//	}
-	//
-	//	r.logger.Info("successfully logged in to reddit", zap.String("org_id", orgID))
-	//	return "", nil, nil
-	//}
+	if cookieJSON != "" {
+		updatedLoginConfig, err := r.browserClient.ValidateCookies(ctx, cookieJSON)
+		if err != nil {
+			return "", nil, err
+		}
+
+		if err := r.finalizeLogin(ctx, orgID, updatedLoginConfig); err != nil {
+			return "", nil, err
+		}
+
+		r.logger.Info("successfully logged in to reddit", zap.String("org_id", orgID))
+		return "", nil, nil
+	}
 
 	// Handle login via browser automation
 	cdp, err := r.browserClient.StartLogin(ctx)
@@ -211,7 +211,7 @@ func (r redditInteractions) Authenticate(ctx context.Context, orgID string, cook
 	}
 
 	return cdp.LiveURL, func() error {
-		updatedLoginConfig, err := r.browserClient.WaitAndGetCookies(ctx, cdp.BrowserWSEndpoint)
+		updatedLoginConfig, err := r.browserClient.WaitAndGetCookies(ctx, cdp)
 		if err != nil {
 			return err
 		}

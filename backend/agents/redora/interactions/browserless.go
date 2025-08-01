@@ -114,7 +114,7 @@ func (r browserless) ValidateCookies(ctx context.Context, cookiesJSON string) (c
 		return nil, fmt.Errorf("CDP url fetch failed: %w", err)
 	}
 
-	browser, err := pw.Chromium.ConnectOverCDP(info.BrowserWSEndpoint)
+	browser, err := pw.Chromium.ConnectOverCDP(info.WSEndpoint)
 	if err != nil {
 		return nil, fmt.Errorf("CDP connection failed: %w", err)
 	}
@@ -189,7 +189,7 @@ func (r browserless) SendDM(ctx context.Context, params DMParams) (cookies []byt
 		return nil, fmt.Errorf("CDP url fetch failed: %w", err)
 	}
 
-	browser, err := pw.Chromium.ConnectOverCDP(info.BrowserWSEndpoint)
+	browser, err := pw.Chromium.ConnectOverCDP(info.WSEndpoint)
 	if err != nil {
 		return nil, fmt.Errorf("CDP connection failed: %w", err)
 	}
@@ -560,7 +560,7 @@ func (r browserless) storeScreenshot(stage, id string, page playwright.Page) {
 //	return strings.Join(errors, " | ")
 //}
 
-func (r browserless) WaitAndGetCookies(ctx context.Context, browserURL string) (*models.RedditDMLoginConfig, error) {
+func (r browserless) WaitAndGetCookies(ctx context.Context, cdp *CDPInfo) (*models.RedditDMLoginConfig, error) {
 	pw, err := playwright.Run()
 	if err != nil {
 		return nil, fmt.Errorf("playwright start failed: %w", err)
@@ -569,7 +569,7 @@ func (r browserless) WaitAndGetCookies(ctx context.Context, browserURL string) (
 
 	// added a hack to reconnect wait
 	time.Sleep(3 * time.Second)
-	browser, err := pw.Chromium.ConnectOverCDP(browserURL)
+	browser, err := pw.Chromium.ConnectOverCDP(cdp.WSEndpoint)
 	if err != nil {
 		return nil, fmt.Errorf("CDP connection failed: %w", err)
 	}
@@ -636,15 +636,6 @@ func (r browserless) StartLogin(ctx context.Context) (*CDPInfo, error) {
 
 	return cdp, nil
 }
-
-type CDPInfo struct {
-	SessionID         string
-	BrowserWSEndpoint string
-	LiveURL           string
-}
-
-const loginURL = "https://www.reddit.com/login"
-const chatURL = "https://chat.reddit.com"
 
 func (r browserless) getCDPUrl(ctx context.Context, startURL string, includeLiveURL, useProxy bool) (*CDPInfo, error) {
 	const maxRetries = 3
@@ -721,7 +712,7 @@ func (r browserless) getCDPUrl(ctx context.Context, startURL string, includeLive
 		}
 
 		info := &CDPInfo{
-			BrowserWSEndpoint: result.Data.Reconnect.BrowserWSEndpoint,
+			WSEndpoint: result.Data.Reconnect.BrowserWSEndpoint,
 		}
 
 		if includeLiveURL {
