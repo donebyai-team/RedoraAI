@@ -30,7 +30,7 @@ type AutomatedInteractions interface {
 type redditInteractions struct {
 	db                datastore.Repository
 	alertNotifier     alerts.AlertNotifier
-	browserLessClient *browserless
+	browserClient     BrowserAutomation
 	redditOauthClient *reddit.OauthClient
 	logger            *zap.Logger
 }
@@ -39,8 +39,8 @@ func (r redditInteractions) GetInteractions(ctx context.Context, projectID strin
 	return r.db.GetLeadInteractions(ctx, projectID, status, dateRange)
 }
 
-func NewRedditInteractions(db datastore.Repository, alertNotifier alerts.AlertNotifier, browserLessClient *browserless, redditOauthClient *reddit.OauthClient, logger *zap.Logger) AutomatedInteractions {
-	return &redditInteractions{alertNotifier: alertNotifier, redditOauthClient: redditOauthClient, browserLessClient: browserLessClient, db: db, logger: logger}
+func NewRedditInteractions(db datastore.Repository, alertNotifier alerts.AlertNotifier, browserClient BrowserAutomation, redditOauthClient *reddit.OauthClient, logger *zap.Logger) AutomatedInteractions {
+	return &redditInteractions{alertNotifier: alertNotifier, redditOauthClient: redditOauthClient, browserClient: browserClient, db: db, logger: logger}
 }
 
 func NewSimpleRedditInteractions(db datastore.Repository, logger *zap.Logger) AutomatedInteractions {

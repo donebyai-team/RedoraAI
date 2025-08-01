@@ -89,7 +89,7 @@ type browserless struct {
 	db             datastore.Repository
 }
 
-func NewBrowserlessClient(token string, debugFileStore dstore.Store, logger *zap.Logger) *browserless {
+func NewBrowserlessClient(token string, debugFileStore dstore.Store, logger *zap.Logger) BrowserAutomation {
 	err := playwright.Install(&playwright.RunOptions{SkipInstallBrowsers: true})
 	if err != nil {
 		logger.Warn("failed to install playwright", zap.Error(err))
@@ -634,6 +634,7 @@ func (r browserless) StartLogin(ctx context.Context) (*CDPInfo, error) {
 }
 
 type CDPInfo struct {
+	SessionID         string
 	BrowserWSEndpoint string
 	LiveURL           string
 }
