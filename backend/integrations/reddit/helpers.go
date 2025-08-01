@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/hashicorp/go-retryablehttp"
+	"go.uber.org/zap"
 	"golang.org/x/time/rate"
 	"io"
 	"net/http"
@@ -30,6 +31,7 @@ func (r *Client) doRequest(ctx context.Context, method, url string, rawBody inte
 	}
 
 	if err := validateResponse(resp); err != nil {
+		r.logger.Error("failed to validate response", zap.Error(err))
 		if errors.Is(err, ErrUnAuthorized) && r.unAuthorizedErrorCallback != nil {
 			r.unAuthorizedErrorCallback(ctx)
 		}

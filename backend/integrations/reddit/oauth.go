@@ -288,6 +288,10 @@ func (c *OauthClient) buildRedditClient(ctx context.Context, integration *models
 		if err != nil {
 			return nil, fmt.Errorf("failed to update integration after token refresh: %w", err)
 		}
+	} else {
+		c.logger.Info("token exists, using existing token",
+			zap.String("expiry", client.config.ExpiresAt.String()),
+			zap.String("integration_id", integration.ID))
 	}
 
 	return client, nil
