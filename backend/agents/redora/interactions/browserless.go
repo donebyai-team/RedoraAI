@@ -274,17 +274,17 @@ func (r browserless) SendDM(ctx context.Context, params DMParams) (cookies []byt
 	})
 	if err != nil {
 		r.logger.Error("element 'rs-current-user' did not appear in time", zap.Error(err))
-		return nil, fmt.Errorf("unable to login, please check your credentials or cookies and try again")
+		//return nil, fmt.Errorf("unable to login, please check your credentials or cookies and try again")
 	}
 
 	displayName, err := locatorCurrentUser.GetAttribute("display-name")
 	if err != nil {
 		r.logger.Error("failed to get display name", zap.Error(err))
-		return nil, fmt.Errorf("unable to login, please check your credentials or cookies and try again")
+		//return nil, fmt.Errorf("unable to login, please check your credentials or cookies and try again")
 	}
 
 	if displayName == "" {
-		return nil, fmt.Errorf("unable to login, please check your credentials or cookies and try again")
+		//return nil, fmt.Errorf("unable to login, please check your credentials or cookies and try again")
 	}
 
 	if strings.Contains(currentURL, "www.reddit.com/user") {
