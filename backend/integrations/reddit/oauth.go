@@ -274,8 +274,10 @@ func (c *OauthClient) buildRedditClient(ctx context.Context, integration *models
 	}
 
 	if client.isTokenExpired() {
+		c.logger.Info("token expired, refreshing...", zap.String("integration_id", integration.ID))
 		err := client.refreshToken(ctx)
 		if err != nil {
+			c.logger.Error("failed to refresh token", zap.String("integration_id", integration.ID), zap.Error(err))
 			client.unAuthorizedErrorCallback(ctx)
 			return nil, &errorx.RefreshTokenError{Reason: err.Error()}
 		}
@@ -302,7 +304,7 @@ func (c *OauthClient) revokeIntegration(ctx context.Context, integrationID strin
 	if err != nil {
 		c.logger.Error("failed to mark integration as AUTHREVOKED", zap.Error(err))
 	}
-	c.logger.Info("integration marked as AUTHREVOKED", zap.String("integration_id", integrationID))
+	c.logger.Info("integration marked as revoked", zap.String("state", state.String()), zap.String("integration_id", integrationID))
 	return err
 }
 
