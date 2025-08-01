@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/shank318/doota/models"
+	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -379,6 +380,8 @@ func (r *Client) refreshToken(ctx context.Context) error {
 	if newToken.RefreshToken != "" {
 		r.config.RefreshToken = newToken.RefreshToken
 	}
+
+	r.logger.Info("token refreshed", zap.String("expiry", r.config.ExpiresAt.String()), zap.String("account", r.config.Name))
 
 	return nil
 }
