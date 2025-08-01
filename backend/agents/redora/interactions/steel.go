@@ -362,6 +362,13 @@ func (r steelBrowser) SendDM(ctx context.Context, params DMParams) (cookies []by
 	}
 	defer pw.Stop()
 
+	optionalCookies, err := ParseCookiesFromJSON(params.Cookie, false)
+	if err != nil {
+		return nil, fmt.Errorf("cookie injection failed: %w", err)
+	}
+
+	fmt.Println(optionalCookies)
+
 	info, err := r.getCDPUrl(ctx, true)
 	if err != nil {
 		return nil, fmt.Errorf("CDP url fetch failed: %w", err)
