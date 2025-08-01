@@ -266,15 +266,25 @@ func (r browserless) SendDM(ctx context.Context, params DMParams) (cookies []byt
 		return nil, fmt.Errorf("chat error: invalid user")
 	}
 
-	displayName, err := page.Locator("rs-current-user").GetAttribute("display-name")
+	locatorCurrentUser := page.Locator("rs-current-user")
+
+	// Wait for the element to be attached and visible (up to 5 seconds)
+	err = locatorCurrentUser.WaitFor(playwright.LocatorWaitForOptions{
+		Timeout: playwright.Float(5000), // in milliseconds
+	})
 	if err != nil {
-		r.logger.Error("failed to get display name")
-	} else {
-		r.logger.Info("logged in as user", zap.String("display_name", displayName))
+		r.logger.Error("element 'rs-current-user' did not appear in time", zap.Error(err))
+		//return nil, fmt.Errorf("unable to login, please check your credentials or cookies and try again")
+	}
+
+	displayName, err := locatorCurrentUser.GetAttribute("display-name")
+	if err != nil {
+		r.logger.Error("failed to get display name", zap.Error(err))
+		//return nil, fmt.Errorf("unable to login, please check your credentials or cookies and try again")
 	}
 
 	if displayName == "" {
-		return nil, fmt.Errorf("unable to login, please check your credentials or cookies and try again")
+		//return nil, fmt.Errorf("unable to login, please check your credentials or cookies and try again")
 	}
 
 	if strings.Contains(currentURL, "www.reddit.com/user") {

@@ -66,7 +66,7 @@ func (r steelBrowser) getCDPUrl(ctx context.Context, useProxy bool) (*CDPInfo, e
 		r.logger.Info("creating steel browser session", zap.Int("attempt", attempt+1))
 
 		payload := CreateSession{
-			SolveCaptcha: true,
+			SolveCaptcha: false,
 			UseProxy:     useProxy,
 			Timeout:      3 * 60 * 1000, // 3 minutes in ms
 		}
@@ -251,7 +251,8 @@ func (r steelBrowser) gotoWithRetry(page playwright.Page, url string, timeout fl
 	for i := 0; i <= maxRetries; i++ {
 		r.logger.Info("navigating to url", zap.String("url", url))
 		_, err := page.Goto(url, playwright.PageGotoOptions{
-			Timeout: playwright.Float(timeout),
+			Timeout:   playwright.Float(0),
+			WaitUntil: playwright.WaitUntilStateDomcontentloaded,
 		})
 		if err == nil {
 			return nil
@@ -361,13 +362,6 @@ func (r steelBrowser) SendDM(ctx context.Context, params DMParams) (cookies []by
 		return nil, fmt.Errorf("playwright start failed: %w", err)
 	}
 	defer pw.Stop()
-
-	optionalCookies, err := ParseCookiesFromJSON(params.Cookie, false)
-	if err != nil {
-		return nil, fmt.Errorf("cookie injection failed: %w", err)
-	}
-
-	fmt.Println(optionalCookies)
 
 	info, err := r.getCDPUrl(ctx, true)
 	if err != nil {

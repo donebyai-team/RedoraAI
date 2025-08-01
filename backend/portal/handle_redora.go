@@ -648,8 +648,11 @@ func (p *Portal) UpdateLeadInteractionStatus(ctx context.Context, c *connect.Req
 		return nil, err
 	}
 
-	// for now , we can update only removed
-	if c.Msg.Status != pbcore.LeadInteractionStatus_LEAD_INTERACTION_STATUS_REMOVED {
+	status := c.Msg.Status
+
+	// Only allow specific status updates
+	if status != pbcore.LeadInteractionStatus_LEAD_INTERACTION_STATUS_REMOVED &&
+		status != pbcore.LeadInteractionStatus_LEAD_INTERACTION_STATUS_CREATED {
 		return connect.NewResponse(&emptypb.Empty{}), nil
 	}
 
@@ -658,6 +661,21 @@ func (p *Portal) UpdateLeadInteractionStatus(ctx context.Context, c *connect.Req
 		return nil, err
 	}
 
+	// Handle CREATED status only if the current status is FAILED
+	if status == pbcore.LeadInteractionStatus_LEAD_INTERACTION_STATUS_CREATED {
+		if interaction.Status != models.LeadInteractionStatusFAILED {
+			return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("interaction status is not failed, cannot retry"))
+		}
+
+		interaction.Status = status.ToModel()
+		if err := p.db.UpdateLeadInteraction(ctx, interaction); err != nil {
+			return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to update interaction to CREATED: %w", err))
+		}
+
+		return connect.NewResponse(&emptypb.Empty{}), nil
+	}
+
+	// At this point, status must be REMOVED
 	project, err := p.getProject(ctx, c.Header(), actor.OrganizationID)
 	if err != nil {
 		return nil, err
@@ -672,19 +690,18 @@ func (p *Portal) UpdateLeadInteractionStatus(ctx context.Context, c *connect.Req
 		return connect.NewResponse(&emptypb.Empty{}), nil
 	}
 
-	interaction.Status = c.Msg.Status.ToModel()
+	interaction.Status = status.ToModel()
+	interaction.Reason = "Skipped, as user marked it as not relevant"
 
 	// Clear scheduled timestamps
 	lead.LeadMetadata.CommentScheduledAt = nil
 	lead.LeadMetadata.DMScheduledAt = nil
-	interaction.Reason = "Skipped, as user marked it as not relevant"
 
 	if err := p.db.UpdateLeadInteraction(ctx, interaction); err != nil {
 		return nil, err
 	}
 
-	err = p.db.UpdateLeadStatus(ctx, lead)
-	if err != nil {
+	if err := p.db.UpdateLeadStatus(ctx, lead); err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("unable to update lead status: %w", err))
 	}
 
