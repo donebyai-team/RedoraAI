@@ -132,11 +132,11 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 		}
 
 		updatedCookies, err := r.browserLessClient.SendDM(ctx, DMParams{
-			ID:     interaction.ID,
-			Cookie: config.Cookies,
-			To:     fmt.Sprintf("t2_%s", user.ID),
-			//ToUsername: user.Name,
-			Message: utils.FormatDM(redditLead.LeadMetadata.SuggestedDM),
+			ID:         interaction.ID,
+			Cookie:     config.Cookies,
+			To:         fmt.Sprintf("t2_%s", user.ID),
+			ToUsername: user.Name,
+			Message:    utils.FormatDM(redditLead.LeadMetadata.SuggestedDM),
 		})
 		if err != nil {
 			interaction.Reason = fmt.Sprintf("Reason: %v", err)
