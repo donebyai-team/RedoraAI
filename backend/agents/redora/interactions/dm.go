@@ -120,11 +120,11 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 			return err
 		}
 
-		if user == nil || user.ID == "" {
-			interaction.Status = models.LeadInteractionStatusFAILED
-			interaction.Reason = "user does not exist or suspended"
-			return nil
-		}
+		//if user == nil || user.ID == "" {
+		//	interaction.Status = models.LeadInteractionStatusFAILED
+		//	interaction.Reason = "user does not exist or suspended"
+		//	return nil
+		//}
 
 		err = r.db.SetLeadInteractionStatusProcessing(ctx, interaction.ID)
 		if err != nil {
