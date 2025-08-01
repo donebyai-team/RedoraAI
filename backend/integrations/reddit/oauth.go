@@ -141,25 +141,34 @@ func (c *OauthClient) withRotatingIntegrations(
 			continue
 		}
 
-		// Check if account is valid
-		_, err := NewClientWithOutConfig(c.logger).GetUser(ctx, *integration.ReferenceID)
-		if err != nil {
-			lastErr = err
-			if errors.Is(err, AccountBanned) {
-				banned++
-				c.logger.Error("account is banned", zap.String("integration_id", integration.ID), zap.Error(err))
-				c.revokeIntegration(ctx, integration.ID, models.IntegrationStateACCOUNTSUSPENDED)
-			}
-			continue
-		}
+		var client *Client
 
 		if clientBuilder != nil {
-			client, err := clientBuilder(integration)
+			client, err = clientBuilder(integration)
 			if err != nil {
 				lastErr = err
 				continue
 			}
+		} else {
+			client = NewClientWithOutConfig(c.logger)
+		}
 
+		// Attempt GetUser call
+		// If it gives any other error other than an account banned, skip it
+		_, getUserErr := client.GetUser(ctx, *integration.ReferenceID)
+		if getUserErr != nil {
+			if errors.Is(getUserErr, AccountBanned) {
+				lastErr = getUserErr
+				banned++
+				c.logger.Error("account is banned", zap.String("integration_id", integration.ID), zap.Error(getUserErr))
+				c.revokeIntegration(ctx, integration.ID, models.IntegrationStateACCOUNTSUSPENDED)
+				continue
+			}
+
+			c.logger.Warn("warn:failed to check user", zap.String("integration_id", integration.ID), zap.Error(getUserErr))
+		}
+
+		if clientBuilder != nil {
 			err = clientHandler(client)
 			if err == nil {
 				return nil

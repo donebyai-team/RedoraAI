@@ -23,7 +23,7 @@ func (r *Client) GetUser(ctx context.Context, userName string) (*User, error) {
 		if strings.Contains(err.Error(), "404") {
 			return nil, AccountBanned
 		}
-		return nil, err
+		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
 	defer resp.Body.Close()
 

@@ -270,7 +270,11 @@ func (r browserless) SendDM(ctx context.Context, params DMParams) (cookies []byt
 	if err != nil {
 		r.logger.Error("failed to get display name")
 	} else {
-		r.logger.Error("logged in as user", zap.String("display_name", displayName))
+		r.logger.Info("logged in as user", zap.String("display_name", displayName))
+	}
+
+	if displayName == "" {
+		return nil, fmt.Errorf("unable to login, please check your credentials or cookies and try again")
 	}
 
 	if strings.Contains(currentURL, "www.reddit.com/user") {
@@ -642,83 +646,105 @@ type CDPInfo struct {
 const loginURL = "https://www.reddit.com/login"
 const chatURL = "https://chat.reddit.com"
 
-// proxy(type: [document, xhr], country: US, sticky: true) { time }
 func (r browserless) getCDPUrl(ctx context.Context, startURL string, includeLiveURL, useProxy bool) (*CDPInfo, error) {
-	var queryBuilder strings.Builder
+	const maxRetries = 3
+	var backoff = 100 * time.Millisecond
 
-	queryBuilder.WriteString("mutation {")
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		var queryBuilder strings.Builder
 
-	if useProxy {
+		queryBuilder.WriteString("mutation {")
+
+		if useProxy {
+			queryBuilder.WriteString(`
+      proxy(
+        type: [document, xhr],
+        country: US,
+        sticky: true
+      ) {
+        time
+      }`)
+		}
+
 		queryBuilder.WriteString(`
-  proxy(
-    type: [document, xhr],
-    country: US,
-    sticky: true
-  ) {
-    time
-  }`)
-	}
+      goto(
+        url: "` + startURL + `",
+        waitUntil: firstContentfulPaint
+      ) {
+        status
+      }`)
 
-	queryBuilder.WriteString(`
-  goto(
-    url: "` + startURL + `",
-    waitUntil: firstContentfulPaint
-  ) {
-    status
-  }`)
+		if includeLiveURL {
+			queryBuilder.WriteString(`
+      live: liveURL(timeout: 600000 quality: 30 type: jpeg) {
+        liveURL
+      }`)
+		}
 
-	if includeLiveURL {
 		queryBuilder.WriteString(`
-  live: liveURL(timeout: 600000 quality: 30 type: jpeg) {
-    liveURL
-  }`)
+      reconnect {
+        browserWSEndpoint
+      }
+    }`)
+
+		reqBody := map[string]string{"query": queryBuilder.String()}
+		reqBytes, _ := json.Marshal(reqBody)
+
+		resp, err := http.Post(
+			fmt.Sprintf("https://production-sfo.browserless.io/chromium/bql?token=%s&humanlike=true&blockConsentModals=true", r.Token),
+			"application/json",
+			bytes.NewBuffer(reqBytes),
+		)
+		if err != nil {
+			return nil, err
+		}
+		defer resp.Body.Close()
+
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		r.logger.Info("browserless raw response", zap.ByteString("body", bodyBytes))
+
+		var result ReconnectResponse
+		if err := json.Unmarshal(bodyBytes, &result); err != nil {
+			return nil, err
+		}
+
+		// Retry logic if proxy time is 0 and we're using proxy
+		if useProxy && result.Data.Proxy.Time == 0 {
+			r.logger.Warn("proxy.time is 0, retrying", zap.Int("attempt", attempt+1))
+			time.Sleep(backoff)
+			backoff *= 2
+			continue
+		}
+
+		if result.Data.Reconnect.BrowserWSEndpoint == "" {
+			return nil, errors.New("empty browserWSEndpoint - CDP connection failed")
+		}
+
+		info := &CDPInfo{
+			BrowserWSEndpoint: result.Data.Reconnect.BrowserWSEndpoint,
+		}
+
+		if includeLiveURL {
+			info.LiveURL = result.Data.Live.LiveURL
+			r.logger.Info("browserless live url", zap.String("url", info.LiveURL))
+		}
+
+		return info, nil
 	}
 
-	queryBuilder.WriteString(`
-  reconnect {
-    browserWSEndpoint
-  }
-}`)
-
-	reqBody := map[string]string{"query": queryBuilder.String()}
-	reqBytes, _ := json.Marshal(reqBody)
-
-	resp, err := http.Post(
-		fmt.Sprintf("https://production-sfo.browserless.io/chromium/bql?token=%s&humanlike=true&blockConsentModals=true", r.Token),
-		"application/json",
-		bytes.NewBuffer(reqBytes),
-	)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	bodyBytes, _ := io.ReadAll(resp.Body)
-	r.logger.Info("browserless raw response", zap.ByteString("body", bodyBytes))
-
-	var result ReconnectResponse
-	if err := json.Unmarshal(bodyBytes, &result); err != nil {
-		return nil, err
-	}
-
-	if result.Data.Reconnect.BrowserWSEndpoint == "" {
-		return nil, errors.New("empty browserWSEndpoint - CDP connection failed")
-	}
-
-	info := &CDPInfo{
-		BrowserWSEndpoint: result.Data.Reconnect.BrowserWSEndpoint,
-	}
-
-	if includeLiveURL {
-		info.LiveURL = result.Data.Live.LiveURL
-		r.logger.Info("browserless live url", zap.String("url", info.LiveURL))
-	}
-
-	return info, nil
+	return nil, errors.New("failed to get CDP URL after retries due to proxy.time = 0")
 }
 
 type ReconnectResponse struct {
 	Data struct {
+		Proxy struct {
+			Time int `json:"time"`
+		} `json:"proxy"`
+
+		Goto struct {
+			Status int `json:"status"`
+		}
+
 		Reconnect struct {
 			BrowserWSEndpoint string `json:"browserWSEndpoint"`
 		} `json:"reconnect"`
