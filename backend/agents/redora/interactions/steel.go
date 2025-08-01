@@ -66,7 +66,7 @@ func (r steelBrowser) getCDPUrl(ctx context.Context, useProxy bool) (*CDPInfo, e
 		r.logger.Info("creating steel browser session", zap.Int("attempt", attempt+1))
 
 		payload := CreateSession{
-			SolveCaptcha: false,
+			SolveCaptcha: true,
 			UseProxy:     useProxy,
 			Timeout:      3 * 60 * 1000, // 3 minutes in ms
 		}
@@ -189,9 +189,9 @@ func (r steelBrowser) WaitAndGetCookies(ctx context.Context, cdp *CDPInfo) (*mod
 	pageContext := browser.Contexts()[0]
 	page := pageContext.Pages()[0]
 
-	_, err = page.Goto(loginURL, playwright.PageGotoOptions{Timeout: playwright.Float(20000)})
+	err = r.gotoWithRetry(page, loginURL, 30000)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("login page navigation failed: %w", err)
 	}
 
 	ticker := time.NewTicker(2 * time.Second)
@@ -244,6 +244,33 @@ func (r steelBrowser) WaitAndGetCookies(ctx context.Context, cdp *CDPInfo) (*mod
 	}
 }
 
+func (r steelBrowser) gotoWithRetry(page playwright.Page, url string, timeout float64) error {
+	maxRetries := 2
+	var lastErr error
+
+	for i := 0; i <= maxRetries; i++ {
+		r.logger.Info("navigating to url", zap.String("url", url))
+		_, err := page.Goto(url, playwright.PageGotoOptions{
+			Timeout: playwright.Float(timeout),
+		})
+		if err == nil {
+			return nil
+		}
+
+		lastErr = err
+
+		if strings.Contains(err.Error(), "CONNECTION_FAILED") && i < maxRetries {
+			r.logger.Error(fmt.Sprintf("Tunnel connection failed, retrying... (%d/%d)", i+1, maxRetries))
+			time.Sleep(1 * time.Second) // backoff
+			continue
+		}
+
+		break
+	}
+
+	return lastErr
+}
+
 func (r steelBrowser) ValidateCookies(ctx context.Context, cookiesJSON string) (config *models.RedditDMLoginConfig, err error) {
 	optionalCookies, err := ParseCookiesFromJSON(cookiesJSON, true)
 	if err != nil {
@@ -279,7 +306,8 @@ func (r steelBrowser) ValidateCookies(ctx context.Context, cookiesJSON string) (
 		return nil, fmt.Errorf("cookie injection failed: %w", err)
 	}
 
-	if _, err = page.Goto(chatURL, playwright.PageGotoOptions{Timeout: playwright.Float(10000)}); err != nil {
+	err = r.gotoWithRetry(page, chatURL, 30000)
+	if err != nil {
 		return nil, fmt.Errorf("chat page navigation failed: %w", err)
 	}
 
@@ -397,7 +425,9 @@ func (r steelBrowser) SendDM(ctx context.Context, params DMParams) (cookies []by
 	if params.ToUsername != "" {
 		chatURL = "https://www.reddit.com/user/" + params.ToUsername + "/"
 	}
-	if _, err = page.Goto(chatURL, playwright.PageGotoOptions{Timeout: playwright.Float(30000)}); err != nil {
+
+	err = r.gotoWithRetry(page, chatURL, 30000)
+	if err != nil {
 		return nil, fmt.Errorf("chat page navigation failed: %w", err)
 	}
 
