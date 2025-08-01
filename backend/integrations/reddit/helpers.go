@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/hashicorp/go-retryablehttp"
+	"go.uber.org/zap"
 	"golang.org/x/time/rate"
 	"io"
 	"net/http"
@@ -19,25 +20,55 @@ var AllAccountBanned = errors.New("Your connected Reddit accounts either suspend
 var AllAccountNotEstablished = errors.New("Your Reddit accounts isn't established yet — it needs things like a verified email, some posting history, and a clean track record to qualify.")
 
 func (r *Client) doRequest(ctx context.Context, method, url string, rawBody interface{}) (*http.Response, error) {
-	req, err := r.buildRequest(ctx, rawBody, method, url)
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := r.DoWithRateLimit(req)
-	if err != nil {
-		return nil, fmt.Errorf("failed to execute request: %w", err)
-	}
-
-	if err := validateResponse(resp); err != nil {
-		if errors.Is(err, ErrUnAuthorized) && r.unAuthorizedErrorCallback != nil {
-			r.unAuthorizedErrorCallback(ctx)
+	// Helper to execute and validate request
+	execute := func() (*http.Response, error) {
+		req, err := r.buildRequest(ctx, rawBody, method, url)
+		if err != nil {
+			return nil, fmt.Errorf("failed to build request: %w", err)
 		}
 
-		resp.Body.Close() // make sure caller isn't left with unclosed body
-		return nil, err
+		resp, err := r.DoWithRateLimit(req)
+		if err != nil {
+			return nil, fmt.Errorf("failed to execute request: %w", err)
+		}
+
+		if err := validateResponse(resp); err != nil {
+			resp.Body.Close()
+			return nil, err
+		}
+		return resp, nil
 	}
-	return resp, nil
+
+	// Initial request attempt
+	resp, err := execute()
+	if err == nil {
+		return resp, nil
+	}
+
+	// Check if error is unauthorized and retry logic is applicable
+	if errors.Is(err, ErrUnAuthorized) && r.unAuthorizedErrorCallback != nil {
+		r.logger.Warn("unauthorized response, attempting token refresh", zap.String("account", r.config.Name))
+
+		if refreshErr := r.refreshToken(ctx); refreshErr != nil {
+			r.logger.Error("token refresh failed", zap.String("account", r.config.Name), zap.Error(refreshErr))
+			r.unAuthorizedErrorCallback(ctx)
+			return nil, err
+		}
+
+		// Retry after successful token refresh
+		r.logger.Info("retrying request after successful token refresh", zap.String("account", r.config.Name))
+		resp, retryErr := execute()
+		if retryErr != nil {
+			if errors.Is(retryErr, ErrUnAuthorized) {
+				r.logger.Error("unauthorized again after token refresh", zap.String("account", r.config.Name))
+				r.unAuthorizedErrorCallback(ctx)
+			}
+			return nil, retryErr
+		}
+		return resp, nil
+	}
+
+	return nil, err
 }
 
 func (r *Client) buildRequest(ctx context.Context, rawBody interface{}, method, url string) (*retryablehttp.Request, error) {

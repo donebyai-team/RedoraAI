@@ -114,7 +114,7 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 		}
 
 		user, err := reddit.NewClientWithOutConfig(r.logger).GetUser(ctx, interaction.To)
-		if err != nil {
+		if err != nil && !strings.Contains(err.Error(), "403") {
 			interaction.Status = models.LeadInteractionStatusFAILED
 			interaction.Reason = fmt.Sprintf("Reason: %v", err)
 			return err

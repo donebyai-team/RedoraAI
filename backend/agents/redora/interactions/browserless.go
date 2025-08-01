@@ -639,7 +639,7 @@ func (r browserless) StartLogin(ctx context.Context) (*CDPInfo, error) {
 
 func (r browserless) getCDPUrl(ctx context.Context, startURL string, includeLiveURL, useProxy bool) (*CDPInfo, error) {
 	const maxRetries = 3
-	var backoff = 100 * time.Millisecond
+	//var backoff = 100 * time.Millisecond
 
 	for attempt := 0; attempt < maxRetries; attempt++ {
 		var queryBuilder strings.Builder
@@ -700,12 +700,12 @@ func (r browserless) getCDPUrl(ctx context.Context, startURL string, includeLive
 		}
 
 		// Retry logic if proxy time is 0 and we're using proxy
-		if useProxy && result.Data.Proxy.Time == 0 {
-			r.logger.Warn("proxy.time is 0, retrying", zap.Int("attempt", attempt+1))
-			time.Sleep(backoff)
-			backoff *= 2
-			continue
-		}
+		//if useProxy && result.Data.Proxy.Time == 0 {
+		//	r.logger.Warn("proxy.time is 0, retrying", zap.Int("attempt", attempt+1))
+		//	time.Sleep(backoff)
+		//	backoff *= 2
+		//	continue
+		//}
 
 		if result.Data.Reconnect.BrowserWSEndpoint == "" {
 			return nil, errors.New("empty browserWSEndpoint - CDP connection failed")
