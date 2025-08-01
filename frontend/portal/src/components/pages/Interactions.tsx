@@ -23,6 +23,7 @@ import {
     Eye,
     Loader2,
     Trash,
+    RotateCcw,
 } from "lucide-react";
 import { useClientsContext } from "@doota/ui-core/context/ClientContext";
 import {
@@ -32,6 +33,7 @@ import {
 } from "@doota/pb/doota/core/v1/core_pb";
 import { getFormattedDate } from "@/utils/format";
 import { CollapsibleText } from "../Html/HtmlRenderer";
+import { getConnectError } from "@/utils/error";
 
 export default function Interaction() {
     const { portalClient } = useClientsContext();
@@ -183,6 +185,27 @@ export default function Interaction() {
             const message =
                 err?.response?.data?.message || err.message || "Something went wrong";
             toast.error(message);
+        }
+    };
+
+    const handleRetryInteraction = async (id: string) => {
+        try {
+            await portalClient.updateLeadInteractionStatus({
+                interactionId: id,
+                status: LeadInteractionStatus.CREATED,
+            });
+            setInteractions((prevInteractions) =>
+                prevInteractions.map((interaction) =>
+                    interaction.id === id
+                        ? {
+                            ...interaction,
+                            status: LeadInteractionStatus.CREATED,
+                        }
+                        : interaction
+                )
+            );
+        } catch (err: any) {
+            toast.error(getConnectError(err));
         }
     };
 
@@ -403,6 +426,17 @@ export default function Interaction() {
                                                         <Trash className="h-4 w-4" />
                                                     </Button>
                                                 )}
+                                                {interaction.status === LeadInteractionStatus.FAILED && (
+                                                    <Button
+                                                        variant="secondary"
+                                                        size="icon"
+                                                        className="h-8 w-8"
+                                                        onClick={() => handleRetryInteraction(interaction.id)}
+                                                    >
+                                                        <RotateCcw className="h-4 w-4" />
+                                                    </Button>
+                                                )}
+
                                             </div>
                                         </div>
                                     </Card>
