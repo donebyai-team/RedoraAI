@@ -1,4 +1,4 @@
-import { IntegrationState as DootaIntegrationState } from '@doota/pb/doota/portal/v1/portal_pb';
+import { IntegrationState, IntegrationType } from '@doota/pb/doota/portal/v1/portal_pb';
 import { useClientsContext } from '@doota/ui-core/context/ClientContext';
 import { useCallback, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -16,11 +16,13 @@ export function useRedditIntegrationStatus() {
         try {
             const result = await portalClient.getIntegrations({});
             const integrations = result.integrations || [];
-            const status = integrations.some(
-                (integration) => integration.status === DootaIntegrationState.ACTIVE
+            const isAnyActiveRedditIntegration = integrations.some(
+                (integration) =>
+                    integration.status === IntegrationState.ACTIVE &&
+                    integration.type === IntegrationType.REDDIT
             );
 
-            dispatch(setSuccess(status));
+            dispatch(setSuccess(isAnyActiveRedditIntegration));
         } catch (err: any) {
             dispatch(setError(err.message || 'Unknown error'));
         }
