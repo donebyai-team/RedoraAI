@@ -108,7 +108,7 @@ func (r redditInteractions) ProcessScheduledPost(ctx context.Context, post *mode
 			zap.String("reddit_post_id", redditPost.ID),
 		)
 		return nil
-	}, reddit.RandomStrategy)
+	}, reddit.MostQualifiedAccountStrategy(r.logger))
 
 	if err != nil {
 		post.Status = models.PostStatusFAILED
