@@ -289,21 +289,26 @@ func (r browserless) SendDM(ctx context.Context, params DMParams) (cookies []byt
 
 	if strings.Contains(currentURL, "www.reddit.com/user") {
 
-		locatorCloseChat := page.Locator("button[aria-label='Close chat window']")
+		//locatorCloseChat := page.Locator("button[aria-label='Close chat window']")
+		//
+		//// Check if the close button exists
+		//count, err := locatorCloseChat.Count()
+		//if err != nil {
+		//	return nil, fmt.Errorf("error checking for close chat button: %w", err)
+		//}
+		//
+		//if count > 0 {
+		//	err := locatorCloseChat.Click(playwright.LocatorClickOptions{
+		//		Timeout: playwright.Float(3000), // short timeout for optional close
+		//	})
+		//	if err != nil {
+		//		r.logger.Error("error clicking close chat button", zap.Error(err), zap.String("display_name", displayName))
+		//	}
+		//}
 
-		// Check if the close button exists
-		count, err := locatorCloseChat.Count()
+		err = r.closeChatWindow(ctx, page)
 		if err != nil {
-			return nil, fmt.Errorf("error checking for close chat button: %w", err)
-		}
-
-		if count > 0 {
-			err := locatorCloseChat.Click(playwright.LocatorClickOptions{
-				Timeout: playwright.Float(3000), // short timeout for optional close
-			})
-			if err != nil {
-				r.logger.Error("error clicking close chat button", zap.Error(err), zap.String("display_name", displayName))
-			}
+			r.logger.Error("failed to close chat window", zap.Error(err))
 		}
 
 		locatorStartChat := page.Locator("faceplate-tracker[action='click'][noun='chat'] a[href*='chat.reddit.com/user/']")
@@ -404,7 +409,45 @@ func (r browserless) SendDM(ctx context.Context, params DMParams) (cookies []byt
 
 	r.logger.Info("updated cookies", zap.String("interaction", params.ID), zap.Int("cookies", len(updatedCookies)))
 
+	err = r.closeChatWindow(ctx, page)
+	if err != nil {
+		r.logger.Error("failed to close chat window", zap.Error(err))
+	}
+
 	return json.Marshal(updatedCookies)
+}
+
+func (r browserless) closeChatWindow(ctx context.Context, page playwright.Page) error {
+	// Wait for the shadow host <rs-app-window-controls> to be attached
+	_, err := page.WaitForSelector("rs-app-window-controls", playwright.PageWaitForSelectorOptions{
+		State:   playwright.WaitForSelectorStateAttached,
+		Timeout: playwright.Float(3000),
+	})
+
+	if err != nil {
+		return fmt.Errorf("waiting for rs-app-window-controls failed: %w", err)
+	}
+	shadowHost, err := page.QuerySelector("rs-app-window-controls")
+	if err != nil {
+		return fmt.Errorf("error finding shadow host: %w", err)
+	}
+	if shadowHost == nil {
+		r.logger.Info("no close chat button, skipped")
+		return nil
+	}
+
+	// Evaluate inside the shadow root and click the close button
+	_, err = shadowHost.Evaluate(`(el) => {
+		if (!el.shadowRoot) return;
+		const closeButton = el.shadowRoot.querySelector("button[aria-label='Close chat window']");
+		if (closeButton) closeButton.click();
+	}`)
+	if err != nil {
+		return fmt.Errorf("failed to evaluate and click close button: %w", err)
+	}
+
+	r.logger.Info("closed chat window")
+	return nil
 }
 
 func (r browserless) storeScreenshot(stage, id string, page playwright.Page) {
