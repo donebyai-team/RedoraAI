@@ -257,6 +257,14 @@ func (r browserless) SendDM(ctx context.Context, params DMParams) (cookies []byt
 		return nil, fmt.Errorf("unable to login, please check your credentials or cookies and try again")
 	}
 
+	_, err = page.Reload()
+	if err != nil {
+		r.logger.Warn("failed to reload page", zap.Error(err))
+	}
+
+	// Screenshot after chat page load (optional)
+	r.storeScreenshot("chat", params.ID, page)
+
 	// Check for error banner on chat page
 	if alert, _ := page.QuerySelector("faceplate-banner[appearance='error']"); alert != nil {
 		msg, _ := alert.GetAttribute("msg")
@@ -267,24 +275,15 @@ func (r browserless) SendDM(ctx context.Context, params DMParams) (cookies []byt
 	}
 
 	locatorCurrentUser := page.Locator("rs-current-user")
-
-	// Wait for the element to be attached and visible (up to 5 seconds)
-	err = locatorCurrentUser.WaitFor(playwright.LocatorWaitForOptions{
-		Timeout: playwright.Float(5000), // in milliseconds
+	displayName, err := locatorCurrentUser.GetAttribute("display-name", playwright.LocatorGetAttributeOptions{
+		Timeout: playwright.Float(5000), // Optional: Custom timeout for this action
 	})
 	if err != nil {
-		r.logger.Error("element 'rs-current-user' did not appear in time", zap.Error(err))
-		//return nil, fmt.Errorf("unable to login, please check your credentials or cookies and try again")
-	}
-
-	displayName, err := locatorCurrentUser.GetAttribute("display-name")
-	if err != nil {
 		r.logger.Error("failed to get display name", zap.Error(err))
-		//return nil, fmt.Errorf("unable to login, please check your credentials or cookies and try again")
 	}
 
-	if displayName == "" {
-		//return nil, fmt.Errorf("unable to login, please check your credentials or cookies and try again")
+	if displayName != "" {
+		r.logger.Error("logged in as user", zap.String("display_name", displayName))
 	}
 
 	if strings.Contains(currentURL, "www.reddit.com/user") {
@@ -306,21 +305,13 @@ func (r browserless) SendDM(ctx context.Context, params DMParams) (cookies []byt
 			}
 		}
 
-		locatorStartChat := page.Locator("faceplate-tracker[action='click'][noun='chat'] a[href*='chat.reddit.com/user/']")
-		err = locatorStartChat.WaitFor(playwright.LocatorWaitForOptions{
-			Timeout: playwright.Float(20000), // short timeout per selector
-		})
-		if err != nil {
-			r.logger.Error("error clicking start chat button", zap.Error(err), zap.String("interaction_id", params.ID))
-			return nil, fmt.Errorf("chat could not be initiated. Direct messages may be disabled by the user")
-		}
-
+		locatorStartChat := page.Locator("a[aria-label='Open chat']")
 		err = locatorStartChat.Click(playwright.LocatorClickOptions{
 			Delay: playwright.Float(100), // Delay before mouseup (in ms)
 		})
 
 		if err != nil {
-			return nil, fmt.Errorf("unable to click start chat: %w", err)
+			return nil, fmt.Errorf("unable to start chat: %w", err)
 		}
 	}
 
@@ -402,7 +393,10 @@ func (r browserless) SendDM(ctx context.Context, params DMParams) (cookies []byt
 		return nil, err
 	}
 
-	r.logger.Info("updated cookies", zap.String("interaction", params.ID), zap.Int("cookies", len(updatedCookies)))
+	r.logger.Info("updated cookies",
+		zap.String("interaction", params.ID),
+		zap.String("display_name", displayName),
+		zap.Int("cookies", len(updatedCookies)))
 
 	return json.Marshal(updatedCookies)
 }
