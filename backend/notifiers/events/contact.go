@@ -79,6 +79,8 @@ func (b *EventPublisher) UpdateUsers(ctx context.Context, orgID string) error {
 		})
 		if err != nil {
 			b.logger.Error("failed to update contact", zap.Error(err), zap.String("email", user.Email))
+		} else {
+			b.logger.Info("updated contact", zap.String("email", user.Email))
 		}
 	}
 
@@ -115,6 +117,8 @@ func (b *EventPublisher) CreateUser(ctx context.Context, emailID string) error {
 	})
 	if err != nil {
 		return fmt.Errorf("failed to create contact: %w", err)
+	} else {
+		b.logger.Info("created contact", zap.String("email", user.Email))
 	}
 	return nil
 }
