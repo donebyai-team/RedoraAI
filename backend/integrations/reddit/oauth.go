@@ -47,7 +47,7 @@ func NewRedditOauthClient(logger *zap.Logger, db datastore.Repository, clientID,
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
 		RedirectURL:  redirectURL,
-		Scopes:       []string{"identity", "read", "mysubreddits", "submit", "subscribe"},
+		Scopes:       []string{"identity", "read", "mysubreddits", "submit", "subscribe", "flair"},
 		Endpoint: oauth2.Endpoint{
 			AuthURL:  redditAuthURL,
 			TokenURL: redditTokenURL,
