@@ -176,7 +176,7 @@ func (p *Portal) CreateOrEditProject(ctx context.Context, c *connect.Request[pbp
 		}
 
 		// notify admin
-		go p.alertNotifier.SendNewProductAddedAlert(context.Background(), project.Name, project.WebsiteURL)
+		go p.alertNotifier.SendNewProductAddedAlert(context.Background(), project)
 	}
 
 	projectProto, err := p.projectToProto(ctx, project)

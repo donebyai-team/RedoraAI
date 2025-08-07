@@ -92,4 +92,10 @@ func (s *SlackNotifier) sendSubscriptionEmail(ctx context.Context, orgID, subjec
 	if err != nil {
 		s.logger.Error("failed to send subscription email", zap.Error(err))
 	}
+
+	// update event
+	err = s.eventPublisher.UpdateUsers(ctx, orgID)
+	if err != nil {
+		s.logger.Error("failed to update user event", zap.Error(err))
+	}
 }
