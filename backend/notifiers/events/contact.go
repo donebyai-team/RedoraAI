@@ -44,7 +44,7 @@ func (b *EventPublisher) BulkInsert(ctx context.Context) error {
 			}
 		}
 	}
-	
+
 	return nil
 }
 
@@ -64,7 +64,7 @@ func (b *EventPublisher) UpdateUsers(ctx context.Context, orgID string) error {
 		return err
 	}
 
-	projectName := "aaa"
+	projectName := ""
 	if len(projects) > 0 {
 		projectName = projects[0].Name
 	}
