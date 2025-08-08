@@ -448,7 +448,6 @@ func (r steelBrowser) SendDM(ctx context.Context, params DMParams) (cookies []by
 		return nil, fmt.Errorf("unable to login, please check your credentials or cookies and try again")
 	}
 
-	// Check for error banner on chat page
 	if alert, _ := page.QuerySelector("faceplate-banner[appearance='error']"); alert != nil {
 		msg, _ := alert.GetAttribute("msg")
 		if msg != "" {
@@ -457,19 +456,19 @@ func (r steelBrowser) SendDM(ctx context.Context, params DMParams) (cookies []by
 		return nil, fmt.Errorf("chat error: invalid user")
 	}
 
-	displayName, err := page.Locator("rs-current-user").GetAttribute("display-name")
+	locatorCurrentUser := page.Locator("rs-current-user")
+	displayName, err := locatorCurrentUser.GetAttribute("display-name", playwright.LocatorGetAttributeOptions{
+		Timeout: playwright.Float(5000), // Optional: Custom timeout for this action
+	})
 	if err != nil {
-		logger.Error("failed to get display name")
-	} else {
-		logger.Info("logged in as user", zap.String("display_name", displayName))
+		r.logger.Error("failed to get display name", zap.Error(err))
 	}
 
-	if displayName == "" {
-		return nil, fmt.Errorf("unable to login, please check your credentials or cookies and try again")
+	if displayName != "" {
+		r.logger.Error("logged in as user", zap.String("display_name", displayName))
 	}
 
 	if strings.Contains(currentURL, "www.reddit.com/user") {
-
 		locatorCloseChat := page.Locator("button[aria-label='Close chat window']")
 
 		// Check if the close button exists
@@ -483,25 +482,17 @@ func (r steelBrowser) SendDM(ctx context.Context, params DMParams) (cookies []by
 				Timeout: playwright.Float(3000), // short timeout for optional close
 			})
 			if err != nil {
-				logger.Error("error clicking close chat button", zap.Error(err), zap.String("display_name", displayName))
+				r.logger.Error("error clicking close chat button", zap.Error(err), zap.String("display_name", displayName))
 			}
 		}
 
-		locatorStartChat := page.Locator("faceplate-tracker[action='click'][noun='chat'] a[href*='chat.reddit.com/user/']")
-		err = locatorStartChat.WaitFor(playwright.LocatorWaitForOptions{
-			Timeout: playwright.Float(20000), // short timeout per selector
-		})
-		if err != nil {
-			logger.Error("error clicking start chat button", zap.Error(err), zap.String("interaction_id", params.ID))
-			return nil, fmt.Errorf("chat could not be initiated. Direct messages may be disabled by the user")
-		}
-
+		locatorStartChat := page.Locator("a[aria-label='Open chat']")
 		err = locatorStartChat.Click(playwright.LocatorClickOptions{
 			Delay: playwright.Float(100), // Delay before mouseup (in ms)
 		})
 
 		if err != nil {
-			return nil, fmt.Errorf("unable to click start chat: %w", err)
+			return nil, fmt.Errorf("unable to start chat: %w", err)
 		}
 	}
 
@@ -523,12 +514,12 @@ func (r steelBrowser) SendDM(ctx context.Context, params DMParams) (cookies []by
 		})
 		if err == nil {
 			found = true
-			logger.Info("found text area", zap.String("selector", sel))
+			r.logger.Info("found text area", zap.String("selector", sel))
 			break
 		}
 	}
 
-	if !found || locator == nil {
+	if !found {
 		return nil, fmt.Errorf("message textarea not found using any of the selectors")
 	}
 
@@ -549,13 +540,10 @@ func (r steelBrowser) SendDM(ctx context.Context, params DMParams) (cookies []by
 		return nil, fmt.Errorf("clicking send failed: %w", err)
 	}
 
-	// Screenshot after chat page load (optional)
-	logger.Info("clicked send button")
-
 	// Check if page navigated unexpectedly
 	redirectedURL := page.URL()
 	if !strings.Contains(redirectedURL, "/user/") {
-		logger.Warn("Unexpected navigation after sending message",
+		r.logger.Warn("Unexpected navigation after sending message",
 			zap.String("interaction", params.ID),
 			zap.String("redirected_to", redirectedURL))
 	}
@@ -571,7 +559,7 @@ func (r steelBrowser) SendDM(ctx context.Context, params DMParams) (cookies []by
 			return nil, fmt.Errorf("%s", msg)
 		}
 
-		logger.Warn("Reddit chat warning (ignorable)",
+		r.logger.Warn("Reddit chat warning (ignorable)",
 			zap.String("interaction", params.ID),
 			zap.String("error_message", msg))
 	}
@@ -583,7 +571,10 @@ func (r steelBrowser) SendDM(ctx context.Context, params DMParams) (cookies []by
 		return nil, err
 	}
 
-	logger.Info("updated cookies", zap.String("interaction", params.ID), zap.Int("cookies", len(updatedCookies)))
+	r.logger.Info("updated cookies",
+		zap.String("interaction", params.ID),
+		zap.String("display_name", displayName),
+		zap.Int("cookies", len(updatedCookies)))
 
 	return json.Marshal(updatedCookies)
 }
