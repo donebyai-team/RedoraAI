@@ -71,4 +71,5 @@ type PostSettings struct {
 	Goal        string  `json:"goal"`
 	Tone        string  `json:"tone"`
 	ReferenceID *string `json:"reference_id"`
+	FlairID     *string `json:"flair_id"`
 }

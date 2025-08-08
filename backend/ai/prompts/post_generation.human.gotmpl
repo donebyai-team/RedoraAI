@@ -11,3 +11,13 @@ Goal:
 
 Tone:
 {{ .Tone }}
+
+Rules:
+{{ range .Rules -}}
+- {{ . }}
+{{ end }}
+
+Flairs:
+{{ range .Flairs -}}
+- {{ . }}
+{{ end }}

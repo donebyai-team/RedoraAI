@@ -104,3 +104,30 @@ type User struct {
 	HasVerifiedEmail bool    `json:"has_verified_email"`
 	// Add other relevant user-related fields
 }
+
+type ValidationRules struct {
+	TitleRegexes            []string `json:"title_regexes"`
+	BodyBlacklistedStrings  []string `json:"body_blacklisted_strings"`
+	TitleBlacklistedStrings []string `json:"title_blacklisted_strings"`
+	BodyTextMaxLength       *int     `json:"body_text_max_length"`
+	TitleRequiredStrings    []string `json:"title_required_strings"`
+	GuidelinesText          string   `json:"guidelines_text"`
+	DomainBlacklist         []string `json:"domain_blacklist"`
+	DomainWhitelist         []string `json:"domain_whitelist"`
+	TitleTextMaxLength      *int     `json:"title_text_max_length"`
+	BodyRestrictionPolicy   string   `json:"body_restriction_policy"`
+	LinkRestrictionPolicy   string   `json:"link_restriction_policy"`
+	GuidelinesDisplayPolicy string   `json:"guidelines_display_policy"`
+	BodyRequiredStrings     []string `json:"body_required_strings"`
+	TitleTextMinLength      int      `json:"title_text_min_length"`
+	IsFlairRequired         bool     `json:"is_flair_required"`
+	BodyRegexes             []string `json:"body_regexes"`
+	BodyTextMinLength       *int     `json:"body_text_min_length"`
+}
+
+type Flair struct {
+	Type    string `json:"type"`
+	ID      string `json:"id"`
+	Text    string `json:"text"`
+	ModOnly bool   `json:"mod_only"`
+}

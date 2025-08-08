@@ -1,11 +1,12 @@
 package ai
 
 import (
+	"strings"
+	"time"
+
 	"github.com/shank318/doota/models"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
-	"strings"
-	"time"
 )
 
 func GetVars(customerCase *models.AugmentedCustomerCase, currentTime time.Time) Variable {
@@ -86,12 +87,14 @@ func (v Variable) WithPastConversations(conversations []*models.Conversation) Va
 	return v
 }
 
-func GetPostGenerationVars(input *models.PostSettings) Variable {
+func GetPostGenerationVars(input *PostGenerateInput) Variable {
 	out := make(Variable)
-	out["Topic"] = input.Topic
-	out["Context"] = input.Context
-	out["Goal"] = input.Goal
-	out["Tone"] = input.Tone
+	out["Topic"] = input.PostSetting.Topic
+	out["Context"] = input.PostSetting.Context
+	out["Goal"] = input.PostSetting.Goal
+	out["Tone"] = input.PostSetting.Tone
+	out["Rules"] = input.Rules
+	out["Flairs"] = input.Flairs
 	return out
 }
 

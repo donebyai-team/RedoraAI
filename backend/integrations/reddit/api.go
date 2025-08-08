@@ -5,16 +5,18 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/shank318/doota/models"
-	"go.uber.org/zap"
-	"golang.org/x/oauth2"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/shank318/doota/models"
+	"go.uber.org/zap"
+	"golang.org/x/oauth2"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (r *Client) GetUser(ctx context.Context, userName string) (*User, error) {
@@ -384,4 +386,65 @@ func (r *Client) refreshToken(ctx context.Context) error {
 	r.logger.Info("token refreshed", zap.String("expiry", r.config.ExpiresAt.String()), zap.String("account", r.config.Name))
 
 	return nil
+}
+
+func (r *Client) GetPostRequirements(ctx context.Context, subreddit string) (*ValidationRules, error) {
+	reqURL := fmt.Sprintf("%s/api/v1/%s/post_requirements", r.baseURL, subreddit)
+
+	resp, err := r.doRequest(ctx, http.MethodGet, reqURL, nil)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to make request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	// Print or log the raw response body
+	//fmt.Println("Raw response body:")
+	//fmt.Println(string(bodyBytes))
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("reddit API returned %d: %s", resp.StatusCode, string(bodyBytes))
+	}
+
+	var requirements ValidationRules
+	if err := json.Unmarshal(bodyBytes, &requirements); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	return &requirements, nil
+}
+
+func (r *Client) GetSubredditFlairs(ctx context.Context, subreddit string) ([]*Flair, error) {
+	reqURL := fmt.Sprintf("%s/r/%s/api/link_flair_v2", r.baseURL, subreddit)
+
+	resp, err := r.doRequest(ctx, http.MethodGet, reqURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to make request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	// 🔹 Print raw JSON body
+	//fmt.Println("Raw flair response body:")
+	//fmt.Println(string(bodyBytes))
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("reddit API returned %d: %s", resp.StatusCode, string(bodyBytes))
+	}
+
+	var flairs []*Flair
+	if err := json.Unmarshal(bodyBytes, &flairs); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	return flairs, nil
 }
