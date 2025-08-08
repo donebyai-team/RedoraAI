@@ -49,6 +49,8 @@ type PostMetadata struct {
 	Author   string                    `json:"author"`
 	Settings PostSettings              `json:"settings"`
 	History  []PostRegenerationHistory `json:"history"`
+	Rules    []string                  `json:"rules"`
+	Flairs   []Flair                   `json:"flairs"`
 }
 
 type PostRegenerationHistory struct {
@@ -72,4 +74,11 @@ type PostSettings struct {
 	Tone        string  `json:"tone"`
 	ReferenceID *string `json:"reference_id"`
 	FlairID     *string `json:"flair_id"`
+}
+
+type Flair struct {
+	Type    string `json:"type"`
+	ID      string `json:"id"`
+	Text    string `json:"text"`
+	ModOnly bool   `json:"mod_only"`
 }

@@ -112,6 +112,11 @@ export declare type PostSettings = Message<"doota.core.v1.PostSettings"> & {
    * @generated from field: string source_id = 7;
    */
   sourceId: string;
+
+  /**
+   * @generated from field: string flair_id = 8;
+   */
+  flairId: string;
 };
 
 /**
@@ -119,6 +124,37 @@ export declare type PostSettings = Message<"doota.core.v1.PostSettings"> & {
  * Use `create(PostSettingsSchema)` to create a new message.
  */
 export declare const PostSettingsSchema: GenMessage<PostSettings>;
+
+/**
+ * @generated from message doota.core.v1.Flair
+ */
+export declare type Flair = Message<"doota.core.v1.Flair"> & {
+  /**
+   * @generated from field: string type = 1;
+   */
+  type: string;
+
+  /**
+   * @generated from field: string id = 2;
+   */
+  id: string;
+
+  /**
+   * @generated from field: string text = 3;
+   */
+  text: string;
+
+  /**
+   * @generated from field: optional bool mod_only = 4;
+   */
+  modOnly?: boolean;
+};
+
+/**
+ * Describes the message doota.core.v1.Flair.
+ * Use `create(FlairSchema)` to create a new message.
+ */
+export declare const FlairSchema: GenMessage<Flair>;
 
 /**
  * @generated from message doota.core.v1.PostMetadata
@@ -133,6 +169,16 @@ export declare type PostMetadata = Message<"doota.core.v1.PostMetadata"> & {
    * @generated from field: repeated doota.core.v1.PostRegenerationHistory history = 2;
    */
   history: PostRegenerationHistory[];
+
+  /**
+   * @generated from field: repeated string rules = 3;
+   */
+  rules: string[];
+
+  /**
+   * @generated from field: repeated doota.core.v1.Flair flairs = 4;
+   */
+  flairs: Flair[];
 };
 
 /**

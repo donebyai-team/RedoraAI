@@ -124,10 +124,3 @@ type ValidationRules struct {
 	BodyRegexes             []string `json:"body_regexes"`
 	BodyTextMinLength       *int     `json:"body_text_min_length"`
 }
-
-type Flair struct {
-	Type    string `json:"type"`
-	ID      string `json:"id"`
-	Text    string `json:"text"`
-	ModOnly bool   `json:"mod_only"`
-}
