@@ -403,10 +403,6 @@ func (r *Client) GetPostRequirements(ctx context.Context, subreddit string) (*Va
 		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
 
-	// Print or log the raw response body
-	//fmt.Println("Raw response body:")
-	//fmt.Println(string(bodyBytes))
-
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("reddit API returned %d: %s", resp.StatusCode, string(bodyBytes))
 	}
@@ -419,7 +415,7 @@ func (r *Client) GetPostRequirements(ctx context.Context, subreddit string) (*Va
 	return &requirements, nil
 }
 
-func (r *Client) GetSubredditFlairs(ctx context.Context, subreddit string) ([]*Flair, error) {
+func (r *Client) GetSubredditFlairs(ctx context.Context, subreddit string) ([]models.Flair, error) {
 	reqURL := fmt.Sprintf("%s/r/%s/api/link_flair_v2", r.baseURL, subreddit)
 
 	resp, err := r.doRequest(ctx, http.MethodGet, reqURL, nil)
@@ -433,17 +429,13 @@ func (r *Client) GetSubredditFlairs(ctx context.Context, subreddit string) ([]*F
 		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
 
-	// 🔹 Print raw JSON body
-	//fmt.Println("Raw flair response body:")
-	//fmt.Println(string(bodyBytes))
-
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("reddit API returned %d: %s", resp.StatusCode, string(bodyBytes))
 	}
 
-	var flairs []*Flair
+	var flairs []models.Flair
 	if err := json.Unmarshal(bodyBytes, &flairs); err != nil {
-		return nil, fmt.Errorf("failed to decode response: %w", err)
+		return nil, fmt.Errorf("failed to decode flairs: %w", err)
 	}
 
 	return flairs, nil

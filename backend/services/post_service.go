@@ -33,7 +33,7 @@ func NewPostService(logger *zap.Logger, db datastore.Repository, aiClient *ai.Cl
 func (s *postService) CreatePost(ctx context.Context, post *models.Post, project *models.Project) (*models.Post, error) {
 	source, err := s.db.GetSourceByID(ctx, post.SourceID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get source by ID")
+		return nil, fmt.Errorf("failed to get source by ID: %w", err)
 	}
 
 	var existingPost *models.Post
@@ -45,49 +45,65 @@ func (s *postService) CreatePost(ctx context.Context, post *models.Post, project
 	}
 
 	var rules []string
-	var flairs []*reddit.Flair
-	var postRequirement *reddit.ValidationRules
+	var flairs []models.Flair
 
-	err = s.redditOauthClient.WithRotatingAPIClient(ctx, project.OrganizationID, func(client *reddit.Client) error {
-		// fetch Post requirements
-		postRequirement, err = client.GetPostRequirements(ctx, source.Name)
+	if existingPost != nil {
+		// Regeneration → use saved metadata
+		rules = existingPost.Metadata.Rules
+		flairs = existingPost.Metadata.Flairs
+	} else {
+		// First-time post → fetch from Reddit API
+		client, err := s.redditOauthClient.GetRedditAPIClient(ctx, project.OrganizationID, false)
 		if err != nil {
-			return fmt.Errorf("failed to fetch post requirements: %w", err)
+			return nil, fmt.Errorf("failed to get Reddit API client: %w", err)
 		}
 
+		postRequirement, err := client.GetPostRequirements(ctx, source.Name)
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch post requirements: %w", err)
+		}
 		rules = postRequirement.ToRules()
 
-		// Fetch flairs
-		flairsResp, err := client.GetSubredditFlairs(ctx, source.Name)
+		s.logger.Info("rules", zap.Any("rules", rules))
 
+		flairResp, err := client.GetSubredditFlairs(ctx, source.Name)
 		if err != nil {
-			return fmt.Errorf("failed to fetch flairs: %w", err)
+			return nil, fmt.Errorf("failed to fetch flairs: %w", err)
 		}
-		flairs = flairsResp
 
-		return nil
-	}, reddit.MostQualifiedAccountStrategy(s.logger))
-	if err != nil {
-		return nil, err
+		flairs = make([]models.Flair, 0, len(flairResp))
+		for _, f := range flairResp {
+			if !f.ModOnly {
+				flairs = append(flairs, f) // works only if fields match exactly AND types are identical
+			}
+		}
+		s.logger.Info("flair", zap.Any("flair", flairs))
+
+		// Save rules and flairs into metadata for future regenerations
+		post.Metadata.Rules = rules
+		post.Metadata.Flairs = flairs
 	}
 
+	// Extract flair texts for AI input
 	var flairTexts []string
-	for _, flair := range flairs {
-		flairTexts = append(flairTexts, flair.Text)
+	for _, f := range flairs {
+		if !f.ModOnly {
+			flairTexts = append(flairTexts, f.Text)
+		}
 	}
 
 	// Prepare AI post generation input
-	input := &ai.PostGenerateInput{
-		Id:          post.ID,
-		Project:     project,
-		PostSetting: &post.Metadata.Settings,
-		Rules:       rules,
-		Flairs:      flairTexts,
-	}
-	// fmt.Println("Flair text", flairTexts)
-	// fmt.Println("Rules text", rules)
+	//input := &ai.PostGenerateInput{
+	//	Id:          post.ID,
+	//	Project:     project,
+	//	PostSetting: &post.Metadata.Settings,
+	//	Rules:       rules,
+	//	Flairs:      flairTexts,
+	//}
 
-	resp, _, err := s.aiClient.GeneratePost(ctx, s.aiClient.GetDefaultModel(), input, s.logger)
+	//resp, _, err := s.aiClient.GeneratePost(ctx, s.aiClient.GetDefaultModel(), input, s.logger)
+
+	resp, _, err := GeneratePost()
 	if err != nil {
 		return nil, fmt.Errorf("generate post failed: %w", err)
 	}
@@ -97,25 +113,20 @@ func (s *postService) CreatePost(ctx context.Context, post *models.Post, project
 	}
 
 	// Find flair ID by matching AI-selected flair text
-	var selectedFlairID string
-	if resp.SelectedFlair != "" {
-		for _, flair := range flairs {
-			if strings.EqualFold(strings.TrimSpace(flair.Text), strings.TrimSpace(resp.SelectedFlair)) {
-				selectedFlairID = flair.ID
-				break
-			}
-		}
-	}
-
-	// If flair is required but AI's flair not found, use the first available flair
-	if postRequirement.IsFlairRequired && selectedFlairID == "" && len(flairs) > 0 {
-		selectedFlairID = flairs[0].ID
-		s.logger.Warn("AI flair not matched, using first available flair as default",
-			zap.String("default_flair", flairs[0].Text))
-	}
+	//var selectedFlairID string
+	//if resp.SelectedFlair != "" {
+	//	for _, f := range flairs {
+	//		if strings.EqualFold(strings.TrimSpace(f.Text), strings.TrimSpace(resp.SelectedFlair)) {
+	//			selectedFlairID = f.ID
+	//			break
+	//		}
+	//	}
+	//}
 
 	settings := post.Metadata.Settings
-	settings.FlairID = &selectedFlairID
+	//settings.FlairID = &selectedFlairID
+	str := "bdbbbd9c-40e9-11e7-a41b-0e4240cfbe2a"
+	settings.FlairID = &str
 
 	if existingPost != nil {
 		// Append generated result to history but DO NOT update existing title/desc/settings
@@ -148,6 +159,8 @@ func (s *postService) CreatePost(ctx context.Context, post *models.Post, project
 				Description:  resp.Description,
 			},
 		},
+		Rules:  rules,
+		Flairs: flairs,
 	}
 
 	newPost, err := s.db.CreatePost(ctx, post)
