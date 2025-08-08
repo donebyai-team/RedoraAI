@@ -1,0 +1,111 @@
+package events
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+)
+
+type Brevo struct {
+	ApiKey string `json:"api_key"`
+	ListID int    `json:"list_id"`
+}
+
+func NewBrevo(apiKey string, listID int) *Brevo {
+	return &Brevo{ApiKey: apiKey, ListID: listID}
+}
+
+func (b *Brevo) CreateContact(ctx context.Context, contact *OrgUserEvent) error {
+	url := "https://api.brevo.com/v3/contacts"
+
+	// Build the payload
+	payload := map[string]interface{}{
+		"email":         contact.Email,
+		"updateEnabled": true,
+		"ext_id":        contact.UserID,
+		"listIds":       []int{b.ListID},
+		"attributes": map[string]interface{}{
+			"PRODUCT_NAME":         contact.ProductName,
+			"SUBSCRIPTION_PLAN":    string(contact.SubscriptionPlan),
+			"SUBSCRIPTION_EXPIRED": contact.SubscriptionExpired,
+		},
+	}
+
+	bodyBytes, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal contact payload: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(bodyBytes))
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	// Add headers
+	req.Header.Set("accept", "application/json")
+	req.Header.Set("content-type", "application/json")
+	req.Header.Set("api-key", b.ApiKey)
+
+	// Send request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("brevo contact creation failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusNoContent {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("brevo: unexpected status %d - response: %s", resp.StatusCode, string(body))
+	}
+
+	return nil
+}
+
+func (b *Brevo) UpdateContact(ctx context.Context, contact *OrgUserEvent) error {
+	url := fmt.Sprintf("https://api.brevo.com/v3/contacts/identifier?identifierType=%s", "ext_id")
+
+	// Build the payload
+	payload := map[string]interface{}{
+		"ext_id": contact.UserID,
+		"attributes": map[string]interface{}{
+			"EMAIL":                contact.Email,
+			"PRODUCT_NAME":         contact.ProductName,
+			"SUBSCRIPTION_PLAN":    string(contact.SubscriptionPlan),
+			"SUBSCRIPTION_EXPIRED": contact.SubscriptionExpired,
+		},
+	}
+
+	bodyBytes, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal contact payload: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, url, bytes.NewBuffer(bodyBytes))
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	// Add headers
+	req.Header.Set("accept", "application/json")
+	req.Header.Set("content-type", "application/json")
+	req.Header.Set("api-key", b.ApiKey)
+
+	// Send request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("brevo contact creation failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusNoContent {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("brevo: unexpected status %d - response: %s", resp.StatusCode, string(body))
+	}
+
+	return nil
+}

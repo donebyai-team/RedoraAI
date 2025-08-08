@@ -12,6 +12,7 @@ import (
 	"github.com/shank318/doota/integrations/reddit"
 	"github.com/shank318/doota/models"
 	"github.com/shank318/doota/notifiers/alerts"
+	"github.com/shank318/doota/notifiers/events"
 	pbportal "github.com/shank318/doota/pb/doota/portal/v1"
 	"github.com/shank318/doota/portal"
 	"github.com/shank318/doota/portal/state"
@@ -41,6 +42,7 @@ var StartCmd = cli.Command(startCmdE,
 		flags.String("common-gpt-advance-model", "redora-dev-gpt-4.1-2025-04-14", "GPT Model to use for message creator and categorization")
 		flags.String("common-resend-api-key", "", "Resend email api key")
 		flags.String("common-dodopayment-api-key", "", "DodoPayment api key")
+		flags.String("common-brevo-api-key", "", "Brevo api key")
 		flags.String("common-browserless-api-key", "", "Browserless api key")
 		flags.String("common-steel-api-key", "", "Steel Browser api key")
 		flags.String("common-openai-api-key", "", "LiteLLM API key")
@@ -189,7 +191,12 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		isDev = true
 	}
 
-	alertNotifier := alerts.NewSlackNotifier(sflags.MustGetString(cmd, "common-resend-api-key"), deps.ConversationState, deps.DataStore, logger)
+	alertNotifier := alerts.NewSlackNotifier(
+		sflags.MustGetString(cmd, "common-resend-api-key"),
+		deps.ConversationState,
+		getBrevoIntegration(cmd, isDev),
+		deps.DataStore,
+		logger)
 
 	tracker := redora.NewKeywordTrackerFactory(
 		isDev,
@@ -334,6 +341,14 @@ func vanaSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 	), nil
 }
 
+func getBrevoIntegration(cmd *cobra.Command, isDev bool) *events.Brevo {
+	if isDev {
+		return events.NewBrevo(sflags.MustGetString(cmd, "common-brevo-api-key"), 9)
+	}
+
+	return events.NewBrevo(sflags.MustGetString(cmd, "common-brevo-api-key"), 8)
+}
+
 func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 	redisAddr := sflags.MustGetString(cmd, "redis-addr")
 
@@ -412,7 +427,12 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		GoogleAuth0CallbackUrl: sflags.MustGetString(cmd, "portal-reddit-redirect-url"),
 	}
 
-	alertNotifier := alerts.NewSlackNotifier(sflags.MustGetString(cmd, "common-resend-api-key"), nil, deps.DataStore, logger)
+	alertNotifier := alerts.NewSlackNotifier(
+		sflags.MustGetString(cmd, "common-resend-api-key"),
+		nil,
+		getBrevoIntegration(cmd, isDev),
+		deps.DataStore,
+		logger)
 
 	authUsecase, err := services.NewAuthUsecase(cmd.Context(), authConfig, deps.DataStore, deps.AuthSigningKeyGetter, alertNotifier, zlog)
 	if err != nil {

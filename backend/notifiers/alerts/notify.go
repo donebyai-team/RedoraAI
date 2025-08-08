@@ -10,6 +10,7 @@ import (
 	"github.com/shank318/doota/agents/state"
 	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/models"
+	"github.com/shank318/doota/notifiers/events"
 	"go.uber.org/zap"
 	"net/http"
 	"time"
@@ -31,8 +32,8 @@ type AlertNotifier interface {
 	SendLeadsSummaryEmail(ctx context.Context, summary LeadSummary, frequency models.NotificationFrequency) error
 	SendNewUserAlert(ctx context.Context, orgName string)
 	SendUserActivity(ctx context.Context, activity, orgName, redditUsername string)
-	SendNewProductAddedAlert(ctx context.Context, productName, website string)
-	SendWelcomeEmail(ctx context.Context, orgID string)
+	SendNewProductAddedAlert(ctx context.Context, project *models.Project)
+	SendWelcomeEmail(ctx context.Context, email string)
 	SendRedditChatConnectedAlert(ctx context.Context, email string)
 	SendTrialExpiredEmail(ctx context.Context, orgID string, trialDays int) error
 	SendInteractionError(ctx context.Context, interactionID string, err error)
@@ -44,20 +45,28 @@ type AlertNotifier interface {
 }
 
 type SlackNotifier struct {
-	redisClient  state.ConversationState
-	SlackClient  *http.Client
-	ResendClient *resend.Client
-	db           datastore.Repository
-	logger       *zap.Logger
+	redisClient    state.ConversationState
+	SlackClient    *http.Client
+	ResendClient   *resend.Client
+	db             datastore.Repository
+	eventPublisher *events.EventPublisher
+	logger         *zap.Logger
 }
 
-func NewSlackNotifier(resendAPIKey string, redisClient state.ConversationState, db datastore.Repository, logger *zap.Logger) AlertNotifier {
+func NewSlackNotifier(
+	resendAPIKey string,
+	redisClient state.ConversationState,
+	brevoIntegration *events.Brevo,
+	db datastore.Repository,
+	logger *zap.Logger) AlertNotifier {
+
 	return &SlackNotifier{
-		db:           db,
-		logger:       logger,
-		redisClient:  redisClient,
-		SlackClient:  &http.Client{Timeout: 10 * time.Second},
-		ResendClient: resend.NewClient(resendAPIKey),
+		db:             db,
+		logger:         logger,
+		eventPublisher: events.NewEventPublisher(db, logger, brevoIntegration),
+		redisClient:    redisClient,
+		SlackClient:    &http.Client{Timeout: 10 * time.Second},
+		ResendClient:   resend.NewClient(resendAPIKey),
 	}
 }
 
@@ -235,16 +244,22 @@ func (s *SlackNotifier) SendAutoCommentDisabledEmail(ctx context.Context, orgID 
 	return
 }
 
-func (s *SlackNotifier) SendNewProductAddedAlert(ctx context.Context, productName, website string) {
+func (s *SlackNotifier) SendNewProductAddedAlert(ctx context.Context, project *models.Project) {
 	msg := fmt.Sprintf(
 		"*New Product Added*\n"+
 			"*Product:* %s\n"+
 			"*Website:* %s",
-		productName, website,
+		project.Name, project.WebsiteURL,
 	)
 
 	if err := s.send(ctx, msg, redoraChannel); err != nil {
 		s.logger.Error("failed to send new product alert to Slack", zap.Error(err))
+	}
+
+	// update event
+	err := s.eventPublisher.UpdateUsers(ctx, project.OrganizationID)
+	if err != nil {
+		s.logger.Error("failed to create user event", zap.Error(err))
 	}
 }
 
@@ -419,17 +434,17 @@ func (s *SlackNotifier) SendTrialExpiredEmail(ctx context.Context, orgID string,
 	return err
 }
 
-func (s *SlackNotifier) SendWelcomeEmail(ctx context.Context, orgID string) {
-	users, err := s.db.GetUsersByOrgID(ctx, orgID)
-	if err != nil {
-		s.logger.Error("failed to send welcome email", zap.Error(err))
-		return
-	}
-
-	// Only send it for the first one
-	if len(users) == 0 || len(users) > 1 {
-		return
-	}
+func (s *SlackNotifier) SendWelcomeEmail(ctx context.Context, email string) {
+	//users, err := s.db.GetUsersByOrgID(ctx, orgID)
+	//if err != nil {
+	//	s.logger.Error("failed to send welcome email", zap.Error(err))
+	//	return
+	//}
+	//
+	//// Only send it for the first one
+	//if len(users) == 0 || len(users) > 1 {
+	//	return
+	//}
 
 	htmlBody := fmt.Sprintf(`
 	<!DOCTYPE html>
@@ -460,15 +475,21 @@ func (s *SlackNotifier) SendWelcomeEmail(ctx context.Context, orgID string) {
 
 	params := &resend.SendEmailRequest{
 		From:    "RedoraAI <welcome@alerts.redoraai.com>",
-		To:      []string{users[0].Email},
+		To:      []string{email},
 		Cc:      []string{"shashank@donebyai.team", "adarsh@redoraai.com"},
 		Subject: "🔥Welcome aboard — here’s what to do next",
 		Html:    htmlBody,
 	}
 
-	_, err = s.ResendClient.Emails.Send(params)
+	_, err := s.ResendClient.Emails.Send(params)
 	if err != nil {
 		s.logger.Error("failed to send welcome email", zap.Error(err))
+	}
+
+	// update event
+	err = s.eventPublisher.CreateUser(ctx, email)
+	if err != nil {
+		s.logger.Error("failed to create user event", zap.Error(err))
 	}
 }
 

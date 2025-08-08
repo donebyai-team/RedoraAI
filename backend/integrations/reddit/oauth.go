@@ -37,7 +37,7 @@ func (u *userAgentTransport) RoundTrip(req *http.Request) (*http.Response, error
 	if u.userName != "" {
 		req.Header.Set("User-Agent", fmt.Sprintf("com.redoraai:v0.1 by (/u/%s)", u.userName))
 	} else {
-		req.Header.Set("User-Agent", "com.redoraai:v0.1 by (redora)")
+		req.Header.Set("User-Agent", "com.redoraai:v0.1.0 by (redora)")
 	}
 	return u.base.RoundTrip(req)
 }
@@ -47,7 +47,7 @@ func NewRedditOauthClient(logger *zap.Logger, db datastore.Repository, clientID,
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
 		RedirectURL:  redirectURL,
-		Scopes:       []string{"identity", "read", "mysubreddits", "submit", "subscribe"},
+		Scopes:       []string{"identity", "read", "mysubreddits", "submit", "subscribe", "flair"},
 		Endpoint: oauth2.Endpoint{
 			AuthURL:  redditAuthURL,
 			TokenURL: redditTokenURL,
