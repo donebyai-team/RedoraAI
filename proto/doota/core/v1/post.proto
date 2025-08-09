@@ -37,7 +37,7 @@ message PostSettings {
   optional string reference_id = 5;
   optional string id = 6; // post id
   string source_id = 7;
-  string flair_id = 8;
+  optional string flair_id = 8;
 }
 
 message Flair {

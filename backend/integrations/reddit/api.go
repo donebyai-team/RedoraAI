@@ -272,11 +272,12 @@ func (r *Client) GetPostByID(ctx context.Context, postID string) (*Post, error) 
 	return nil, ErrNotFound // Post not found in the response
 }
 
-func (r *Client) CreatePost(ctx context.Context, subreddit, title, text string) (*Post, error) {
+func (r *Client) CreatePost(ctx context.Context, subreddit, title, text, flairID string) (*Post, error) {
 	form := url.Values{}
-	form.Set("sr", subreddit)       // Subreddit name
-	form.Set("title", title)        // Post title
-	form.Set("text", text)          // Post body
+	form.Set("sr", subreddit) // Subreddit name
+	form.Set("title", title)  // Post title
+	form.Set("text", text)    // Post body
+	form.Set("flair_id", flairID)
 	form.Set("kind", "self")        // "self" for text post, "link" for link post
 	form.Set("resubmit", "true")    // avoid Reddit duplicate filtering
 	form.Set("sendreplies", "true") // enable inbox replies

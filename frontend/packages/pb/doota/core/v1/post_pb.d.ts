@@ -114,9 +114,9 @@ export declare type PostSettings = Message<"doota.core.v1.PostSettings"> & {
   sourceId: string;
 
   /**
-   * @generated from field: string flair_id = 8;
+   * @generated from field: optional string flair_id = 8;
    */
-  flairId: string;
+  flairId?: string;
 };
 
 /**

@@ -4,6 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/rand"
+	"strings"
+	"time"
+
 	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/datastore/psql"
 	"github.com/shank318/doota/integrations/reddit"
@@ -12,9 +16,6 @@ import (
 	pbportal "github.com/shank318/doota/pb/doota/portal/v1"
 	"github.com/shank318/doota/utils"
 	"go.uber.org/zap"
-	"math/rand"
-	"strings"
-	"time"
 )
 
 type AutomatedInteractions interface {
@@ -91,7 +92,7 @@ func (r redditInteractions) ProcessScheduledPost(ctx context.Context, post *mode
 		description := post.Description
 		post.Metadata.Author = config.Name
 
-		redditPost, err := client.CreatePost(ctx, subredditName, title, description)
+		redditPost, err := client.CreatePost(ctx, subredditName, title, description, *post.Metadata.Settings.FlairID)
 		if err != nil {
 			r.logger.Error("failed to post to Reddit", zap.String("id", post.ID), zap.Error(err))
 			post.Status = models.PostStatusFAILED

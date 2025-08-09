@@ -13,9 +13,22 @@ func (rules ValidationRules) Validate(post models.Post) []string {
 	title := post.Title
 	body := post.Description
 
-	if len(title) < rules.TitleTextMinLength {
-		errs = append(errs, fmt.Sprintf("title is too short (min %d characters)", rules.TitleTextMinLength))
+	if rules.IsFlairRequired && strings.TrimSpace(*post.Metadata.Settings.FlairID) == "" {
+		errs = append(errs, "flair is required")
 	}
+
+	if len(title) == 0 {
+		errs = append(errs, "title can not be empty")
+	}
+
+	if len(body) == 0 {
+		errs = append(errs, "body can not be empty")
+	}
+
+	if rules.TitleTextMinLength != nil && len(title) < *rules.TitleTextMinLength {
+		errs = append(errs, fmt.Sprintf("title is too short (min %d characters)", *rules.TitleTextMinLength))
+	}
+
 	if rules.TitleTextMaxLength != nil && len(title) > *rules.TitleTextMaxLength {
 		errs = append(errs, fmt.Sprintf("title is too long (max %d characters)", *rules.TitleTextMaxLength))
 	}
@@ -83,7 +96,10 @@ func (rules ValidationRules) ToRules() []string {
 	}
 
 	// Title length
-	result = append(result, fmt.Sprintf("Title must be at least %d characters long.", rules.TitleTextMinLength))
+	if rules.TitleTextMinLength != nil {
+		result = append(result, fmt.Sprintf("Title must be at least %d characters long.", *rules.TitleTextMinLength))
+	}
+
 	if rules.TitleTextMaxLength != nil {
 		result = append(result, fmt.Sprintf("Title cannot exceed %d characters.", *rules.TitleTextMaxLength))
 	}

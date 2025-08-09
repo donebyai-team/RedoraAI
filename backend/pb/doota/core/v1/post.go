@@ -31,7 +31,7 @@ func (ps *PostSettings) FromModel(m models.PostSettings) *PostSettings {
 		Goal:        m.Goal,
 		Tone:        m.Tone,
 		ReferenceId: m.ReferenceID,
-		FlairId:     *m.FlairID,
+		FlairId:     m.FlairID,
 	}
 }
 
@@ -127,6 +127,7 @@ func (ps *PostSettings) ToModel() *models.PostSettings {
 		Goal:        ps.GetGoal(),
 		Tone:        ps.GetTone(),
 		ReferenceID: ps.ReferenceId,
+		FlairID:     ps.FlairId,
 	}
 }
 

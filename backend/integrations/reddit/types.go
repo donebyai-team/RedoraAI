@@ -119,7 +119,7 @@ type ValidationRules struct {
 	LinkRestrictionPolicy   string   `json:"link_restriction_policy"`
 	GuidelinesDisplayPolicy string   `json:"guidelines_display_policy"`
 	BodyRequiredStrings     []string `json:"body_required_strings"`
-	TitleTextMinLength      int      `json:"title_text_min_length"`
+	TitleTextMinLength      *int     `json:"title_text_min_length"`
 	IsFlairRequired         bool     `json:"is_flair_required"`
 	BodyRegexes             []string `json:"body_regexes"`
 	BodyTextMinLength       *int     `json:"body_text_min_length"`

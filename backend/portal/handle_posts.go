@@ -108,9 +108,9 @@ func (p *Portal) UpdatePost(ctx context.Context, c *connect.Request[pbcore.Updat
 	postModel := c.Msg.Post.ToModel()
 	postModel.ProjectID = project.ID
 
-	updatedPost, err := p.postService.UpdatePost(ctx, postModel)
+	updatedPost, err := p.postService.UpdatePost(ctx, postModel, project.OrganizationID)
 	if err != nil {
-		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("unable to update post: %w", err))
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("%w", err))
 	}
 
 	return connect.NewResponse(new(pbcore.Post).FromModel(updatedPost)), nil
