@@ -200,6 +200,15 @@ func (c *OauthClient) withRotatingIntegrations(
 	}
 }
 
+func (c *OauthClient) GetAPIClientFromIntegration(ctx context.Context, integrationID string) (*Client, error) {
+	integration, err := c.db.GetIntegrationById(ctx, integrationID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get integration: %w", err)
+	}
+
+	return c.buildRedditClient(ctx, integration)
+}
+
 func (c *OauthClient) GetActiveIntegrations(ctx context.Context, orgID string, integrationType models.IntegrationType) ([]*models.Integration, error) {
 	integrations, err := c.db.GetIntegrationByOrgAndType(ctx, orgID, integrationType)
 	if err != nil {
