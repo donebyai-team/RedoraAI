@@ -16,7 +16,13 @@
         },
         "selected_flair": {
           "type": "string",
-          "description": "The single most suitable flair from the provided list of subreddit flairs that best matches the post's content."
+          "description": "The single most suitable flair from the provided list of subreddit flairs that best matches the post's content.",
+          "enum": [
+            {{- range $i, $v := .Flairs -}}
+              {{- if $i}}, {{ end -}}
+              {{ printf "%q" $v }}
+            {{- end -}}
+          ]
         },
         "chain_of_thought": {
           "type": "string",
