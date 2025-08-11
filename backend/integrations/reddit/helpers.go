@@ -32,6 +32,8 @@ func (r *Client) doRequest(ctx context.Context, method, url string, rawBody inte
 			return nil, fmt.Errorf("failed to execute request: %w", err)
 		}
 
+		r.logger.Info("request done with user agent", zap.String("user_agent", req.Header.Get("User-Agent")))
+
 		if err := validateResponse(resp); err != nil {
 			resp.Body.Close()
 			return nil, err
@@ -111,6 +113,5 @@ func (r *Client) DoWithRateLimit(req *retryablehttp.Request) (*http.Response, er
 		return nil, err
 	}
 
-	r.logger.Info("making request with user agent", zap.String("user_agent", req.Header.Get("User-Agent")))
 	return r.httpClient.Do(req)
 }
