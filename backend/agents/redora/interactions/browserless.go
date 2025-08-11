@@ -311,7 +311,8 @@ func (r browserless) SendDM(ctx context.Context, params DMParams) (cookies []byt
 		})
 
 		if err != nil {
-			return nil, fmt.Errorf("unable to start chat: %w", err)
+			r.logger.Error("error clicking open chat button", zap.Error(err), zap.String("display_name", displayName))
+			return nil, fmt.Errorf("unable to start chat: chat options might be disabled by the user")
 		}
 	}
 
@@ -338,7 +339,7 @@ func (r browserless) SendDM(ctx context.Context, params DMParams) (cookies []byt
 		}
 	}
 
-	if !found || locator == nil {
+	if !found {
 		return nil, fmt.Errorf("message textarea not found using any of the selectors")
 	}
 
