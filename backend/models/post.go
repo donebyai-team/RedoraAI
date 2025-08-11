@@ -52,7 +52,7 @@ type PostMetadata struct {
 	Author           string                    `json:"author"`
 	Settings         PostSettings              `json:"settings"`
 	History          []PostRegenerationHistory `json:"history"`
-	PostRequirements PostRequirements          `json:"post_requirements"`
+	PostRequirements *PostRequirements         `json:"post_requirements"`
 	Flairs           []Flair                   `json:"flairs"`
 }
 

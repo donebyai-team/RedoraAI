@@ -47,10 +47,15 @@ func (pm *PostMetadata) FromModel(m models.PostMetadata) *PostMetadata {
 		flairs = append(flairs, new(Flair).FromModel(f)) // explicit conversion method
 	}
 
+	var rules []string
+	if m.PostRequirements != nil {
+		rules = m.PostRequirements.ToRules()
+	}
+	
 	return &PostMetadata{
 		Settings: new(PostSettings).FromModel(m.Settings),
 		History:  history,
-		Rules:    append([]string{}, m.PostRequirements.ToRules()...),
+		Rules:    append([]string{}, rules...),
 		Flairs:   flairs,
 	}
 }
