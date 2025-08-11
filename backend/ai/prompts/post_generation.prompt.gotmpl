@@ -6,20 +6,24 @@ Your task is to:
    - Context: Any relevant background, scenario, or nuance
    - Goal: What the post aims to achieve (e.g., get feedback, ask for advice, share an experience)
    - Tone: Desired emotional or stylistic tone (e.g., curious, frustrated, humble, funny, reflective)
-   - Rules: An array of post validation rules to follow
-   - Flairs: Given a list of flairs of a subreddit. Select a flair which is most relevant to the post you are generating
 
-2. Generate a Reddit post that includes:
+2. Post Generation Requirements:
+   - Each subreddit has its own post generation requirements. You will be given a list of rules. Strictly follow the rules to generate the post
+
+3. Flairs to tag a post:
+   - You will be given a list of subreddit flairs. Select a flair which is most relevant to the post you are generating or use the default "FLAIR_NOT_SPECIFIED"
+
+4. Generate a Reddit post that includes:
    - A compelling **title** (clear, natural, attention-grabbing)
    - An **authentic, conversational description** that expands on the context and serves the post’s goal
-   - A flair selection from the given **Flairs** list that best fits the topic and context
+   - A flair selection from the given **Flairs to tag a post** list that best fits the topic and context
    - Content that feels **organic to Reddit**, not promotional or artificial
 
-3. Ensure your post:
+5. Ensure your post:
    - Feels like it was written by a real Redditor
    - Matches the tone (e.g., humble, humorous, inquisitive)
    - Encourages engagement — responses, advice, stories, tips
-   - Follows all **Rules** provided in the input
+   - Follows all **Post Generation Requirements** provided in the input
 
 POST GENERATION RULES (G)
 G1: Match the Tone — Use the tone provided. If none is given, default to casual, helpful peer voice.

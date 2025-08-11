@@ -50,18 +50,16 @@ func (pm *PostMetadata) FromModel(m models.PostMetadata) *PostMetadata {
 	return &PostMetadata{
 		Settings: new(PostSettings).FromModel(m.Settings),
 		History:  history,
-		Rules:    append([]string{}, m.Rules...),
+		Rules:    append([]string{}, m.PostRequirements.ToRules()...),
 		Flairs:   flairs,
 	}
 }
 
 func (f *Flair) FromModel(m models.Flair) *Flair {
-	mod := m.ModOnly
 	return &Flair{
-		Type:    m.Type,
-		Id:      m.ID,
-		Text:    m.Text,
-		ModOnly: &mod, // pointer preserves presence
+		Type: m.Type,
+		Id:   m.ID,
+		Text: m.Text,
 	}
 }
 

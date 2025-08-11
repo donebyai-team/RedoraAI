@@ -143,11 +143,6 @@ export declare type Flair = Message<"doota.core.v1.Flair"> & {
    * @generated from field: string text = 3;
    */
   text: string;
-
-  /**
-   * @generated from field: optional bool mod_only = 4;
-   */
-  modOnly?: boolean;
 };
 
 /**

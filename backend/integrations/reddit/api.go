@@ -272,12 +272,20 @@ func (r *Client) GetPostByID(ctx context.Context, postID string) (*Post, error) 
 	return nil, ErrNotFound // Post not found in the response
 }
 
-func (r *Client) CreatePost(ctx context.Context, subreddit, title, text, flairID string) (*Post, error) {
+func (r *Client) CreatePost(ctx context.Context, subreddit string, post *models.Post) (*Post, error) {
+	title := post.Title
+	text := post.Description
+
 	form := url.Values{}
 	form.Set("sr", subreddit) // Subreddit name
 	form.Set("title", title)  // Post title
 	form.Set("text", text)    // Post body
-	form.Set("flair_id", flairID)
+
+	flairID := post.Metadata.Settings.FlairID
+	if flairID != nil {
+		form.Set("flair_id", *flairID)
+	}
+
 	form.Set("kind", "self")        // "self" for text post, "link" for link post
 	form.Set("resubmit", "true")    // avoid Reddit duplicate filtering
 	form.Set("sendreplies", "true") // enable inbox replies
@@ -389,7 +397,7 @@ func (r *Client) refreshToken(ctx context.Context) error {
 	return nil
 }
 
-func (r *Client) GetPostRequirements(ctx context.Context, subreddit string) (*ValidationRules, error) {
+func (r *Client) GetPostRequirements(ctx context.Context, subreddit string) (*models.PostRequirements, error) {
 	reqURL := fmt.Sprintf("%s/api/v1/%s/post_requirements", r.baseURL, subreddit)
 
 	resp, err := r.doRequest(ctx, http.MethodGet, reqURL, nil)
@@ -408,7 +416,7 @@ func (r *Client) GetPostRequirements(ctx context.Context, subreddit string) (*Va
 		return nil, fmt.Errorf("reddit API returned %d: %s", resp.StatusCode, string(bodyBytes))
 	}
 
-	var requirements ValidationRules
+	var requirements models.PostRequirements
 	if err := json.Unmarshal(bodyBytes, &requirements); err != nil {
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}

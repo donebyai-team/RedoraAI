@@ -88,11 +88,9 @@ func (r redditInteractions) ProcessScheduledPost(ctx context.Context, post *mode
 			return err
 		}
 
-		title := post.Title
-		description := post.Description
 		post.Metadata.Author = config.Name
 
-		redditPost, err := client.CreatePost(ctx, subredditName, title, description, *post.Metadata.Settings.FlairID)
+		redditPost, err := client.CreatePost(ctx, subredditName, post)
 		if err != nil {
 			r.logger.Error("failed to post to Reddit", zap.String("id", post.ID), zap.Error(err))
 			post.Status = models.PostStatusFAILED

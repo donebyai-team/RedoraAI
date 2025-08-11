@@ -17,7 +17,7 @@ import (
 type PostService interface {
 	CreatePost(ctx context.Context, post *models.Post, project *models.Project) (*models.Post, error)
 	DeletePost(ctx context.Context, postID string) error
-	UpdatePost(ctx context.Context, updated *models.Post, organizationID string) (*models.Post, error)
+	UpdatePost(ctx context.Context, updated *models.Post) (*models.Post, error)
 }
 type postService struct {
 	aiClient          *ai.Client
@@ -44,35 +44,24 @@ func (s *postService) CreatePost(ctx context.Context, post *models.Post, project
 		}
 	}
 
-	rules, flairs, err := s.fetchRulesAndFlairs(ctx, post, project, source, existingPost)
+	postRequirements, flairs, err := s.fetchPostRequirementsAndFlairs(ctx, post, project, source, existingPost)
 	if err != nil {
 		return nil, err
 	}
 
-	// Extract flair texts for AI input
-	var flairTexts []string
-	for _, f := range flairs {
-		if !f.ModOnly {
-			flairTexts = append(flairTexts, f.Text)
-		}
-	}
-
-	if len(flairTexts) == 0 {
-		flairTexts = append(flairTexts, "FLAIR_NOT_SPECIFIED")
-	}
+	flairTexts := extractFlairTexts(flairs)
 
 	// Prepare AI post generation input
 	input := &ai.PostGenerateInput{
 		Id:          post.ID,
 		Project:     project,
 		PostSetting: &post.Metadata.Settings,
-		Rules:       rules,
+		Rules:       postRequirements.ToRules(),
 		Flairs:      flairTexts,
 	}
 
 	resp, _, err := s.aiClient.GeneratePost(ctx, s.aiClient.GetDefaultModel(), input, s.logger)
 
-	//resp, _, err := GeneratePost()
 	if err != nil {
 		return nil, fmt.Errorf("generate post failed: %w", err)
 	}
@@ -83,7 +72,7 @@ func (s *postService) CreatePost(ctx context.Context, post *models.Post, project
 
 	// Find flair ID by matching AI-selected flair text
 	var selectedFlairID string
-	if resp.SelectedFlair != "" && !strings.EqualFold(strings.TrimSpace(resp.SelectedFlair), "FLAIR_NOT_SPECIFIED") {
+	if resp.SelectedFlair != "" && !strings.EqualFold(strings.TrimSpace(resp.SelectedFlair), reddit.DummyFlair) {
 		for _, f := range flairs {
 			if strings.EqualFold(strings.TrimSpace(f.Text), strings.TrimSpace(resp.SelectedFlair)) {
 				selectedFlairID = f.ID
@@ -126,8 +115,8 @@ func (s *postService) CreatePost(ctx context.Context, post *models.Post, project
 				Description:  resp.Description,
 			},
 		},
-		Rules:  rules,
-		Flairs: flairs,
+		PostRequirements: *postRequirements,
+		Flairs:           flairs,
 	}
 
 	newPost, err := s.db.CreatePost(ctx, post)
@@ -137,21 +126,21 @@ func (s *postService) CreatePost(ctx context.Context, post *models.Post, project
 	return newPost, nil
 }
 
-func (s *postService) fetchRulesAndFlairs(
+func (s *postService) fetchPostRequirementsAndFlairs(
 	ctx context.Context,
 	post *models.Post,
 	project *models.Project,
 	source *models.Source,
 	existingPost *models.Post,
-) ([]string, []models.Flair, error) {
-	var rules []string
+) (*models.PostRequirements, []models.Flair, error) {
+	var postRequirement models.PostRequirements
 	var flairs []models.Flair
 
 	if existingPost != nil {
 		// Regeneration → use saved metadata
-		rules = existingPost.Metadata.Rules
+		postRequirement = existingPost.Metadata.PostRequirements
 		flairs = existingPost.Metadata.Flairs
-		return rules, flairs, nil
+		return &postRequirement, flairs, nil
 	}
 
 	// First-time post → fetch from Reddit API
@@ -160,56 +149,63 @@ func (s *postService) fetchRulesAndFlairs(
 		return nil, nil, fmt.Errorf("failed to get Reddit API client: %w", err)
 	}
 
-	postRequirement, err := client.GetPostRequirements(ctx, source.Name)
+	postReqPtr, err := client.GetPostRequirements(ctx, source.Name)
+
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to fetch post requirements: %w", err)
 	}
 
-	rules = postRequirement.ToRules()
+	postRequirement = *postReqPtr
 
-	flairResp, err := client.GetSubredditFlairs(ctx, source.Name)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to fetch flairs: %w", err)
-	}
-
-	flairs = make([]models.Flair, 0, len(flairResp))
-	for _, f := range flairResp {
-		if !f.ModOnly && len(f.Text) > 0 {
-			flairs = append(flairs, f)
+	if postRequirement.IsFlairRequired == true {
+		flairResp, err := client.GetSubredditFlairs(ctx, source.Name)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to fetch flairs: %w", err)
 		}
+
+		// filter non-moderator flairs
+		flairs = make([]models.Flair, 0, len(flairResp))
+		for _, f := range flairResp {
+			if !f.ModOnly && len(f.Text) > 0 {
+				flairs = append(flairs, f)
+			}
+		}
+
+		// Save rules and flairs into metadata for future regenerations
+		post.Metadata.PostRequirements = postRequirement
+		post.Metadata.Flairs = flairs
+
+		return &postRequirement, flairs, nil
 	}
 
-	// Save rules and flairs into metadata for future regenerations
-	post.Metadata.Rules = rules
-	post.Metadata.Flairs = flairs
-
-	return rules, flairs, nil
+	return &postRequirement, nil, nil
 }
 
-func (s *postService) UpdatePost(ctx context.Context, updated *models.Post, organizationID string) (*models.Post, error) {
-	client, err := s.redditOauthClient.GetRedditAPIClient(ctx, organizationID, false)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get Reddit API client: %w", err)
+func extractFlairTexts(flairs []models.Flair) []string {
+	var texts []string
+	for _, f := range flairs {
+		texts = append(texts, f.Text)
 	}
 
-	source, err := s.db.GetSourceByID(ctx, updated.SourceID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get source by ID: %w", err)
+	// insert dummy flair in case flair is empty or not required
+	if len(texts) == 0 {
+		return []string{reddit.DummyFlair}
 	}
 
-	postRequirement, err := client.GetPostRequirements(ctx, source.Name)
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch post requirements: %w", err)
+	return texts
+}
+
+func (s *postService) UpdatePost(ctx context.Context, updated *models.Post) (*models.Post, error) {
+	existing, err := s.db.GetPostByID(ctx, updated.ID)
+	if err != nil && !errors.Is(err, datastore.NotFound) {
+		return nil, fmt.Errorf("invalid post id: %w", err)
 	}
+
+	postRequirement := existing.Metadata.PostRequirements
 	validationErr := postRequirement.Validate(*updated)
 
 	if len(validationErr) != 0 {
 		return nil, fmt.Errorf(strings.Join(validationErr, "\n"))
-	}
-
-	existing, err := s.db.GetPostByID(ctx, updated.ID)
-	if err != nil && !errors.Is(err, datastore.NotFound) {
-		return nil, fmt.Errorf("invalid post id: %w", err)
 	}
 
 	if updated.ScheduleAt != nil && updated.ScheduleAt.Before(time.Now().UTC().Add(-30*time.Second)) {

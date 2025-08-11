@@ -76,7 +76,7 @@ export default function PostEditor() {
     const [postDetails, setPostDetails] = useState(post?.metadata?.settings?.context || '')
     const [selectedGoal, setSelectedGoal] = useState(post?.metadata?.settings?.goal || '')
     const [selectedSubreddit, setSelectedSubreddit] = useState(post?.source || '')
-    const [selectedFlair, setSelectedFlair] = useState(post?.metadata?.settings?.flairId || '')
+    const [selectedFlairID, setSelectedFlairID] = useState(post?.metadata?.settings?.flairId || '')
     const [selectedTone, setSelectedTone] = useState(post?.metadata?.settings?.tone || '')
     const [isEditable, setIsEditable] = useState(editableStatus.includes(post?.status as PostStatus || ''))
     const [selectedVersionIndex, setSelectedVersionIndex] = useState<number>(0)
@@ -131,7 +131,7 @@ export default function PostEditor() {
             context: postDetails,
             goal: selectedGoal,
             tone: selectedTone,
-            referenceId: selectedInsight ?? null, flairId: selectedFlair,
+            referenceId: selectedInsight ?? null, flairId: selectedFlairID,
         },false,
         )
 
@@ -160,13 +160,12 @@ export default function PostEditor() {
         setSelectedSubreddit(post?.source || '')
         setSelectedGoal(item.postSettings?.goal || '')
         setSelectedTone(item.postSettings?.tone || '')
-        setSelectedFlair(item.postSettings?.flairId || '')
+        setSelectedFlairID(item.postSettings?.flairId || '')
 
         setShowHistory(false)
     }
 
     const handleSchedule = async () => {
-        console.log("inside handle schedule ")
         if (!scheduledDate) {
             toast.error("Please select a date and time")
             return
@@ -198,7 +197,7 @@ export default function PostEditor() {
                             tone: selectedTone,
                             referenceId: selectedInsight || '',
                             sourceId: selectedSubreddit,
-                            flairId: selectedFlair,
+                            flairId: selectedFlairID,
                         },
                         history: post?.metadata?.history || [],
                         rules: [],
@@ -287,12 +286,12 @@ export default function PostEditor() {
                             <div className="lg:col-span-3">
                                 <Card>
                                     <CardHeader className="flex flex-row justify-between items-center gap-6">
-                                        <div className="w-[85%]">
+                                        <div className="w-[85%] text-[12px]">
                                             {post?.metadata?.rules && post?.metadata?.rules.length > 0 && (
                                                 <div className="bg-secondary/50 rounded-md p-3">
                                                     <div className="flex items-center gap-2 text-sm font-medium mb-2">
                                                         <Info size={20}/>
-                                                        <span className="text-primary">Community Guidelines: </span>
+                                                        <span className="text-primary">Generated per subreddit requirements: </span>
                                                     </div>
                                                     <ol className="list-decimal list-inside space-y-1 mt-2 ml-2">
                                                         {post.metadata.rules.map((rule, index) => (
@@ -504,7 +503,7 @@ export default function PostEditor() {
                                         {
                                             post?.metadata?.flairs && post?.metadata?.flairs.length > 0 && <div>
                                                 <Label className='mb-2.5 block'>Flair</Label>
-                                                <Select value={selectedFlair} onValueChange={setSelectedFlair}
+                                                <Select value={selectedFlairID} onValueChange={setSelectedFlairID}
                                                         disabled={!isEditable}
                                                 >
                                                     <SelectTrigger><SelectValue placeholder="Select subreddit" /></SelectTrigger>

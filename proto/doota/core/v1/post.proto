@@ -44,7 +44,6 @@ message Flair {
   string type = 1;
   string id = 2;
   string text = 3;
-  optional bool mod_only = 4;
 }
 
 message PostMetadata {
