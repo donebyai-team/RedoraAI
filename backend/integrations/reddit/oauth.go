@@ -37,7 +37,7 @@ func (u *userAgentTransport) RoundTrip(req *http.Request) (*http.Response, error
 	if u.userName != "" {
 		req.Header.Set("User-Agent", fmt.Sprintf("com.redoraai:v0.1 by (/u/%s)", u.userName))
 	} else {
-		req.Header.Set("User-Agent", "com.redoraai:v0.1 by (redora)")
+		req.Header.Set("User-Agent", "com.redoraai:v0.1.0 by (redora)")
 	}
 	return u.base.RoundTrip(req)
 }
@@ -198,6 +198,15 @@ func (c *OauthClient) withRotatingIntegrations(
 	default:
 		return lastErr
 	}
+}
+
+func (c *OauthClient) GetAPIClientFromIntegration(ctx context.Context, integrationID string) (*Client, error) {
+	integration, err := c.db.GetIntegrationById(ctx, integrationID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get integration: %w", err)
+	}
+
+	return c.buildRedditClient(ctx, integration)
 }
 
 func (c *OauthClient) GetActiveIntegrations(ctx context.Context, orgID string, integrationType models.IntegrationType) ([]*models.Integration, error) {

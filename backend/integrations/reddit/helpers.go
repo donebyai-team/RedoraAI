@@ -110,5 +110,7 @@ func (r *Client) DoWithRateLimit(req *retryablehttp.Request) (*http.Response, er
 	if err != nil {
 		return nil, err
 	}
+
+	r.logger.Info("making request with user agent", zap.String("user_agent", req.Header.Get("User-Agent")))
 	return r.httpClient.Do(req)
 }
