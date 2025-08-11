@@ -35,6 +35,11 @@ func (r *Client) doRequest(ctx context.Context, method, url string, rawBody inte
 		r.logger.Info("request done with user agent", zap.String("user_agent", req.Header.Get("User-Agent")))
 
 		if err := validateResponse(resp); err != nil {
+			bodyBytes, _ := io.ReadAll(resp.Body)
+			r.logger.Error("failed reddit response",
+				zap.String("url", url),
+				zap.Any("body", string(bodyBytes)),
+				zap.Error(err))
 			resp.Body.Close()
 			return nil, err
 		}
