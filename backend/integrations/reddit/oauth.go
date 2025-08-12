@@ -145,7 +145,6 @@ func (c *OauthClient) withRotatingIntegrations(
 		}
 
 		var client *Client
-
 		if clientBuilder != nil {
 			client, err = clientBuilder(integration)
 			if err != nil {
@@ -158,7 +157,8 @@ func (c *OauthClient) withRotatingIntegrations(
 
 		// Attempt GetUser call
 		// If it gives any other error other than an account banned, skip it
-		_, getUserErr := client.GetUser(ctx, *integration.ReferenceID)
+		// Do the GetUser call with non-auth client to get 404(banned)
+		_, getUserErr := NewClientWithOutConfig(c.logger).GetUser(ctx, *integration.ReferenceID)
 		if getUserErr != nil {
 			if errors.Is(getUserErr, AccountBanned) {
 				lastErr = getUserErr
