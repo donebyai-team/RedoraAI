@@ -25,9 +25,11 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 	if interaction.Type != models.LeadInteractionTypeDM {
 		return fmt.Errorf("interaction type is not DM")
 	}
-	r.logger.Info("sending reddit DM",
+	logger := r.logger.With(
 		zap.String("interaction_id", interaction.ID),
 		zap.String("from", interaction.From))
+
+	logger.Info("sending DM")
 
 	project, err := r.db.GetProject(ctx, interaction.ProjectID)
 	if err != nil {
@@ -53,7 +55,7 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 		redditLead.LeadMetadata.DMScheduledAt = nil
 		updateError := r.db.UpdateLeadStatus(ctx, redditLead)
 		if updateError != nil {
-			r.logger.Warn("failed to update lead status for automated DM", zap.Error(err), zap.String("lead_id", redditLead.ID))
+			logger.Warn("failed to update lead status for automated DM", zap.Error(err))
 		}
 	}()
 
@@ -162,12 +164,10 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 		redditLead.LeadMetadata.AutomatedDMSent = true
 		redditLead.Status = models.LeadStatusAIRESPONDED
 
-		r.logger.Info("successfully sent reddit DM",
-			zap.String("interaction_id", interaction.ID),
-			zap.String("from", interaction.From))
+		logger.Info("successfully sent reddit DM")
 
 		return nil
-	}, reddit.PreferSpecificAccountStrategy(interaction.From))
+	}, reddit.PreferSpecificAccountStrategy(interaction.From), logger)
 
 	if err != nil {
 		interaction.Status = models.LeadInteractionStatusFAILED

@@ -82,12 +82,14 @@ func (c *OauthClient) WithRotatingAccounts(
 	integrationType models.IntegrationType,
 	fn func(integration *models.Integration) error,
 	strategy IntegrationSelectionStrategy,
+	logger *zap.Logger,
 ) error {
 	return c.withRotatingIntegrations(ctx, orgID, integrationType,
 		nil,
 		nil,
 		fn,
 		strategy,
+		logger,
 	)
 }
 
@@ -96,14 +98,16 @@ func (c *OauthClient) WithRotatingAPIClient(
 	orgID string,
 	fn func(client *Client) error,
 	strategy IntegrationSelectionStrategy,
+	logger *zap.Logger,
 ) error {
 	return c.withRotatingIntegrations(ctx, orgID, models.IntegrationTypeREDDIT,
 		func(integration *models.Integration) (*Client, error) {
-			return c.buildRedditClient(ctx, integration)
+			return c.buildRedditClient(ctx, integration, logger)
 		},
 		fn,
 		nil,
 		strategy,
+		logger,
 	)
 }
 
@@ -115,6 +119,7 @@ func (c *OauthClient) withRotatingIntegrations(
 	clientHandler func(*Client) error,
 	integrationHandler func(*models.Integration) error,
 	strategy IntegrationSelectionStrategy,
+	logger *zap.Logger,
 ) error {
 	integrations, err := c.db.GetIntegrationByOrgAndType(ctx, orgID, integrationType)
 	if err != nil {
@@ -140,7 +145,7 @@ func (c *OauthClient) withRotatingIntegrations(
 
 	for _, integration := range finalIntegrations {
 		if integration.ReferenceID == nil {
-			c.logger.Error("reference id is nil", zap.String("integration_id", integration.ID))
+			logger.Error("reference id is nil", zap.String("integration_id", integration.ID))
 			continue
 		}
 
@@ -163,12 +168,12 @@ func (c *OauthClient) withRotatingIntegrations(
 			if errors.Is(getUserErr, AccountBanned) {
 				lastErr = getUserErr
 				banned++
-				c.logger.Error("account is banned", zap.String("integration_id", integration.ID), zap.Error(getUserErr))
+				logger.Error("account is banned", zap.String("integration_id", integration.ID), zap.Error(getUserErr))
 				c.revokeIntegration(ctx, integration.ID, models.IntegrationStateACCOUNTSUSPENDED)
 				continue
 			}
 
-			c.logger.Warn("warn:failed to check user", zap.String("integration_id", integration.ID), zap.Error(getUserErr))
+			logger.Warn("warn:failed to check user", zap.String("integration_id", integration.ID), zap.Error(getUserErr))
 		}
 
 		if clientBuilder != nil {
@@ -188,7 +193,7 @@ func (c *OauthClient) withRotatingIntegrations(
 		// Revoke integration if account isn't established
 		if strings.Contains(lastErr.Error(), "account isn't established") {
 			notEstablished++
-			c.logger.Error("account isn't established", zap.String("integration_id", integration.ID), zap.Error(err))
+			logger.Error("account isn't established", zap.String("integration_id", integration.ID), zap.Error(err))
 			c.revokeIntegration(ctx, integration.ID, models.IntegrationStateNOTESTABLISHED)
 		}
 	}
@@ -209,7 +214,7 @@ func (c *OauthClient) GetAPIClientFromIntegration(ctx context.Context, integrati
 		return nil, fmt.Errorf("failed to get integration: %w", err)
 	}
 
-	return c.buildRedditClient(ctx, integration)
+	return c.buildRedditClient(ctx, integration, c.logger)
 }
 
 func (c *OauthClient) GetActiveIntegrations(ctx context.Context, orgID string, integrationType models.IntegrationType) ([]*models.Integration, error) {
@@ -255,7 +260,7 @@ func (c *OauthClient) GetRedditAPIClient(ctx context.Context, orgID string, forc
 
 	// Randomly select one from candidates
 	for _, integration := range candidates {
-		client, err := c.buildRedditClient(ctx, integration)
+		client, err := c.buildRedditClient(ctx, integration, c.logger)
 		if err == nil {
 			return client, nil
 		}
@@ -271,11 +276,11 @@ func (c *OauthClient) GetRedditAPIClient(ctx context.Context, orgID string, forc
 	return nil, datastore.IntegrationNotFoundOrActive
 }
 
-func (c *OauthClient) buildRedditClient(ctx context.Context, integration *models.Integration) (*Client, error) {
+func (c *OauthClient) buildRedditClient(ctx context.Context, integration *models.Integration, logger *zap.Logger) (*Client, error) {
 	redditUserConfig := integration.GetRedditConfig()
 
 	client := &Client{
-		logger:      c.logger,
+		logger:      logger,
 		config:      redditUserConfig,
 		httpClient:  newHTTPClient(redditUserConfig.Name),
 		oauthConfig: c.config,
@@ -286,10 +291,10 @@ func (c *OauthClient) buildRedditClient(ctx context.Context, integration *models
 	}
 
 	if client.isTokenExpired() {
-		c.logger.Info("token expired, refreshing...", zap.String("integration_id", integration.ID))
+		logger.Info("token expired, refreshing...", zap.String("integration_id", integration.ID))
 		err := client.refreshToken(ctx)
 		if err != nil {
-			c.logger.Error("failed to refresh token", zap.String("integration_id", integration.ID), zap.Error(err))
+			logger.Error("failed to refresh token", zap.String("integration_id", integration.ID), zap.Error(err))
 			client.unAuthorizedErrorCallback(ctx)
 			return nil, &errorx.RefreshTokenError{Reason: err.Error()}
 		}
@@ -301,7 +306,7 @@ func (c *OauthClient) buildRedditClient(ctx context.Context, integration *models
 			return nil, fmt.Errorf("failed to update integration after token refresh: %w", err)
 		}
 	} else {
-		c.logger.Info("token exists, using existing token",
+		logger.Info("token exists, using existing token",
 			zap.String("expiry", client.config.ExpiresAt.String()),
 			zap.String("integration_id", integration.ID))
 	}
