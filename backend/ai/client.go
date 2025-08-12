@@ -5,6 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/rand"
+	"net/http"
+	"strconv"
+	"strings"
+	"text/template"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"
@@ -15,12 +22,6 @@ import (
 	"github.com/streamingfast/derr"
 	"github.com/streamingfast/dstore"
 	"go.uber.org/zap"
-	"math/rand"
-	"net/http"
-	"strconv"
-	"strings"
-	"text/template"
-	"time"
 )
 
 const SEED = 42
@@ -331,11 +332,13 @@ type PostGenerateInput struct {
 	Id          string               `json:"id"`
 	Project     *models.Project      `json:"project"`
 	PostSetting *models.PostSettings `json:"post"`
+	Flairs      []string             `json:"flairs"`
+	Rules       []string             `json:"rules"`
 }
 
 func (c *Client) GeneratePost(ctx context.Context, model models.LLMModel, input *PostGenerateInput, logger *zap.Logger) (*models.PostGenerationResponse, *models.LLMModelUsage, error) {
 	runID := input.Id
-	vars := GetPostGenerationVars(input.PostSetting)
+	vars := GetPostGenerationVars(input)
 
 	llmModelToUse := c.defaultLLMModel
 	if string(model) != "" {

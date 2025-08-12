@@ -9,7 +9,7 @@ import { file_google_protobuf_any, file_google_protobuf_timestamp } from "@bufbu
  * Describes the file doota/core/v1/post.proto.
  */
 export const file_doota_core_v1_post = /*@__PURE__*/
-  fileDesc("Chhkb290YS9jb3JlL3YxL3Bvc3QucHJvdG8SDWRvb3RhLmNvcmUudjEioQIKBFBvc3QSCgoCaWQYASABKAkSEgoKcHJvamVjdF9pZBgCIAEoCRIOCgZzb3VyY2UYAyABKAkSDQoFdG9waWMYBCABKAkSEwoLZGVzY3JpcHRpb24YBSABKAkSDgoGc3RhdHVzGAYgASgJEg4KBnJlYXNvbhgHIAEoCRIuCgpjcmVhdGVkX2F0GAggASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBI1CgxzY2hlZHVsZWRfYXQYCSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wSACIAQESLQoIbWV0YWRhdGEYCyABKAsyGy5kb290YS5jb3JlLnYxLlBvc3RNZXRhZGF0YUIPCg1fc2NoZWR1bGVkX2F0IqEBCgxQb3N0U2V0dGluZ3MSDQoFdG9waWMYASABKAkSDwoHY29udGV4dBgCIAEoCRIMCgRnb2FsGAMgASgJEgwKBHRvbmUYBCABKAkSGQoMcmVmZXJlbmNlX2lkGAUgASgJSACIAQESDwoCaWQYBiABKAlIAYgBARIRCglzb3VyY2VfaWQYByABKAlCDwoNX3JlZmVyZW5jZV9pZEIFCgNfaWQidgoMUG9zdE1ldGFkYXRhEi0KCHNldHRpbmdzGAEgASgLMhsuZG9vdGEuY29yZS52MS5Qb3N0U2V0dGluZ3MSNwoHaGlzdG9yeRgCIAMoCzImLmRvb3RhLmNvcmUudjEuUG9zdFJlZ2VuZXJhdGlvbkhpc3RvcnkicQoXUG9zdFJlZ2VuZXJhdGlvbkhpc3RvcnkSMgoNcG9zdF9zZXR0aW5ncxgBIAEoCzIbLmRvb3RhLmNvcmUudjEuUG9zdFNldHRpbmdzEg0KBXRpdGxlGAIgASgJEhMKC2Rlc2NyaXB0aW9uGAMgASgJIlYKClBvc3REZXRhaWwSIQoEcG9zdBgBIAEoCzITLmRvb3RhLmNvcmUudjEuUG9zdBITCgtzb3VyY2VfbmFtZRgCIAEoCRIQCghwb3N0X3VybBgDIAEoCSI2ChFVcGRhdGVQb3N0UmVxdWVzdBIhCgRwb3N0GAEgASgLMhMuZG9vdGEuY29yZS52MS5Qb3N0Ih8KEURlbGV0ZVBvc3RSZXF1ZXN0EgoKAmlkGAEgASgJKqcBCgpQb3N0U3RhdHVzEhsKF1BPU1RfU1RBVFVTX1VOU1BFQ0lGSUVEEAASFwoTUE9TVF9TVEFUVVNfQ1JFQVRFRBABEhoKFlBPU1RfU1RBVFVTX1BST0NFU1NJTkcQAhIUChBQT1NUX1NUQVRVU19TRU5UEAMSFgoSUE9TVF9TVEFUVVNfRkFJTEVEEAQSGQoVUE9TVF9TVEFUVVNfU0NIRURVTEVEEAVCM1oxZ2l0aHViLmNvbS9zaGFuazMxOC9kb290YS9wYi9kb290YS9jb3JlL3YxO3BiY29yZWIGcHJvdG8z", [file_google_protobuf_timestamp, file_google_protobuf_any]);
+  fileDesc("Chhkb290YS9jb3JlL3YxL3Bvc3QucHJvdG8SDWRvb3RhLmNvcmUudjEioQIKBFBvc3QSCgoCaWQYASABKAkSEgoKcHJvamVjdF9pZBgCIAEoCRIOCgZzb3VyY2UYAyABKAkSDQoFdG9waWMYBCABKAkSEwoLZGVzY3JpcHRpb24YBSABKAkSDgoGc3RhdHVzGAYgASgJEg4KBnJlYXNvbhgHIAEoCRIuCgpjcmVhdGVkX2F0GAggASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBI1CgxzY2hlZHVsZWRfYXQYCSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wSACIAQESLQoIbWV0YWRhdGEYCyABKAsyGy5kb290YS5jb3JlLnYxLlBvc3RNZXRhZGF0YUIPCg1fc2NoZWR1bGVkX2F0IsUBCgxQb3N0U2V0dGluZ3MSDQoFdG9waWMYASABKAkSDwoHY29udGV4dBgCIAEoCRIMCgRnb2FsGAMgASgJEgwKBHRvbmUYBCABKAkSGQoMcmVmZXJlbmNlX2lkGAUgASgJSACIAQESDwoCaWQYBiABKAlIAYgBARIRCglzb3VyY2VfaWQYByABKAkSFQoIZmxhaXJfaWQYCCABKAlIAogBAUIPCg1fcmVmZXJlbmNlX2lkQgUKA19pZEILCglfZmxhaXJfaWQiLwoFRmxhaXISDAoEdHlwZRgBIAEoCRIKCgJpZBgCIAEoCRIMCgR0ZXh0GAMgASgJIqsBCgxQb3N0TWV0YWRhdGESLQoIc2V0dGluZ3MYASABKAsyGy5kb290YS5jb3JlLnYxLlBvc3RTZXR0aW5ncxI3CgdoaXN0b3J5GAIgAygLMiYuZG9vdGEuY29yZS52MS5Qb3N0UmVnZW5lcmF0aW9uSGlzdG9yeRINCgVydWxlcxgDIAMoCRIkCgZmbGFpcnMYBCADKAsyFC5kb290YS5jb3JlLnYxLkZsYWlyInEKF1Bvc3RSZWdlbmVyYXRpb25IaXN0b3J5EjIKDXBvc3Rfc2V0dGluZ3MYASABKAsyGy5kb290YS5jb3JlLnYxLlBvc3RTZXR0aW5ncxINCgV0aXRsZRgCIAEoCRITCgtkZXNjcmlwdGlvbhgDIAEoCSJWCgpQb3N0RGV0YWlsEiEKBHBvc3QYASABKAsyEy5kb290YS5jb3JlLnYxLlBvc3QSEwoLc291cmNlX25hbWUYAiABKAkSEAoIcG9zdF91cmwYAyABKAkiNgoRVXBkYXRlUG9zdFJlcXVlc3QSIQoEcG9zdBgBIAEoCzITLmRvb3RhLmNvcmUudjEuUG9zdCIfChFEZWxldGVQb3N0UmVxdWVzdBIKCgJpZBgBIAEoCSqnAQoKUG9zdFN0YXR1cxIbChdQT1NUX1NUQVRVU19VTlNQRUNJRklFRBAAEhcKE1BPU1RfU1RBVFVTX0NSRUFURUQQARIaChZQT1NUX1NUQVRVU19QUk9DRVNTSU5HEAISFAoQUE9TVF9TVEFUVVNfU0VOVBADEhYKElBPU1RfU1RBVFVTX0ZBSUxFRBAEEhkKFVBPU1RfU1RBVFVTX1NDSEVEVUxFRBAFQjNaMWdpdGh1Yi5jb20vc2hhbmszMTgvZG9vdGEvcGIvZG9vdGEvY29yZS92MTtwYmNvcmViBnByb3RvMw", [file_google_protobuf_timestamp, file_google_protobuf_any]);
 
 /**
  * Describes the message doota.core.v1.Post.
@@ -26,39 +26,46 @@ export const PostSettingsSchema = /*@__PURE__*/
   messageDesc(file_doota_core_v1_post, 1);
 
 /**
+ * Describes the message doota.core.v1.Flair.
+ * Use `create(FlairSchema)` to create a new message.
+ */
+export const FlairSchema = /*@__PURE__*/
+  messageDesc(file_doota_core_v1_post, 2);
+
+/**
  * Describes the message doota.core.v1.PostMetadata.
  * Use `create(PostMetadataSchema)` to create a new message.
  */
 export const PostMetadataSchema = /*@__PURE__*/
-  messageDesc(file_doota_core_v1_post, 2);
+  messageDesc(file_doota_core_v1_post, 3);
 
 /**
  * Describes the message doota.core.v1.PostRegenerationHistory.
  * Use `create(PostRegenerationHistorySchema)` to create a new message.
  */
 export const PostRegenerationHistorySchema = /*@__PURE__*/
-  messageDesc(file_doota_core_v1_post, 3);
+  messageDesc(file_doota_core_v1_post, 4);
 
 /**
  * Describes the message doota.core.v1.PostDetail.
  * Use `create(PostDetailSchema)` to create a new message.
  */
 export const PostDetailSchema = /*@__PURE__*/
-  messageDesc(file_doota_core_v1_post, 4);
+  messageDesc(file_doota_core_v1_post, 5);
 
 /**
  * Describes the message doota.core.v1.UpdatePostRequest.
  * Use `create(UpdatePostRequestSchema)` to create a new message.
  */
 export const UpdatePostRequestSchema = /*@__PURE__*/
-  messageDesc(file_doota_core_v1_post, 5);
+  messageDesc(file_doota_core_v1_post, 6);
 
 /**
  * Describes the message doota.core.v1.DeletePostRequest.
  * Use `create(DeletePostRequestSchema)` to create a new message.
  */
 export const DeletePostRequestSchema = /*@__PURE__*/
-  messageDesc(file_doota_core_v1_post, 6);
+  messageDesc(file_doota_core_v1_post, 7);
 
 /**
  * Describes the enum doota.core.v1.PostStatus.

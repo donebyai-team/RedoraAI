@@ -3,6 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
+	"regexp"
+	"strings"
+	"time"
+
 	"github.com/shank318/doota/agents/redora"
 	"github.com/shank318/doota/agents/redora/interactions"
 	"github.com/shank318/doota/agents/vana"
@@ -18,10 +23,6 @@ import (
 	"github.com/shank318/doota/portal/state"
 	"github.com/shank318/doota/services"
 	"github.com/streamingfast/dstore"
-	"os"
-	"regexp"
-	"strings"
-	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -459,7 +460,7 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 
 	dodoPaymentToken := sflags.MustGetString(cmd, "common-dodopayment-api-key")
 	dodoSubscriptionService := services.NewDodoSubscriptionService(deps.DataStore, alertNotifier, dodoPaymentToken, logger, isDev)
-	postsService := services.NewPostService(logger, deps.DataStore, deps.LiteLLMClient)
+	postsService := services.NewPostService(logger, deps.DataStore, deps.LiteLLMClient, redditOauthClient)
 
 	p := portal.New(
 		deps.OpenAIClient,
