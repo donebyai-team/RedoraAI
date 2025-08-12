@@ -11,3 +11,13 @@ Goal:
 
 Tone:
 {{ .Tone }}
+
+Post Generation Requirements:
+{{ range .Rules -}}
+- {{ . }}
+{{ end }}
+
+Flairs to tag a post:
+{{ range .Flairs -}}
+- {{ . }}
+{{ end }}

@@ -37,11 +37,20 @@ message PostSettings {
   optional string reference_id = 5;
   optional string id = 6; // post id
   string source_id = 7;
+  optional string flair_id = 8;
+}
+
+message Flair {
+  string type = 1;
+  string id = 2;
+  string text = 3;
 }
 
 message PostMetadata {
   PostSettings settings = 1;
   repeated PostRegenerationHistory history = 2;
+  repeated string rules = 3;
+  repeated Flair flairs = 4;
 }
 
 message PostRegenerationHistory {

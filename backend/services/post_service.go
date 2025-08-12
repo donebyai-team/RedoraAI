@@ -9,6 +9,7 @@ import (
 
 	"github.com/shank318/doota/ai"
 	"github.com/shank318/doota/datastore"
+	"github.com/shank318/doota/integrations/reddit"
 	"github.com/shank318/doota/models"
 	"go.uber.org/zap"
 )
@@ -19,19 +20,20 @@ type PostService interface {
 	UpdatePost(ctx context.Context, updated *models.Post) (*models.Post, error)
 }
 type postService struct {
-	aiClient *ai.Client
-	db       datastore.Repository
-	logger   *zap.Logger
+	aiClient          *ai.Client
+	db                datastore.Repository
+	logger            *zap.Logger
+	redditOauthClient *reddit.OauthClient
 }
 
-func NewPostService(logger *zap.Logger, db datastore.Repository, aiClient *ai.Client) *postService {
-	return &postService{logger: logger, db: db, aiClient: aiClient}
+func NewPostService(logger *zap.Logger, db datastore.Repository, aiClient *ai.Client, redditOauthClient *reddit.OauthClient) *postService {
+	return &postService{logger: logger, db: db, aiClient: aiClient, redditOauthClient: redditOauthClient}
 }
 
 func (s *postService) CreatePost(ctx context.Context, post *models.Post, project *models.Project) (*models.Post, error) {
-	_, err := s.db.GetSourceByID(ctx, post.SourceID)
+	source, err := s.db.GetSourceByID(ctx, post.SourceID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get source by ID")
+		return nil, fmt.Errorf("failed to get source by ID: %w", err)
 	}
 
 	var existingPost *models.Post
@@ -42,10 +44,28 @@ func (s *postService) CreatePost(ctx context.Context, post *models.Post, project
 		}
 	}
 
+	postRequirements, flairs, err := s.fetchPostRequirementsAndFlairs(ctx, project, source, existingPost)
+	if err != nil {
+		return nil, err
+	}
+
+	post.Metadata.PostRequirements = postRequirements
+	post.Metadata.Flairs = flairs
+
+	flairTexts := extractFlairTexts(flairs)
+
+	var rules []string
+	if postRequirements != nil {
+		rules = postRequirements.ToRules()
+	}
+
+	// Prepare AI post generation input
 	input := &ai.PostGenerateInput{
 		Id:          post.ID,
 		Project:     project,
 		PostSetting: &post.Metadata.Settings,
+		Rules:       rules,
+		Flairs:      flairTexts,
 	}
 
 	resp, _, err := s.aiClient.GeneratePost(ctx, s.aiClient.GetDefaultModel(), input, s.logger)
@@ -57,7 +77,19 @@ func (s *postService) CreatePost(ctx context.Context, post *models.Post, project
 		return nil, fmt.Errorf("generated post is invalid: title or description is empty")
 	}
 
+	// Find flair ID by matching AI-selected flair text
+	var selectedFlairID string
+	if resp.SelectedFlair != "" && !strings.EqualFold(strings.TrimSpace(resp.SelectedFlair), reddit.DummyFlair) {
+		for _, f := range flairs {
+			if strings.EqualFold(strings.TrimSpace(f.Text), strings.TrimSpace(resp.SelectedFlair)) {
+				selectedFlairID = f.ID
+				break
+			}
+		}
+	}
+
 	settings := post.Metadata.Settings
+	settings.FlairID = &selectedFlairID
 
 	if existingPost != nil {
 		// Append generated result to history but DO NOT update existing title/desc/settings
@@ -90,6 +122,8 @@ func (s *postService) CreatePost(ctx context.Context, post *models.Post, project
 				Description:  resp.Description,
 			},
 		},
+		PostRequirements: postRequirements,
+		Flairs:           flairs,
 	}
 
 	newPost, err := s.db.CreatePost(ctx, post)
@@ -99,10 +133,130 @@ func (s *postService) CreatePost(ctx context.Context, post *models.Post, project
 	return newPost, nil
 }
 
+func (s *postService) fetchPostRequirementsAndFlairs(
+	ctx context.Context,
+	project *models.Project,
+	source *models.Source,
+	existingPost *models.Post,
+) (*models.PostRequirements, []models.Flair, error) {
+	// If regenerating, reuse existing metadata
+	if existingPost != nil {
+		return existingPost.Metadata.PostRequirements, existingPost.Metadata.Flairs, nil
+	}
+
+	// First-time: fetch from Reddit API
+	postRequirements, err := s.getPostRequirements(ctx, project, source)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get post requirements: %w", err)
+	}
+
+	var flairs []models.Flair
+	if postRequirements.IsFlairRequired {
+		flairs, err = s.getFlairs(ctx, project, source)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to get flairs: %w", err)
+		}
+	}
+
+	return postRequirements, flairs, nil
+}
+
+func (s *postService) getPostRequirements(ctx context.Context, project *models.Project, source *models.Source) (*models.PostRequirements, error) {
+	client, err := s.redditOauthClient.GetRedditAPIClient(ctx, project.OrganizationID, false)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get Reddit API client: %w", err)
+	}
+
+	postReqPtr, err := client.GetPostRequirements(ctx, source.Name)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch post requirements: %w", err)
+	}
+
+	return postReqPtr, nil
+}
+
+func (s *postService) getFlairs(ctx context.Context, project *models.Project, source *models.Source) ([]models.Flair, error) {
+	getValidFlairs := func(flairs []models.Flair) []models.Flair {
+		valid := make([]models.Flair, 0, len(flairs))
+		for _, f := range flairs {
+			if !f.ModOnly && len(f.Text) > 0 {
+				valid = append(valid, f)
+			}
+		}
+		return valid
+	}
+
+	// Primary attempt
+	client, err := s.redditOauthClient.GetRedditAPIClient(ctx, project.OrganizationID, false)
+	if err == nil {
+		if flairs, err := client.GetSubredditFlairs(ctx, source.Name); err == nil && len(flairs) > 0 {
+			return getValidFlairs(flairs), nil
+		}
+	}
+
+	s.logger.Error("failed to get flairs with user integration", zap.Error(err))
+
+	// Fallback attempt
+	fallbackIntegrationIDs := []string{
+		"09e5cc56-41a1-40fb-9ac1-10aec3bfe529",
+		"0f2427a2-4ef9-418f-a68a-bc902d2dbd26",
+	}
+
+	for _, fallbackID := range fallbackIntegrationIDs {
+		s.logger.Info("trying fallback integration", zap.String("fallbackID", fallbackID))
+
+		fallbackClient, fbErr := s.redditOauthClient.GetAPIClientFromIntegration(ctx, fallbackID)
+		if fbErr != nil {
+			s.logger.Error("failed to get fallback integration client",
+				zap.String("fallbackID", fallbackID),
+				zap.Error(fbErr),
+			)
+			continue
+		}
+
+		flairs, fbErr := fallbackClient.GetSubredditFlairs(ctx, source.Name)
+		if fbErr != nil {
+			s.logger.Error("failed to get flairs from fallback integration",
+				zap.String("fallbackID", fallbackID),
+				zap.Error(fbErr),
+			)
+			continue
+		}
+
+		s.logger.Info("used fallback integration to get flairs", zap.String("fallbackID", fallbackID))
+		return getValidFlairs(flairs), nil
+	}
+
+	return nil, fmt.Errorf("failed to get flairs with user and all fallback integrations")
+}
+
+func extractFlairTexts(flairs []models.Flair) []string {
+	var texts []string
+	for _, f := range flairs {
+		texts = append(texts, f.Text)
+	}
+
+	// insert dummy flair in case flair is empty or not required
+	if len(texts) == 0 {
+		return []string{reddit.DummyFlair}
+	}
+
+	return texts
+}
+
 func (s *postService) UpdatePost(ctx context.Context, updated *models.Post) (*models.Post, error) {
 	existing, err := s.db.GetPostByID(ctx, updated.ID)
 	if err != nil && !errors.Is(err, datastore.NotFound) {
 		return nil, fmt.Errorf("invalid post id: %w", err)
+	}
+
+	postRequirement := existing.Metadata.PostRequirements
+	if postRequirement != nil {
+		validationErr := postRequirement.Validate(*updated)
+
+		if len(validationErr) != 0 {
+			return nil, fmt.Errorf(strings.Join(validationErr, "\n"))
+		}
 	}
 
 	if updated.ScheduleAt != nil && updated.ScheduleAt.Before(time.Now().UTC().Add(-30*time.Second)) {
