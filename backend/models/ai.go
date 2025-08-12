@@ -58,6 +58,7 @@ type CaseDecisionResponse struct {
 type PostGenerationResponse struct {
 	Title          string   `json:"title"`
 	Description    string   `json:"description"`
+	SelectedFlair  string   `json:"selected_flair"`
 	ChainOfThought string   `json:"chain_of_thought"`
 	ModelUsed      LLMModel `json:"model_used"`
 }

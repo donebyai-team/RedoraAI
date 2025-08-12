@@ -14,14 +14,25 @@
           "type": "string",
           "description": "The full Reddit post body that elaborates on the title, providing useful content aligned with the goal and tone."
         },
+        "selected_flair": {
+          "type": "string",
+          "description": "The single most suitable flair from the provided list of subreddit flairs that best matches the post's content.",
+          "enum": [
+            {{- range $i, $v := .Flairs -}}
+              {{- if $i}}, {{ end -}}
+              {{ printf "%q" $v }}
+            {{- end -}}
+          ]
+        },
         "chain_of_thought": {
           "type": "string",
-          "description": "Reasoning explaining how the topic, context, goal, and tone were interpreted and used to construct the post."
+          "description": "Reasoning explaining how the topic, context, goal, tone, and flairs list were interpreted to construct the post and select the flair."
         }
       },
       "required": [
         "title",
         "description",
+        "selected_flair",
         "chain_of_thought"
       ],
       "additionalProperties": false

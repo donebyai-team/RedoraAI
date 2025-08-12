@@ -2,6 +2,7 @@ package ai
 
 import (
 	"embed"
+
 	"github.com/shank318/doota/models"
 	"github.com/streamingfast/cli"
 )
@@ -37,7 +38,7 @@ var keywordSuggestionRedditTemplates = []Template{
 }
 
 var postCreateTemplates = []Template{
-	{path: "post_generation.system.gotmpl", promptType: PromptTypeSYSTEM, promptFeature: PromptFeatureTEXTONLY},
+	{path: "post_generation.prompt.gotmpl", promptType: PromptTypeSYSTEM, promptFeature: PromptFeatureTEXTONLY},
 	{path: "post_generation.schema.gotmpl", promptType: PromptTypeRESPONSESCHEMA, promptFeature: PromptFeatureBOTH},
 	{path: "post_generation.human.gotmpl", promptType: PromptTypeHUMAN, promptFeature: PromptFeatureBOTH},
 }

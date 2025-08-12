@@ -104,3 +104,5 @@ type User struct {
 	HasVerifiedEmail bool    `json:"has_verified_email"`
 	// Add other relevant user-related fields
 }
+
+const DummyFlair = "FLAIR_NOT_SPECIFIED"

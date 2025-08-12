@@ -86,9 +86,9 @@ export default function Posts() {
             day: "numeric",
             hour: "2-digit",
             minute: "2-digit",
-            hour12: false,
+            hour12: true,
             // Removed timeZone: "UTC" to use local time
-        });
+        }).replace(/am|pm/, (match) => match.toUpperCase());;
     };
 
 
