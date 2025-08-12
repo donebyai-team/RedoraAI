@@ -82,6 +82,7 @@ func (r redditInteractions) ProcessScheduledPost(ctx context.Context, post *mode
 		config := client.GetConfig()
 
 		subredditName := utils.CleanSubredditName(source.Name)
+		err = client.JoinSubreddit(ctx, subredditName)
 		if err != nil && !strings.Contains(err.Error(), "403") {
 			post.Status = models.PostStatusFAILED
 			post.Reason = fmt.Sprintf("Reason: failed to join subreddit %v", err)
