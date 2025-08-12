@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/shank318/doota/agents/redora"
 	"github.com/shank318/doota/agents/redora/interactions"
@@ -243,10 +244,10 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 	//	deps.DataStore.UpdateOrganization(context.Background(), org)
 	//}
 
-	//andType, err := deps.DataStore.GetIntegrationById(context.Background(), "649fd5e3-c2a1-4e2b-a753-630ef4d2f315")
-	//if err != nil {
-	//	return nil, err
-	//}
+	andType, err := deps.DataStore.GetIntegrationById(context.Background(), "649fd5e3-c2a1-4e2b-a753-630ef4d2f315")
+	if err != nil {
+		return nil, err
+	}
 	//_, err = steelBrowserClient.SendDM(context.Background(), interactions.DMParams{
 	//	To:         "t2_1otowi6mq2",
 	//	Message:    "hello",
@@ -257,6 +258,13 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 	//if err != nil {
 	//	return nil, err
 	//}
+
+	err = steelBrowserClient.DailyWarmup(context.Background(), interactions.DailyWarmParams{
+		Cookies: andType.GetRedditDMLoginConfig().Cookies,
+	})
+	if err != nil {
+		return nil, err
+	}
 
 	//updates := map[string]any{
 	//	psql.FEATURE_FLAG_DISABLE_AUTOMATED_COMMENT_PATH: false,

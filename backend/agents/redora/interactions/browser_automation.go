@@ -22,4 +22,5 @@ type BrowserAutomation interface {
 	WaitAndGetCookies(ctx context.Context, cdp *CDPInfo) (*models.RedditDMLoginConfig, error)
 	ValidateCookies(ctx context.Context, cookiesJSON string) (config *models.RedditDMLoginConfig, err error)
 	SendDM(ctx context.Context, params DMParams) (cookies []byte, err error)
+	DailyWarmup(ctx context.Context, params DailyWarmParams) error
 }

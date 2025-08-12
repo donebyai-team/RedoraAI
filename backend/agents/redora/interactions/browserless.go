@@ -89,6 +89,11 @@ type browserless struct {
 	db             datastore.Repository
 }
 
+func (r browserless) DailyWarmup(ctx goCtx.Context, params DailyWarmParams) error {
+	//TODO implement me
+	panic("implement me")
+}
+
 func NewBrowserlessClient(token string, debugFileStore dstore.Store, logger *zap.Logger) BrowserAutomation {
 	err := playwright.Install(&playwright.RunOptions{SkipInstallBrowsers: true})
 	if err != nil {

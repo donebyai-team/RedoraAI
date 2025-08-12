@@ -11,6 +11,7 @@ import (
 	"github.com/streamingfast/dstore"
 	"go.uber.org/zap"
 	"io"
+	"math/rand"
 	"net/http"
 	"strings"
 	"time"
@@ -20,6 +21,122 @@ type steelBrowser struct {
 	Token          string
 	logger         *zap.Logger
 	debugFileStore dstore.Store
+}
+
+type DailyWarmParams struct {
+	Cookies string
+}
+
+func (r steelBrowser) DailyWarmup(ctx context.Context, params DailyWarmParams) error {
+	cdp, err := r.getCDPUrl(ctx, true)
+	if err != nil {
+		return fmt.Errorf("CDP url fetch failed: %w", err)
+	}
+
+	defer func() {
+		cdp.ReleaseSession()
+	}()
+
+	pw, err := playwright.Run()
+	if err != nil {
+		return fmt.Errorf("playwright start failed: %w", err)
+	}
+	defer pw.Stop()
+
+	browser, err := pw.Chromium.ConnectOverCDP(cdp.WSEndpoint)
+	if err != nil {
+		return fmt.Errorf("CDP connection failed: %w", err)
+	}
+	defer browser.Close()
+
+	pageContext := browser.Contexts()[0]
+	page := pageContext.Pages()[0]
+
+	optionalCookies, err := ParseCookiesFromJSON(params.Cookies, false)
+	if err != nil {
+		return fmt.Errorf("cookie injection failed: %w", err)
+	}
+
+	err = pageContext.AddCookies(optionalCookies)
+	if err != nil {
+		return fmt.Errorf("cookie injection failed: %w", err)
+	}
+
+	err = r.gotoWithRetry(page, "https://www.reddit.com", 30000)
+	if err != nil {
+		return fmt.Errorf("login page navigation failed: %w", err)
+	}
+
+	// Let page load
+	time.Sleep(5 * time.Second)
+
+	// Scroll to load more posts
+	for i := 0; i < 5; i++ {
+		err := page.Keyboard().Press("PageDown")
+		if err != nil {
+			return fmt.Errorf("failed to press page down: %w", err)
+		}
+		time.Sleep(time.Duration(rand.Intn(3)+2) * time.Second)
+	}
+
+	// Locate shreddit-feed
+	feed := page.Locator("shreddit-feed")
+
+	// Get all articles inside the feed
+	articles, err := feed.Locator("article").All()
+	if err != nil {
+		return fmt.Errorf("failed to get articles: %w", err)
+	}
+	if len(articles) == 0 {
+		return fmt.Errorf("no articles found")
+	}
+
+	// Visit 4–5 random articles
+	rand.Seed(time.Now().UnixNano())
+	numVisits := rand.Intn(2) + 4 // random between 4 and 5
+
+	for i := 0; i < numVisits; i++ {
+		// Pick random article index
+		randomIndex := rand.Intn(len(articles))
+		r.logger.Info("visiting article",
+			zap.Int("index", randomIndex))
+
+		// Click it
+		if err := articles[randomIndex].Click(); err != nil {
+			return fmt.Errorf("failed to click article: %w", err)
+		}
+
+		// Wait for post page to load
+		time.Sleep(3 * time.Second)
+
+		// Scroll inside the post page for 3–6 seconds
+		scrollCount := rand.Intn(3) + 2
+		for s := 0; s < scrollCount; s++ {
+			if err := page.Keyboard().Press("PageDown"); err != nil {
+				return fmt.Errorf("failed to press page down on post: %w", err)
+			}
+			time.Sleep(time.Duration(rand.Intn(3)+2) * time.Second)
+		}
+
+		// Go back to home feed
+		if err, _ := page.GoBack(); err != nil {
+			return fmt.Errorf("failed to navigate back: %w", err)
+		}
+
+		// Let feed reload
+		time.Sleep(3 * time.Second)
+
+		// Refresh articles list after coming back
+		articles, err = feed.Locator("article").All()
+		if err != nil {
+			return fmt.Errorf("failed to refresh articles: %w", err)
+		}
+		if len(articles) == 0 {
+			return fmt.Errorf("no articles found after returning")
+		}
+	}
+
+	return nil
 }
 
 func NewSteelBrowserClient(token string, debugFileStore dstore.Store, logger *zap.Logger) BrowserAutomation {
