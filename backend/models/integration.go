@@ -30,6 +30,8 @@ func (i *Integration) GetIntegrationStatus(isOldEnough bool) string {
 	switch i.State {
 	case IntegrationStateACCOUNTSUSPENDED:
 		return "🚫 Account seem to be suspended or banned"
+	case IntegrationStateAUTHREVOKED:
+		return "🚫 Auth token has been revoked by the user"
 	case IntegrationStateAUTHEXPIRED:
 		return "🔑 Account auth is expired, please reconnect"
 	case IntegrationStateNOTESTABLISHED:

@@ -8,6 +8,7 @@ import (
 	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/errorx"
 	"github.com/shank318/doota/models"
+	"github.com/shank318/doota/notifiers/alerts"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 	"io"
@@ -17,12 +18,13 @@ import (
 )
 
 type OauthClient struct {
-	logger       *zap.Logger
-	clientID     string
-	clientSecret string
-	config       *oauth2.Config
-	db           datastore.Repository
-	httpClient   *http.Client
+	logger        *zap.Logger
+	clientID      string
+	clientSecret  string
+	config        *oauth2.Config
+	db            datastore.Repository
+	alertNotifier alerts.AlertNotifier
+	httpClient    *http.Client
 
 	mu          sync.Mutex
 	clientCache map[string]*Client // orgID -> RedditClient
@@ -42,7 +44,7 @@ func (u *userAgentTransport) RoundTrip(req *http.Request) (*http.Response, error
 	return u.base.RoundTrip(req)
 }
 
-func NewRedditOauthClient(logger *zap.Logger, db datastore.Repository, clientID, clientSecret, redirectURL string) *OauthClient {
+func NewRedditOauthClient(logger *zap.Logger, alertNotifier alerts.AlertNotifier, db datastore.Repository, clientID, clientSecret, redirectURL string) *OauthClient {
 	config := &oauth2.Config{
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
@@ -62,13 +64,14 @@ func NewRedditOauthClient(logger *zap.Logger, db datastore.Repository, clientID,
 	}
 
 	oauthClient := &OauthClient{
-		clientID:     clientID,
-		clientSecret: clientSecret,
-		config:       config,
-		logger:       logger,
-		db:           db,
-		httpClient:   client,
-		clientCache:  make(map[string]*Client),
+		clientID:      clientID,
+		clientSecret:  clientSecret,
+		config:        config,
+		logger:        logger,
+		db:            db,
+		httpClient:    client,
+		alertNotifier: alertNotifier,
+		clientCache:   make(map[string]*Client),
 	}
 	return oauthClient
 }
@@ -318,6 +321,8 @@ func (c *OauthClient) revokeIntegration(ctx context.Context, integrationID strin
 		c.logger.Error("failed to mark integration as AUTHREVOKED", zap.Error(err))
 	}
 	c.logger.Info("integration marked as revoked", zap.String("state", state.String()), zap.String("integration_id", integrationID))
+
+	go c.alertNotifier.SendIntegrationRevoked(context.Background(), integration.OrganizationID, *integration.ReferenceID, integration.GetIntegrationStatus(true))
 	return err
 }
 

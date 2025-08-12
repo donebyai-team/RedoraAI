@@ -63,6 +63,8 @@ func (p *Portal) RevokeIntegration(ctx context.Context, c *connect.Request[pbpor
 		return nil, err
 	}
 
+	go p.alertNotifier.SendIntegrationRevoked(context.Background(), integration.OrganizationID, *integration.ReferenceID, integration.GetIntegrationStatus(true))
+
 	return connect.NewResponse(&emptypb.Empty{}), nil
 }
 

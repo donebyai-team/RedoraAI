@@ -182,8 +182,6 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 
 	logger := zlog.Named("spooler")
 
-	redditOauthClient := reddit.NewRedditOauthClient(logger, deps.DataStore, sflags.MustGetString(cmd, "portal-reddit-client-id"), sflags.MustGetString(cmd, "portal-reddit-client-secret"), sflags.MustGetString(cmd, "portal-reddit-redirect-url"))
-
 	var isDev bool
 	// TODO: Hack to know the env
 	if strings.Contains(redisAddr, "localhost") {
@@ -196,6 +194,8 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		getBrevoIntegration(cmd, isDev),
 		deps.DataStore,
 		logger)
+
+	redditOauthClient := reddit.NewRedditOauthClient(logger, alertNotifier, deps.DataStore, sflags.MustGetString(cmd, "portal-reddit-client-id"), sflags.MustGetString(cmd, "portal-reddit-client-secret"), sflags.MustGetString(cmd, "portal-reddit-redirect-url"))
 
 	tracker := redora.NewKeywordTrackerFactory(
 		isDev,
@@ -436,7 +436,7 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		return nil, fmt.Errorf("unable to create auth usecase: %w", err)
 	}
 
-	redditOauthClient := reddit.NewRedditOauthClient(logger, deps.DataStore, sflags.MustGetString(cmd, "portal-reddit-client-id"), sflags.MustGetString(cmd, "portal-reddit-client-secret"), sflags.MustGetString(cmd, "portal-reddit-redirect-url"))
+	redditOauthClient := reddit.NewRedditOauthClient(logger, alertNotifier, deps.DataStore, sflags.MustGetString(cmd, "portal-reddit-client-id"), sflags.MustGetString(cmd, "portal-reddit-client-secret"), sflags.MustGetString(cmd, "portal-reddit-redirect-url"))
 
 	debugStore, err := dstore.NewStore(sflags.MustGetString(cmd, "common-playwright-debug-store"), "", "", true)
 	if err != nil {
