@@ -28,21 +28,24 @@ type DailyWarmParams struct {
 }
 
 func (r steelBrowser) DailyWarmup(ctx context.Context, params DailyWarmParams) error {
+	// Step 1: Get CDP URL
+	r.logger.Info("Fetching CDP URL")
 	cdp, err := r.getCDPUrl(ctx, true)
 	if err != nil {
 		return fmt.Errorf("CDP url fetch failed: %w", err)
 	}
+	defer cdp.ReleaseSession()
 
-	defer func() {
-		cdp.ReleaseSession()
-	}()
-
+	// Step 2: Start Playwright
+	r.logger.Info("Starting Playwright")
 	pw, err := playwright.Run()
 	if err != nil {
 		return fmt.Errorf("playwright start failed: %w", err)
 	}
 	defer pw.Stop()
 
+	// Step 3: Connect to browser
+	r.logger.Info("Connecting to Chromium over CDP", zap.String("wsEndpoint", cdp.WSEndpoint))
 	browser, err := pw.Chromium.ConnectOverCDP(cdp.WSEndpoint)
 	if err != nil {
 		return fmt.Errorf("CDP connection failed: %w", err)
@@ -52,90 +55,104 @@ func (r steelBrowser) DailyWarmup(ctx context.Context, params DailyWarmParams) e
 	pageContext := browser.Contexts()[0]
 	page := pageContext.Pages()[0]
 
+	// Step 4: Inject cookies
+	r.logger.Info("Injecting cookies")
 	optionalCookies, err := ParseCookiesFromJSON(params.Cookies, false)
 	if err != nil {
 		return fmt.Errorf("cookie injection failed: %w", err)
 	}
-
-	err = pageContext.AddCookies(optionalCookies)
-	if err != nil {
+	if err = pageContext.AddCookies(optionalCookies); err != nil {
 		return fmt.Errorf("cookie injection failed: %w", err)
 	}
 
-	err = r.gotoWithRetry(page, "https://www.reddit.com", 30000)
-	if err != nil {
-		return fmt.Errorf("login page navigation failed: %w", err)
+	// Step 5: Go to Reddit home
+	r.logger.Info("Navigating to Reddit home")
+	if err = r.gotoWithRetry(page, "https://www.reddit.com", 30000); err != nil {
+		return fmt.Errorf("home page navigation failed: %w", err)
 	}
 
-	// Let page load
+	// Wait for feed to load
 	time.Sleep(5 * time.Second)
+	r.logger.Info("Initial page load complete")
 
-	// Scroll to load more posts
-	for i := 0; i < 5; i++ {
-		err := page.Keyboard().Press("PageDown")
+	// Step 6: Initial scroll to load posts
+	r.logger.Info("Performing initial scroll to load more posts")
+	for i := 0; i < 1; i++ {
+		_, err = page.Evaluate(`window.scrollBy(0, 600)`)
 		if err != nil {
-			return fmt.Errorf("failed to press page down: %w", err)
+			r.logger.Error("failed to scroll", zap.Error(err))
+		} else {
+			r.logger.Info("Scrolled feed", zap.Int("scrollIteration", i+1))
 		}
 		time.Sleep(time.Duration(rand.Intn(3)+2) * time.Second)
 	}
 
-	// Locate shreddit-feed
-	feed := page.Locator("shreddit-feed")
-
-	// Get all articles inside the feed
-	articles, err := feed.Locator("article").All()
-	if err != nil {
-		return fmt.Errorf("failed to get articles: %w", err)
-	}
-	if len(articles) == 0 {
-		return fmt.Errorf("no articles found")
-	}
-
-	// Visit 4–5 random articles
+	// Step 7: Decide how many articles to visit
 	rand.Seed(time.Now().UnixNano())
-	numVisits := rand.Intn(2) + 4 // random between 4 and 5
+	numVisits := rand.Intn(2) + 4 // 4 or 5
+	r.logger.Info("Starting article visits", zap.Int("numVisits", numVisits))
 
 	for i := 0; i < numVisits; i++ {
-		// Pick random article index
-		randomIndex := rand.Intn(len(articles))
-		r.logger.Info("visiting article",
-			zap.Int("index", randomIndex))
-
-		// Click it
-		if err := articles[randomIndex].Click(); err != nil {
-			return fmt.Errorf("failed to click article: %w", err)
+		// Refresh article list
+		r.logger.Info("Fetching latest articles", zap.Int("visit", i+1))
+		feed := page.Locator("shreddit-feed")
+		articles, err := feed.Locator("article").All()
+		if err != nil {
+			return fmt.Errorf("failed to get articles: %w", err)
+		}
+		if len(articles) == 0 {
+			return fmt.Errorf("no articles found")
 		}
 
-		// Wait for post page to load
-		time.Sleep(3 * time.Second)
+		// Pick random article
+		randomIndex := rand.Intn(len(articles))
+		r.logger.Info("Selected article", zap.Int("visit", i+1), zap.Int("index", randomIndex+1), zap.Int("totalArticles", len(articles)))
 
-		// Scroll inside the post page for 3–6 seconds
+		selectedArticle := articles[randomIndex]
+
+		// Scroll into view before clicking
+		if err := selectedArticle.ScrollIntoViewIfNeeded(); err != nil {
+			return fmt.Errorf("failed to scroll article into view: %w", err)
+		}
+		r.logger.Info("Scrolled article into view", zap.Int("visit", i+1))
+		time.Sleep(500 * time.Millisecond) // small delay for rendering
+
+		// Click article
+		if err := selectedArticle.Click(); err != nil {
+			return fmt.Errorf("failed to click article: %w", err)
+		}
+		r.logger.Info("Clicked article", zap.Int("visit", i+1))
+
+		// Scroll inside post
+		time.Sleep(3 * time.Second)
 		scrollCount := rand.Intn(3) + 2
 		for s := 0; s < scrollCount; s++ {
 			if err := page.Keyboard().Press("PageDown"); err != nil {
-				return fmt.Errorf("failed to press page down on post: %w", err)
+				return fmt.Errorf("failed to scroll post: %w", err)
 			}
+			r.logger.Info("Scrolled post", zap.Int("scroll", s+1), zap.Int("totalScrolls", scrollCount))
 			time.Sleep(time.Duration(rand.Intn(3)+2) * time.Second)
 		}
 
-		// Go back to home feed
+		// Go back to feed
+		r.logger.Info("Returning to home feed", zap.Int("visit", i+1))
 		if err, _ := page.GoBack(); err != nil {
 			return fmt.Errorf("failed to navigate back: %w", err)
 		}
 
-		// Let feed reload
-		time.Sleep(3 * time.Second)
+		// Wait for feed to reappear
+		if _, err := page.WaitForSelector("shreddit-feed", playwright.PageWaitForSelectorOptions{
+			Timeout: playwright.Float(10000),
+		}); err != nil {
+			return fmt.Errorf("feed not found after going back: %w", err)
+		}
+		r.logger.Info("Feed reloaded", zap.Int("visit", i+1))
 
-		// Refresh articles list after coming back
-		articles, err = feed.Locator("article").All()
-		if err != nil {
-			return fmt.Errorf("failed to refresh articles: %w", err)
-		}
-		if len(articles) == 0 {
-			return fmt.Errorf("no articles found after returning")
-		}
+		// Small delay before next article
+		time.Sleep(time.Duration(rand.Intn(3)+2) * time.Second)
 	}
 
+	r.logger.Info("Daily warmup complete")
 	return nil
 }
 
@@ -183,7 +200,7 @@ func (r steelBrowser) getCDPUrl(ctx context.Context, useProxy bool) (*CDPInfo, e
 		r.logger.Info("creating steel browser session", zap.Int("attempt", attempt+1))
 
 		payload := CreateSession{
-			SolveCaptcha: false,
+			SolveCaptcha: true,
 			UseProxy:     useProxy,
 			Timeout:      3 * 60 * 1000, // 3 minutes in ms
 		}
