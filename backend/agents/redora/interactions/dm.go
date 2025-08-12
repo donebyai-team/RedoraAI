@@ -126,10 +126,10 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 		//	return nil
 		//}
 
-		err = r.db.SetLeadInteractionStatusProcessing(ctx, interaction.ID)
-		if err != nil {
-			return err
-		}
+		//err = r.db.SetLeadInteractionStatusProcessing(ctx, interaction.ID)
+		//if err != nil {
+		//	return err
+		//}
 
 		updatedCookies, err := r.browserLessClient.SendDM(ctx, DMParams{
 			ID:     interaction.ID,

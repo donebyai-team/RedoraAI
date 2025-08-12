@@ -196,10 +196,10 @@ func (r redditInteractions) SendComment(ctx context.Context, interaction *models
 	err = r.redditOauthClient.WithRotatingAPIClient(ctx, interaction.Organization.ID, func(client *reddit.Client) error {
 		interaction.From = client.GetConfig().Name
 
-		err = r.db.SetLeadInteractionStatusProcessing(ctx, interaction.ID)
-		if err != nil {
-			return err
-		}
+		//err = r.db.SetLeadInteractionStatusProcessing(ctx, interaction.ID)
+		//if err != nil {
+		//	return err
+		//}
 
 		subRedditName := utils.CleanSubredditName(redditLead.LeadMetadata.SubRedditPrefixed)
 		if err = client.JoinSubreddit(ctx, subRedditName); err != nil {
