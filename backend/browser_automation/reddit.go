@@ -35,6 +35,10 @@ type RedditBrowserAutomation struct {
 }
 
 func NewRedditBrowserAutomation(provider BrowserAutomationProvider, logger *zap.Logger, debugFileStore dstore.Store) *RedditBrowserAutomation {
+	err := playwright.Install(&playwright.RunOptions{SkipInstallBrowsers: true})
+	if err != nil {
+		logger.Warn("failed to install playwright", zap.Error(err))
+	}
 	return &RedditBrowserAutomation{provider: provider, logger: logger, debugFileStore: debugFileStore}
 }
 
