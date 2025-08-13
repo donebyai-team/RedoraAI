@@ -283,21 +283,35 @@ export function RedditAccountsList() {
 
 
   const getIntegrationBadge = (integration?: Integration) => {
+    const baseClass =
+      "flex items-center gap-1 border-green-200 bg-green-50 text-green-700";
+
     if (!integration) {
-      return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 flex items-center gap-1">
-        <Cookie className="h-3 w-3" />
-        Connect Cookies
-      </Badge>
+      return (
+        <Badge variant="outline" className={baseClass}>
+          <Cookie className="h-3 w-3" />
+          Connect Cookies
+        </Badge>
+      );
     }
 
-    if (integration.status == IntegrationState.ACTIVE) {
+    if (integration.status === IntegrationState.ACTIVE) {
       return (
-        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 flex items-center gap-1">
+        <Badge variant="outline" className={baseClass}>
           Connected
         </Badge>
       );
     }
-  }
+
+    // For inactive integrations
+    return (
+      <Badge variant="outline" className={baseClass}>
+        <Cookie className="h-3 w-3" />
+        Reconnect
+      </Badge>
+    );
+  };
+
 
   if (loading) {
     return <FallbackSpinner />
