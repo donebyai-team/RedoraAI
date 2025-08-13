@@ -51,7 +51,7 @@ export default function Page() {
 
     handleCallback().catch((err) => {
       toast.error(getConnectError(err));
-      router.push(routes.new.dashboard);
+      router.push(routes.new.integrations);
     });
 
 

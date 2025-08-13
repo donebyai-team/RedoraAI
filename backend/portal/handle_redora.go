@@ -560,12 +560,27 @@ func (p *Portal) UpdateAutomationSettings(ctx context.Context, c *connect.Reques
 	}
 
 	if c.Msg.Dm != nil {
-		//if c.Msg.Dm.RelevancyScore < 70 {
-		//	return nil, status.New(codes.InvalidArgument, "relevancy score should be at least 70").Err()
-		//}
-		org.FeatureFlags.MaxCommentsPerDay = c.Msg.Dm.MaxPerDay
+		if c.Msg.Dm.Enabled {
+			integrations, err := p.redditOauthClient.GetActiveIntegrations(ctx, actor.OrganizationID, models.IntegrationTypeREDDITDMLOGIN)
+			if err != nil {
+				return nil, err
+			}
+
+			if len(integrations) == 0 {
+				return nil, status.New(codes.InvalidArgument, "Please connect your reddit account cookies to enable automated DMs").Err()
+			}
+
+			maxAllowedDMsPerDay := org.FeatureFlags.GetSubscriptionPlanMetadata().DMs.PerDay
+
+			if c.Msg.Dm.MaxPerDay > maxAllowedDMsPerDay {
+				return nil, status.New(codes.InvalidArgument, fmt.Sprintf("max %d automated DMs allows as per the subscribed plan", maxAllowedDMsPerDay)).Err()
+			}
+
+			// If 0 is given, we default to the max allowed
+			org.FeatureFlags.MaxDMsPerDay = c.Msg.Dm.MaxPerDay
+			org.FeatureFlags.RelevancyScoreDM = float64(c.Msg.Dm.RelevancyScore)
+		}
 		org.FeatureFlags.EnableAutoDM = c.Msg.Dm.Enabled
-		org.FeatureFlags.RelevancyScoreDM = float64(c.Msg.Dm.RelevancyScore)
 	}
 
 	if c.Msg.NotificationSettings != nil {

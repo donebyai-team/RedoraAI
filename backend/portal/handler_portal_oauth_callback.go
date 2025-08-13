@@ -16,7 +16,7 @@ import (
 
 type IntegrationHandler func(ctx context.Context, p *Portal, code string, organizationID string, oauthState *state.State) error
 
-var integrations = map[pbportal.IntegrationType]IntegrationHandler{
+var integrationsMap = map[pbportal.IntegrationType]IntegrationHandler{
 	pbportal.IntegrationType_INTEGRATION_TYPE_REDDIT: handleRedditOauth,
 }
 
@@ -48,7 +48,7 @@ func (p *Portal) OauthCallback(ctx context.Context, c *connect.Request[pbportal.
 		return nil, fmt.Errorf("error validating state: %w", err)
 	}
 
-	handler, ok := integrations[authState.IntegrationType]
+	handler, ok := integrationsMap[authState.IntegrationType]
 	if !ok {
 		return nil, fmt.Errorf("unknown %s handler: %w", authState.IntegrationType.String(), err)
 	}
