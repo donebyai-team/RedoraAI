@@ -2,12 +2,12 @@ package interactions
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/shank318/doota/integrations/reddit"
 	"github.com/shank318/doota/models"
 	"github.com/shank318/doota/utils"
 	"go.uber.org/zap"
-	"strings"
 )
 
 func (r redditInteractions) ProcessScheduledPost(ctx context.Context, post *models.Post) (err error) {
@@ -45,7 +45,7 @@ func (r redditInteractions) ProcessScheduledPost(ctx context.Context, post *mode
 
 		subredditName := utils.CleanSubredditName(source.Name)
 		err = client.JoinSubreddit(ctx, subredditName)
-		if err != nil && !strings.Contains(err.Error(), "403") {
+		if err != nil && !errors.Is(err, reddit.ErrForbidden) {
 			post.Status = models.PostStatusFAILED
 			post.Reason = fmt.Sprintf("Reason: failed to join subreddit %v", err)
 			return err
