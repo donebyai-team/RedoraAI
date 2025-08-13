@@ -4,20 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/shank318/doota/browser_automation"
 	"github.com/shank318/doota/integrations/reddit"
 	"github.com/shank318/doota/models"
 	"github.com/shank318/doota/utils"
 	"go.uber.org/zap"
 	"strings"
 )
-
-type DMParams struct {
-	ID         string
-	Cookie     string // json array
-	To         string
-	ToUsername string
-	Message    string
-}
 
 const disabledReasonAccNotEstablished = "Your Reddit account hasn't met Reddit's requirements for sending direct messages, which typically include email verification and a history of positive contributions."
 
@@ -133,7 +126,7 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 		//	return err
 		//}
 
-		updatedCookies, err := r.browserClient.SendDM(ctx, DMParams{
+		updatedCookies, err := r.redditBrowserAutomation.SendDM(ctx, browser_automation.DMParams{
 			ID:     interaction.ID,
 			Cookie: config.Cookies,
 			//To:         fmt.Sprintf("t2_%s", user.ID),
@@ -191,7 +184,7 @@ type loginCallback func() error
 func (r redditInteractions) Authenticate(ctx context.Context, orgID string, cookieJSON string) (string, loginCallback, error) {
 	// Handle direct cookie login
 	if cookieJSON != "" {
-		updatedLoginConfig, err := r.browserClient.ValidateCookies(ctx, cookieJSON)
+		updatedLoginConfig, err := r.redditBrowserAutomation.ValidateCookies(ctx, cookieJSON)
 		if err != nil {
 			return "", nil, err
 		}
@@ -205,13 +198,13 @@ func (r redditInteractions) Authenticate(ctx context.Context, orgID string, cook
 	}
 
 	// Handle login via browser automation
-	cdp, err := r.browserClient.StartLogin(ctx)
+	cdp, err := r.redditBrowserAutomation.StartLogin(ctx)
 	if err != nil {
 		return "", nil, err
 	}
 
 	return cdp.LiveURL, func() error {
-		updatedLoginConfig, err := r.browserClient.WaitAndGetCookies(ctx, cdp)
+		updatedLoginConfig, err := r.redditBrowserAutomation.WaitAndGetCookies(ctx, cdp)
 		if err != nil {
 			return err
 		}

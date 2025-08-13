@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/shank318/doota/browser_automation"
 	"math/rand"
 	"strings"
 	"time"
@@ -29,19 +30,30 @@ type AutomatedInteractions interface {
 }
 
 type redditInteractions struct {
-	db                datastore.Repository
-	alertNotifier     alerts.AlertNotifier
-	browserClient     BrowserAutomation
-	redditOauthClient *reddit.OauthClient
-	logger            *zap.Logger
+	db                      datastore.Repository
+	alertNotifier           alerts.AlertNotifier
+	redditBrowserAutomation *browser_automation.RedditBrowserAutomation
+	redditOauthClient       *reddit.OauthClient
+	logger                  *zap.Logger
 }
 
 func (r redditInteractions) GetInteractions(ctx context.Context, projectID string, status models.LeadInteractionStatus, dateRange pbportal.DateRangeFilter) ([]*models.LeadInteraction, error) {
 	return r.db.GetLeadInteractions(ctx, projectID, status, dateRange)
 }
 
-func NewRedditInteractions(db datastore.Repository, alertNotifier alerts.AlertNotifier, browserClient BrowserAutomation, redditOauthClient *reddit.OauthClient, logger *zap.Logger) AutomatedInteractions {
-	return &redditInteractions{alertNotifier: alertNotifier, redditOauthClient: redditOauthClient, browserClient: browserClient, db: db, logger: logger}
+func NewRedditInteractions(
+	db datastore.Repository,
+	alertNotifier alerts.AlertNotifier,
+	redditBrowserAutomation *browser_automation.RedditBrowserAutomation,
+	redditOauthClient *reddit.OauthClient,
+	logger *zap.Logger) AutomatedInteractions {
+	return &redditInteractions{
+		alertNotifier:           alertNotifier,
+		redditOauthClient:       redditOauthClient,
+		redditBrowserAutomation: redditBrowserAutomation,
+		db:                      db,
+		logger:                  logger,
+	}
 }
 
 func NewSimpleRedditInteractions(db datastore.Repository, logger *zap.Logger) AutomatedInteractions {

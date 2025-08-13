@@ -3,8 +3,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/shank318/doota/agents/redora/interactions"
 	"github.com/shank318/doota/app"
+	"github.com/shank318/doota/browser_automation"
 	"github.com/shank318/doota/models"
 	"github.com/spf13/cobra"
 	. "github.com/streamingfast/cli"
@@ -164,7 +164,7 @@ func toolsCreateIntegrationRedditLogin(cmd *cobra.Command, args []string) error 
 	out.Password = gjson.Get(args[1], "password").String()
 	out.Cookies = gjson.Get(args[1], "cookies").String()
 
-	_, err = interactions.ParseCookiesFromJSON(out.Cookies, true)
+	_, err = browser_automation.ParseCookiesFromJSON(out.Cookies, true)
 	if err != nil {
 		return fmt.Errorf("unable to parse cookies: %w", err)
 	}

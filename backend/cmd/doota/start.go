@@ -1,8 +1,8 @@
 package main
 
 import (
-	"context"
 	"fmt"
+	"github.com/shank318/doota/browser_automation"
 	"os"
 	"regexp"
 	"strings"
@@ -214,9 +214,10 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		return nil, fmt.Errorf("unable to create debug store: %w", err)
 	}
 
-	//browserLessClient := interactions.NewBrowserlessClient(sflags.MustGetString(cmd, "common-browserless-api-key"), debugStore, logger)
-	steelBrowserClient := interactions.NewSteelBrowserClient(sflags.MustGetString(cmd, "common-steel-api-key"), debugStore, logger)
-	interactionService := interactions.NewRedditInteractions(deps.DataStore, alertNotifier, steelBrowserClient, redditOauthClient, logger)
+	browserLessClient := browser_automation.NewBrowserLessBrowser(sflags.MustGetString(cmd, "common-browserless-api-key"), logger)
+	//steelBrowserClient := browser_automation.NewSteelBrowser(sflags.MustGetString(cmd, "common-steel-api-key"), logger)
+	redditBrowserAutomation := browser_automation.NewRedditBrowserAutomation(browserLessClient, logger, debugStore)
+	interactionService := interactions.NewRedditInteractions(deps.DataStore, alertNotifier, redditBrowserAutomation, redditOauthClient, logger)
 
 	//interaction, err := deps.DataStore.GetLeadInteractionByID(context.Background(), "b71b1f6b-ed17-4761-98c2-2229ba305f99")
 	//if err != nil {
@@ -245,27 +246,27 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 	//	deps.DataStore.UpdateOrganization(context.Background(), org)
 	//}
 
-	andType, err := deps.DataStore.GetIntegrationById(context.Background(), "649fd5e3-c2a1-4e2b-a753-630ef4d2f315")
-	if err != nil {
-		return nil, err
-	}
-	//_, err = steelBrowserClient.SendDM(context.Background(), interactions.DMParams{
-	//	To:         "t2_1otowi6mq2",
-	//	Message:    "hello",
-	//	ID:         "unique_id",
-	//	ToUsername: "Clean-Sport-4436",
-	//	Cookie:     andType.GetRedditDMLoginConfig().Cookies,
+	//andType, err := deps.DataStore.GetIntegrationById(context.Background(), "649fd5e3-c2a1-4e2b-a753-630ef4d2f315")
+	//if err != nil {
+	//	return nil, err
+	//}
+	////_, err = steelBrowserClient.SendDM(context.Background(), interactions.DMParams{
+	////	To:         "t2_1otowi6mq2",
+	////	Message:    "hello",
+	////	ID:         "unique_id",
+	////	ToUsername: "Clean-Sport-4436",
+	////	Cookie:     andType.GetRedditDMLoginConfig().Cookies,
+	////})
+	////if err != nil {
+	////	return nil, err
+	////}
+	//
+	//err = redditBrowserAutomation.DailyWarmup(context.Background(), browser_automation.DailyWarmParams{
+	//	Cookies: andType.GetRedditDMLoginConfig().Cookies,
 	//})
 	//if err != nil {
 	//	return nil, err
 	//}
-
-	err = steelBrowserClient.DailyWarmup(context.Background(), interactions.DailyWarmParams{
-		Cookies: andType.GetRedditDMLoginConfig().Cookies,
-	})
-	if err != nil {
-		return nil, err
-	}
 
 	//updates := map[string]any{
 	//	psql.FEATURE_FLAG_DISABLE_AUTOMATED_COMMENT_PATH: false,
@@ -454,9 +455,11 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		return nil, fmt.Errorf("unable to create debug store: %w", err)
 	}
 
-	//browserLessClient := interactions.NewBrowserlessClient(sflags.MustGetString(cmd, "common-browserless-api-key"), debugStore, logger)
-	steelBrowserClient := interactions.NewSteelBrowserClient(sflags.MustGetString(cmd, "common-steel-api-key"), debugStore, logger)
-	interactionService := interactions.NewRedditInteractions(deps.DataStore, alertNotifier, steelBrowserClient, redditOauthClient, logger)
+	browserLessClient := browser_automation.NewBrowserLessBrowser(sflags.MustGetString(cmd, "common-browserless-api-key"), logger)
+	//steelBrowserClient := browser_automation.NewSteelBrowser(sflags.MustGetString(cmd, "common-steel-api-key"), logger)
+	redditBrowserAutomation := browser_automation.NewRedditBrowserAutomation(browserLessClient, logger, debugStore)
+
+	interactionService := interactions.NewRedditInteractions(deps.DataStore, alertNotifier, redditBrowserAutomation, redditOauthClient, logger)
 
 	dodoPaymentToken := sflags.MustGetString(cmd, "common-dodopayment-api-key")
 	dodoSubscriptionService := services.NewDodoSubscriptionService(deps.DataStore, alertNotifier, dodoPaymentToken, logger, isDev)

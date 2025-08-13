@@ -1,108 +1,44 @@
-package interactions
+package browser_automation
 
 import (
 	"bytes"
-	goCtx "context"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/playwright-community/playwright-go"
-	"github.com/shank318/doota/datastore"
 	"github.com/shank318/doota/models"
 	"github.com/streamingfast/dstore"
 	"go.uber.org/zap"
-	"golang.org/x/net/context"
-	"io"
-	"net/http"
+	"math/rand"
 	"strings"
 	"time"
 )
 
-var cookiesTest = `[]`
-
-type CookieFromJSON struct {
-	Name           string   `json:"name"`
-	Value          string   `json:"value"`
-	Domain         *string  `json:"domain"`
-	Path           *string  `json:"path"`
-	URL            *string  `json:"url"`
-	ExpirationDate *float64 `json:"expirationDate"`
-	HttpOnly       *bool    `json:"httpOnly"`
-	Secure         *bool    `json:"secure"`
-	SameSite       *string  `json:"sameSite"`
+type DMParams struct {
+	ID         string
+	Cookie     string // json array
+	To         string
+	ToUsername string
+	Message    string
 }
 
-func ParseCookiesFromJSON(jsonStr string, isUserProvidedCookies bool) ([]playwright.OptionalCookie, error) {
-	var rawCookies []playwright.OptionalCookie
-	if err := json.Unmarshal([]byte(jsonStr), &rawCookies); err != nil {
-		return nil, fmt.Errorf("failed to parse cookie JSON: %w", err)
-	}
-
-	if len(rawCookies) == 0 {
-		return nil, fmt.Errorf("no cookies found in JSON")
-	}
-
-	if !isUserProvidedCookies {
-		return rawCookies, nil
-	}
-
-	var cookies []playwright.OptionalCookie
-	for _, rc := range rawCookies {
-		cookie := playwright.OptionalCookie{
-			Name:     rc.Name,
-			Value:    rc.Value,
-			Domain:   rc.Domain,
-			Path:     rc.Path,
-			URL:      rc.URL,
-			HttpOnly: rc.HttpOnly,
-			Secure:   rc.Secure,
-		}
-
-		if rc.Expires != nil {
-			cookie.Expires = rc.Expires
-		}
-
-		if rc.SameSite != nil {
-			switch *rc.SameSite {
-			case "strict":
-				s := playwright.SameSiteAttributeStrict
-				cookie.SameSite = s
-			case "lax":
-				s := playwright.SameSiteAttributeLax
-				cookie.SameSite = s
-			case "no_restriction", "none":
-				s := playwright.SameSiteAttributeNone
-				cookie.SameSite = s
-			}
-		}
-
-		cookies = append(cookies, cookie)
-	}
-
-	return cookies, nil
+type DailyWarmParams struct {
+	ID      string
+	Cookies string
 }
 
-type browserless struct {
-	Token          string
+type RedditBrowserAutomation struct {
+	provider       BrowserAutomationProvider
 	logger         *zap.Logger
 	debugFileStore dstore.Store
-	db             datastore.Repository
 }
 
-func (r browserless) DailyWarmup(ctx goCtx.Context, params DailyWarmParams) error {
-	//TODO implement me
-	panic("implement me")
+func NewRedditBrowserAutomation(provider BrowserAutomationProvider, logger *zap.Logger, debugFileStore dstore.Store) *RedditBrowserAutomation {
+	return &RedditBrowserAutomation{provider: provider, logger: logger, debugFileStore: debugFileStore}
 }
 
-func NewBrowserlessClient(token string, debugFileStore dstore.Store, logger *zap.Logger) BrowserAutomation {
-	err := playwright.Install(&playwright.RunOptions{SkipInstallBrowsers: true})
-	if err != nil {
-		logger.Warn("failed to install playwright", zap.Error(err))
-	}
-	return &browserless{Token: token, logger: logger, debugFileStore: debugFileStore}
-}
-
-func (r browserless) ValidateCookies(ctx context.Context, cookiesJSON string) (config *models.RedditDMLoginConfig, err error) {
+func (r RedditBrowserAutomation) ValidateCookies(ctx context.Context, cookiesJSON string) (config *models.RedditDMLoginConfig, err error) {
 	optionalCookies, err := ParseCookiesFromJSON(cookiesJSON, true)
 	if err != nil {
 		return nil, fmt.Errorf("cookie injection failed: %w", err)
@@ -114,10 +50,24 @@ func (r browserless) ValidateCookies(ctx context.Context, cookiesJSON string) (c
 	}
 	defer pw.Stop()
 
-	info, err := r.getCDPUrl(ctx, chatURL, false, true)
+	info, err := r.provider.GetCDPInfo(ctx, CDPInput{
+		StartURL: chatURL,
+		UseProxy: true,
+		LiveURL:  false,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("CDP url fetch failed: %w", err)
 	}
+
+	defer func() {
+		if info.ReleaseSession != nil {
+			err = info.ReleaseSession()
+			if err != nil {
+				r.logger.Error("failed to release session", zap.Error(err))
+				return
+			}
+		}
+	}()
 
 	browser, err := pw.Chromium.ConnectOverCDP(info.WSEndpoint)
 	if err != nil {
@@ -133,7 +83,6 @@ func (r browserless) ValidateCookies(ctx context.Context, cookiesJSON string) (c
 		return nil, fmt.Errorf("cookie injection failed: %w", err)
 	}
 
-	chatURL := "https://chat.reddit.com/"
 	if _, err = page.Goto(chatURL, playwright.PageGotoOptions{Timeout: playwright.Float(10000)}); err != nil {
 		return nil, fmt.Errorf("chat page navigation failed: %w", err)
 	}
@@ -182,17 +131,32 @@ func (r browserless) ValidateCookies(ctx context.Context, cookiesJSON string) (c
 	return config, nil
 }
 
-func (r browserless) SendDM(ctx context.Context, params DMParams) (cookies []byte, err error) {
+func (r RedditBrowserAutomation) SendDM(ctx context.Context, params DMParams) (cookies []byte, err error) {
+	logger := r.logger.With(zap.String("interaction_id", params.ID))
 	pw, err := playwright.Run()
 	if err != nil {
 		return nil, fmt.Errorf("playwright start failed: %w", err)
 	}
 	defer pw.Stop()
 
-	info, err := r.getCDPUrl(ctx, chatURL, false, true)
+	info, err := r.provider.GetCDPInfo(ctx, CDPInput{
+		StartURL: chatURL,
+		UseProxy: true,
+		LiveURL:  false,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("CDP url fetch failed: %w", err)
 	}
+
+	defer func() {
+		if info.ReleaseSession != nil {
+			err = info.ReleaseSession()
+			if err != nil {
+				logger.Error("failed to release session", zap.Error(err))
+				return
+			}
+		}
+	}()
 
 	browser, err := pw.Chromium.ConnectOverCDP(info.WSEndpoint)
 	if err != nil {
@@ -203,17 +167,6 @@ func (r browserless) SendDM(ctx context.Context, params DMParams) (cookies []byt
 	pageContext := browser.Contexts()[0]
 	page := pageContext.Pages()[0]
 
-	//pageContext, err := browser.NewContext(playwright.BrowserNewContextOptions{})
-	//if err != nil {
-	//	return fmt.Errorf("context creation failed: %w", err)
-	//}
-	//
-	//page, err := pageContext.NewPage()
-	//if err != nil {
-	//	_ = pageContext.Close() // clean up context if page creation fails
-	//	return fmt.Errorf("page creation failed: %w", err)
-	//}
-
 	// Defer cleanup and video save after context is closed
 	defer func() {
 		if err != nil {
@@ -222,29 +175,22 @@ func (r browserless) SendDM(ctx context.Context, params DMParams) (cookies []byt
 	}()
 
 	// cookie flow
-	if params.Cookie != "" {
-		optionalCookies, err := ParseCookiesFromJSON(params.Cookie, false)
-		if err != nil {
-			return nil, fmt.Errorf("cookie injection failed: %w", err)
-		}
+	optionalCookies, err := ParseCookiesFromJSON(params.Cookie, false)
+	if err != nil {
+		return nil, fmt.Errorf("cookie injection failed: %w", err)
+	}
 
-		err = pageContext.AddCookies(optionalCookies)
-		if err != nil {
-			return nil, fmt.Errorf("cookie injection failed: %w", err)
-		}
-	} else {
-		// Login flow
-		//if err = r.tryLogin(page, params); err != nil {
-		//	return err
-		//}
+	err = pageContext.AddCookies(optionalCookies)
+	if err != nil {
+		return nil, fmt.Errorf("cookie injection failed: %w", err)
 	}
 
 	// Navigate to chat page
-	chatURL := "https://chat.reddit.com/user/" + params.To
+	chatPageURL := "https://chat.reddit.com/user/" + params.To
 	if params.ToUsername != "" {
-		chatURL = "https://www.reddit.com/user/" + params.ToUsername + "/"
+		chatPageURL = "https://www.reddit.com/user/" + params.ToUsername + "/"
 	}
-	if _, err = page.Goto(chatURL, playwright.PageGotoOptions{Timeout: playwright.Float(10000)}); err != nil {
+	if _, err = page.Goto(chatPageURL, playwright.PageGotoOptions{Timeout: playwright.Float(10000)}); err != nil {
 		return nil, fmt.Errorf("chat page navigation failed: %w", err)
 	}
 
@@ -254,8 +200,8 @@ func (r browserless) SendDM(ctx context.Context, params DMParams) (cookies []byt
 	// verify if logged in
 	currentURL := page.URL()
 
-	r.logger.Info("sending DM page",
-		zap.String("chat_url", chatURL),
+	logger.Info("sending DM page",
+		zap.String("chat_url", chatPageURL),
 		zap.String("current_url", currentURL))
 
 	if strings.Contains(currentURL, "/login") {
@@ -264,7 +210,7 @@ func (r browserless) SendDM(ctx context.Context, params DMParams) (cookies []byt
 
 	_, err = page.Reload()
 	if err != nil {
-		r.logger.Warn("failed to reload page", zap.Error(err))
+		logger.Warn("failed to reload page", zap.Error(err))
 	}
 
 	// Screenshot after chat page load (optional)
@@ -284,11 +230,11 @@ func (r browserless) SendDM(ctx context.Context, params DMParams) (cookies []byt
 		Timeout: playwright.Float(5000), // Optional: Custom timeout for this action
 	})
 	if err != nil {
-		r.logger.Error("failed to get display name", zap.Error(err))
+		logger.Error("failed to get display name", zap.Error(err))
 	}
 
 	if displayName != "" {
-		r.logger.Error("logged in as user", zap.String("display_name", displayName))
+		logger.Error("logged in as user", zap.String("display_name", displayName))
 	}
 
 	if strings.Contains(currentURL, "www.reddit.com/user") {
@@ -306,7 +252,7 @@ func (r browserless) SendDM(ctx context.Context, params DMParams) (cookies []byt
 				Timeout: playwright.Float(3000), // short timeout for optional close
 			})
 			if err != nil {
-				r.logger.Error("error clicking close chat button", zap.Error(err), zap.String("display_name", displayName))
+				logger.Error("error clicking close chat button", zap.Error(err), zap.String("display_name", displayName))
 			}
 		}
 
@@ -316,7 +262,7 @@ func (r browserless) SendDM(ctx context.Context, params DMParams) (cookies []byt
 		})
 
 		if err != nil {
-			r.logger.Error("error clicking open chat button", zap.Error(err), zap.String("display_name", displayName))
+			logger.Error("error clicking open chat button", zap.Error(err), zap.String("display_name", displayName))
 			return nil, fmt.Errorf("unable to start chat: chat options might be disabled by the user")
 		}
 	}
@@ -339,7 +285,7 @@ func (r browserless) SendDM(ctx context.Context, params DMParams) (cookies []byt
 		})
 		if err == nil {
 			found = true
-			r.logger.Info("found text area", zap.String("selector", sel))
+			logger.Info("found text area", zap.String("selector", sel))
 			break
 		}
 	}
@@ -371,7 +317,7 @@ func (r browserless) SendDM(ctx context.Context, params DMParams) (cookies []byt
 	// Check if page navigated unexpectedly
 	redirectedURL := page.URL()
 	if !strings.Contains(redirectedURL, "/user/") {
-		r.logger.Warn("Unexpected navigation after sending message",
+		logger.Warn("Unexpected navigation after sending message",
 			zap.String("interaction", params.ID),
 			zap.String("redirected_to", redirectedURL))
 	}
@@ -387,7 +333,7 @@ func (r browserless) SendDM(ctx context.Context, params DMParams) (cookies []byt
 			return nil, fmt.Errorf("%s", msg)
 		}
 
-		r.logger.Warn("Reddit chat warning (ignorable)",
+		logger.Warn("Reddit chat warning (ignorable)",
 			zap.String("interaction", params.ID),
 			zap.String("error_message", msg))
 	}
@@ -399,7 +345,7 @@ func (r browserless) SendDM(ctx context.Context, params DMParams) (cookies []byt
 		return nil, err
 	}
 
-	r.logger.Info("updated cookies",
+	logger.Info("updated cookies",
 		zap.String("interaction", params.ID),
 		zap.String("display_name", displayName),
 		zap.Int("cookies", len(updatedCookies)))
@@ -407,7 +353,7 @@ func (r browserless) SendDM(ctx context.Context, params DMParams) (cookies []byt
 	return json.Marshal(updatedCookies)
 }
 
-func (r browserless) storeScreenshot(stage, id string, page playwright.Page) {
+func (r RedditBrowserAutomation) storeScreenshot(stage, id string, page playwright.Page) {
 	filePath := fmt.Sprintf("%s_%s.png", stage, id)
 	byteData, screenShotErr := page.Screenshot(playwright.PageScreenshotOptions{
 		FullPage: playwright.Bool(true), // Optional: capture full page
@@ -416,10 +362,241 @@ func (r browserless) storeScreenshot(stage, id string, page playwright.Page) {
 		r.logger.Error("failed to take chat screenshot", zap.Error(screenShotErr))
 	} else {
 		buf := bytes.NewBuffer(byteData)
-		if errFileStore := r.debugFileStore.WriteObject(goCtx.Background(), filePath, buf); errFileStore != nil {
+		if errFileStore := r.debugFileStore.WriteObject(context.Background(), filePath, buf); errFileStore != nil {
 			r.logger.Error("failed to save chat screenshot", zap.Error(errFileStore), zap.String("output_name", filePath))
 		}
 	}
+}
+
+func (r RedditBrowserAutomation) WaitAndGetCookies(ctx context.Context, cdp *CDPInfo) (*models.RedditDMLoginConfig, error) {
+	defer func() {
+		if cdp.ReleaseSession != nil {
+			err := cdp.ReleaseSession()
+			if err != nil {
+				r.logger.Error("failed to release session", zap.Error(err))
+				return
+			}
+		}
+	}()
+
+	pw, err := playwright.Run()
+	if err != nil {
+		return nil, fmt.Errorf("playwright start failed: %w", err)
+	}
+	defer pw.Stop()
+
+	// added a hack to reconnect wait
+	time.Sleep(3 * time.Second)
+	browser, err := pw.Chromium.ConnectOverCDP(cdp.WSEndpoint)
+	if err != nil {
+		return nil, fmt.Errorf("CDP connection failed: %w", err)
+	}
+	defer browser.Close()
+
+	pageContext := browser.Contexts()[0]
+	page := pageContext.Pages()[0]
+
+	ticker := time.NewTicker(2 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return nil, fmt.Errorf("login timed out or cancelled: %w", ctx.Err())
+		case <-ticker.C:
+			currentURL := page.URL()
+			if alert, _ := page.QuerySelector("faceplate-banner[appearance='error']"); alert != nil {
+				msg, _ := alert.GetAttribute("msg")
+				if msg != "" {
+					return nil, errors.New(msg)
+				}
+			}
+
+			if (strings.HasPrefix(currentURL, "https://www.reddit.com") || strings.HasPrefix(currentURL, "https://chat.reddit.com")) &&
+				!strings.Contains(currentURL, "/login") {
+
+				displayName, err := page.Locator("rs-current-user").GetAttribute("display-name")
+				if err != nil {
+					r.logger.Error("failed to get display name, while login")
+				} else {
+					r.logger.Error("logged in as user while login", zap.String("display_name", displayName))
+				}
+
+				cookies, err := pageContext.Cookies()
+				if err != nil {
+					return nil, fmt.Errorf("failed to read cookies: %w", err)
+				}
+
+				marshal, err := json.Marshal(cookies)
+				if err != nil {
+					return nil, fmt.Errorf("failed to marshal cookies: %w", err)
+				}
+
+				if len(marshal) == 0 {
+					return nil, errors.New("no cookies found")
+				}
+
+				loginConfig := &models.RedditDMLoginConfig{
+					Username: displayName,
+					Cookies:  string(marshal),
+				}
+				return loginConfig, nil
+			}
+		}
+	}
+}
+
+func (r RedditBrowserAutomation) StartLogin(ctx context.Context) (*CDPInfo, error) {
+	cdp, err := r.provider.GetCDPInfo(ctx, CDPInput{StartURL: loginURL, UseProxy: true, LiveURL: true})
+	if err != nil {
+		return nil, err
+	}
+
+	return cdp, nil
+}
+
+func (r RedditBrowserAutomation) DailyWarmup(ctx context.Context, params DailyWarmParams) error {
+	logger := r.logger.With(zap.String("integration_id", params.ID))
+	warmupStartedAt := time.Now()
+
+	// Step 1: Get CDP URL
+	logger.Info("Fetching CDP URL")
+	cdp, err := r.provider.GetCDPInfo(ctx, CDPInput{
+		StartURL: redditHomePage,
+		UseProxy: true,
+	})
+	if err != nil {
+		return fmt.Errorf("cDP url fetch failed: %w", err)
+	}
+
+	defer func() {
+		if cdp.ReleaseSession != nil {
+			err = cdp.ReleaseSession()
+			if err != nil {
+				logger.Error("failed to release session", zap.Error(err))
+				return
+			}
+		}
+	}()
+
+	// Step 2: Start Playwright
+	logger.Info("Starting Playwright")
+	pw, err := playwright.Run()
+	if err != nil {
+		return fmt.Errorf("playwright start failed: %w", err)
+	}
+	defer pw.Stop()
+
+	// Step 3: Connect to browser
+	logger.Info("Connecting to Chromium over CDP", zap.String("wsEndpoint", cdp.WSEndpoint))
+	browser, err := pw.Chromium.ConnectOverCDP(cdp.WSEndpoint)
+	if err != nil {
+		return fmt.Errorf("CDP connection failed: %w", err)
+	}
+	defer browser.Close()
+
+	pageContext := browser.Contexts()[0]
+	page := pageContext.Pages()[0]
+
+	// Step 4: Inject cookies
+	logger.Info("Injecting cookies")
+	optionalCookies, err := ParseCookiesFromJSON(params.Cookies, false)
+	if err != nil {
+		return fmt.Errorf("cookie injection failed: %w", err)
+	}
+	if err = pageContext.AddCookies(optionalCookies); err != nil {
+		return fmt.Errorf("cookie injection failed: %w", err)
+	}
+
+	// Step 5: Go to Reddit home
+	logger.Info("Navigating to Reddit home")
+	if err = r.gotoWithRetry(page, "https://www.reddit.com", 30000); err != nil {
+		return fmt.Errorf("home page navigation failed: %w", err)
+	}
+
+	// Wait for feed to load
+	time.Sleep(5 * time.Second)
+	logger.Info("Initial page load complete")
+
+	// Step 6: Initial scroll to load posts
+	logger.Info("Performing initial scroll to load more posts")
+	for i := 0; i < 4; i++ {
+		_, err = page.Evaluate(`window.scrollBy(0, 600)`)
+		if err != nil {
+			logger.Error("failed to scroll", zap.Error(err))
+		} else {
+			logger.Info("Scrolled feed", zap.Int("scrollIteration", i+1))
+		}
+		time.Sleep(time.Duration(rand.Intn(3)+2) * time.Second)
+	}
+
+	// Step 7: Decide how many articles to visit
+	rand.Seed(time.Now().UnixNano())
+	numVisits := rand.Intn(2) + 4 // 4 or 5
+	logger.Info("Starting article visits", zap.Int("numVisits", numVisits))
+
+	for i := 0; i < numVisits; i++ {
+		// Refresh article list
+		logger.Info("Fetching latest articles", zap.Int("visit", i+1))
+		feed := page.Locator("shreddit-feed")
+		articles, err := feed.Locator("article").All()
+		if err != nil {
+			return fmt.Errorf("failed to get articles: %w", err)
+		}
+		if len(articles) == 0 {
+			return fmt.Errorf("no articles found")
+		}
+
+		// Pick random article
+		randomIndex := rand.Intn(5)
+		logger.Info("Selected article", zap.Int("visit", i+1), zap.Int("index", randomIndex+1), zap.Int("totalArticles", len(articles)))
+
+		selectedArticle := articles[randomIndex]
+
+		// Scroll into view before clicking
+		if err := selectedArticle.ScrollIntoViewIfNeeded(); err != nil {
+			return fmt.Errorf("failed to scroll article into view: %w", err)
+		}
+		logger.Info("Scrolled article into view", zap.Int("visit", i+1))
+		time.Sleep(500 * time.Millisecond) // small delay for rendering
+
+		// Click article
+		if err := selectedArticle.Click(); err != nil {
+			return fmt.Errorf("failed to click article: %w", err)
+		}
+		logger.Info("Clicked article", zap.Int("visit", i+1))
+
+		// Scroll inside post
+		time.Sleep(3 * time.Second)
+		scrollCount := rand.Intn(3) + 2
+		for s := 0; s < scrollCount; s++ {
+			if err := page.Keyboard().Press("PageDown"); err != nil {
+				return fmt.Errorf("failed to scroll post: %w", err)
+			}
+			logger.Info("Scrolled post", zap.Int("scroll", s+1), zap.Int("totalScrolls", scrollCount))
+			time.Sleep(time.Duration(rand.Intn(3)+2) * time.Second)
+		}
+
+		// Go back to feed
+		logger.Info("Returning to home feed", zap.Int("visit", i+1))
+		if err, _ := page.GoBack(); err != nil {
+			return fmt.Errorf("failed to navigate back: %w", err)
+		}
+
+		// Wait for feed to reappear
+		if _, err := page.WaitForSelector("shreddit-feed", playwright.PageWaitForSelectorOptions{
+			Timeout: playwright.Float(10000),
+		}); err != nil {
+			return fmt.Errorf("feed not found after going back: %w", err)
+		}
+		logger.Info("Feed reloaded", zap.Int("visit", i+1))
+
+		// Small delay before next article
+		time.Sleep(time.Duration(rand.Intn(3)+2) * time.Second)
+	}
+
+	logger.Info("Daily warmup complete", zap.Duration("duration", time.Since(warmupStartedAt)))
+	return nil
 }
 
 //func (r browserless) CheckIfLogin(params DMParams) (err error) {
@@ -570,188 +747,30 @@ func (r browserless) storeScreenshot(stage, id string, page playwright.Page) {
 //	return strings.Join(errors, " | ")
 //}
 
-func (r browserless) WaitAndGetCookies(ctx context.Context, cdp *CDPInfo) (*models.RedditDMLoginConfig, error) {
-	pw, err := playwright.Run()
-	if err != nil {
-		return nil, fmt.Errorf("playwright start failed: %w", err)
-	}
-	defer pw.Stop()
+func (r RedditBrowserAutomation) gotoWithRetry(page playwright.Page, url string, timeout float64) error {
+	maxRetries := 2
+	var lastErr error
 
-	// added a hack to reconnect wait
-	time.Sleep(3 * time.Second)
-	browser, err := pw.Chromium.ConnectOverCDP(cdp.WSEndpoint)
-	if err != nil {
-		return nil, fmt.Errorf("CDP connection failed: %w", err)
-	}
-	defer browser.Close()
-
-	pageContext := browser.Contexts()[0]
-	page := pageContext.Pages()[0]
-
-	ticker := time.NewTicker(2 * time.Second)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ctx.Done():
-			return nil, fmt.Errorf("login timed out or cancelled: %w", ctx.Err())
-		case <-ticker.C:
-			currentURL := page.URL()
-			if alert, _ := page.QuerySelector("faceplate-banner[appearance='error']"); alert != nil {
-				msg, _ := alert.GetAttribute("msg")
-				if msg != "" {
-					return nil, errors.New(msg)
-				}
-			}
-
-			if (strings.HasPrefix(currentURL, "https://www.reddit.com") || strings.HasPrefix(currentURL, "https://chat.reddit.com")) &&
-				!strings.Contains(currentURL, "/login") {
-
-				displayName, err := page.Locator("rs-current-user").GetAttribute("display-name")
-				if err != nil {
-					r.logger.Error("failed to get display name, while login")
-				} else {
-					r.logger.Error("logged in as user while login", zap.String("display_name", displayName))
-				}
-
-				cookies, err := pageContext.Cookies()
-				if err != nil {
-					return nil, fmt.Errorf("failed to read cookies: %w", err)
-				}
-
-				marshal, err := json.Marshal(cookies)
-				if err != nil {
-					return nil, fmt.Errorf("failed to marshal cookies: %w", err)
-				}
-
-				if len(marshal) == 0 {
-					return nil, errors.New("no cookies found")
-				}
-
-				loginConfig := &models.RedditDMLoginConfig{
-					Username: displayName,
-					Cookies:  string(marshal),
-				}
-				return loginConfig, nil
-			}
+	for i := 0; i <= maxRetries; i++ {
+		r.logger.Info("navigating to url", zap.String("url", url))
+		_, err := page.Goto(url, playwright.PageGotoOptions{
+			Timeout:   playwright.Float(0),
+			WaitUntil: playwright.WaitUntilStateDomcontentloaded,
+		})
+		if err == nil {
+			return nil
 		}
-	}
-}
 
-func (r browserless) StartLogin(ctx context.Context) (*CDPInfo, error) {
-	cdp, err := r.getCDPUrl(ctx, loginURL, true, true)
-	if err != nil {
-		return nil, err
+		lastErr = err
+
+		if strings.Contains(err.Error(), "CONNECTION_FAILED") && i < maxRetries {
+			r.logger.Error(fmt.Sprintf("Tunnel connection failed, retrying... (%d/%d)", i+1, maxRetries))
+			time.Sleep(1 * time.Second) // backoff
+			continue
+		}
+
+		break
 	}
 
-	return cdp, nil
-}
-
-func (r browserless) getCDPUrl(ctx context.Context, startURL string, includeLiveURL, useProxy bool) (*CDPInfo, error) {
-	const maxRetries = 3
-	//var backoff = 100 * time.Millisecond
-
-	for attempt := 0; attempt < maxRetries; attempt++ {
-		var queryBuilder strings.Builder
-
-		queryBuilder.WriteString("mutation {")
-
-		if useProxy {
-			queryBuilder.WriteString(`
-      proxy(
-        type: [document, xhr],
-        country: US,
-        sticky: true
-      ) {
-        time
-      }`)
-		}
-
-		queryBuilder.WriteString(`
-      goto(
-        url: "` + startURL + `",
-        waitUntil: firstContentfulPaint
-      ) {
-        status
-      }`)
-
-		if includeLiveURL {
-			queryBuilder.WriteString(`
-      live: liveURL(timeout: 600000 quality: 30 type: jpeg) {
-        liveURL
-      }`)
-		}
-
-		queryBuilder.WriteString(`
-      reconnect {
-        browserWSEndpoint
-      }
-    }`)
-
-		reqBody := map[string]string{"query": queryBuilder.String()}
-		reqBytes, _ := json.Marshal(reqBody)
-
-		resp, err := http.Post(
-			fmt.Sprintf("https://production-sfo.browserless.io/chromium/bql?token=%s&humanlike=true&blockConsentModals=true", r.Token),
-			"application/json",
-			bytes.NewBuffer(reqBytes),
-		)
-		if err != nil {
-			return nil, err
-		}
-		defer resp.Body.Close()
-
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		r.logger.Info("browserless raw response", zap.ByteString("body", bodyBytes))
-
-		var result ReconnectResponse
-		if err := json.Unmarshal(bodyBytes, &result); err != nil {
-			return nil, err
-		}
-
-		// Retry logic if proxy time is 0 and we're using proxy
-		//if useProxy && result.Data.Proxy.Time == 0 {
-		//	r.logger.Warn("proxy.time is 0, retrying", zap.Int("attempt", attempt+1))
-		//	time.Sleep(backoff)
-		//	backoff *= 2
-		//	continue
-		//}
-
-		if result.Data.Reconnect.BrowserWSEndpoint == "" {
-			return nil, errors.New("empty browserWSEndpoint - CDP connection failed")
-		}
-
-		info := &CDPInfo{
-			WSEndpoint: result.Data.Reconnect.BrowserWSEndpoint,
-		}
-
-		if includeLiveURL {
-			info.LiveURL = result.Data.Live.LiveURL
-			r.logger.Info("browserless live url", zap.String("url", info.LiveURL))
-		}
-
-		return info, nil
-	}
-
-	return nil, errors.New("failed to get CDP URL after retries due to proxy.time = 0")
-}
-
-type ReconnectResponse struct {
-	Data struct {
-		Proxy struct {
-			Time int `json:"time"`
-		} `json:"proxy"`
-
-		Goto struct {
-			Status int `json:"status"`
-		}
-
-		Reconnect struct {
-			BrowserWSEndpoint string `json:"browserWSEndpoint"`
-		} `json:"reconnect"`
-
-		Live struct {
-			LiveURL string `json:"liveURL"`
-		} `json:"live"`
-	} `json:"data"`
+	return lastErr
 }
