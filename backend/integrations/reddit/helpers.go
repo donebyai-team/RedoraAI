@@ -15,6 +15,7 @@ import (
 
 var ErrNotFound = errors.New("not found")
 var ErrUnAuthorized = errors.New("unauthorized")
+var ErrForbidden = errors.New("not allowed to perform this action, check if you have the correct access")
 var AccountBanned = errors.New("your connected Reddit account either suspended or banned")
 var AllAccountBanned = errors.New("Your connected Reddit accounts either suspended or banned")
 var AllAccountNotEstablished = errors.New("Your Reddit accounts isn't established yet — it needs things like a verified email, some posting history, and a clean track record to qualify.")
@@ -97,6 +98,11 @@ func validateResponse(resp *http.Response) error {
 	if resp.StatusCode == http.StatusUnauthorized {
 		return ErrUnAuthorized
 	}
+
+	if resp.StatusCode == http.StatusForbidden {
+		return ErrForbidden
+	}
+
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}

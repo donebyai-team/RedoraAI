@@ -39,6 +39,7 @@ type AlertNotifier interface {
 	SendInteractionError(ctx context.Context, interactionID string, err error)
 	SendAutoCommentDisabledEmail(ctx context.Context, orgID string, redditUsername string, reason string)
 	SendAutoDMDisabledEmail(ctx context.Context, orgID string, redditUsername string, reason string)
+	SendIntegrationRevoked(ctx context.Context, orgID string, redditUsername string, reason string)
 	SendSubscriptionCreatedEmail(ctx context.Context, orgID string)
 	SendSubscriptionRenewedEmail(ctx context.Context, orgID string)
 	SendSubscriptionCancelledEmail(ctx context.Context, orgID string)

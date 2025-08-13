@@ -50,94 +50,106 @@ func (s *Spooler) Start(ctx context.Context) {
 
 func (s *Spooler) processInteraction(ctx context.Context, tracker *models.LeadInteraction) error {
 	logger := s.logger.With(
-		zap.String("interaction_id", tracker.ID))
+		zap.String("interaction_type", tracker.Type.String()),
+		zap.String("interaction_id", tracker.ID),
+	)
 
-	// we want only one type of interaction to be executed at once
+	// Only one interaction of the same type should run at a time per project
 	uniqueID := fmt.Sprintf("interactions:%s:type:%s", tracker.ProjectID, tracker.Type.String())
 
 	isRunning, err := s.state.IsRunning(ctx, uniqueID)
 	if err != nil {
 		return fmt.Errorf("failed to check if interaction is running: %w", err)
 	}
-
 	if isRunning {
 		logger.Debug("interaction is already in processing state")
 		return nil
 	}
 
-	// Async call to TrackKeyword
-	go func() {
-		if err := s.state.Acquire(ctx, tracker.Organization.ID, uniqueID); err != nil {
-			s.logger.Warn("could not acquire lock for keyword tracker, skipping", zap.Error(err))
-			return
-		}
-		defer func() {
-			if err := s.state.Release(ctx, uniqueID); err != nil {
-				s.logger.Error("failed to release lock on keyword tracker", zap.Error(err))
-			}
-		}()
+	// Process asynchronously
+	go s.processInteractionAsync(ctx, tracker, uniqueID, logger)
 
-		const maxRetries = 2
-		const retryDelay = 10 * time.Second
-		nonRetryableErrors := []string{
-			"Unable to invite the selected invitee", // banned
-			"Unable to show the room",               // should not happen, because of redirect
-			"suspended",
-			"banned",
-			"Direct messages may be disabled by the user",
-		}
+	return nil
+}
 
-		var lastErr error
-		for i := 0; i < maxRetries; i++ {
-			if tracker.Type == models.LeadInteractionTypeCOMMENT {
-				lastErr = s.automatedInteractions.SendComment(ctx, tracker)
-			} else if tracker.Type == models.LeadInteractionTypeDM {
-				lastErr = s.automatedInteractions.SendDM(ctx, tracker)
-			} else {
-				lastErr = fmt.Errorf("unsupported interaction type: %v", tracker.Type)
-			}
-
-			if lastErr == nil {
-				return // success
-			}
-
-			errMsg := lastErr.Error()
-			for _, nonRetry := range nonRetryableErrors {
-				if strings.Contains(errMsg, nonRetry) {
-					s.logger.Warn("non-retryable error occurred, skipping retries",
-						zap.String("interaction_type", tracker.Type.String()),
-						zap.String("reason", nonRetry),
-						zap.Error(lastErr),
-					)
-
-					if s.notifier != nil && !strings.Contains(errMsg, "suspended") {
-						s.notifier.SendInteractionError(ctx, tracker.ID, lastErr)
-					}
-					return
-				}
-			}
-
-			s.logger.Warn("interaction attempt failed, will retry in 10 seconds:",
-				zap.Int("attempt", i+1),
-				zap.String("interaction_type", tracker.Type.String()),
-				zap.Error(lastErr),
-			)
-
-			time.Sleep(retryDelay)
-		}
-
-		// Final failure after retries
-		s.logger.Error("failed to send interaction after retries",
-			zap.String("interaction_type", tracker.Type.String()),
-			zap.Error(lastErr),
-		)
-
-		if s.notifier != nil {
-			s.notifier.SendInteractionError(ctx, tracker.ID, lastErr)
+func (s *Spooler) processInteractionAsync(ctx context.Context, tracker *models.LeadInteraction, uniqueID string, logger *zap.Logger) {
+	// Acquire lock
+	if err := s.state.Acquire(ctx, tracker.Organization.ID, uniqueID); err != nil {
+		logger.Warn("could not acquire lock for keyword tracker, skipping", zap.Error(err))
+		return
+	}
+	defer func() {
+		if err := s.state.Release(ctx, uniqueID); err != nil {
+			logger.Error("failed to release lock on keyword tracker", zap.Error(err))
 		}
 	}()
 
-	return nil
+	const maxRetries = 2
+	const retryDelay = 10 * time.Second
+	nonRetryableErrors := []string{
+		"Unable to invite the selected invitee", // banned
+		"Unable to show the room",               // should not happen, because of redirect
+		"suspended",
+		"banned",
+		"not allowed to perform this action",
+		"Direct messages may be disabled by the user",
+	}
+
+	var lastErr error
+	for i := 0; i < maxRetries; i++ {
+		lastErr = s.sendInteraction(ctx, tracker)
+
+		if lastErr == nil {
+			return // Success
+		}
+
+		errMsg := lastErr.Error()
+		if reason := s.findNonRetryableReason(errMsg, nonRetryableErrors); reason != "" {
+			logger.Warn("non-retryable error occurred, skipping retries",
+				zap.String("reason", reason),
+				zap.Error(lastErr),
+			)
+			if s.notifier != nil && !strings.Contains(errMsg, "suspended") {
+				s.notifier.SendInteractionError(ctx, tracker.ID, lastErr)
+			}
+			return
+		}
+
+		logger.Warn("interaction attempt failed, will retry",
+			zap.Int("attempt", i+1),
+			zap.Duration("retry_delay", retryDelay),
+			zap.Error(lastErr),
+		)
+		time.Sleep(retryDelay)
+	}
+
+	// Final failure after retries
+	logger.Error("failed to send interaction after retries", zap.Error(lastErr))
+	if s.notifier != nil {
+		s.notifier.SendInteractionError(ctx, tracker.ID, fmt.Errorf("failed to send interaction[%s]: %w", tracker.Type.String(), lastErr))
+	}
+}
+
+// sendInteraction chooses the right method based on tracker type
+func (s *Spooler) sendInteraction(ctx context.Context, tracker *models.LeadInteraction) error {
+	switch tracker.Type {
+	case models.LeadInteractionTypeCOMMENT:
+		return s.automatedInteractions.SendComment(ctx, tracker)
+	case models.LeadInteractionTypeDM:
+		return s.automatedInteractions.SendDM(ctx, tracker)
+	default:
+		return fmt.Errorf("unsupported interaction type: %v", tracker.Type)
+	}
+}
+
+// findNonRetryableReason checks if an error message matches a known non-retryable reason
+func (s *Spooler) findNonRetryableReason(errMsg string, nonRetryableErrors []string) string {
+	for _, reason := range nonRetryableErrors {
+		if strings.Contains(errMsg, reason) {
+			return reason
+		}
+	}
+	return ""
 }
 
 func (s *Spooler) leadInteractionsToExecute(ctx context.Context) error {
@@ -163,46 +175,44 @@ func (s *Spooler) processPost(ctx context.Context, post *models.Post) error {
 
 	uniqueID := fmt.Sprintf("post:%s", post.ID)
 
+	// Check if already running
 	isRunning, err := s.state.IsRunning(ctx, uniqueID)
 	if err != nil {
 		return fmt.Errorf("failed to check if post is running: %w", err)
 	}
-
 	if isRunning {
 		logger.Debug("post is already in processing state")
 		return nil
 	}
 
-	go func() {
-		if err := s.state.Acquire(ctx, post.ProjectID, uniqueID); err != nil {
-			s.logger.Warn("could not acquire lock for post, skipping", zap.Error(err))
-			return
-		}
-		defer func() {
-			if err := s.state.Release(ctx, uniqueID); err != nil {
-				s.logger.Error("failed to release lock on post", zap.Error(err))
-			}
-		}()
-
-		err := s.automatedInteractions.ProcessScheduledPost(ctx, post)
-		if err != nil {
-			s.logger.Error("failed to send post",
-				zap.String("post_id", post.ID),
-				zap.Error(err),
-			)
-
-			// TODO: Notify about the error
-			// if s.notifier != nil {
-			//     s.notifier.SendPostError(ctx, post.ID, err)
-			// }
-
-			return
-		}
-
-		logger.Info("successfully sent post")
-	}()
+	// Process asynchronously
+	go s.processPostAsync(ctx, post, uniqueID, logger)
 
 	return nil
+}
+
+func (s *Spooler) processPostAsync(ctx context.Context, post *models.Post, uniqueID string, logger *zap.Logger) {
+	// Try to acquire lock
+	if err := s.state.Acquire(ctx, post.ProjectID, uniqueID); err != nil {
+		logger.Warn("could not acquire lock for post, skipping", zap.Error(err))
+		return
+	}
+	defer func() {
+		if err := s.state.Release(ctx, uniqueID); err != nil {
+			logger.Error("failed to release lock on post", zap.Error(err))
+		}
+	}()
+
+	// Process post
+	if err := s.automatedInteractions.ProcessScheduledPost(ctx, post); err != nil {
+		logger.Error("failed to send post", zap.Error(err))
+		if s.notifier != nil {
+			s.notifier.SendInteractionError(ctx, post.ID, fmt.Errorf("failed to send post: %w", err))
+		}
+		return
+	}
+
+	logger.Info("successfully sent post")
 }
 
 func (s *Spooler) postsToExecute(ctx context.Context) error {

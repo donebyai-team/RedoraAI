@@ -48,85 +48,15 @@ func NewSimpleRedditInteractions(db datastore.Repository, logger *zap.Logger) Au
 	return &redditInteractions{db: db, logger: logger}
 }
 
-func (r redditInteractions) ProcessScheduledPost(ctx context.Context, post *models.Post) (err error) {
-	r.logger.Info("processing scheduled post", zap.String("id", post.ID))
-
-	project, err := r.db.GetProject(ctx, post.ProjectID)
-	if err != nil {
-		r.logger.Error("failed to fetch project for post", zap.String("id", post.ID), zap.Error(err))
-		return err
-	}
-
-	source, err := r.db.GetSourceByID(ctx, post.SourceID)
-	if err != nil {
-		r.logger.Error("failed to fetch source for post", zap.String("id", post.ID), zap.Error(err))
-		return err
-	}
-
-	defer func() {
-		if updateErr := r.db.UpdatePost(ctx, post); updateErr != nil {
-			r.logger.Error("failed to update post in defer", zap.String("id", post.ID), zap.Error(updateErr))
-			if err == nil {
-				err = fmt.Errorf("post update failed: %w", updateErr)
-			}
-		}
-	}()
-
-	if !project.IsActive {
-		post.Status = models.PostStatusFAILED
-		post.Reason = "Project is not active"
-		return nil
-	}
-
-	err = r.redditOauthClient.WithRotatingAPIClient(ctx, project.OrganizationID, func(client *reddit.Client) error {
-		config := client.GetConfig()
-
-		subredditName := utils.CleanSubredditName(source.Name)
-		if err != nil && !strings.Contains(err.Error(), "403") {
-			post.Status = models.PostStatusFAILED
-			post.Reason = fmt.Sprintf("Reason: failed to join subreddit %v", err)
-			return err
-		}
-
-		post.Metadata.Author = config.Name
-
-		redditPost, err := client.CreatePost(ctx, subredditName, post)
-		if err != nil {
-			r.logger.Error("failed to post to Reddit", zap.String("id", post.ID), zap.Error(err))
-			post.Status = models.PostStatusFAILED
-			post.Reason = fmt.Sprintf("Failed to Post: %v", err)
-			return err
-		}
-
-		post.PostID = &redditPost.ID
-		post.Status = models.PostStatusSENT
-		post.Reason = ""
-
-		r.logger.Info("successfully posted to Reddit",
-			zap.String("id", post.ID),
-			zap.String("reddit_post_id", redditPost.ID),
-		)
-		return nil
-	}, reddit.MostQualifiedAccountStrategy(r.logger))
-
-	if err != nil {
-		post.Status = models.PostStatusFAILED
-		// if the reason is not set then set it to the error message
-		if post.Reason == "" {
-			post.Reason = err.Error()
-		}
-	}
-
-	return err
-}
-
 func (r redditInteractions) SendComment(ctx context.Context, interaction *models.LeadInteraction) (err error) {
 	if interaction.Type != models.LeadInteractionTypeCOMMENT {
 		return fmt.Errorf("interaction type is not comment")
 	}
-	r.logger.Info("sending reddit comment",
+	logger := r.logger.With(
 		zap.String("interaction_id", interaction.ID),
 		zap.String("from", interaction.From))
+
+	logger.Info("sending comment")
 
 	// reset reason in case we retry
 	interaction.Reason = ""
@@ -151,7 +81,7 @@ func (r redditInteractions) SendComment(ctx context.Context, interaction *models
 		redditLead.LeadMetadata.CommentScheduledAt = nil
 		updateError := r.db.UpdateLeadStatus(ctx, redditLead)
 		if updateError != nil {
-			r.logger.Warn("failed to update lead status for automated comment", zap.Error(err), zap.String("lead_id", redditLead.ID))
+			logger.Warn("failed to update lead status for automated comment", zap.Error(err), zap.String("lead_id", redditLead.ID))
 		}
 	}()
 
@@ -196,10 +126,10 @@ func (r redditInteractions) SendComment(ctx context.Context, interaction *models
 	err = r.redditOauthClient.WithRotatingAPIClient(ctx, interaction.Organization.ID, func(client *reddit.Client) error {
 		interaction.From = client.GetConfig().Name
 
-		err = r.db.SetLeadInteractionStatusProcessing(ctx, interaction.ID)
-		if err != nil {
-			return err
-		}
+		//err = r.db.SetLeadInteractionStatusProcessing(ctx, interaction.ID)
+		//if err != nil {
+		//	return err
+		//}
 
 		subRedditName := utils.CleanSubredditName(redditLead.LeadMetadata.SubRedditPrefixed)
 		if err = client.JoinSubreddit(ctx, subRedditName); err != nil {
@@ -228,12 +158,9 @@ func (r redditInteractions) SendComment(ctx context.Context, interaction *models
 			redditLead.Status = models.LeadStatusAIRESPONDED
 		}
 
-		r.logger.Info("successfully sent reddit comment",
-			zap.String("interaction_id", interaction.ID),
-			zap.String("from", interaction.From))
-
+		logger.Info("successfully sent reddit comment")
 		return nil
-	}, reddit.PreferSpecificAccountStrategy(interaction.From))
+	}, reddit.PreferSpecificAccountStrategy(interaction.From), logger)
 
 	if err != nil {
 		interaction.Status = models.LeadInteractionStatusFAILED
