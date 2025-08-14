@@ -4,6 +4,7 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
+	"go.uber.org/zap"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -31,6 +32,12 @@ func (p *customerCaseState) AcquireTracker(ctx context.Context, organizationID, 
 	if err != nil {
 		return false, fmt.Errorf("failed to read active set: %w", err)
 	}
+
+	p.logger.Debug("members found while acquiring tracking",
+		zap.String("set_key", setKey),
+		zap.Int("count", len(members)))
+
+	memberToClean := 0
 	for _, id := range members {
 		hbKey := p.generateKey(fmt.Sprintf("org:%s:tracker:%s", organizationID, id))
 		exists, err := p.redisClient.Exists(ctx, hbKey).Result()
@@ -38,9 +45,15 @@ func (p *customerCaseState) AcquireTracker(ctx context.Context, organizationID, 
 			return false, fmt.Errorf("failed to check tracker key: %w", err)
 		}
 		if exists == 0 {
-			_ = p.redisClient.SRem(ctx, setKey, id).Err()
+			if p.redisClient.SRem(ctx, setKey, id).Err() == nil {
+				memberToClean++
+			}
 		}
 	}
+
+	p.logger.Debug("members cleaned while acquiring tracking",
+		zap.String("set_key", setKey),
+		zap.Int("members_removed", memberToClean))
 
 	script := redis.NewScript(acquireLuaScript)
 
