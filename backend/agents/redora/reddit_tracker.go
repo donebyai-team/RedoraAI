@@ -487,16 +487,24 @@ func (s *redditKeywordTracker) searchLeadsFromPosts(
 		// IMP: Make sure to send comment after saving the lead as we need lead id
 		s.scheduleInteractions(ctx, tracker.Organization, redditLead)
 
-		// track max posts to track per day
-		shouldContinue, err := s.state.CheckIfUnderLimitAndIncrement(ctx, dailyCounterKey(project.OrganizationID), keyTrackedPostPerDay, maxPostsToTrackPerDay, 24*time.Hour)
-		if err != nil {
-			s.logger.Error("failed to check if daily_tracked_posts under limit and increment", zap.Error(err))
+		// skip the tracking counter for posts which are rejected because of aging
+		if !strings.Contains(reason, "post is older than") {
+			// track max posts to track per day
+			shouldContinue, err := s.state.CheckIfUnderLimitAndIncrement(ctx, dailyCounterKey(project.OrganizationID), keyTrackedPostPerDay, maxPostsToTrackPerDay, 24*time.Hour)
+			if err != nil {
+				s.logger.Error("failed to check if daily_tracked_posts under limit and increment", zap.Error(err))
+			}
+
+			if !shouldContinue {
+				s.logger.Info("daily_tracked_posts limit reached, skipping tracking", zap.String("post_id", post.ID))
+				break
+			}
 		}
 
-		if !shouldContinue {
-			s.logger.Info("daily_tracked_posts limit reached, skipping tracking", zap.String("post_id", post.ID))
-			break
-		}
+		// TODO:
+		// CheckIfUnderLimitAndIncrement and isMaxLeadLimitUnderLimit can be combined into one function
+		// it should increment the daily counters for both
+		// and we should not need isMaxLeadLimitReached separately
 
 		// We will try to keep searching until we reach the max relevant posts per day >= defaultRelevancyScore
 		ok, err := s.isMaxLeadLimitReached(ctx, tracker.Organization)
