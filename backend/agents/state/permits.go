@@ -33,7 +33,7 @@ func (p *customerCaseState) AcquireTracker(ctx context.Context, organizationID, 
 		return false, fmt.Errorf("failed to read active set: %w", err)
 	}
 
-	p.logger.Debug("members found while acquiring tracking",
+	p.logger.Info("members found while acquiring tracking",
 		zap.String("set_key", setKey),
 		zap.Int("count", len(members)))
 
@@ -51,7 +51,7 @@ func (p *customerCaseState) AcquireTracker(ctx context.Context, organizationID, 
 		}
 	}
 
-	p.logger.Debug("members cleaned while acquiring tracking",
+	p.logger.Info("members cleaned while acquiring tracking",
 		zap.String("set_key", setKey),
 		zap.Int("members_removed", memberToClean))
 
