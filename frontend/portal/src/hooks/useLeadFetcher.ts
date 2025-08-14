@@ -86,6 +86,9 @@ export const useLeadFetcher = ({
       setLoadingState(fetchType, true)
 
       try {
+        // we first call with status = NEW and if no leads found then
+        // we try with status = COMPLETED and if still no leads found then
+        // set the response of status = NEW
         if (shouldFallbackToCompletedLeads && !hasRunPriorityLoad.current) {
           const priorityStatuses: LeadStatus[] = [LeadStatus.NEW, LeadStatus.COMPLETED]
 
