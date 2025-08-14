@@ -78,8 +78,15 @@ func (p *customerCaseState) AcquireTracker(ctx context.Context, organizationID, 
 func (p *customerCaseState) ReleaseTracker(ctx context.Context, organizationID, trackerID string) error {
 	setKey := p.generateKey(fmt.Sprintf("org:%s:active_trackers", organizationID))
 	heartbeatKey := p.generateKey(fmt.Sprintf("org:%s:tracker:%s", organizationID, trackerID))
-	_ = p.redisClient.SRem(ctx, setKey, trackerID)
-	_ = p.redisClient.Del(ctx, heartbeatKey)
+
+	if err := p.redisClient.SRem(ctx, setKey, trackerID).Err(); err != nil {
+		return fmt.Errorf("failed to remove tracker %q from set %q: %w", trackerID, setKey, err)
+	}
+
+	if err := p.redisClient.Del(ctx, heartbeatKey).Err(); err != nil {
+		return fmt.Errorf("failed to delete heartbeat key %q: %w", heartbeatKey, err)
+	}
+
 	return nil
 }
 
