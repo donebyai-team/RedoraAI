@@ -99,11 +99,11 @@ export const useLeadFetcher = ({
                 pageNo
               })
 
-              if ((response.leads ?? []).length > 0) {
-                handleSuccess(response, pageNo)
-                dispatch(setLeadStatusFilter(status))
-                break
-              }
+              // if ((response.leads ?? []).length > 0) {
+              handleSuccess(response, pageNo)
+              dispatch(setLeadStatusFilter(status))
+              break
+              // }
             } catch (err: any) {
               handleError(err)
             }
