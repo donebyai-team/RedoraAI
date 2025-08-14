@@ -89,6 +89,9 @@ export const useLeadFetcher = ({
         if (shouldFallbackToCompletedLeads && !hasRunPriorityLoad.current) {
           const priorityStatuses: LeadStatus[] = [LeadStatus.NEW, LeadStatus.COMPLETED]
 
+          let foundLeads = false
+          let newLeadsResponse: any = null
+
           for (const status of priorityStatuses) {
             try {
               const response = await fetchLeadsFromServer({
@@ -99,14 +102,25 @@ export const useLeadFetcher = ({
                 pageNo
               })
 
-              // if ((response.leads ?? []).length > 0) {
-              handleSuccess(response, pageNo)
-              dispatch(setLeadStatusFilter(status))
-              break
-              // }
+              if (!newLeadsResponse) {
+                newLeadsResponse = response // store the first API response
+              }
+
+              if ((response.leads ?? []).length > 0) {
+                handleSuccess(response, pageNo)
+                dispatch(setLeadStatusFilter(status))
+                foundLeads = true
+                break
+              }
             } catch (err: any) {
               handleError(err)
             }
+          }
+
+          if (!foundLeads && newLeadsResponse) {
+            // Treat the first response as NEW
+            handleSuccess(newLeadsResponse, pageNo)
+            dispatch(setLeadStatusFilter(LeadStatus.NEW))
           }
 
           hasRunPriorityLoad.current = true
