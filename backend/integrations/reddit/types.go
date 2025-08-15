@@ -98,6 +98,7 @@ func (f Comment) ShouldInclude() bool {
 type User struct {
 	ID               string  `json:"id"`
 	Name             string  `json:"name"`
+	IsSuspended      bool    `json:"is_suspended"`
 	Karma            int     `json:"total_karma"`
 	CreatedAt        float64 `json:"created_utc"`
 	IsGold           bool    `json:"is_gold"`

@@ -38,6 +38,10 @@ func (r *Client) GetUser(ctx context.Context, userName string) (*User, error) {
 		return nil, err
 	}
 
+	if response.Data.IsSuspended {
+		return nil, AccountBanned
+	}
+
 	return &response.Data, nil
 }
 
