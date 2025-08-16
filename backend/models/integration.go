@@ -65,9 +65,10 @@ var _ Serializable = (*RedditConfig)(nil)
 var _ Serializable = (*RedditDMLoginConfig)(nil)
 
 type RedditDMLoginConfig struct {
-	Username string `json:"username"`
-	Password string `json:"-"`
-	Cookies  string `json:"-"`
+	Username          string `json:"username"`
+	Alpha2CountryCode string `json:"alpha_2_country_code"`
+	Password          string `json:"-"`
+	Cookies           string `json:"-"`
 }
 
 func (i *RedditDMLoginConfig) GetUniqID() *string {

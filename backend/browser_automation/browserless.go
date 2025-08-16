@@ -34,7 +34,7 @@ func (b browserLessClient) GetCDPInfo(ctx context.Context, input CDPInput) (*CDP
 			queryBuilder.WriteString(`
       proxy(
         type: [document, xhr],
-        country: US,
+        country: ` + input.GetCountryCode() + `,
         sticky: true
       ) {
         time
@@ -76,7 +76,9 @@ func (b browserLessClient) GetCDPInfo(ctx context.Context, input CDPInput) (*CDP
 		defer resp.Body.Close()
 
 		bodyBytes, _ := io.ReadAll(resp.Body)
-		b.logger.Info("browserless raw response", zap.ByteString("body", bodyBytes))
+		b.logger.Info("browserless raw response",
+			zap.String("country_code", input.Alpha2CountryCode),
+			zap.ByteString("body", bodyBytes))
 
 		var result reconnectResponse
 		if err := json.Unmarshal(bodyBytes, &result); err != nil {

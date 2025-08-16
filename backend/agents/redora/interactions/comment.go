@@ -20,7 +20,7 @@ import (
 )
 
 type AutomatedInteractions interface {
-	Authenticate(ctx context.Context, orgID string, cookieJSON string) (string, loginCallback, error)
+	Authenticate(ctx context.Context, orgID string, cookieJSON, alpha2CountryCode string) (string, loginCallback, error)
 	SendDM(ctx context.Context, interaction *models.LeadInteraction) error
 	ScheduleComment(ctx context.Context, leadInteraction *models.LeadInteraction) (*models.LeadInteraction, error)
 	ScheduleDM(ctx context.Context, leadInteraction *models.LeadInteraction) (*models.LeadInteraction, error)

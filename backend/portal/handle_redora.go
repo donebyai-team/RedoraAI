@@ -56,7 +56,7 @@ func (p *Portal) ConnectReddit(ctx context.Context, c *connect.Request[pbportal.
 	taskCtx, cancel := context.WithTimeout(ctx, 3*time.Minute)
 	defer cancel()
 
-	liveURL, loginCallback, err := p.interactionService.Authenticate(taskCtx, actor.OrganizationID, c.Msg.CookieJson)
+	liveURL, loginCallback, err := p.interactionService.Authenticate(taskCtx, actor.OrganizationID, c.Msg.CookieJson, c.Msg.Alpha2CountryCode)
 	if err != nil {
 		return status.New(codes.InvalidArgument, err.Error()).Err()
 	}

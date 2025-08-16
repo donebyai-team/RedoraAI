@@ -41,7 +41,40 @@ func (p *Portal) GetIntegration(ctx context.Context, c *connect.Request[pbportal
 		Integrations: result,
 	}), nil
 }
+func (p *Portal) UpdateIntegration(ctx context.Context, c *connect.Request[pbportal.UpdateIntegrationRequest]) (*connect.Response[emptypb.Empty], error) {
+	actor, err := p.gethAuthContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 
+	integration, err := p.db.GetIntegrationById(ctx, c.Msg.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	if integration.OrganizationID != actor.OrganizationID {
+		return nil, connect.NewError(connect.CodePermissionDenied, fmt.Errorf("only admins can revoke integrations"))
+	}
+
+	if integration.Type == models.IntegrationTypeREDDITDMLOGIN {
+		if redditDetails, ok := c.Msg.Details.(*pbportal.UpdateIntegrationRequest_Reddit); ok {
+			detailsToBeUpdated := redditDetails.Reddit
+			existingDetails := integration.GetRedditDMLoginConfig()
+			if existingDetails.Alpha2CountryCode != detailsToBeUpdated.Alpha2CountryCode {
+				existingDetails.Alpha2CountryCode = detailsToBeUpdated.Alpha2CountryCode
+
+				integration = models.SetIntegrationType(integration, models.IntegrationTypeREDDITDMLOGIN, existingDetails)
+
+				if _, err = p.db.UpsertIntegration(ctx, integration); err != nil {
+					p.logger.Warn("failed to update integration", zap.Error(err), zap.String("integration_id", c.Msg.Id))
+					return nil, err
+				}
+				p.logger.Info("updated integration", zap.String("integration_id", c.Msg.Id))
+			}
+		}
+	}
+	return connect.NewResponse(&emptypb.Empty{}), nil
+}
 func (p *Portal) RevokeIntegration(ctx context.Context, c *connect.Request[pbportal.RevokeIntegrationRequest]) (*connect.Response[emptypb.Empty], error) {
 	actor, err := p.gethAuthContext(ctx)
 	if err != nil {
@@ -88,6 +121,7 @@ func (p *Portal) protoIntegration(integration *models.Integration) *pbportal.Int
 		}
 		return resp
 	case models.IntegrationTypeREDDITDMLOGIN:
+		config := integration.GetRedditDMLoginConfig()
 		resp := &pbportal.Integration{
 			Id:             integration.ID,
 			OrganizationId: integration.OrganizationID,
@@ -97,8 +131,9 @@ func (p *Portal) protoIntegration(integration *models.Integration) *pbportal.Int
 		if integration.ReferenceID != nil {
 			resp.Details = &pbportal.Integration_Reddit{
 				Reddit: &pbportal.RedditIntegration{
-					UserName: *integration.ReferenceID,
-					Reason:   integration.GetIntegrationStatus(true),
+					UserName:          *integration.ReferenceID,
+					Alpha2CountryCode: config.Alpha2CountryCode,
+					Reason:            integration.GetIntegrationStatus(true),
 				},
 			}
 		}

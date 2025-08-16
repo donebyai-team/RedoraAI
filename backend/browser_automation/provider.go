@@ -2,12 +2,23 @@ package browser_automation
 
 import (
 	"context"
+	"strings"
 )
 
 type CDPInput struct {
-	StartURL string
-	UseProxy bool
-	LiveURL  bool
+	StartURL          string
+	UseProxy          bool
+	LiveURL           bool
+	Alpha2CountryCode string
+}
+
+const defaultAlpha2CountryCode = "US"
+
+func (c CDPInput) GetCountryCode() string {
+	if code := strings.TrimSpace(c.Alpha2CountryCode); code != "" {
+		return code
+	}
+	return defaultAlpha2CountryCode
 }
 
 type CDPInfo struct {

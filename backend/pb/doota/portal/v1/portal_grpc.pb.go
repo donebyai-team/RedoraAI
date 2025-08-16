@@ -25,6 +25,7 @@ const (
 	PortalService_Self_FullMethodName                        = "/doota.portal.v1.PortalService/Self"
 	PortalService_GetIntegration_FullMethodName              = "/doota.portal.v1.PortalService/GetIntegration"
 	PortalService_RevokeIntegration_FullMethodName           = "/doota.portal.v1.PortalService/RevokeIntegration"
+	PortalService_UpdateIntegration_FullMethodName           = "/doota.portal.v1.PortalService/UpdateIntegration"
 	PortalService_Batch_FullMethodName                       = "/doota.portal.v1.PortalService/Batch"
 	PortalService_CreateCustomerCase_FullMethodName          = "/doota.portal.v1.PortalService/CreateCustomerCase"
 	PortalService_PasswordlessStart_FullMethodName           = "/doota.portal.v1.PortalService/PasswordlessStart"
@@ -66,6 +67,7 @@ type PortalServiceClient interface {
 	// rpc RenewUser(RenewUserRequest) returns (.google.protobuf.Empty);
 	GetIntegration(ctx context.Context, in *GetIntegrationRequest, opts ...grpc.CallOption) (*Integrations, error)
 	RevokeIntegration(ctx context.Context, in *RevokeIntegrationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	UpdateIntegration(ctx context.Context, in *UpdateIntegrationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	Batch(ctx context.Context, in *BatchReq, opts ...grpc.CallOption) (*BatchResp, error)
 	CreateCustomerCase(ctx context.Context, in *CreateCustomerCaseReq, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	PasswordlessStart(ctx context.Context, in *PasswordlessStartRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
@@ -139,6 +141,15 @@ func (c *portalServiceClient) GetIntegration(ctx context.Context, in *GetIntegra
 func (c *portalServiceClient) RevokeIntegration(ctx context.Context, in *RevokeIntegrationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, PortalService_RevokeIntegration_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *portalServiceClient) UpdateIntegration(ctx context.Context, in *UpdateIntegrationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, PortalService_UpdateIntegration_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -439,6 +450,7 @@ type PortalServiceServer interface {
 	// rpc RenewUser(RenewUserRequest) returns (.google.protobuf.Empty);
 	GetIntegration(context.Context, *GetIntegrationRequest) (*Integrations, error)
 	RevokeIntegration(context.Context, *RevokeIntegrationRequest) (*emptypb.Empty, error)
+	UpdateIntegration(context.Context, *UpdateIntegrationRequest) (*emptypb.Empty, error)
 	Batch(context.Context, *BatchReq) (*BatchResp, error)
 	CreateCustomerCase(context.Context, *CreateCustomerCaseReq) (*emptypb.Empty, error)
 	PasswordlessStart(context.Context, *PasswordlessStartRequest) (*emptypb.Empty, error)
@@ -490,6 +502,9 @@ func (UnimplementedPortalServiceServer) GetIntegration(context.Context, *GetInte
 }
 func (UnimplementedPortalServiceServer) RevokeIntegration(context.Context, *RevokeIntegrationRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RevokeIntegration not implemented")
+}
+func (UnimplementedPortalServiceServer) UpdateIntegration(context.Context, *UpdateIntegrationRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateIntegration not implemented")
 }
 func (UnimplementedPortalServiceServer) Batch(context.Context, *BatchReq) (*BatchResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Batch not implemented")
@@ -659,6 +674,24 @@ func _PortalService_RevokeIntegration_Handler(srv interface{}, ctx context.Conte
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(PortalServiceServer).RevokeIntegration(ctx, req.(*RevokeIntegrationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PortalService_UpdateIntegration_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateIntegrationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortalServiceServer).UpdateIntegration(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortalService_UpdateIntegration_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortalServiceServer).UpdateIntegration(ctx, req.(*UpdateIntegrationRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1210,6 +1243,10 @@ var PortalService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RevokeIntegration",
 			Handler:    _PortalService_RevokeIntegration_Handler,
+		},
+		{
+			MethodName: "UpdateIntegration",
+			Handler:    _PortalService_UpdateIntegration_Handler,
 		},
 		{
 			MethodName: "Batch",

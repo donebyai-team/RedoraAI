@@ -16,16 +16,18 @@ import (
 )
 
 type DMParams struct {
-	ID         string
-	Cookie     string // json array
-	To         string
-	ToUsername string
-	Message    string
+	ID          string
+	Cookie      string // json array
+	CountryCode string
+	To          string
+	ToUsername  string
+	Message     string
 }
 
 type DailyWarmParams struct {
-	ID      string
-	Cookies string
+	ID          string
+	Cookies     string
+	CountryCode string
 }
 
 type RedditBrowserAutomation struct {
@@ -42,7 +44,7 @@ func NewRedditBrowserAutomation(provider BrowserAutomationProvider, logger *zap.
 	return &RedditBrowserAutomation{provider: provider, logger: logger, debugFileStore: debugFileStore}
 }
 
-func (r RedditBrowserAutomation) ValidateCookies(ctx context.Context, cookiesJSON string) (config *models.RedditDMLoginConfig, err error) {
+func (r RedditBrowserAutomation) ValidateCookies(ctx context.Context, cookiesJSON, alpha2CountryCode string) (config *models.RedditDMLoginConfig, err error) {
 	optionalCookies, err := ParseCookiesFromJSON(cookiesJSON, true)
 	if err != nil {
 		return nil, fmt.Errorf("cookie injection failed: %w", err)
@@ -55,9 +57,10 @@ func (r RedditBrowserAutomation) ValidateCookies(ctx context.Context, cookiesJSO
 	defer pw.Stop()
 
 	info, err := r.provider.GetCDPInfo(ctx, CDPInput{
-		StartURL: chatURL,
-		UseProxy: true,
-		LiveURL:  false,
+		StartURL:          chatURL,
+		UseProxy:          true,
+		LiveURL:           false,
+		Alpha2CountryCode: alpha2CountryCode,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("CDP url fetch failed: %w", err)
@@ -144,9 +147,10 @@ func (r RedditBrowserAutomation) SendDM(ctx context.Context, params DMParams) (c
 	defer pw.Stop()
 
 	info, err := r.provider.GetCDPInfo(ctx, CDPInput{
-		StartURL: chatURL,
-		UseProxy: true,
-		LiveURL:  false,
+		StartURL:          chatURL,
+		UseProxy:          true,
+		LiveURL:           false,
+		Alpha2CountryCode: params.CountryCode,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("CDP url fetch failed: %w", err)
@@ -450,8 +454,13 @@ func (r RedditBrowserAutomation) WaitAndGetCookies(ctx context.Context, cdp *CDP
 	}
 }
 
-func (r RedditBrowserAutomation) StartLogin(ctx context.Context) (*CDPInfo, error) {
-	cdp, err := r.provider.GetCDPInfo(ctx, CDPInput{StartURL: loginURL, UseProxy: true, LiveURL: true})
+func (r RedditBrowserAutomation) StartLogin(ctx context.Context, alpha2CountryCode string) (*CDPInfo, error) {
+	cdp, err := r.provider.GetCDPInfo(ctx, CDPInput{
+		StartURL:          loginURL,
+		UseProxy:          true,
+		LiveURL:           true,
+		Alpha2CountryCode: alpha2CountryCode,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -466,8 +475,9 @@ func (r RedditBrowserAutomation) DailyWarmup(ctx context.Context, params DailyWa
 	// Step 1: Get CDP URL
 	logger.Info("Fetching CDP URL")
 	cdp, err := r.provider.GetCDPInfo(ctx, CDPInput{
-		StartURL: redditHomePage,
-		UseProxy: true,
+		StartURL:          redditHomePage,
+		UseProxy:          true,
+		Alpha2CountryCode: params.CountryCode,
 	})
 	if err != nil {
 		return fmt.Errorf("cDP url fetch failed: %w", err)

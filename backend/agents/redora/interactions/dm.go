@@ -130,8 +130,9 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 			ID:     interaction.ID,
 			Cookie: config.Cookies,
 			//To:         fmt.Sprintf("t2_%s", user.ID),
-			ToUsername: interaction.To,
-			Message:    utils.FormatDM(redditLead.LeadMetadata.SuggestedDM),
+			CountryCode: config.Alpha2CountryCode,
+			ToUsername:  interaction.To,
+			Message:     utils.FormatDM(redditLead.LeadMetadata.SuggestedDM),
 		})
 		if err != nil {
 			interaction.Reason = fmt.Sprintf("Reason: %v", err)
@@ -181,14 +182,15 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 
 type loginCallback func() error
 
-func (r redditInteractions) Authenticate(ctx context.Context, orgID string, cookieJSON string) (string, loginCallback, error) {
+func (r redditInteractions) Authenticate(ctx context.Context, orgID string, cookieJSON, alpha2CountryCode string) (string, loginCallback, error) {
 	// Handle direct cookie login
 	if cookieJSON != "" {
-		updatedLoginConfig, err := r.redditBrowserAutomation.ValidateCookies(ctx, cookieJSON)
+		updatedLoginConfig, err := r.redditBrowserAutomation.ValidateCookies(ctx, cookieJSON, alpha2CountryCode)
 		if err != nil {
 			return "", nil, err
 		}
 
+		updatedLoginConfig.Alpha2CountryCode = alpha2CountryCode
 		if err := r.finalizeLogin(ctx, orgID, updatedLoginConfig); err != nil {
 			return "", nil, err
 		}
@@ -198,7 +200,7 @@ func (r redditInteractions) Authenticate(ctx context.Context, orgID string, cook
 	}
 
 	// Handle login via browser automation
-	cdp, err := r.redditBrowserAutomation.StartLogin(ctx)
+	cdp, err := r.redditBrowserAutomation.StartLogin(ctx, alpha2CountryCode)
 	if err != nil {
 		return "", nil, err
 	}
@@ -209,6 +211,7 @@ func (r redditInteractions) Authenticate(ctx context.Context, orgID string, cook
 			return err
 		}
 
+		updatedLoginConfig.Alpha2CountryCode = alpha2CountryCode
 		if err := r.finalizeLogin(ctx, orgID, updatedLoginConfig); err != nil {
 			return err
 		}
@@ -224,9 +227,9 @@ func (r redditInteractions) finalizeLogin(ctx context.Context, orgID string, upd
 	}
 
 	// Validate Reddit user is still active
-	if _, err := reddit.NewClientWithOutConfig(r.logger).GetUser(ctx, updatedLoginConfig.Username); err != nil {
-		return err
-	}
+	//if _, err := reddit.NewClientWithOutConfig(r.logger).GetUser(ctx, updatedLoginConfig.Username); err != nil {
+	//	return err
+	//}
 
 	integration := &models.Integration{
 		OrganizationID: orgID,

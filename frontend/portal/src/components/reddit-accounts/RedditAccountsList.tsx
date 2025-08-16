@@ -31,11 +31,19 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Textarea } from "@/components/ui/textarea"
 import { useAuthUser, useAuth } from "@doota/ui-core/hooks/useAuth";
 import Link from "next/link";
+import countries from "i18n-iso-countries";
+import enLocale from "i18n-iso-countries/langs/en.json";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
+countries.registerLocale(enLocale);
+const countryEntries = Object.entries(
+  countries.getNames("en", { select: "official" })
+);
 
 interface RedditAccount {
   id: string;
   username: string;
+  countryCode?: string;
   karma: number;
   apiIntegration?: Integration;
   cookieIntegration?: Integration;
@@ -47,6 +55,7 @@ export function RedditAccountsList() {
   const [loading, setLoading] = useState(true)
   const user = useAuthUser()
   const { setUser, setOrganization } = useAuth()
+  const [cookieCountry, setCookieCountry] = useState<string | null>(null);
 
   const fetchAccounts = () => {
     setLoading(true);
@@ -76,6 +85,7 @@ export function RedditAccountsList() {
 
           // Fill in Cookie integration
           if (integration.type === IntegrationType.REDDIT_DM_LOGIN) {
+            account.countryCode = integration.details.value?.alpha2CountryCode
             account.cookieIntegration = integration
           }
         });
@@ -102,6 +112,36 @@ export function RedditAccountsList() {
         window.open(oAuthAuthorizeResp.authorizeUrl, '_self')
       })
   }
+
+  const handleCountryChange = (id: string, countryCode: string) => {
+    console.log("country code changed", countryCode, "id", id);
+
+    setAccounts(prev =>
+      prev.map(account =>
+        account.id === id ? { ...account, countryCode } : account
+      )
+    );
+
+    // Run async update separately
+    const account = accounts.find(a => a.id === id);
+    if (account?.cookieIntegration) {
+      portalClient.updateIntegration({
+        id: account.cookieIntegration.id,
+        details: {
+          case: "reddit",
+          value: {
+            alpha2CountryCode: countryCode,
+          },
+        },
+      }).then(() => {
+        console.log("Country updated");
+        toast.success("Integration updated!")
+      }).catch(err => {
+        toast.error(getConnectError(err));
+      });
+    }
+  };
+
 
   const handleDisconnectReddit = (id: string) => {
     // Optimistic update
@@ -190,7 +230,14 @@ export function RedditAccountsList() {
   const [isConnecting, setIsConnecting] = useState(false);
 
 
-  const handleConnectReddit = async () => {
+  const handleConnectReddit = async (id: string) => {
+    const countryCode = accounts.find(acc => acc.id === id)?.countryCode;
+    if (!countryCode) {
+      toast.error("Please select a country before continuing");
+      return;
+    }
+
+
     let popup: Window | null = null;
     try {
       setIsConnecting(true);
@@ -212,7 +259,7 @@ export function RedditAccountsList() {
               `);
       popup.document.close();
       const abortController = new AbortController();
-      const response = portalClient.connectReddit({}, { signal: abortController.signal });
+      const response = portalClient.connectReddit({ alpha2CountryCode: countryCode }, { signal: abortController.signal });
 
       let streamClosed = false;
 
@@ -251,6 +298,7 @@ export function RedditAccountsList() {
       if (popup && !popup.closed) {
         popup.close();
       }
+      setCookieCountry(countryCode);
       setShowCookieModal(true); // show modal
       // toast.error(getConnectError(err));
     } finally {
@@ -514,6 +562,10 @@ export function RedditAccountsList() {
                           <Button
                             onClick={async () => {
                               try {
+                                if (!cookieCountry) {
+                                  setCookieError("Please select a country before continuing");
+                                  return;
+                                }
                                 setIsSubmittingCookie(true)
                                 setCookieError("")
 
@@ -525,7 +577,10 @@ export function RedditAccountsList() {
                                   return
                                 }
 
-                                const response = portalClient.connectReddit({ cookieJson: cookieInput })
+                                const response = portalClient.connectReddit({
+                                  cookieJson: cookieInput,
+                                  alpha2CountryCode: cookieCountry,
+                                })
                                 for await (const msg of response) { }
 
                                 await handleSaveAutomation({ dm: { enabled: true } })
@@ -554,7 +609,7 @@ export function RedditAccountsList() {
                       <div className="flex items-center gap-2">
                         {!account.cookieIntegration || account.cookieIntegration.status !== IntegrationState.ACTIVE ? (
                           <Button
-                            onClick={() => handleConnectReddit()}
+                            onClick={() => handleConnectReddit(account.id)}
                             size="sm"
                             className="gap-1 bg-orange-500 text-white hover:bg-orange-600 shadow-md hover:shadow-lg transition-all duration-200 border-none"
                           >
@@ -576,6 +631,31 @@ export function RedditAccountsList() {
                         {account.cookieIntegration.details.value?.reason}
                       </p>
                     )}
+
+                    {/* Country Selection */}
+                    <div className="space-y-2 mb-3">
+                      <div className="flex items-center gap-2">
+                        <label className="text-xs font-medium text-foreground">Country:</label>
+                        <Select
+                          value={account.countryCode || ""}
+                          onValueChange={(value) => handleCountryChange(account.id, value)}
+                        >
+                          <SelectTrigger className="w-48 h-7 text-xs">
+                            <SelectValue placeholder="Select a country" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {countryEntries.map(([code, name]) => (
+                              <SelectItem key={code} value={code} className="text-xs">
+                                {name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Select the country you primarily use this Reddit account from. We’ll use it to match your proxy location and help avoid Reddit security checks.
+                      </p>
+                    </div>
 
                     {(!account.cookieIntegration || account.cookieIntegration?.status !== IntegrationState.ACTIVE) ? (
                       <div className="space-y-3">

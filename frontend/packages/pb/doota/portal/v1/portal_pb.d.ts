@@ -160,6 +160,11 @@ export declare type ConnectRedditRequest = Message<"doota.portal.v1.ConnectReddi
    * @generated from field: string cookie_json = 1;
    */
   cookieJson: string;
+
+  /**
+   * @generated from field: string alpha2_country_code = 2;
+   */
+  alpha2CountryCode: string;
 };
 
 /**
@@ -975,6 +980,11 @@ export declare type RedditIntegration = Message<"doota.portal.v1.RedditIntegrati
    * @generated from field: string reason = 2;
    */
   reason: string;
+
+  /**
+   * @generated from field: string alpha2_country_code = 3;
+   */
+  alpha2CountryCode: string;
 };
 
 /**
@@ -998,6 +1008,33 @@ export declare type Integrations = Message<"doota.portal.v1.Integrations"> & {
  * Use `create(IntegrationsSchema)` to create a new message.
  */
 export declare const IntegrationsSchema: GenMessage<Integrations>;
+
+/**
+ * @generated from message doota.portal.v1.UpdateIntegrationRequest
+ */
+export declare type UpdateIntegrationRequest = Message<"doota.portal.v1.UpdateIntegrationRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from oneof doota.portal.v1.UpdateIntegrationRequest.details
+   */
+  details: {
+    /**
+     * @generated from field: doota.portal.v1.RedditIntegration reddit = 6;
+     */
+    value: RedditIntegration;
+    case: "reddit";
+  } | { case: undefined; value?: undefined };
+};
+
+/**
+ * Describes the message doota.portal.v1.UpdateIntegrationRequest.
+ * Use `create(UpdateIntegrationRequestSchema)` to create a new message.
+ */
+export declare const UpdateIntegrationRequestSchema: GenMessage<UpdateIntegrationRequest>;
 
 /**
  * @generated from message doota.portal.v1.RevokeIntegrationRequest
@@ -1352,6 +1389,14 @@ export declare const PortalService: GenService<{
   revokeIntegration: {
     methodKind: "unary";
     input: typeof RevokeIntegrationRequestSchema;
+    output: typeof EmptySchema;
+  },
+  /**
+   * @generated from rpc doota.portal.v1.PortalService.UpdateIntegration
+   */
+  updateIntegration: {
+    methodKind: "unary";
+    input: typeof UpdateIntegrationRequestSchema;
     output: typeof EmptySchema;
   },
   /**
