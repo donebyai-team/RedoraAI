@@ -37,7 +37,7 @@ type userAgentTransport struct {
 
 func (u *userAgentTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	if u.userName != "" {
-		req.Header.Set("User-Agent", fmt.Sprintf("com.redoraai:v0.1 by (/u/%s)", u.userName))
+		req.Header.Set("User-Agent", fmt.Sprintf("com.redoraai:v0.1.0 by (/u/%s)", u.userName))
 	} else {
 		req.Header.Set("User-Agent", "com.redoraai:v0.1.0 by (redora)")
 	}
