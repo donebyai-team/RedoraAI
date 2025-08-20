@@ -34,9 +34,11 @@ type dodoSubscriptionService struct {
 }
 
 const (
+	liveStarterPlanID = "pdt_vvajqdsO8AjYlrz0PGWkp"
 	liveProPlanID     = "pdt_h2V8lsZsVRO88Q19pCjU8"
 	liveFounderPlanID = "pdt_1Arsz78Oy4pyi4MJbYeSb"
 
+	testStarterPlanID = "pdt_8ZRMux3EotTaRBj7Y7iXA"
 	testProPlanID     = "pdt_HcHajJOaRun8JfZwdBuNR"
 	testFounderPlanID = "pdt_EEaOOJXUcgej57Jzl4O5w"
 )
@@ -44,21 +46,25 @@ const (
 var livePlanToProductID = map[models.SubscriptionPlanType]string{
 	models.SubscriptionPlanTypeFOUNDER: liveFounderPlanID,
 	models.SubscriptionPlanTypePRO:     liveProPlanID,
+	models.SubscriptionPlanTypeSTARTER: liveStarterPlanID,
 }
 
 var testPlanToProductID = map[models.SubscriptionPlanType]string{
 	models.SubscriptionPlanTypeFOUNDER: testFounderPlanID,
 	models.SubscriptionPlanTypePRO:     testProPlanID,
+	models.SubscriptionPlanTypeSTARTER: testStarterPlanID,
 }
 
 var liveProductIDToPlan = map[string]models.SubscriptionPlanType{
 	liveFounderPlanID: models.SubscriptionPlanTypeFOUNDER,
 	liveProPlanID:     models.SubscriptionPlanTypePRO,
+	liveStarterPlanID: models.SubscriptionPlanTypeSTARTER,
 }
 
 var testProductIDToPlan = map[string]models.SubscriptionPlanType{
 	testFounderPlanID: models.SubscriptionPlanTypeFOUNDER,
 	testProPlanID:     models.SubscriptionPlanTypePRO,
+	testStarterPlanID: models.SubscriptionPlanTypeSTARTER,
 }
 
 var liveAddOnIDMap = map[string]models.AddOnType{

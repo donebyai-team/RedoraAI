@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { CreditCard, Calendar, Star, Crown, Zap, Check, ShieldCheck, Handshake } from 'lucide-react'
+import { CreditCard, Calendar, Star, Crown, Zap, Check, ShieldCheck, Handshake, ListStart, Lightbulb } from 'lucide-react'
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader'
 import { useAuth } from '@doota/ui-core/hooks/useAuth'
 import { SubscriptionPlanID, SubscriptionStatus } from '@doota/pb/doota/core/v1/core_pb'
@@ -63,6 +63,27 @@ const plans: PlanInfo[] = [
             'Real-time Alerts (In-app only)',
             'Basic Analytics'
         ]
+    },
+    {
+        id: SubscriptionPlanID.SUBSCRIPTION_PLAN_STARTER,
+        name: 'Starter',
+        price: '$12',
+        interval: 'per month',
+        description: 'Perfect for testing Reddit marketing waters',
+        icon: <Lightbulb className='h-5 w-5' />,
+        features: [
+            '5 Tracked Keywords',
+            '5 Monitored Subreddits',
+            'Up to 25 highly relevant posts per day',
+            'Post Creation: Add or schedule 5 Reddit posts/month',
+            'AI Suggested DM and Comments',
+            'Slack Notifications',
+            'No Automated Comments',
+            'No Automated DMs',
+            'No Multi-Account Rotation',
+            'No IP Rotation',
+        ],
+        popular: false
     },
     {
         id: SubscriptionPlanID.SUBSCRIPTION_PLAN_FOUNDER,
