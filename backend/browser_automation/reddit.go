@@ -168,7 +168,8 @@ func (r RedditBrowserAutomation) SendDM(ctx context.Context, params DMParams) (c
 
 	browser, err := pw.Chromium.ConnectOverCDP(info.WSEndpoint)
 	if err != nil {
-		return nil, fmt.Errorf("CDP connection failed: %w", err)
+		r.logger.Error("failed to connect to browser", zap.Error(err))
+		return nil, errors.New("unable to connect to the browser, will be retried in sometime")
 	}
 	defer browser.Close()
 

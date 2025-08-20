@@ -246,20 +246,21 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 	//	deps.DataStore.UpdateOrganization(context.Background(), org)
 	//}
 
-	//andType, err := deps.DataStore.GetIntegrationById(context.Background(), "649fd5e3-c2a1-4e2b-a753-630ef4d2f315")
+	//andType, err := deps.DataStore.GetIntegrationById(context.Background(), "f157a6fd-3b14-4e54-8d0b-cb667250810e")
 	//if err != nil {
 	//	return nil, err
 	//}
-	////_, err = steelBrowserClient.SendDM(context.Background(), interactions.DMParams{
-	////	To:         "t2_1otowi6mq2",
-	////	Message:    "hello",
-	////	ID:         "unique_id",
-	////	ToUsername: "Clean-Sport-4436",
-	////	Cookie:     andType.GetRedditDMLoginConfig().Cookies,
-	////})
-	////if err != nil {
-	////	return nil, err
-	////}
+	//_, err = redditBrowserAutomation.SendDM(context.Background(), browser_automation.DMParams{
+	//	To:          "t2_1otowi6mq2",
+	//	Message:     "hello",
+	//	ID:          "unique_id",
+	//	ToUsername:  "Clean-Sport-4436",
+	//	Cookie:      andType.GetRedditDMLoginConfig().Cookies,
+	//	CountryCode: andType.GetRedditDMLoginConfig().Alpha2CountryCode,
+	//})
+	//if err != nil {
+	//	return nil, err
+	//}
 	//
 	//err = redditBrowserAutomation.DailyWarmup(context.Background(), browser_automation.DailyWarmParams{
 	//	Cookies: andType.GetRedditDMLoginConfig().Cookies,
