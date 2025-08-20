@@ -52,6 +52,8 @@ const (
 	SubscriptionPlanTypeFOUNDER SubscriptionPlanType = "FOUNDER"
 	// SubscriptionPlanTypePRO is a SubscriptionPlanType of type PRO.
 	SubscriptionPlanTypePRO SubscriptionPlanType = "PRO"
+	// SubscriptionPlanTypeSTARTER is a SubscriptionPlanType of type STARTER.
+	SubscriptionPlanTypeSTARTER SubscriptionPlanType = "STARTER"
 )
 
 var ErrInvalidSubscriptionPlanType = errors.New("not a valid SubscriptionPlanType")
@@ -72,6 +74,7 @@ var _SubscriptionPlanTypeValue = map[string]SubscriptionPlanType{
 	"FREE":    SubscriptionPlanTypeFREE,
 	"FOUNDER": SubscriptionPlanTypeFOUNDER,
 	"PRO":     SubscriptionPlanTypePRO,
+	"STARTER": SubscriptionPlanTypeSTARTER,
 }
 
 // ParseSubscriptionPlanType attempts to convert a string to a SubscriptionPlanType.

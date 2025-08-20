@@ -131,6 +131,34 @@ func (f OrganizationFeatureFlags) GetMaxLeadsPerDay() int64 {
 	return f.GetSubscriptionPlanMetadata().RelevantPosts.PerDay
 }
 
+func (f OrganizationFeatureFlags) IsCommentAutomationAllowed() bool {
+	planMetadata := f.GetSubscriptionPlanMetadata()
+	// if nothing is set, assume enabled
+	if planMetadata.AutomationLimits == nil {
+		return true
+	}
+
+	return planMetadata.AutomationLimits.Comment
+}
+
+func (f OrganizationFeatureFlags) IsCommentAutomationEnabled() bool {
+	return f.IsCommentAutomationAllowed() && f.EnableAutoComment
+}
+
+func (f OrganizationFeatureFlags) IsDMAutomationAllowed() bool {
+	planMetadata := f.GetSubscriptionPlanMetadata()
+	// if nothing is set, assume enabled
+	if planMetadata.AutomationLimits == nil {
+		return true
+	}
+
+	return planMetadata.AutomationLimits.DM
+}
+
+func (f OrganizationFeatureFlags) IsDMAutomationEnabled() bool {
+	return f.IsDMAutomationAllowed() && f.EnableAutoDM
+}
+
 // Defined by user or max allowed by plan, whichever is higher
 func (f OrganizationFeatureFlags) GetMaxDMsPerDay() int64 {
 	if f.MaxDMsPerDay == 0 {

@@ -535,7 +535,7 @@ const (
 func (s *redditKeywordTracker) scheduleInteractions(ctx context.Context, org *models.Organization, redditLead *models.Lead) {
 	var redditConfig *models.RedditConfig
 	if redditLead.RelevancyScore >= org.FeatureFlags.GetRelevancyScoreComment() &&
-		org.FeatureFlags.EnableAutoComment &&
+		org.FeatureFlags.IsCommentAutomationEnabled() &&
 		len(strings.TrimSpace(redditLead.LeadMetadata.SuggestedComment)) > 0 {
 		// Get the client
 		redditClient, err := s.redditOauthClient.GetRedditAPIClient(ctx, org.ID, true)
@@ -552,7 +552,7 @@ func (s *redditKeywordTracker) scheduleInteractions(ctx context.Context, org *mo
 	}
 
 	if redditLead.RelevancyScore >= org.FeatureFlags.GetRelevancyScoreDM() &&
-		org.FeatureFlags.EnableAutoDM &&
+		org.FeatureFlags.IsDMAutomationEnabled() &&
 		len(strings.TrimSpace(redditLead.LeadMetadata.SuggestedDM)) > 0 {
 		// Schedule DM
 		err := s.sendAutomatedDM(ctx, org, redditConfig, redditLead)
@@ -563,7 +563,7 @@ func (s *redditKeywordTracker) scheduleInteractions(ctx context.Context, org *mo
 }
 
 func (s *redditKeywordTracker) sendAutomatedDM(ctx context.Context, org *models.Organization, redditConfig *models.RedditConfig, redditLead *models.Lead) error {
-	if !org.FeatureFlags.EnableAutoDM {
+	if !org.FeatureFlags.IsDMAutomationEnabled() {
 		return nil
 	}
 
@@ -624,7 +624,7 @@ func (s *redditKeywordTracker) sendAutomatedComment(ctx context.Context, org *mo
 		isOldEnough = true
 	}
 
-	autoCommentEnabled := org.FeatureFlags.EnableAutoComment
+	autoCommentEnabled := org.FeatureFlags.IsCommentAutomationEnabled()
 
 	//// Case 1: User is old enough, but auto comment is currently disabled because of OrgActivityTypeCOMMENTDISABLEDACCOUNTAGENEW
 	//// enable it

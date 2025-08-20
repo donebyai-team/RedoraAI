@@ -129,7 +129,7 @@ func (r redditInteractions) SendComment(ctx context.Context, interaction *models
 	}
 
 	// case: if auto comment disabled
-	if !interaction.Organization.FeatureFlags.EnableAutoComment {
+	if !interaction.Organization.FeatureFlags.IsCommentAutomationEnabled() {
 		interaction.Status = models.LeadInteractionStatusFAILED
 		interaction.Reason = "auto comment is disabled for this organization"
 		return nil

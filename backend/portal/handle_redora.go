@@ -531,7 +531,13 @@ func (p *Portal) UpdateAutomationSettings(ctx context.Context, c *connect.Reques
 		return nil, err
 	}
 
+	planMetadata := org.FeatureFlags.GetSubscriptionPlanMetadata()
+
 	if c.Msg.Comment != nil {
+		if !org.FeatureFlags.IsCommentAutomationAllowed() {
+			return nil, status.New(codes.InvalidArgument, "comment feature is not available in this current plan").Err()
+		}
+
 		if c.Msg.Comment.Enabled {
 			integrations, err := p.redditOauthClient.GetActiveIntegrations(ctx, actor.OrganizationID, models.IntegrationTypeREDDIT)
 			if err != nil {
@@ -546,7 +552,7 @@ func (p *Portal) UpdateAutomationSettings(ctx context.Context, c *connect.Reques
 				return nil, status.New(codes.InvalidArgument, "relevancy score should be at least 80").Err()
 			}
 
-			maxAllowedCommentPerDay := org.FeatureFlags.GetSubscriptionPlanMetadata().Comments.PerDay
+			maxAllowedCommentPerDay := planMetadata.Comments.PerDay
 
 			if c.Msg.Comment.MaxPerDay > maxAllowedCommentPerDay {
 				return nil, status.New(codes.InvalidArgument, fmt.Sprintf("max %d automated comments allows as per the subscribed plan", maxAllowedCommentPerDay)).Err()
@@ -560,6 +566,10 @@ func (p *Portal) UpdateAutomationSettings(ctx context.Context, c *connect.Reques
 	}
 
 	if c.Msg.Dm != nil {
+		if !org.FeatureFlags.IsDMAutomationAllowed() {
+			return nil, status.New(codes.InvalidArgument, "DM feature is not available in this current plan").Err()
+		}
+
 		if c.Msg.Dm.Enabled {
 			integrations, err := p.redditOauthClient.GetActiveIntegrations(ctx, actor.OrganizationID, models.IntegrationTypeREDDITDMLOGIN)
 			if err != nil {
@@ -570,7 +580,7 @@ func (p *Portal) UpdateAutomationSettings(ctx context.Context, c *connect.Reques
 				return nil, status.New(codes.InvalidArgument, "Please connect your reddit account cookies to enable automated DMs").Err()
 			}
 
-			maxAllowedDMsPerDay := org.FeatureFlags.GetSubscriptionPlanMetadata().DMs.PerDay
+			maxAllowedDMsPerDay := planMetadata.DMs.PerDay
 
 			if c.Msg.Dm.MaxPerDay > maxAllowedDMsPerDay {
 				return nil, status.New(codes.InvalidArgument, fmt.Sprintf("max %d automated DMs allows as per the subscribed plan", maxAllowedDMsPerDay)).Err()

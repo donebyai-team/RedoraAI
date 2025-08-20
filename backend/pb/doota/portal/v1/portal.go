@@ -61,13 +61,13 @@ func (o *Organization) FromModel(model *models.Organization) *Organization {
 		o.FeatureFlags.Subscription.MaxKeywords = int32(model.FeatureFlags.GetMaxKeywordAllowed())
 	}
 	o.FeatureFlags.Comment = &AutomationSetting{
-		Enabled:        model.FeatureFlags.EnableAutoComment,
+		Enabled:        model.FeatureFlags.IsCommentAutomationEnabled(),
 		RelevancyScore: float32(model.FeatureFlags.GetRelevancyScoreComment()),
 		MaxPerDay:      model.FeatureFlags.GetMaxCommentsPerDay(),
 	}
 
 	o.FeatureFlags.DM = &AutomationSetting{
-		Enabled:        model.FeatureFlags.EnableAutoDM,
+		Enabled:        model.FeatureFlags.IsDMAutomationEnabled(),
 		RelevancyScore: float32(model.FeatureFlags.GetRelevancyScoreDM()),
 		MaxPerDay:      model.FeatureFlags.GetMaxDMsPerDay(),
 	}

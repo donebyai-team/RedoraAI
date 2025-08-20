@@ -84,7 +84,7 @@ func (r redditInteractions) SendDM(ctx context.Context, interaction *models.Lead
 	}
 
 	// case: if auto DM disabled
-	if !interaction.Organization.FeatureFlags.EnableAutoDM {
+	if !interaction.Organization.FeatureFlags.IsDMAutomationEnabled() {
 		interaction.Status = models.LeadInteractionStatusFAILED
 		interaction.Reason = "auto DM is disabled for this organization"
 		return nil

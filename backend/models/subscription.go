@@ -10,21 +10,27 @@ type UsageLimits struct {
 	PerDay int64 `json:"per_day"`
 }
 
+type AutomationLimits struct {
+	Comment bool `json:"comment"`
+	DM      bool `json:"dm"`
+}
+
 // ENUM(KEYWORD, SOURCE)
 type AddOnType string
 
 type SubscriptionPlanMetadata struct {
-	Comments      UsageLimits       `json:"comments"`
-	DMs           UsageLimits       `json:"dms"`
-	RelevantPosts UsageLimits       `json:"relevant_posts"`
-	MaxKeywords   int               `json:"max_keywords"`
-	MaxSources    int               `json:"max_sources"`
-	AddOns        map[AddOnType]int `json:"add_ons"`
+	AutomationLimits *AutomationLimits `json:"automation_limits"`
+	Comments         UsageLimits       `json:"comments"`
+	DMs              UsageLimits       `json:"dms"`
+	RelevantPosts    UsageLimits       `json:"relevant_posts"`
+	MaxKeywords      int               `json:"max_keywords"`
+	MaxSources       int               `json:"max_sources"`
+	AddOns           map[AddOnType]int `json:"add_ons"`
 }
 
 //go:generate go-enum -f=$GOFILE
 
-// ENUM(FREE, FOUNDER, PRO)
+// ENUM(FREE, FOUNDER, PRO, STARTER)
 type SubscriptionPlanType string
 
 type SubscriptionPlan struct {
@@ -53,6 +59,29 @@ var RedoraPlans = map[SubscriptionPlanType]*SubscriptionPlan{
 			},
 			MaxSources:  7,
 			MaxKeywords: 7,
+		},
+	},
+	SubscriptionPlanTypeSTARTER: {
+		PlanType:    SubscriptionPlanTypeSTARTER,
+		Description: "Starter plan with limited usage to try out the platform",
+		Price:       12.0,
+		Interval:    30,
+		Metadata: SubscriptionPlanMetadata{
+			AutomationLimits: &AutomationLimits{
+				Comment: false,
+				DM:      false,
+			},
+			Comments: UsageLimits{
+				PerDay: 25,
+			},
+			DMs: UsageLimits{
+				PerDay: 25,
+			},
+			RelevantPosts: UsageLimits{
+				PerDay: 25,
+			},
+			MaxSources:  5,
+			MaxKeywords: 5,
 		},
 	},
 	SubscriptionPlanTypeFOUNDER: {
