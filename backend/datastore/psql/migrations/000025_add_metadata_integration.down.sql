@@ -1,0 +1,3 @@
+BEGIN;
+ALTER TABLE integrations DROP COLUMN IF EXISTS metadata;
+COMMIT;

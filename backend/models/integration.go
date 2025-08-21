@@ -1,6 +1,7 @@
 package models
 
 import (
+	"database/sql/driver"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -15,15 +16,33 @@ type IntegrationType string
 type IntegrationState string
 
 type Integration struct {
-	ID              string           `db:"id"`
-	OrganizationID  string           `db:"organization_id"`
-	ReferenceID     *string          `db:"reference_id"`
-	Type            IntegrationType  `db:"type"`
-	State           IntegrationState `db:"state"`
-	EncryptedConfig string           `db:"encrypted_config"`
-	PlainTextConfig string           `db:"plain_text_config"`
-	CreatedAt       time.Time        `db:"created_at"`
-	UpdatedAt       *time.Time       `db:"updated_at"`
+	ID              string              `db:"id"`
+	OrganizationID  string              `db:"organization_id"`
+	ReferenceID     *string             `db:"reference_id"`
+	Type            IntegrationType     `db:"type"`
+	State           IntegrationState    `db:"state"`
+	EncryptedConfig string              `db:"encrypted_config"`
+	PlainTextConfig string              `db:"plain_text_config"`
+	Metadata        IntegrationMetadata `db:"metadata"`
+	CreatedAt       time.Time           `db:"created_at"`
+	UpdatedAt       *time.Time          `db:"updated_at"`
+}
+
+type WarmUpData struct {
+	LastWarmUpAt time.Time `json:"last_warm_up_at"`
+	Count        int       `json:"count"`
+}
+
+type IntegrationMetadata struct {
+	WarmUpData WarmUpData `json:"warm_up_data"`
+}
+
+func (b IntegrationMetadata) Value() (driver.Value, error) {
+	return valueAsJSON(b, "integration metadata")
+}
+
+func (b *IntegrationMetadata) Scan(value interface{}) error {
+	return scanFromJSON(value, b, "integration metadata")
 }
 
 func (i *Integration) GetIntegrationStatus(isOldEnough bool) string {

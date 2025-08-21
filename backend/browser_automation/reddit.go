@@ -470,6 +470,7 @@ func (r RedditBrowserAutomation) StartLogin(ctx context.Context, alpha2CountryCo
 }
 
 func (r RedditBrowserAutomation) DailyWarmup(ctx context.Context, params DailyWarmParams) error {
+	return nil
 	logger := r.logger.With(zap.String("integration_id", params.ID))
 	warmupStartedAt := time.Now()
 

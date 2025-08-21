@@ -44,6 +44,7 @@ func (r *Database) UpsertIntegration(ctx context.Context, integration *models.In
 		"encrypted_config":  integration.EncryptedConfig,
 		"plain_text_config": integration.PlainTextConfig,
 		"state":             integration.State,
+		"metadata":          integration.Metadata,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create integration: %w", err)
