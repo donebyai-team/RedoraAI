@@ -13,12 +13,13 @@ import (
 )
 
 type browserLessClient struct {
-	Token  string
-	logger *zap.Logger
+	Token       string
+	WarmUpToken string
+	logger      *zap.Logger
 }
 
-func NewBrowserLessBrowser(token string, logger *zap.Logger) BrowserAutomationProvider {
-	return &browserLessClient{Token: token, logger: logger}
+func NewBrowserLessBrowser(token, warmUpToken string, logger *zap.Logger) BrowserAutomationProvider {
+	return &browserLessClient{Token: token, WarmUpToken: warmUpToken, logger: logger}
 }
 
 func (b browserLessClient) GetCDPInfo(ctx context.Context, input CDPInput) (*CDPInfo, error) {
@@ -65,8 +66,13 @@ func (b browserLessClient) GetCDPInfo(ctx context.Context, input CDPInput) (*CDP
 		reqBody := map[string]string{"query": queryBuilder.String()}
 		reqBytes, _ := json.Marshal(reqBody)
 
+		tokenToUse := b.Token
+		if input.IsWarmUp {
+			tokenToUse = b.WarmUpToken
+		}
+
 		resp, err := http.Post(
-			fmt.Sprintf("https://production-sfo.browserless.io/chromium/bql?token=%s&humanlike=true&blockConsentModals=true", b.Token),
+			fmt.Sprintf("https://production-sfo.browserless.io/chromium/bql?token=%s&humanlike=true&blockConsentModals=true", tokenToUse),
 			"application/json",
 			bytes.NewBuffer(reqBytes),
 		)

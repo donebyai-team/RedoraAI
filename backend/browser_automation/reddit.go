@@ -470,7 +470,6 @@ func (r RedditBrowserAutomation) StartLogin(ctx context.Context, alpha2CountryCo
 }
 
 func (r RedditBrowserAutomation) DailyWarmup(ctx context.Context, params DailyWarmParams) error {
-	return nil
 	logger := r.logger.With(zap.String("integration_id", params.ID))
 	warmupStartedAt := time.Now()
 
@@ -480,6 +479,7 @@ func (r RedditBrowserAutomation) DailyWarmup(ctx context.Context, params DailyWa
 		StartURL:          redditHomePage,
 		UseProxy:          true,
 		Alpha2CountryCode: params.CountryCode,
+		IsWarmUp:          true,
 	})
 	if err != nil {
 		return fmt.Errorf("cDP url fetch failed: %w", err)

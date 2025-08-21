@@ -9,6 +9,7 @@ type CDPInput struct {
 	StartURL          string
 	UseProxy          bool
 	LiveURL           bool
+	IsWarmUp          bool
 	Alpha2CountryCode string
 }
 

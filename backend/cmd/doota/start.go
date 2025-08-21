@@ -45,6 +45,7 @@ var StartCmd = cli.Command(startCmdE,
 		flags.String("common-dodopayment-api-key", "", "DodoPayment api key")
 		flags.String("common-brevo-api-key", "", "Brevo api key")
 		flags.String("common-browserless-api-key", "", "Browserless api key")
+		flags.String("common-browserless-warmup-api-key", "2SIxpPBYG6XJqLj5ec45cd436c170abdbec8713fd1bbaffe4", "Browserless api key")
 		flags.String("common-steel-api-key", "", "Steel Browser api key")
 		flags.String("common-openai-api-key", "", "LiteLLM API key")
 		flags.String("common-openai-gpt-api-key", "", "OpenAI API key")
@@ -214,7 +215,10 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		return nil, fmt.Errorf("unable to create debug store: %w", err)
 	}
 
-	browserLessClient := browser_automation.NewBrowserLessBrowser(sflags.MustGetString(cmd, "common-browserless-api-key"), logger)
+	browserLessClient := browser_automation.NewBrowserLessBrowser(
+		sflags.MustGetString(cmd, "common-browserless-api-key"),
+		sflags.MustGetString(cmd, "common-browserless-warmup-api-key"),
+		logger)
 	//steelBrowserClient := browser_automation.NewSteelBrowser(sflags.MustGetString(cmd, "common-steel-api-key"), logger)
 	redditBrowserAutomation := browser_automation.NewRedditBrowserAutomation(browserLessClient, logger, debugStore)
 	interactionService := interactions.NewRedditInteractions(deps.DataStore, alertNotifier, redditBrowserAutomation, redditOauthClient, logger)
@@ -456,7 +460,10 @@ func portalApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		return nil, fmt.Errorf("unable to create debug store: %w", err)
 	}
 
-	browserLessClient := browser_automation.NewBrowserLessBrowser(sflags.MustGetString(cmd, "common-browserless-api-key"), logger)
+	browserLessClient := browser_automation.NewBrowserLessBrowser(
+		sflags.MustGetString(cmd, "common-browserless-api-key"),
+		sflags.MustGetString(cmd, "common-browserless-warmup-api-key"),
+		logger)
 	//steelBrowserClient := browser_automation.NewSteelBrowser(sflags.MustGetString(cmd, "common-steel-api-key"), logger)
 	redditBrowserAutomation := browser_automation.NewRedditBrowserAutomation(browserLessClient, logger, debugStore)
 
