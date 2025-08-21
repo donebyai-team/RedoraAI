@@ -83,7 +83,7 @@ func (b browserLessClient) GetCDPInfo(ctx context.Context, input CDPInput) (*CDP
 
 		bodyBytes, _ := io.ReadAll(resp.Body)
 		b.logger.Info("browserless raw response",
-			zap.String("country_code", input.Alpha2CountryCode),
+			zap.String("country_code", input.GetCountryCode()),
 			zap.ByteString("body", bodyBytes))
 
 		var result reconnectResponse
