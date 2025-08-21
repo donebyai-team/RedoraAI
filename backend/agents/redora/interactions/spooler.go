@@ -39,6 +39,9 @@ func (s *Spooler) Start(ctx context.Context) {
 			if err := s.postsToExecute(ctx); err != nil {
 				s.logger.Error("failed to poll scheduled posts", zap.Error(err))
 			}
+			if err := s.automatedInteractions.WarmUpAccounts(ctx); err != nil {
+				s.logger.Error("failed to warmup accounts", zap.Error(err))
+			}
 		case <-ctx.Done():
 		}
 		// If we have 0 it means we just started, move to the real interval now

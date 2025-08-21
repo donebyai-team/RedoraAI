@@ -60,6 +60,7 @@ type IntegrationRepository interface {
 	GetIntegrationByOrgAndType(ctx context.Context, organizationId string, integrationType models.IntegrationType) ([]*models.Integration, error)
 	GetIntegrationsByOrgID(ctx context.Context, orgID string) ([]*models.Integration, error)
 	GetIntegrationById(ctx context.Context, id string) (*models.Integration, error)
+	GetIntegrationsByReferenceId(ctx context.Context, referenceId string) ([]*models.Integration, error)
 }
 
 type UserRepository interface {

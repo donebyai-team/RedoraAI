@@ -16,6 +16,7 @@ func init() {
 		"integration/query_integration_by_org_and_type.sql",
 		"integration/query_integration_by_id.sql",
 		"integration/query_integration_by_org.sql",
+		"integration/query_integration_by_reference.sql",
 	})
 }
 
@@ -106,4 +107,23 @@ func (r *Database) GetIntegrationById(ctx context.Context, id string) (*models.I
 	}
 
 	return integration, nil
+}
+
+func (r *Database) GetIntegrationsByReferenceId(ctx context.Context, referenceId string) ([]*models.Integration, error) {
+	integrations, err := getMany[models.Integration](ctx, r, "integration/query_integration_by_reference.sql", map[string]any{
+		"reference_id": referenceId,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, integration := range integrations {
+		integration.EncryptedConfig, err = r.decryptMessage(integration.EncryptedConfig)
+		if err != nil {
+			return nil, errors.Wrap(err, fmt.Sprintf("failed to decrypt [%s] config", integration.Type))
+		}
+
+	}
+	return integrations, nil
 }

@@ -27,6 +27,7 @@ type AutomatedInteractions interface {
 	SendComment(ctx context.Context, interaction *models.LeadInteraction) (err error)
 	GetInteractions(ctx context.Context, projectID string, status models.LeadInteractionStatus, dateRange pbportal.DateRangeFilter) ([]*models.LeadInteraction, error)
 	ProcessScheduledPost(ctx context.Context, post *models.Post) error
+	WarmUpAccounts(ctx context.Context) error
 }
 
 type redditInteractions struct {

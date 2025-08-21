@@ -227,9 +227,11 @@ func (r redditInteractions) finalizeLogin(ctx context.Context, orgID string, upd
 	}
 
 	// Validate Reddit user is still active
-	//if _, err := reddit.NewClientWithOutConfig(r.logger).GetUser(ctx, updatedLoginConfig.Username); err != nil {
-	//	return err
-	//}
+	user, err := reddit.NewClientWithOutConfig(r.logger).GetUser(ctx, updatedLoginConfig.Username)
+	if err != nil {
+		return err
+	}
+	updatedLoginConfig.CreatedUtc = user.CreatedAt
 
 	integration := &models.Integration{
 		OrganizationID: orgID,
