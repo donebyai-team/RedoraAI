@@ -9,6 +9,7 @@ import { TokenStore, OrganizationStore } from '@doota/store'
 import { Subscription, SubscriptionPlanID, SubscriptionStatus } from '@doota/pb/doota/core/v1/core_pb'
 import { logDailyVisit } from '../amplitude'
 import { isPlatformAdmin } from '../helper/role'
+import { Timestamp } from '@bufbuild/protobuf/dist/cjs/wkt/gen/google/protobuf/timestamp_pb'
 
 
 const DEFAULT_PLAN: Subscription = {
@@ -171,6 +172,7 @@ export const BaseAuthProvider: FC<Props> = ({
         logDailyVisit(orgID, name, {
           plan: plan?.toString(),
           page: window.location.pathname,
+          createdAt: user.createdAt ? timestampToISOString(user.createdAt) : undefined,
         })
       }
 
@@ -220,4 +222,10 @@ export const BaseAuthProvider: FC<Props> = ({
   }
 
   return <AuthContext.Provider value={values}>{children}</AuthContext.Provider>
+}
+
+function timestampToISOString(ts?: Timestamp): string | undefined {
+  if (!ts) return undefined;
+  const millis = Number(ts.seconds) * 1000 + Math.floor(ts.nanos / 1_000_000);
+  return new Date(millis).toISOString();
 }

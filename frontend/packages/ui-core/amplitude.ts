@@ -1,4 +1,5 @@
 import { init, track, identify, setUserId, Identify } from '@amplitude/analytics-browser';
+import { setUser } from '@sentry/browser'
 
 let amplitudeInitialized = false;
 
@@ -16,6 +17,13 @@ export function initAmplitude(apiKey?: string) {
 }
 
 export function logDailyVisit(customerId: string, productName: string, metadata: Record<string, any> = {}) {
+    // Set user information in Decipher via the Sentry TypeScript SDK
+    setUser({
+        "id": customerId, // Optional: use if email not available
+        "account": productName,  // Recommended: Which account/organization is this user a member of?
+        "created_at": metadata.createdAt,
+    });
+
     if (!amplitudeInitialized) {
         console.log('Amplitude not initialized');
         return;

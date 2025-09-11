@@ -27,6 +27,33 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name='robots' content='noindex,follow' />
         <link rel="icon" href="/images/favicon.ico" />
         <title>RedoraAI</title>
+
+        <script
+          src="https://browser.sentry-cdn.com/8.47.0/bundle.tracing.replay.min.js"
+          integrity="sha384-VaqNrma84jlgEWxBCMOnatKAHLSjaKGmo8Biuj3NQEg1MrmeukY8s6pnaTgRVjKM"
+          crossOrigin="anonymous"
+        ></script>
+
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              Sentry.init({
+                dsn: "https://9ddcdfafdb7a4f7e8ffa1b4a653678da@o5948691128404174.ingest.us.getdecipher.com/5382214313016608",
+                integrations: [
+                  Sentry.replayIntegration({
+                    maskAllText: false,
+                    blockAllMedia: false,
+                    maskAllInputs: true,
+                    networkDetailAllowUrls: [/^.*$/],
+                  }),
+                ],
+                replaysOnErrorSampleRate: 1.0,
+                replaysSessionSampleRate: 1.0,
+              });
+            `,
+          }}
+        />
+
       </head>
 
       <body>
