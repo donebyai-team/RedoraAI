@@ -1,42 +1,71 @@
-# Enables you to use 'doota' CLI directly and it will re-compile it from source before running
+# Enables you to use 'DOOTA' CLI directly and it will re-compile it from source before running
 # as well as other easy helper scripts like 'gh_trigger_ci'.
 PATH_add `pwd`/devel
 
-## You will need a Google account with `glcloud auth login` and `gcloud auth application-default login` configured
-export DOOTA_GLOBAL_JWT_KMS_KEYPATH="projects/doota/locations/global/keyRings/api-auth/cryptoKeys/jwt-signing-dev/cryptoKeyVersions/1"
+# Auth0 for passwordless login
+export AUTH0_CLIENT_ID="xxx"
+export AUTH0_DOMAIN="xxx.us.auth0.com"
+export AUTH0_SECRET="xxx"
 
-# LangChain
-export LANGCHAIN_ENDPOINT=https://api.smith.langchain.com
-export LANGCHAIN_PROJECT=DOOTAtream-dev
-export LANGCHAIN_API_KEY="<langchain-dev-api-key>"
+export DOOTA_START_PORTAL_AUTH0_PORTAL_CLIENT_ID="$AUTH0_CLIENT_ID"
+export DOOTA_START_PORTAL_AUTH0_PORTAL_CLIENT_SECRET="$AUTH0_SECRET"
+export DOOTA_START_PORTAL_AUTH0_DOMAIN="$AUTH0_DOMAIN"
 
-# PostgreSQL
-export LOCAL_PG_DSN="postgresql://dev-node:insecure-change-me-in-prod@localhost:5432/dev-node?enable_incremental_sort=off&sslmode=disable"
-export TEST_PGDSN="postgresql://dev-node:insecure-change-me-in-prod@localhost:5432/dev-test?enable_incremental_sort=off&sslmode=disable"
-export PG_DSN=$LOCAL_PG_DSN
+# Reddit
+export DOOTA_START_PORTAL_REDDIT_REDIRECT_URL="http://localhost:3000/auth/callback"
+export DOOTA_START_PORTAL_REDDIT_CLIENT_ID="xxx"
+export DOOTA_START_PORTAL_REDDIT_CLIENT_SECRET="xxx"
+
+#For Google Login
+export GOOGLE_CLIENT_ID_DEV="xxx.apps.googleusercontent.com"
+export GOOGLE_CLIENT_SECRET_DEV="xxx"
+
+export DOOTA_GLOBAL_GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID_DEV"
+export DOOTA_GLOBAL_GOOGLE_CLIENT_SECRET="$GOOGLE_CLIENT_SECRET_DEV"
+
+#Redis
+export REDIS_DEV="localhost:6379"
+export DOOTA_GLOBAL_REDIS_ADDR="$REDIS_DEV"
+
+## For JWT token signing
+export DOOTA_GLOBAL_JWT_KMS_KEYPATH=""
+
+# PostgreSQL (IMPORTANT: Make sure to add an encryption key in the DSN used to encrypt configs)
+export LOCAL_PG_DSN="postgresql://dev-node:insecure-change-me-in-prod@localhost:5432/dev-node?enable_incremental_sort=off&sslmode=disable&encryptionKey=697be1de9c87e09269246b49df7f29a0"
+export PG_DSN="$LOCAL_PG_DSN"
 export DOOTA_GLOBAL_PG_DSN="$PG_DSN"
 
-# OpenAI
-export OPENAI_API_KEY_DEV="<openai-dev-api-key>"
-export OPENAI_ORG="org-J3D3FjZr8vPXO8oG0SP5VOvZ"
-export LANGSMITH_API_KEY_DEV="<langchain-dev-key>"
-export LANGSMITH_PROJECT="doota-dev"
+# Email notifications
+export DOOTA_START_COMMON_RESEND_API_KEY="xxx"
+
+# Browser Automation
+export DOOTA_START_COMMON_BROWSERLESS_API_KEY="xxx"
+export DOOTA_START_COMMON_STEEL_API_KEY="xxx"
+
+# LiteLLM
+export OPENAI_API_KEY_DEV="xxx"
 export TEST_OPENAI_API_KEY="$OPENAI_API_KEY_DEV"
-export TEST_LANGSMITH_API_KEY="$LANGSMITH_API_KEY_DEV"
-export TEST_OPENAI_ORGANIZATION="$OPENAI_ORG"
+export DOOTA_START_COMMON_GPT_MODEL="redora-gemini-2.0-flash"
+export DOOTA_START_COMMON_ADVANCE_GPT_MODEL="redora-gemini-2.0-flash"
 export DOOTA_START_COMMON_OPENAI_API_KEY="$OPENAI_API_KEY_DEV"
-export DOOTA_START_COMMON_OPENAI_ORGANIZATION="$OPENAI_ORG"
-export DOOTA_START_COMMON_LANGSMITH_API_KEY="$LANGSMITH_API_KEY_DEV"
-export DOOTA_START_COMMON_LANGSMITH_PROJECT="$LANGSMITH_PROJECT"
-export DOOTA_DOC_TEST_OPENAI_API_KEY="$OPENAI_API_KEY_DEV"
-export DOOTA_DOC_TEST_OPENAI_ORGANIZATION="$OPENAI_ORG"
-export DOOTA_DOC_TEST_LANGSMITH_API_KEY="$LANGSMITH_API_KEY_DEV"
-export DOOTA_DOC_TEST_LANGSMITH_PROJECT="$LANGSMITH_PROJECT"
 
+# OpenAI
+export DOOTA_START_COMMON_OPENAI_ORGANIZATION="org-xxx"
+export DOOTA_START_COMMON_OPENAI_GPT_API_KEY="sk-proj-xxx"
 
-# Test
-export TEST_REDDIT_TOKEN=""
+# Testing
+export PROMPT_TYPE_STORE_URL="file://$(pwd)/data/prompts"
+export TEST_DEBUG_STRORE="file://$(pwd)/data/debugstore"
+
+export DOOTA_GLOBAL_PROMPT_TYPE_STORE_URL="$PROMPT_TYPE_STORE_URL"
 
 # Frontend Next.JS Configuration
 export NEXT_PUBLIC_API_URL=http://localhost:8787
 export NEXT_PUBLIC_APP_URL="http://localhost:3000"
+export NEXT_PUBLIC_AMPLITUDE_API_KEY="xxx"
+
+export DOOTA_START_COMMON_PUBSUB_PROJECT="doota-main"
+
+# Subscription
+export DOOTA_START_COMMON_DODOPAYMENT_API_KEY="xxx"
+export DOOTA_START_COMMON_BREVO_API_KEY="xxx"
