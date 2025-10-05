@@ -9,6 +9,8 @@ It automates lead discovery, monitoring, and engagement — helping you find and
 
 ---
 
+<img width="1431" height="686" alt="Screenshot 2025-10-05 at 3 02 31 PM" src="https://github.com/user-attachments/assets/cb5a1ab9-a6b4-47af-978d-2e5a2a1b664b" />
+
 ## 📋 Table of Contents
 
 - [Features](#-features)
@@ -290,6 +292,7 @@ To minimize Reddit account bans:
 - Comment and DM generation should be moved into separate LLM calls. Right now, scoring, comment and DM generation are all done in a single LLM call.
 - We should add the ability to regenerate comments or DMs.
 - To avoid getting banned, we only use Reddit accounts that are > 2 weeks old for AI generation. This is a temporary solution and we should come up with a better way to handle account warmup.
+
 
 ---
 
