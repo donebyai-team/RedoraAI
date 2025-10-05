@@ -9,7 +9,8 @@ It automates lead discovery, monitoring, and engagement — helping you find and
 
 ---
 
-<img width="1431" height="686" alt="Screenshot 2025-10-05 at 3 02 31 PM" src="https://github.com/user-attachments/assets/cb5a1ab9-a6b4-47af-978d-2e5a2a1b664b" />
+<img width="2862" height="1372" alt="image" src="https://github.com/user-attachments/assets/a9ac9b02-f29f-4e4b-b71d-059a7e57c198" />
+
 
 ## 📋 Table of Contents
 
