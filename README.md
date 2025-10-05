@@ -4,6 +4,8 @@
 It automates lead discovery, monitoring, and engagement — helping you find and connect with high-intent users across Reddit while staying fully compliant with community rules.
 
 > 🚀 Automate your Reddit lead generation with AI agents that discover relevant subreddits, monitor discussions, and craft authentic, rule-safe engagement messages.
+> 
+> You can explore and use RedoraAI online at https://redoraai.com
 
 ---
 
@@ -44,6 +46,9 @@ It automates lead discovery, monitoring, and engagement — helping you find and
 
 - Email notifications via [Resend](https://resend.com)
 - Slack alerts for daily or weekly summaries
+- Email Alerts to users when a connected account is revoked or banned
+- Onboarding emails
+- Subscription expiry and renewal alerts
 
 ### 👥 Multi-Account Management
 
@@ -93,6 +98,10 @@ This repository contains all components required to run RedoraAI.
 - **Portal** — API layer for frontend over gRPC/Connect-Web
 - **Spooler** — Tracks relevant posts based on subreddit/keyword pairs every 24h
     - Configurable fanout limits, polling intervals, and daily quotas
+    - Limits no of posts to track
+    - Limits Max no of relevant posts per day as per the subscribed plan
+    - Built-in retry logic for failed posts
+    - Send scheduled posts, DM and Comments
 
 ### LLM Layer
 
@@ -246,6 +255,11 @@ Integrations store external service credentials and configuration.
 doota tools integrations slack_webhook create <org-id> '{"channel":"redora-alerts","webhook":"<slack-url>"}'
 ```
 ---
+
+## 🛠️ Admin Interface
+
+There is no separate admin interface. Users assigned the role `PLATFORM_ADMIN` can view all organizations and have access to all accounts across the platform.
+
 
 ## ☁️ Deployment
 
