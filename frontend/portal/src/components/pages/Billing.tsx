@@ -48,8 +48,8 @@ const plans: PlanInfo[] = [
         id: SubscriptionPlanID.SUBSCRIPTION_PLAN_FREE,
         name: 'FREE',
         price: '$0',
-        interval: '7-day trial',
-        description: '7-day trial of Founder plan',
+        interval: '3-day trial',
+        description: '3-day trial of Founder plan',
         icon: <Star className='h-5 w-5' />,
         features: [
             '7 Tracked Keywords',
