@@ -18,13 +18,12 @@ type Spooler struct {
 	state                 state.ConversationState
 	pollingInterval       time.Duration
 	automatedInteractions AutomatedInteractions
-	rateLimiter           RateLimiter
 	notifier              alerts.AlertNotifier
 	logger                *zap.Logger
 }
 
-func NewSpooler(db datastore.Repository, notifier alerts.AlertNotifier, state state.ConversationState, automatedInteractions AutomatedInteractions, rateLimiter RateLimiter, pollingInterval time.Duration, logger *zap.Logger) *Spooler {
-	return &Spooler{db: db, state: state, notifier: notifier, automatedInteractions: automatedInteractions, rateLimiter: rateLimiter, pollingInterval: pollingInterval, logger: logger}
+func NewSpooler(db datastore.Repository, notifier alerts.AlertNotifier, state state.ConversationState, automatedInteractions AutomatedInteractions, pollingInterval time.Duration, logger *zap.Logger) *Spooler {
+	return &Spooler{db: db, state: state, notifier: notifier, automatedInteractions: automatedInteractions, pollingInterval: pollingInterval, logger: logger}
 }
 
 func (s *Spooler) Start(ctx context.Context) {

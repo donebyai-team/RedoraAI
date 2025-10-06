@@ -228,7 +228,6 @@ func redoraSpoolerApp(cmd *cobra.Command, isAppReady func() bool) (App, error) {
 		alertNotifier,
 		deps.ConversationState,
 		interactionService,
-		nil,
 		4*time.Minute,
 		logger)
 
